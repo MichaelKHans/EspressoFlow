@@ -16,6 +16,7 @@ import {
   Plus,
   Minus,
   AlertCircle,
+  Barcode,
 } from 'lucide-react';
 import {
   loadActiveBarDrinkIds,
@@ -40,6 +41,7 @@ interface DrinkSelectorProps {
   onOpenBeanVault: () => void;
   onGrindSettingChange?: (setting: string) => void;
   onSwitchBean?: (beanId: string) => void;
+  onScanBean?: () => void;
 }
 
 export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
@@ -54,6 +56,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onOpenBeanVault,
   onGrindSettingChange,
   onSwitchBean,
+  onScanBean,
 }) => {
   const [activeDeckIds, setActiveDeckIds] = useState<string[]>(() => loadActiveBarDrinkIds());
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState<boolean>(false);
@@ -641,11 +644,24 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
         return (
           <div className="border border-[#E8DFD5] bg-[#FFFDF9] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
-            <div className="flex items-center gap-2 mb-2">
-              <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
-              <span className="text-xs font-bold text-[#2C2018] font-mono">
-                Bean Vault Match
-              </span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
+                <span className="text-xs font-bold text-[#2C2018] font-mono">
+                  Bean Vault Match
+                </span>
+              </div>
+              {onScanBean && (
+                <button
+                  type="button"
+                  onClick={onScanBean}
+                  className="text-[10px] text-[#C26D52] hover:text-[#A95840] font-mono font-semibold flex items-center gap-1 transition"
+                  title="Scan new bean bag or barcode"
+                >
+                  <Barcode className="w-3 h-3" />
+                  <span>Scan New Bag</span>
+                </button>
+              )}
             </div>
 
             {/* Current bean match */}

@@ -11,6 +11,16 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Bean & Barcode Vision Scanner Modal, Open Food Facts & Multi-Format Date OCR (v0.6.0)
+- **Bean & Barcode Vision Scanner Modal (`BeanScannerModal.tsx`):**
+  - Live kamera-viewfinder med scan-reticle og laser-linje.
+  - Native `BarcodeDetector` Web API (EAN-13, EAN-8, UPC, QR-koder) i browser/Capacitor.
+  - Direkte opslag i Open Food Facts globale fødevare-database for automatisk indlæsning af bønnenavn, risteri og udledt ristegrad.
+  - Offline fallback-database for kendte espressobønner (Lavazza, Illy, Peter Larsen, BKI, Coffee Collective, Starbucks).
+  - Intelligent multi-format ristedato-dekoder (15+ formater på tværs af EN, DA, DE, FR, ES, IT + Best Before / BBD 12-måneders beregning).
+  - $CO_2$ afgasningsindikator og 1-klik "Gem & Sæt Som Aktiv Bønne".
+- **Integration i DrinkSelector og Equipment Tab:** "Scan New Bag" knap direkte ved Bean Vault Match og i udstyrssektionen.
+
 ### 2026-09-26 -- Onboarding Wizard, Bean Vault Match Engine & Rist-Profilmatch (v0.5.9)
 - **3-Step Onboarding Wizard (`OnboardingWizard.tsx`):** Ny brugere guides gennem kværn-valg (22 modeller), maskine-valg (18 modeller) og oprettelse af deres første kaffebønne med auto-ratio.
 - **Bean Vault Match Engine (`beanMatcher.ts`):** Matematisk Roast Compatibility Matrix scorer alle bønner i vaulten mod den valgte drik. Viser match-procent og foreslår bedre bønner med 1-klik switch.

@@ -4,6 +4,20 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.6.0] - 2026-09-26
+### Added
+- **Bean & Barcode Vision Scanner Modal (`BeanScannerModal.tsx`):**
+  - **Live Camera Viewfinder med Laser-Reticle:** Optisk scanning direkte i browseren via telefonens kamera (`facingMode: 'environment'`) med animeret måleramme og scan-linje.
+  - **Stregkode-Scanning via Native `BarcodeDetector` Web API:** Registrerer lynhurtigt EAN-13, EAN-8, UPC-A, UPC-E og QR-koder direkte fra kamera-streamet eller uploadet billede.
+  - **Open Food Facts Global Database Integration:** Slår automatisk scannede stregkoder op mod Open Food Facts API'et og udfylder lynhurtigt produktnavn, risteri/brand, oprindelse og udleder ristegrad (Light/Medium/Dark).
+  - **Offline Kaffebase for Kendte Bønner:** Indbygget lynhurtig offline database med de mest populære bønner (Lavazza Qualità Oro, Illy Classico/Intenso, Peter Larsen Kaffe Rød/Økologisk Espresso, BKI Guld/Espresso, Coffee Collective Kieni/Takesi, Starbucks Espresso/Blonde).
+  - **Intelligent Multi-Format Ristedato OCR-Engine:** Optisk genkendelse af ristedatoer på emballage uanset format:
+    - Numeriske formater: `DD.MM.YYYY`, `DD/MM/YYYY`, `DD-MM-YYYY`, `YYYY-MM-DD`, `DD/MM/YY`.
+    - Månedsnavne på tværs af 6 sprog (Engelsk, Dansk, Tysk, Fransk, Spansk, Italiensk), fx `14 SEP 2026`, `12 MAJ 2026`, `18 OKT`, `14 September 2026`.
+    - **Best Before / BBD Heuristik:** Hvis posen kun har en "Bedst Før" dato (fx Illy/Lavazza), beregner motoren den sandsynlige ristedato (~12 måneder før) med tydelig angivelse.
+  - **$CO_2$ Afgasnings- & Friskhedsindikator:** Realtids-vurdering af bønnernes alder i dage fra ristning (Advarsel om uroligt flow ved < 4 dage, *The Golden Window* ved 7–28 dage, og finere kværnanbefaling for ældre bønner).
+  - **1-Tap Gem til Bean Vault:** Tilføj direkte til bønne-rotationen med forudindstillede kværn- og ratio-parametre tilpasset den scannede ristegrad.
+
 ## [0.5.9] - 2026-09-26
 ### Added
 - **Førstegangs-Onboarding Wizard (3-Step Station Setup):** Ny brugere mødes nu af en elegant 3-trins velkomstguide, der samler hele espressostationen:

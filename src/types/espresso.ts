@@ -28,6 +28,7 @@ export interface CoffeeBeanProfile {
   grindSetting: string;
   grinderName: string;
   notes?: string;
+  barcode?: string;
 }
 
 export interface ShotRecord {

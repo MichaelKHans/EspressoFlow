@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, FlaskConical } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, FlaskConical, Barcode } from 'lucide-react';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
 import { TasteFeedback } from './components/TasteFeedback';
@@ -9,6 +9,7 @@ import { LegalModal } from './components/LegalModal';
 import { DrinkSelector } from './components/DrinkSelector';
 import { DialInWizardModal } from './components/DialInWizardModal';
 import { OnboardingWizard } from './components/OnboardingWizard';
+import { BeanScannerModal } from './components/BeanScannerModal';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
 import type {
@@ -68,6 +69,7 @@ export function App() {
     new Date().toISOString().split('T')[0]
   );
   const [isScanningBag, setIsScanningBag] = useState<boolean>(false);
+  const [isBeanScannerOpen, setIsBeanScannerOpen] = useState<boolean>(false);
   const [scanMessage, setScanMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -312,6 +314,16 @@ export function App() {
     }
   };
 
+  const handleSaveBeanFromScanner = (scannedBean: CoffeeBeanProfile, makeActive?: boolean) => {
+    const updated = [scannedBean, ...beans];
+    setBeans(updated);
+    saveBeans(updated);
+    if (makeActive) {
+      handleSelectBean(scannedBean.id);
+    }
+    setScanMessage(`Scanned & added "${scannedBean.name}" to Vault!`);
+  };
+
   const handleDeleteBean = (beanId: string) => {
     if (beans.length <= 1) return;
     const updated = beans.filter((b) => b.id !== beanId);
@@ -419,7 +431,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.5.9
+                  v0.6.0
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -525,6 +537,7 @@ export function App() {
             onOpenBeanVault={() => setActiveTab('equipment')}
             onGrindSettingChange={setGrindSetting}
             onSwitchBean={handleSelectBean}
+            onScanBean={() => setIsBeanScannerOpen(true)}
           />
         )}
 
@@ -650,13 +663,13 @@ export function App() {
                   />
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => setIsBeanScannerOpen(true)}
                     disabled={isScanningBag}
-                    className="px-3 py-1.5 rounded-lg border border-[#72806B] bg-[#72806B]/10 hover:bg-[#72806B]/20 text-[#72806B] text-xs font-semibold flex items-center gap-1.5 transition"
-                    title="Take or upload a photo of your coffee bag label"
+                    className="px-3 py-1.5 rounded-lg border border-[#72806B] bg-[#72806B]/10 hover:bg-[#72806B]/20 text-[#72806B] text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
+                    title="Scan coffee bag barcodes, packaging labels, and roast date stamps"
                   >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>{isScanningBag ? 'Scanning...' : 'Scan Bag Photo'}</span>
+                    <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
+                    <span>{isScanningBag ? 'Scanning...' : 'Scan Bag / Barcode'}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -1116,6 +1129,14 @@ export function App() {
           onComplete={handleOnboardingComplete}
         />
       )}
+
+      {/* Bean Bag & Barcode Vision Scanner Modal */}
+      <BeanScannerModal
+        isOpen={isBeanScannerOpen}
+        onClose={() => setIsBeanScannerOpen(false)}
+        onSaveBean={handleSaveBeanFromScanner}
+        currentGrinderName={currentGrinder.name}
+      />
     </div>
   );
 }
