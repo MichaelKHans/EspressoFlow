@@ -4,6 +4,15 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.0.0] - 2026-09-26
+### Added
+- **Global i18n Fase 3: Sydeuropas Kaffekultur & Global 1.0 Milepæl (Italien, Frankrig & Spanien):**
+  - **Italien (`it` - Italiano) 🇮🇹:** 100% ordbog dedikeret til espressoens fødeland (Milano, Rom, Napoli, Firenze). Autentiske italienske SCA-fagtermer (*Rapporto di estrazione, Dose macinata, Resa in tazza, Grado di macinatura, Pre-infusione, Canalizzazione, Taratura*).
+  - **Frankrig (`fr` - Français) 🇫🇷:** 100% ordbog skræddersyet til Frankrigs blomstrende specialty coffee miljø (Paris, Lyon, Bordeaux) (*Ratio d'extraction, Dose de café, Rendement, Finesse de mouture, Pré-infusion, Canalisation, Calibrage*).
+  - **Spanien (`es` - Español) 🇪🇸:** 100% ordbog henvendt til Spaniens specialty kaffe-epicentre (Barcelona, Madrid, Valencia) samt det store latinamerikanske marked (*Ratio de extracción, Dosis de café, Rendimiento, Molienda, Pre-infusión, Canalización, Calibración*).
+  - **Automatisk Browser-Detektering:** Genkender automatisk `it`, `fr` og `es` ved opstart via `navigator.language`.
+  - **11 Globale Verdenssprog:** Sprogvælger i header og settings tilbyder nu 11 landeflag (`🇬🇧 EN`, `🇮🇹 IT`, `🇫🇷 FR`, `🇪🇸 ES`, `🇩🇪 DE`, `🇩🇰 DA`, `🇰🇷 KO`, `🇯🇵 JA`, `🇨🇳 ZH-CN`, `🇹🇼 ZH-TW`, `🇦🇪 AR`).
+
 ## [0.9.1] - 2026-09-26
 ### Fixed & Improved
 - **Scale Cam OCR Revolution: Præcisions-aflæsning af Digitale Kaffevægte (Blue LED & Dual-Display):**

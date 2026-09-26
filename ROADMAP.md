@@ -67,10 +67,10 @@
   - [x] 🇨🇳 **Kina (简体中文 - `zh-CN.ts`):** Komplet ordbog tilpasset Kinas eksploderende specialty coffee marked (Shanghai m.fl.) med SCA standardtermer.
   - [x] 🇹🇼 **Taiwan (繁體中文 - `zh-TW.ts`):** Komplet ordbog tilpasset Taiwans barista-mesterskabs standarder.
   - [x] 🇦🇪/🇸🇦 **Dubai & Golfen (العربية - `ar.ts`):** Komplet arabisk ordbog med automatisk RTL (`dir="rtl"`) layout-understøttelse.
-- [ ] **Fase 3: Sydeuropas Kaffekultur:**
-  - [ ] 🇮🇹 Italien (Italiano - `it.ts`)
-  - [ ] 🇪🇸 Spanien & Latinamerika (Español - `es.ts`)
-  - [ ] 🇫🇷 Frankrig (Français - `fr.ts`)
+- [x] **Fase 3: Sydeuropas Kaffekultur & Global 1.0 (v1.0.0):**
+  - [x] 🇮🇹 **Italien (Italiano - `it.ts`):** Komplet ordbog for espressoens moderland med autentiske SCA fagtermer.
+  - [x] 🇫🇷 **Frankrig (Français - `fr.ts`):** Komplet ordbog for Frankrigs specialty kaffescene.
+  - [x] 🇪🇸 **Spanien & Latinamerika (Español - `es.ts`):** Komplet ordbog for det spanske og latinamerikanske marked.
 
 ---
 

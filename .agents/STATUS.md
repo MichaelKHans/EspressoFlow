@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Global i18n Fase 3: Sydeuropas Kaffekultur & Global 1.0 (v1.0.0)
+- **Italien (Italiano - `it.ts`):** 100% ordbog for espressoens moderland (Milano, Rom, Napoli) med autentiske SCA fagtermer (*Rapporto di estrazione, Dose macinata, Resa in tazza, Grado di macinatura, Pre-infusione, Canalizzazione, Taratura*).
+- **Frankrig (Français - `fr.ts`):** 100% ordbog for Frankrigs specialty kaffemiljø (*Ratio d'extraction, Dose de café, Rendement, Finesse de mouture, Pré-infusion, Canalisation, Calibrage*).
+- **Spanien (Español - `es.ts`):** 100% ordbog for den spanske og latinamerikanske specialty scene (*Ratio de extracción, Dosis de café, Rendimiento, Molienda, Pre-infusión, Canalización, Calibración*).
+- **11 Globale Verdenssprog:** Fuld dækning af 11 sprog med landeflag (`🇬🇧 EN`, `🇮🇹 IT`, `🇫🇷 FR`, `🇪🇸 ES`, `🇩🇪 DE`, `🇩🇰 DA`, `🇰🇷 KO`, `🇯🇵 JA`, `🇨🇳 ZH-CN`, `🇹🇼 ZH-TW`, `🇦🇪 AR`).
+- **Automatisk Detektering:** Browser-sprogdetektering for italiensk, fransk og spansk ved opstart.
+
 ### 2026-09-26 -- Scale Cam OCR Revolution: Præcision til Kaffevægte (Blue LED & Dual-Display) (v0.9.1)
 - **Viewfinder Flexbox Layout Fix:** `<video>` sat til `absolute inset-0 w-full h-full object-cover`, så kameraet fylder 100% af søgeren og sigtekassen er perfekt centreret (rettet bug hvor video var mast i venstre halvdel og sigtekassen svævede over tomt sort felt i højre halvdel).
 - **Dual-Display Adskillelse:** Implementeret række-bånd analyse, der isolerer den øverste vægtrække (`39.5` / `0.3`) fra den nederste timerrække (`0:00` med kolon `:`). Slut med blandede tal.

@@ -7,8 +7,11 @@ import { ja } from './locales/ja';
 import { zhCN } from './locales/zh-CN';
 import { zhTW } from './locales/zh-TW';
 import { ar } from './locales/ar';
+import { it } from './locales/it';
+import { fr } from './locales/fr';
+import { es } from './locales/es';
 
-export type SupportedLanguage = 'en' | 'de' | 'da' | 'ko' | 'ja' | 'zh-CN' | 'zh-TW' | 'ar';
+export type SupportedLanguage = 'en' | 'de' | 'da' | 'ko' | 'ja' | 'zh-CN' | 'zh-TW' | 'ar' | 'it' | 'fr' | 'es';
 
 export interface LanguageInfo {
   code: SupportedLanguage;
@@ -18,6 +21,9 @@ export interface LanguageInfo {
 
 export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
   { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
   { code: 'da', label: 'Dansk', flag: '🇩🇰' },
   { code: 'ko', label: '한국어', flag: '🇰🇷' },
@@ -36,6 +42,9 @@ const dictionaries: Record<SupportedLanguage, Partial<Record<TranslationKeys, st
   'zh-CN': zhCN,
   'zh-TW': zhTW,
   ar,
+  it,
+  fr,
+  es,
 };
 
 const STORAGE_KEY = 'espressoflow_lang';
@@ -47,12 +56,15 @@ const EVENT_NAME = 'espressoflow_lang_change';
 export function getInitialLanguage(): SupportedLanguage {
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as SupportedLanguage | null;
-    const validCodes: SupportedLanguage[] = ['en', 'de', 'da', 'ko', 'ja', 'zh-CN', 'zh-TW', 'ar'];
+    const validCodes: SupportedLanguage[] = ['en', 'de', 'da', 'ko', 'ja', 'zh-CN', 'zh-TW', 'ar', 'it', 'fr', 'es'];
     if (saved && validCodes.includes(saved)) {
       return saved;
     }
 
     const browserLang = navigator.language?.toLowerCase() || '';
+    if (browserLang.startsWith('it')) return 'it';
+    if (browserLang.startsWith('fr')) return 'fr';
+    if (browserLang.startsWith('es')) return 'es';
     if (browserLang.startsWith('de')) return 'de';
     if (browserLang.startsWith('da')) return 'da';
     if (browserLang.startsWith('ko')) return 'ko';
