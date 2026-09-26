@@ -62,6 +62,7 @@ export interface GrinderProfile {
   type: 'stepped' | 'stepless';
   defaultSetting: string;
   stepUnit: string; // e.g. "clicks", "numbers", "marks"
+  secondsPerStep?: number; // Approximate extraction time delta (seconds) per step
 }
 
 export interface EspressoMachineProfile {

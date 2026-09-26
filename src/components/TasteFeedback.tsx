@@ -23,7 +23,9 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
     lastShot.channeling || lastShot.channelingDetected,
     selectedTaste,
     lastShot.preInfusionSeconds,
-    lastShot.roastLevel
+    lastShot.roastLevel,
+    lastShot.grinderName,
+    lastShot.grindSetting
   );
 
   const handleSave = () => {
@@ -93,6 +95,18 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
         </div>
 
         <p className="text-xs text-[#2C2018]">{advice.rationale}</p>
+
+        {advice.grinderSpecificAdvice && (
+          <div className="text-[11px] text-[#2C2018] font-mono bg-white p-2.5 rounded-lg border-2 border-[#C26D52]/40 shadow-xs flex items-start gap-2">
+            <span className="text-sm">🎯</span>
+            <div>
+              <strong className="text-[#C26D52] uppercase text-[10px] tracking-wider block mb-0.5">
+                Calibrated Grinder Step Adjustment:
+              </strong>
+              <span>{advice.grinderSpecificAdvice}</span>
+            </div>
+          </div>
+        )}
 
         {advice.roastAdvice && (
           <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5]">

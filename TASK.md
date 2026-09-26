@@ -22,8 +22,8 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] Ristegradsvælger (Light / Medium / Med-Dark / Dark) med celledensitets-anbefalinger
 - [x] Drikke-Ratio Presets (Ristretto 1:1.5, Standard 1:2.0, Lungo 1:2.5, Allongé 1:3.0)
 - [x] Kværnkatalog inkl. Baratza Encore ESP (1–20 micro-steps), Eureka, DF64, Niche m.fl.
-- [ ] AI fotoscanning af kaffepose (OCR af ristedato, bønnetype, vaskeproces)
-- [ ] Kværn-oversættelse for mikro-justeringer (f.eks. +/- 1 trin på Encore ESP = +/- 2.5s udtræk)
+- [x] AI fotoscanning af kaffepose (OCR af ristedato, bønnetype, vaskeproces) via mobil kamera
+- [x] Kværn-oversættelse for mikro-justeringer (f.eks. +/- 1 trin på Encore ESP = +/- 2.5s udtræk, Eureka delestreger)
 - [x] $CO_2$ afgasnings-alarm for friskristede bønner (< 4 dage fra ristning)
 
 ---

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Coffee, Sliders, BookOpen, Sparkles, Flame, Plus, Check, Trash2, Layers } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Coffee, Sliders, BookOpen, Sparkles, Flame, Plus, Check, Trash2, Layers, Camera } from 'lucide-react';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
 import { TasteFeedback } from './components/TasteFeedback';
@@ -27,6 +27,7 @@ import {
   saveGrinders,
 } from './lib/storage';
 import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoMath';
+import { parseCoffeeBagPhoto } from './lib/bagScanner';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'monitor' | 'logbook' | 'equipment'>('monitor');
@@ -49,6 +50,9 @@ export function App() {
   const [newBeanRoastDate, setNewBeanRoastDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [isScanningBag, setIsScanningBag] = useState<boolean>(false);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Active Bean derived
   const currentBean = beans.find((b) => b.id === activeBeanId) || beans[0] || {
@@ -186,6 +190,28 @@ export function App() {
     setIsAddingBean(false);
     setNewBeanName('');
     setNewBeanRoaster('');
+    setScanMessage(null);
+  };
+
+  const handleScanBagFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsScanningBag(true);
+    setScanMessage(null);
+    try {
+      const scanned = await parseCoffeeBagPhoto(file);
+      setNewBeanName(scanned.name);
+      setNewBeanRoaster(scanned.roaster || '');
+      setNewBeanRoastDate(scanned.roastDate);
+      setNewBeanRoastLevel(scanned.roastLevel);
+      setIsAddingBean(true);
+      setScanMessage(`✨ Scanned label: "${scanned.name}" (${scanned.roastLevel} roast)`);
+    } catch (err) {
+      console.error('Failed to scan coffee bag photo', err);
+    } finally {
+      setIsScanningBag(false);
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleDeleteBean = (beanId: string) => {
@@ -286,7 +312,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.3.1
+                  v0.4.0
                 </span>
               </div>
               <p className="text-[11px] text-[#7A6E65] font-mono">
@@ -462,13 +488,36 @@ export function App() {
                     Switch between active beans with 1 tap. Grind settings & extraction ratios are remembered per bag.
                   </p>
                 </div>
-                <button
-                  onClick={() => setIsAddingBean(!isAddingBean)}
-                  className="px-3 py-1.5 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isAddingBean ? 'Close' : 'Add New Bag'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleScanBagFile}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isScanningBag}
+                    className="px-3 py-1.5 rounded-lg border border-[#72806B] bg-[#72806B]/10 hover:bg-[#72806B]/20 text-[#72806B] text-xs font-semibold flex items-center gap-1.5 transition"
+                    title="Take or upload a photo of your coffee bag label"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>{isScanningBag ? 'Scanning...' : 'Scan Bag Photo'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsAddingBean(!isAddingBean);
+                      setScanMessage(null);
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isAddingBean ? 'Close' : 'Add New Bag'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Inline Add New Bean Form */}
@@ -477,7 +526,14 @@ export function App() {
                   onSubmit={handleCreateNewBean}
                   className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3 animate-fadeIn"
                 >
-                  <div className="text-xs font-bold text-[#2C2018] uppercase">Add Coffee Bean To Vault</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-bold text-[#2C2018] uppercase">Add Coffee Bean To Vault</div>
+                    {scanMessage && (
+                      <span className="text-[11px] text-[#72806B] font-mono font-semibold animate-pulse">
+                        {scanMessage}
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Bean Origin / Name</label>

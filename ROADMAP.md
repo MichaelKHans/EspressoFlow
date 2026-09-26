@@ -36,11 +36,14 @@
 
 ---
 
-## 🏷️ FASE 4: BEAN SCANNER & GRINDER PROFILES
-- [ ] Kaffe-journal og logbog over tidligere bryg
-- [ ] AI fotoscanning af kaffepose (OCR af ristedato, bønnetype, oprindelse)
-- [ ] Kværnprofiler (DF64, Eureka Mignon, Fellow Opus, Sage/Breville m.fl.) med trinvise klik-anbefalinger
-- [ ] $CO_2$ afgasnings-alarm ved friskristede bønner
+## 🏷️ FASE 4: BEAN VAULT, CREMASHOP KVÆRNKATALOG & DIAL-IN ENGINE (AFSLUTTET)
+- [x] Kaffe-journal og logbog over tidligere bryg med split-tider og kanalisering
+- [x] Coffee Bean Vault (multi-bag management) med husket formalingsgrad og ratio per pose
+- [x] CremaShop.dk Kværnkatalog (Baratza Encore ESP Pro, Eureka Specialità/Libra/Zero/Manuale, Varia VS3/VS4/VS6, Sage Smart/Dose, Timemore, DF64, Niche, Fellow m.fl.)
+- [x] Matematisk kværn-kalibreringsberegner (`GRINDER_CALIBRATIONS`) med præcise micro-steps/divisions
+- [x] Ristegrads-profiler (Light, Medium, Med-Dark, Dark) og ratio-presets (Ristretto, Standard, Lungo, Allongé)
+- [x] AI fotoscanning af kaffepose (`parseCoffeeBagPhoto`) via mobil kamera-trigger
+- [x] $CO_2$ afgasnings-alarm ved friskristede bønner (< 4 dage)
 
 ---
 

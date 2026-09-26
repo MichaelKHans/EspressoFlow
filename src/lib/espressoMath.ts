@@ -152,10 +152,38 @@ export function detectChanneling(points: ShotDataPoint[]): boolean {
   return analyzeChanneling(points).detected;
 }
 
+export const GRINDER_CALIBRATIONS: Record<string, { secondsPerStep: number; unitName: string }> = {
+  'Baratza Encore ESP Pro': { secondsPerStep: 2.5, unitName: 'micro-steps' },
+  'Baratza Encore ESP': { secondsPerStep: 2.5, unitName: 'micro-steps' },
+  'Eureka Mignon Specialita 16CR': { secondsPerStep: 6.0, unitName: 'major divisions (0.2 per 1.2s)' },
+  'Eureka Mignon Manuale / Silenzio 15BL': { secondsPerStep: 6.0, unitName: 'major divisions' },
+  'Eureka Mignon Libra (Grind-by-Weight)': { secondsPerStep: 6.0, unitName: 'divisions' },
+  'Eureka Mignon Zero / Oro Single Dose': { secondsPerStep: 5.0, unitName: 'dial marks' },
+  'Varia VS3 (Gen 2)': { secondsPerStep: 4.0, unitName: 'marks' },
+  'Varia VS4': { secondsPerStep: 3.5, unitName: 'marks' },
+  'Sage The Smart Grinder Pro': { secondsPerStep: 2.0, unitName: 'steps' },
+  'Sage The Dose Control Pro': { secondsPerStep: 2.0, unitName: 'steps' },
+  'Fellow Opus Conical': { secondsPerStep: 2.5, unitName: 'micro-notches' },
+  'Baratza Sette 270 / 270Wi': { secondsPerStep: 2.0, unitName: 'macro/micro steps' },
+  'DF64 Gen 2 (Single Dose)': { secondsPerStep: 2.0, unitName: 'collar ticks' },
+  'Niche Zero (Conical)': { secondsPerStep: 1.5, unitName: 'calibration marks' },
+  'Timemore Sculptor 064S / 078S': { secondsPerStep: 2.5, unitName: 'stepless marks' },
+  'Wilfa Uniform WSFBS-100B': { secondsPerStep: 2.5, unitName: 'steps' },
+  'Lelit Fred PL043MM': { secondsPerStep: 8.0, unitName: 'worm screw turns' },
+  '1Zpresso J-Ultra / J-Max': { secondsPerStep: 3.0, unitName: 'clicks' },
+  'Comandante C40 MK4': { secondsPerStep: 3.5, unitName: 'clicks' },
+  'Mahlkönig X54 Allround Home': { secondsPerStep: 3.0, unitName: 'dial marks' },
+  'Varia VS6 Commercial Grade': { secondsPerStep: 3.0, unitName: 'micrometric ticks' },
+  'Timemore Bricks 01S Electric': { secondsPerStep: 2.5, unitName: 'notches' },
+  'Timemore Whirly 01S Portable': { secondsPerStep: 3.0, unitName: 'clicks' },
+  'DeLonghi KG79': { secondsPerStep: 2.0, unitName: 'steps' },
+};
+
 export interface DialInAdvice {
   summary: string;
   grindAdvice: 'finer' | 'coarser' | 'keep';
   grindDeltaSteps: number;
+  grinderSpecificAdvice?: string;
   puckAdvice?: string;
   preInfusionAdvice?: string;
   roastAdvice?: string;
@@ -163,7 +191,7 @@ export interface DialInAdvice {
 }
 
 /**
- * Generates barista tech dial-in advice from flow curve, pre-infusion, user taste, and roast level
+ * Generates barista tech dial-in advice from flow curve, pre-infusion, user taste, roast level, and specific grinder calibration
  */
 export function generateDialInAdvice(
   totalTimeSeconds: number,
@@ -172,7 +200,9 @@ export function generateDialInAdvice(
   channeling: boolean | ChannelingEvent,
   taste?: TasteRating,
   preInfusionSeconds?: number,
-  roastLevel?: RoastLevel
+  roastLevel?: RoastLevel,
+  grinderName?: string,
+  currentGrindSetting?: string
 ): DialInAdvice {
   const isChanneling = typeof channeling === 'boolean' ? channeling : channeling.detected;
   const channelingEvent = typeof channeling === 'object' ? channeling : undefined;
@@ -210,6 +240,31 @@ export function generateDialInAdvice(
     roastNotice = 'Dark roasts extract rapidly. Pull as a Ristretto (1:1.5 - 1:1.8) with short contact time to avoid bitterness.';
   }
 
+  // Calculate specific grinder step adjustments
+  const targetTime = 28.0;
+  const timeDifference = targetTime - totalTimeSeconds;
+  let grinderAdvice: string | undefined;
+
+  const matchedGrinderKey = grinderName
+    ? Object.keys(GRINDER_CALIBRATIONS).find((k) => grinderName.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(grinderName.toLowerCase()))
+    : undefined;
+  const calibration = matchedGrinderKey ? GRINDER_CALIBRATIONS[matchedGrinderKey] : undefined;
+
+  if (calibration && Math.abs(timeDifference) >= 2.0 && (taste === 'sour' || taste === 'bitter' || totalTimeSeconds < 24 || totalTimeSeconds > 32)) {
+    const rawSteps = Math.abs(timeDifference) / calibration.secondsPerStep;
+    const roundedSteps = Math.max(0.5, Math.round(rawSteps * 2) / 2);
+    const direction = timeDifference > 0 ? 'finer' : 'coarser';
+
+    const currentNum = currentGrindSetting ? parseFloat(currentGrindSetting) : NaN;
+    let targetSettingText = '';
+    if (!isNaN(currentNum)) {
+      const nextSetting = direction === 'finer' ? Math.max(0, currentNum - roundedSteps) : currentNum + roundedSteps;
+      targetSettingText = ` (e.g. from ${currentNum} to ${nextSetting.toFixed(1).replace('.0', '')})`;
+    }
+
+    grinderAdvice = `On your ${matchedGrinderKey || grinderName}: Adjust ${roundedSteps} ${calibration.unitName} ${direction}${targetSettingText} to compensate for ~${Math.abs(Math.round(timeDifference))}s flow variance.`;
+  }
+
   if (taste === 'sour' || totalTimeSeconds < 24) {
     const extra = roastLevel === 'light'
       ? ' For this Light Roast, consider pushing ratio to 1:2.5 (lungo) to extract ripe fruit sweetness.'
@@ -218,10 +273,11 @@ export function generateDialInAdvice(
       summary: 'Under-extracted (Fast Flow / Sour)',
       grindAdvice: 'finer',
       grindDeltaSteps: 0.5,
+      grinderSpecificAdvice: grinderAdvice,
       puckAdvice: 'Ensure even distribution before tamping.',
       preInfusionAdvice: preAdvice,
       roastAdvice: roastNotice,
-      rationale: `The shot ran fast (${totalTimeSeconds.toFixed(1)}s for ${ratio}x ratio). Water rushed through too quickly.${extra} Grind finer by 0.5 steps to increase puck resistance.`,
+      rationale: `The shot ran fast (${totalTimeSeconds.toFixed(1)}s for ${ratio}x ratio). Water rushed through too quickly.${extra} Grind finer to increase puck resistance.`,
     };
   }
 
@@ -233,10 +289,11 @@ export function generateDialInAdvice(
       summary: 'Over-extracted (Slow Flow / Bitter)',
       grindAdvice: 'coarser',
       grindDeltaSteps: 0.5,
+      grinderSpecificAdvice: grinderAdvice,
       puckAdvice: 'Verify puck headspace and basket capacity.',
       preInfusionAdvice: preAdvice,
       roastAdvice: roastNotice,
-      rationale: `The shot choked or dragged on (${totalTimeSeconds.toFixed(1)}s). The puck was too dense, extracting bitter tannins.${extra} Grind coarser by 0.5 steps for a smoother flow.`,
+      rationale: `The shot choked or dragged on (${totalTimeSeconds.toFixed(1)}s). The puck was too dense, extracting bitter tannins.${extra} Grind coarser for a smoother flow.`,
     };
   }
 
@@ -245,6 +302,7 @@ export function generateDialInAdvice(
       summary: 'Low Body / Diluted Concentration',
       grindAdvice: 'finer',
       grindDeltaSteps: 0.5,
+      grinderSpecificAdvice: grinderAdvice,
       puckAdvice: 'Increase dry dose by 0.5g while keeping target yield constant.',
       preInfusionAdvice: preAdvice,
       roastAdvice: roastNotice,
