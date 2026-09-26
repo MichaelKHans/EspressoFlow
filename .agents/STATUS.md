@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Global-First Letvægts i18n Motor (v0.7.0)
+- **i18n Arkitektur:** Etableret fjerlet, typesikker `src/i18n/` translations motor (0 KB eksterne afhængigheder).
+- **Sprogpakker:** Engelsk som Single Source of Truth + fail-safe fallback, pilotpakker for Tysk (DE) og Dansk (DA) med fuld bevarelse af universelle specialty barista-termer.
+- **Sprogvælger:** Integreret i header og som dedikeret indstillingskort under *Beans & Gear*.
+- **Opdaterede Regler:** Regel 4 i `.agents/rules/projektinstrukser.md` opdateret til global-first i18n standard.
+
 ### 2026-09-26 -- Adaptiv Mellem-Skærm Top-Navigation (v0.6.6)
 - **Top-Navigation Breakpoint (380px+):** Implementeret `--breakpoint-xs: 380px`, så fulde titler (`Coffee Bar`, `Scale Cam`, `Logbook`, `Beans & Gear`) vises på alle normale smartphones og tablets, mens ultrakompakte titler (`Bar`, `Gear` osv.) reserveres til ekstremt smalle skærme (<380px).
 

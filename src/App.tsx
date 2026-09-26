@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, FlaskConical, Barcode } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, FlaskConical, Barcode, Globe } from 'lucide-react';
+import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
 import { TasteFeedback } from './components/TasteFeedback';
@@ -43,6 +44,7 @@ import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoM
 import { parseCoffeeBagPhoto } from './lib/bagScanner';
 
 export function App() {
+  const { t, language, setLanguage, supportedLanguages } = useTranslation();
   const [activeTab, setActiveTab] = useState<'drinks' | 'monitor' | 'logbook' | 'equipment'>('drinks');
   const [activeDrinkId, setActiveDrinkId] = useState<string>('cappuccino');
   const [isDialInWizardOpen, setIsDialInWizardOpen] = useState<boolean>(false);
@@ -441,16 +443,28 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.6.6
+                  v0.7.0
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
-                Precision Scale OCR & Flow Dynamics
+                {t('app.subtitle')}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Language Switcher */}
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+              className="text-[10px] sm:text-[11px] font-mono px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full border border-[#E8DFD5] bg-[#FFFDF9] text-[#2C2018] cursor-pointer hover:border-[#C26D52] transition focus:outline-none"
+              title="Select App Language"
+            >
+              <option value="en">🇬🇧 EN</option>
+              <option value="de">🇩🇪 DE</option>
+              <option value="da">🇩🇰 DA</option>
+            </select>
+
             {/* Trial / Pro Badge */}
             <button
               onClick={() => setIsPaywallOpen(true)}
@@ -462,8 +476,8 @@ export function App() {
             >
               <ShieldCheck className="w-3 h-3" />
               {accessState.isProLifetime
-                ? 'PRO LIFETIME'
-                : `TRIAL: ${accessState.daysRemainingInTrial}D`}
+                ? t('app.pro_lifetime')
+                : t('app.trial_days', { days: accessState.daysRemainingInTrial })}
             </button>
           </div>
         </div>
@@ -481,8 +495,8 @@ export function App() {
             >
               <Coffee className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'drinks' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="xs:hidden">Bar</span>
-                <span className="hidden xs:inline">Coffee Bar</span>
+                <span className="xs:hidden">{t('nav.bar')}</span>
+                <span className="hidden xs:inline">{t('nav.coffee_bar')}</span>
               </span>
             </button>
 
@@ -496,8 +510,8 @@ export function App() {
             >
               <Camera className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'monitor' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="xs:hidden">Scale</span>
-                <span className="hidden xs:inline">Scale Cam</span>
+                <span className="xs:hidden">{t('nav.scale')}</span>
+                <span className="hidden xs:inline">{t('nav.scale_cam')}</span>
               </span>
             </button>
 
@@ -511,8 +525,8 @@ export function App() {
             >
               <BookOpen className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'logbook' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="xs:hidden">Logs</span>
-                <span className="hidden xs:inline">Logbook</span>
+                <span className="xs:hidden">{t('nav.logs')}</span>
+                <span className="hidden xs:inline">{t('nav.logbook')}</span>
               </span>
               {shots.length > 0 && (
                 <span
@@ -537,8 +551,8 @@ export function App() {
             >
               <Sliders className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'equipment' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="xs:hidden">Gear</span>
-                <span className="hidden xs:inline">Beans & Gear</span>
+                <span className="xs:hidden">{t('nav.gear')}</span>
+                <span className="hidden xs:inline">{t('nav.beans_and_gear')}</span>
               </span>
             </button>
           </nav>
@@ -569,7 +583,7 @@ export function App() {
         {activeTab !== 'drinks' && (
         <div className="bg-[#FFFDF9] rounded-xl border border-[#E8DFD5] p-3 text-xs font-mono flex flex-wrap items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[#7A6E65]">ACTIVE BEAN:</span>
+            <span className="text-[#7A6E65]">{t('active_bean.title')}:</span>
             <select
               value={activeBeanId}
               onChange={(e) => handleSelectBean(e.target.value)}
@@ -594,7 +608,7 @@ export function App() {
             >
               {roastLevel}
             </span>
-            <span className="text-[#7A6E65]">({daysOffRoast}d off roast)</span>
+            <span className="text-[#7A6E65]">({t('active_bean.days_off_roast', { days: daysOffRoast })})</span>
             {isTooFresh && (
               <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
                 <Flame className="w-3 h-3" /> CO2 Degassing
@@ -603,21 +617,21 @@ export function App() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <div>
-              <span className="text-[#7A6E65]">RATIO: </span>
+              <span className="text-[#7A6E65]">{t('active_bean.ratio')}: </span>
               <span className="font-semibold text-[#C26D52]">
                 1:{(doseGrams > 0 ? (targetYieldGrams / doseGrams).toFixed(1) : '2.0')}
               </span>
             </div>
             <div>
-              <span className="text-[#7A6E65]">DOSE: </span>
+              <span className="text-[#7A6E65]">{t('active_bean.dose')}: </span>
               <span className="font-semibold">{doseGrams}g</span>
             </div>
             <div>
-              <span className="text-[#7A6E65]">YIELD: </span>
+              <span className="text-[#7A6E65]">{t('active_bean.yield')}: </span>
               <span className="font-semibold">{targetYieldGrams}g</span>
             </div>
             <div>
-              <span className="text-[#7A6E65]">GRIND: </span>
+              <span className="text-[#7A6E65]">{t('active_bean.grind')}: </span>
               <span className="font-semibold text-[#2C2018]">{grindSetting}</span>
               <span className="text-[10px] text-[#7A6E65]"> ({grinderName.split(' ')[0]})</span>
             </div>
@@ -1265,6 +1279,36 @@ export function App() {
                     <span>5-8s (Standard specialty)</span>
                     <span>15s (Long soak)</span>
                   </div>
+                </div>
+              </div>
+
+              {/* Language Selection Card */}
+              <div className="bg-[#FFFDF9] rounded-xl sm:rounded-2xl border border-[#E8DFD5] p-4 sm:p-5 space-y-3 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-[#C26D52]" />
+                  <h3 className="font-bold text-xs sm:text-sm text-[#2C2018] uppercase tracking-wide">
+                    {t('settings.language')}
+                  </h3>
+                </div>
+                <p className="text-[11px] text-[#7A6E65] leading-relaxed">
+                  Select your preferred language. Barista specialty coffee terms remain international.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {supportedLanguages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => setLanguage(lang.code)}
+                      className={`p-2.5 rounded-xl border text-center transition flex items-center justify-center gap-2 font-mono text-xs ${
+                        language === lang.code
+                          ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52] font-bold text-[#2C2018]'
+                          : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:bg-[#FAF7F2]/50'
+                      }`}
+                    >
+                      <span className="text-base">{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

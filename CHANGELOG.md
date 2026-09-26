@@ -4,6 +4,16 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.7.0] - 2026-09-26
+### Added
+- **Global-First Letvægts i18n Motor (Flersprogethed):**
+  - Implementeret ultra-hurtig, typesikker zero-dependency i18n arkitektur i `src/i18n/`.
+  - Single Source of Truth på engelsk (`en.ts`) med komplet fail-safe fallback, hvis nøgler mangler i andre sprog.
+  - Tilføjet pilot-sprogpakker for **Tysk (Deutsch)** og **Dansk (Dansk)** med fuld bevarelse af universelle specialty coffee termer (Pre-infusion, Channeling, Ratio, Dose, Yield, Dial-in).
+  - Sprogvælger integreret i headeren og som dedikeret kort under *Beans & Gear* indstillinger.
+  - Automatisk sprogdetektering via enhedens `navigator.language` med lagring i `localStorage`.
+  - Projektregler opdateret i `.agents/rules/projektinstrukser.md` til global-first i18n standard.
+
 ## [0.6.6] - 2026-09-26
 ### Improved
 - **Intelligent Mellem-Skærm Top-Navigation (Breakpoints til 380px+):**
