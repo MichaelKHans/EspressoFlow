@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   GRINDERS: 'espressoflow_grinders_v1',
   ACTIVE_GRINDER_ID: 'espressoflow_active_grinder_v1',
   MACHINE: 'espressoflow_machine_v1',
+  ACTIVE_BAR_DRINKS: 'espressoflow_active_bar_drinks_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -89,6 +90,18 @@ export function saveShot(shot: ShotRecord): void {
     localStorage.setItem(STORAGE_KEYS.SHOTS, JSON.stringify(updated));
   } catch (err) {
     console.error('Failed to save shot record', err);
+  }
+}
+
+export function deleteShot(shotId: string): ShotRecord[] {
+  try {
+    const current = loadShots();
+    const updated = current.filter((s) => s.id !== shotId);
+    localStorage.setItem(STORAGE_KEYS.SHOTS, JSON.stringify(updated));
+    return updated;
+  } catch (err) {
+    console.error('Failed to delete shot record', err);
+    return [];
   }
 }
 
@@ -415,3 +428,32 @@ export function getDefaultGrinders(): GrinderProfile[] {
     },
   ];
 }
+
+const DEFAULT_ACTIVE_BAR_DRINKS: string[] = [
+  'cappuccino',
+  'espresso',
+  'flat-white',
+  'cortado',
+  'latte',
+  'americano',
+];
+
+export function loadActiveBarDrinkIds(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ACTIVE_BAR_DRINKS);
+    if (!raw) return DEFAULT_ACTIVE_BAR_DRINKS;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_ACTIVE_BAR_DRINKS;
+  } catch {
+    return DEFAULT_ACTIVE_BAR_DRINKS;
+  }
+}
+
+export function saveActiveBarDrinkIds(drinkIds: string[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_BAR_DRINKS, JSON.stringify(drinkIds));
+  } catch (err) {
+    console.error('Failed to save active bar drinks', err);
+  }
+}
+

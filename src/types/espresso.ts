@@ -38,6 +38,8 @@ export interface ShotRecord {
   roastDate?: string;
   roastLevel?: RoastLevel;
   ratioStyle?: RatioStyle;
+  drinkId?: string;
+  drinkName?: string;
   doseGrams: number;
   targetYieldGrams: number;
   actualYieldGrams: number;
@@ -79,25 +81,40 @@ export interface UserAccessState {
   daysRemainingInTrial: number;
 }
 
-export type DrinkId = 'espresso' | 'cappuccino' | 'flat-white' | 'cortado' | 'lungo' | 'americano';
+export type DrinkId =
+  | 'cappuccino'
+  | 'espresso'
+  | 'flat-white'
+  | 'cortado'
+  | 'latte'
+  | 'macchiato'
+  | 'ristretto'
+  | 'lungo'
+  | 'americano'
+  | 'affogato'
+  | 'cafe-bombon'
+  | 'espresso-tonic';
 
 export interface DrinkLayer {
   name: string;
   percentage: number; // 0-100
   color: string;
   description: string;
+  volumeMl?: number;
 }
 
 export interface DrinkRecipe {
   id: DrinkId;
   name: string;
   subtitle: string;
-  category: 'black' | 'milk';
+  category: 'black' | 'milk' | 'dessert';
   defaultDoseGrams: number;
   targetYieldGrams: number;
   targetRatio: number;
   ratioStyle: RatioStyle;
   expectedTimeSeconds: number;
+  cupVolumeMl?: number;
+  isDefaultActive?: boolean;
   milkGuide?: {
     volumeMl: number;
     tempCelsius: number;

@@ -117,7 +117,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             fontWeight="bold"
             opacity="0.8"
           >
-            ★ GOLDEN ZONE (1.2–1.6 g/s)
+            GOLDEN ZONE (1.2–1.6 g/s)
           </text>
 
           {/* Horizontal grid lines */}
@@ -205,7 +205,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
                   fontWeight="bold"
                   fontSize="9"
                 >
-                  ⚠️ SPIKE {channelingEvent.flowSpikeGps} g/s
+                  SPIKE {channelingEvent.flowSpikeGps} g/s
                 </text>
               </g>
             )}

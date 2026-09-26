@@ -4,6 +4,17 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.5.1] - 2026-09-26
+### Fixed
+- **Blank Screen Fix on Production (Vercel):** Løst Temporal Dead Zone (TDZ) ReferenceError i `src/App.tsx`, hvor `currentGrinder` refererede til `grinderName` før dets statserklæring.
+- **100% Emoji Purge:** Total udrensning af samtlige emojis i hele kildekoden (`TasteFeedback`, `FlowChart`, `DrinkSelector`, `App.tsx`), erstattet med præcise Lucide vector-ikoner (`Target`, `Flame`, `Clock`, `Lightbulb`, `FlaskConical`, `Coffee`, `Layers`, `Sliders`).
+
+### Added
+- **Sletning af Logbogs-indtastninger (`Logbook.tsx` & `storage.ts`):** Sikker sletning af individuelle bryg-logs ved fejl med 2-trins bekræftelses-knap ("Delete? Check / Cancel") så utilsigtede tryk på mobilen undgås.
+- **Logbog Opdelt efter Drikke:** Dynamisk filterbånd i toppen af logbogen med filtre for "All Drinks", "Cappuccino", "Double Espresso", "Flat White" osv., samt dedikeret drikkebadge på alle log-kort.
+- **Tilpasning af Drinks Bar ("Active Bar Deck"):** Brugeren kan nu frit vælge hvilke drikke der vises på den daglige kvik-bar via "Customize Bar" modulet (`loadActiveBarDrinkIds` / `saveActiveBarDrinkIds`), mens hele 12-drikkes biblioteket altid kan tilgås i kataloget.
+- **Arkitektonisk Billede 3 Kop-Stil:** Implementeret Swiss-guide inspireret kop-anatomi ("Coffee The Essential Guide") med præcise væskelag, farvekodning, og specifikation af volumen i ml per lag for alle specialitetsdrikke.
+
 ## [0.5.0] - 2026-09-26
 ### Added
 - **Digital Barista Deck & Smart Drink Selector (`DrinkSelector.tsx`):** Startskærmen byder nu brugeren velkommen som på en prosumer digital espressomaskine med tidsstyret barista-hilsen, active vault bag chip og hurtig-vælger.

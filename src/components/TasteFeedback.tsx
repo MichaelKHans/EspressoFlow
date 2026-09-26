@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { TasteRating, ShotRecord } from '../types/espresso';
 import { generateDialInAdvice, type DialInAdvice } from '../lib/espressoMath';
-import { Sparkles, Sliders, Check, BookmarkPlus, Clock, AlertCircle } from 'lucide-react';
+import { Sparkles, Sliders, Check, BookmarkPlus, Clock, AlertCircle, Target, Flame, Lightbulb } from 'lucide-react';
 
 interface TasteFeedbackProps {
   lastShot: ShotRecord;
@@ -98,7 +98,7 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
 
         {advice.grinderSpecificAdvice && (
           <div className="text-[11px] text-[#2C2018] font-mono bg-white p-2.5 rounded-lg border-2 border-[#C26D52]/40 shadow-xs flex items-start gap-2">
-            <span className="text-sm">🎯</span>
+            <Target className="w-4 h-4 text-[#C26D52] shrink-0 mt-0.5" />
             <div>
               <strong className="text-[#C26D52] uppercase text-[10px] tracking-wider block mb-0.5">
                 Calibrated Grinder Step Adjustment:
@@ -109,20 +109,29 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
         )}
 
         {advice.roastAdvice && (
-          <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5]">
-            🔥 <strong className="text-[#2C2018]">Roast Profile {lastShot.roastLevel ? `(${lastShot.roastLevel})` : ''}:</strong> {advice.roastAdvice}
+          <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5] flex items-center gap-1.5">
+            <Flame className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
+            <span>
+              <strong className="text-[#2C2018]">Roast Profile {lastShot.roastLevel ? `(${lastShot.roastLevel})` : ''}:</strong> {advice.roastAdvice}
+            </span>
           </div>
         )}
 
         {advice.preInfusionAdvice && (
-          <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5]">
-            ⏱️ <strong className="text-[#2C2018]">Pre-Infusion:</strong> {advice.preInfusionAdvice}
+          <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5] flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-[#7A6E65] shrink-0" />
+            <span>
+              <strong className="text-[#2C2018]">Pre-Infusion:</strong> {advice.preInfusionAdvice}
+            </span>
           </div>
         )}
 
         {advice.puckAdvice && (
-          <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5]">
-            💡 <strong className="text-[#2C2018]">Puck Prep:</strong> {advice.puckAdvice}
+          <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5] flex items-center gap-1.5">
+            <Lightbulb className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
+            <span>
+              <strong className="text-[#2C2018]">Puck Prep:</strong> {advice.puckAdvice}
+            </span>
           </div>
         )}
       </div>

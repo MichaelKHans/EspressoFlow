@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Coffee, Sliders, BookOpen, Sparkles, Flame, Plus, Check, Trash2, Layers, Camera } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, Sparkles, Flame, Plus, Check, Trash2, Layers, Camera, FlaskConical } from 'lucide-react';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
 import { TasteFeedback } from './components/TasteFeedback';
@@ -23,6 +23,7 @@ import type {
 import {
   loadShots,
   saveShot,
+  deleteShot,
   loadUserAccess,
   saveProStatus,
   loadBeans,
@@ -74,16 +75,7 @@ export function App() {
     grinderName: 'Eureka Mignon Specialita',
   };
 
-  // Active Grinder derived
-  const currentGrinder = grinders.find((g) => g.name === grinderName) || grinders[0] || {
-    id: 'default',
-    name: 'Baratza Encore ESP Pro',
-    type: 'stepped' as const,
-    defaultSetting: '15',
-    stepUnit: 'micro-steps',
-  };
-
-  // Brewing & Equipment Parameters
+  // Brewing & Equipment Parameters (Declared BEFORE currentGrinder to prevent TDZ crash)
   const [doseGrams, setDoseGrams] = useState<number>(currentBean.doseGrams);
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(currentBean.targetYieldGrams);
   const [grinderName, setGrinderName] = useState<string>(currentBean.grinderName);
@@ -94,6 +86,15 @@ export function App() {
   const [roastDate, setRoastDate] = useState<string>(currentBean.roastDate);
   const [roastLevel, setRoastLevel] = useState<RoastLevel>(currentBean.roastLevel);
   const [ratioStyle, setRatioStyle] = useState<RatioStyle>(currentBean.ratioStyle);
+
+  // Active Grinder derived safely after grinderName is declared
+  const currentGrinder = grinders.find((g) => g.name === grinderName) || grinders[0] || {
+    id: 'default',
+    name: 'Baratza Encore ESP Pro',
+    type: 'stepped' as const,
+    defaultSetting: '15',
+    stepUnit: 'micro-steps',
+  };
 
   // Brewing State
   const [isBrewing, setIsBrewing] = useState<boolean>(false);
@@ -242,7 +243,7 @@ export function App() {
       setNewBeanRoastDate(scanned.roastDate);
       setNewBeanRoastLevel(scanned.roastLevel);
       setIsAddingBean(true);
-      setScanMessage(`✨ Scanned label: "${scanned.name}" (${scanned.roastLevel} roast)`);
+      setScanMessage(`Scanned label: "${scanned.name}" (${scanned.roastLevel} roast)`);
     } catch (err) {
       console.error('Failed to scan coffee bag photo', err);
     } finally {
@@ -281,6 +282,8 @@ export function App() {
     const avgFlow = timeSeconds > 0 ? Math.round((finalWeight / timeSeconds) * 100) / 100 : 0;
     const peakFlow = points.reduce((max, p) => Math.max(max, p.flowRateGps), 0);
 
+    const activeDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId);
+
     const newShot: ShotRecord = {
       id: `shot-${Date.now()}`,
       timestamp: new Date().toISOString(),
@@ -288,6 +291,8 @@ export function App() {
       roastDate: roastDate,
       roastLevel: roastLevel,
       ratioStyle: ratioStyle,
+      drinkId: activeDrinkId,
+      drinkName: activeDrink?.name || 'Double Espresso',
       doseGrams: doseGrams,
       targetYieldGrams: targetYieldGrams,
       actualYieldGrams: finalWeight,
@@ -305,6 +310,11 @@ export function App() {
     };
 
     setLastFinishedShot(newShot);
+  };
+
+  const handleDeleteShot = (shotId: string) => {
+    const updated = deleteShot(shotId);
+    setShots(updated);
   };
 
   const handleSaveFeedback = (taste: TasteRating, notes: string) => {
@@ -349,7 +359,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.5.0
+                  v0.5.1
                 </span>
               </div>
               <p className="text-[11px] text-[#7A6E65] font-mono">
@@ -531,7 +541,7 @@ export function App() {
 
         {/* Tab 2: Analog Logbook */}
         {activeTab === 'logbook' && (
-          <Logbook shots={shots} />
+          <Logbook shots={shots} onDeleteShot={handleDeleteShot} />
         )}
 
         {/* Tab 3: Beans & Gear */}
@@ -804,7 +814,7 @@ export function App() {
 
               {/* Barista Chemistry Advice Banner */}
               <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[11px] text-[#2C2018] leading-relaxed flex items-start gap-2">
-                <span className="text-sm">🔬</span>
+                <FlaskConical className="w-4 h-4 text-[#C26D52] shrink-0 mt-0.5" />
                 <div>
                   <strong className="text-[#C26D52] uppercase text-[10px] tracking-wider block mb-0.5">
                     Extraction Physics for {ROAST_PRESETS[roastLevel].label}:
