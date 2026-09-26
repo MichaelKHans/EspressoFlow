@@ -22,7 +22,8 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
     lastShot.actualYieldGrams,
     lastShot.channeling || lastShot.channelingDetected,
     selectedTaste,
-    lastShot.preInfusionSeconds
+    lastShot.preInfusionSeconds,
+    lastShot.roastLevel
   );
 
   const handleSave = () => {
@@ -92,6 +93,12 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
         </div>
 
         <p className="text-xs text-[#2C2018]">{advice.rationale}</p>
+
+        {advice.roastAdvice && (
+          <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5]">
+            🔥 <strong className="text-[#2C2018]">Roast Profile {lastShot.roastLevel ? `(${lastShot.roastLevel})` : ''}:</strong> {advice.roastAdvice}
+          </div>
+        )}
 
         {advice.preInfusionAdvice && (
           <div className="text-[11px] text-[#7A6E65] font-mono bg-white p-2 rounded-lg border border-[#E8DFD5]">

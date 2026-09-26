@@ -18,9 +18,13 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] The Golden Zone (1.2–1.6 g/s) og First Drip markør i `FlowChart.tsx`
 - [x] Matematisk kanaliserings-detektor (`analyzeChanneling`) med spike g/s & tid
 - [x] Espressomaskine vælger og justerbar pre-infusion skyder (0–15s)
+- [x] Coffee Bean Vault (flere aktive poser i rotation, gemmer ratio & kværnindstilling)
+- [x] Ristegradsvælger (Light / Medium / Med-Dark / Dark) med celledensitets-anbefalinger
+- [x] Drikke-Ratio Presets (Ristretto 1:1.5, Standard 1:2.0, Lungo 1:2.5, Allongé 1:3.0)
+- [x] Kværnkatalog inkl. Baratza Encore ESP (1–20 micro-steps), Eureka, DF64, Niche m.fl.
 - [ ] AI fotoscanning af kaffepose (OCR af ristedato, bønnetype, vaskeproces)
-- [ ] Kværnprofil database med trin- og klik-oversættelse for mikro-justeringer
-- [ ] $CO_2$ afgasnings-alarm for friskristede bønner (< 4 dage fra ristning)
+- [ ] Kværn-oversættelse for mikro-justeringer (f.eks. +/- 1 trin på Encore ESP = +/- 2.5s udtræk)
+- [x] $CO_2$ afgasnings-alarm for friskristede bønner (< 4 dage fra ristning)
 
 ---
 

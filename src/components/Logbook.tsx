@@ -54,6 +54,11 @@ export const Logbook: React.FC<LogbookProps> = ({ shots }) => {
                     #{shotNumber}
                   </span>
                   <span className="font-bold text-[#2C2018]">{shot.coffeeName}</span>
+                  {shot.roastLevel && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded border uppercase font-mono tracking-wider font-semibold border-[#E8DFD5] bg-[#FAF7F2] text-[#7A6E65]">
+                      {shot.roastLevel}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-[#7A6E65]">
                   <Calendar className="w-3 h-3" />

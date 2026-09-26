@@ -1,4 +1,6 @@
 export type TasteRating = 'sour' | 'bitter' | 'balanced' | 'watery';
+export type RoastLevel = 'light' | 'medium' | 'medium-dark' | 'dark';
+export type RatioStyle = 'ristretto' | 'standard' | 'lungo' | 'allonge' | 'custom';
 
 export interface ShotDataPoint {
   timeSeconds: number;
@@ -14,12 +16,28 @@ export interface ChannelingEvent {
   message?: string;
 }
 
+export interface CoffeeBeanProfile {
+  id: string;
+  name: string;
+  roaster?: string;
+  roastDate: string;
+  roastLevel: RoastLevel;
+  doseGrams: number;
+  ratioStyle: RatioStyle;
+  targetYieldGrams: number;
+  grindSetting: string;
+  grinderName: string;
+  notes?: string;
+}
+
 export interface ShotRecord {
   id: string;
   timestamp: string;
   coffeeName: string;
   roaster?: string;
   roastDate?: string;
+  roastLevel?: RoastLevel;
+  ratioStyle?: RatioStyle;
   doseGrams: number;
   targetYieldGrams: number;
   actualYieldGrams: number;

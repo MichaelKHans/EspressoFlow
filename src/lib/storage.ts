@@ -1,10 +1,13 @@
-import type { ShotRecord, UserAccessState } from '../types/espresso';
+import type { ShotRecord, UserAccessState, CoffeeBeanProfile, GrinderProfile } from '../types/espresso';
 
 const STORAGE_KEYS = {
   SHOTS: 'espressoflow_shots_v1',
   ACCESS: 'espressoflow_access_v1',
-  GRINDER: 'espressoflow_grinder_v1',
-  BEAN: 'espressoflow_bean_v1',
+  BEANS: 'espressoflow_beans_v1',
+  ACTIVE_BEAN_ID: 'espressoflow_active_bean_v1',
+  GRINDERS: 'espressoflow_grinders_v1',
+  ACTIVE_GRINDER_ID: 'espressoflow_active_grinder_v1',
+  MACHINE: 'espressoflow_machine_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -142,6 +145,166 @@ function getSampleShots(): ShotRecord[] {
       tasteRating: 'sour',
       notes: 'Mid-shot channeling spike. Needs finer grind and more thorough WDT puck prep.',
       dataPoints: [],
+    },
+  ];
+}
+
+export function loadBeans(): CoffeeBeanProfile[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.BEANS);
+    return raw ? JSON.parse(raw) : getDefaultBeans();
+  } catch {
+    return getDefaultBeans();
+  }
+}
+
+export function saveBeans(beans: CoffeeBeanProfile[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.BEANS, JSON.stringify(beans));
+  } catch (err) {
+    console.error('Failed to save coffee beans', err);
+  }
+}
+
+export function getDefaultBeans(): CoffeeBeanProfile[] {
+  return [
+    {
+      id: 'bean-ethiopia',
+      name: 'Ethiopia Yirgacheffe (Washed)',
+      roaster: 'Nomad Coffee',
+      roastDate: '2026-09-14',
+      roastLevel: 'light',
+      doseGrams: 18.0,
+      ratioStyle: 'lungo',
+      targetYieldGrams: 45.0,
+      grindSetting: '1.4',
+      grinderName: 'Eureka Mignon Specialita',
+      notes: 'Floral jasmine, bergamot, peach sweetness.',
+    },
+    {
+      id: 'bean-colombia',
+      name: 'Colombia Huila Pink Bourbon',
+      roaster: 'La Cabra',
+      roastDate: '2026-09-10',
+      roastLevel: 'medium',
+      doseGrams: 18.0,
+      ratioStyle: 'standard',
+      targetYieldGrams: 36.0,
+      grindSetting: '14.0',
+      grinderName: 'DF64 Gen 2',
+      notes: 'Juicy red apple, cane sugar, creamy chocolate body.',
+    },
+    {
+      id: 'bean-napoli',
+      name: 'Napoli Dark Velvet Espresso',
+      roaster: 'Caffè Vergnano',
+      roastDate: '2026-09-02',
+      roastLevel: 'dark',
+      doseGrams: 18.0,
+      ratioStyle: 'ristretto',
+      targetYieldGrams: 27.0,
+      grindSetting: '2.2',
+      grinderName: 'Eureka Mignon Specialita',
+      notes: 'Dark cacao, toasted hazelnuts, thick crema syrup.',
+    },
+  ];
+}
+
+export function loadGrinders(): GrinderProfile[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.GRINDERS);
+    return raw ? JSON.parse(raw) : getDefaultGrinders();
+  } catch {
+    return getDefaultGrinders();
+  }
+}
+
+export function saveGrinders(grinders: GrinderProfile[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.GRINDERS, JSON.stringify(grinders));
+  } catch (err) {
+    console.error('Failed to save grinder profiles', err);
+  }
+}
+
+export function getDefaultGrinders(): GrinderProfile[] {
+  return [
+    {
+      id: 'grinder-baratza-esp',
+      name: 'Baratza Encore ESP',
+      type: 'stepped',
+      defaultSetting: '15',
+      stepUnit: 'micro-steps (1-20)',
+    },
+    {
+      id: 'grinder-eureka',
+      name: 'Eureka Mignon Specialita',
+      type: 'stepless',
+      defaultSetting: '1.4',
+      stepUnit: 'micrometric dial',
+    },
+    {
+      id: 'grinder-df64',
+      name: 'DF64 Gen 2 (Single Dose)',
+      type: 'stepless',
+      defaultSetting: '14.0',
+      stepUnit: 'collar marks',
+    },
+    {
+      id: 'grinder-niche',
+      name: 'Niche Zero (Conical)',
+      type: 'stepless',
+      defaultSetting: '17.0',
+      stepUnit: 'dial calibration marks',
+    },
+    {
+      id: 'grinder-fellow-opus',
+      name: 'Fellow Opus',
+      type: 'stepped',
+      defaultSetting: '2.0',
+      stepUnit: 'outer bevel + inner ring',
+    },
+    {
+      id: 'grinder-baratza-sette',
+      name: 'Baratza Sette 270',
+      type: 'stepped',
+      defaultSetting: '9E',
+      stepUnit: 'macro 1-31 & micro A-I',
+    },
+    {
+      id: 'grinder-sage-smart',
+      name: 'Sage / Breville Smart Grinder Pro',
+      type: 'stepped',
+      defaultSetting: '12',
+      stepUnit: 'steps (1-60)',
+    },
+    {
+      id: 'grinder-timemore-sculptor',
+      name: 'Timemore Sculptor 064S / 078S',
+      type: 'stepless',
+      defaultSetting: '2.5',
+      stepUnit: 'dial marks',
+    },
+    {
+      id: 'grinder-1zpresso',
+      name: '1Zpresso J-Ultra / J-Max',
+      type: 'stepped',
+      defaultSetting: '1.3.5',
+      stepUnit: 'rotations & clicks (8.4µm)',
+    },
+    {
+      id: 'grinder-comandante',
+      name: 'Comandante C40 MK4',
+      type: 'stepped',
+      defaultSetting: '13 clicks',
+      stepUnit: 'clicks (30µm per click)',
+    },
+    {
+      id: 'grinder-mahlkonig',
+      name: 'Mahlkönig X54 / EK43',
+      type: 'stepless',
+      defaultSetting: '3.5',
+      stepUnit: 'stepless dial indicator',
     },
   ];
 }

@@ -1,14 +1,32 @@
 import { useState, useEffect } from 'react';
-import { Coffee, Sliders, BookOpen, Sparkles, Flame } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, Sparkles, Flame, Plus, Check, Trash2, Layers } from 'lucide-react';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
 import { TasteFeedback } from './components/TasteFeedback';
 import { Logbook } from './components/Logbook';
 import { PaywallModal } from './components/PaywallModal';
 import { LegalModal } from './components/LegalModal';
-import type { ShotDataPoint, ShotRecord, TasteRating, UserAccessState } from './types/espresso';
-import { loadShots, saveShot, loadUserAccess, saveProStatus } from './lib/storage';
-import { analyzeChanneling } from './lib/espressoMath';
+import type {
+  ShotDataPoint,
+  ShotRecord,
+  TasteRating,
+  UserAccessState,
+  CoffeeBeanProfile,
+  GrinderProfile,
+  RoastLevel,
+  RatioStyle,
+} from './types/espresso';
+import {
+  loadShots,
+  saveShot,
+  loadUserAccess,
+  saveProStatus,
+  loadBeans,
+  saveBeans,
+  loadGrinders,
+  saveGrinders,
+} from './lib/storage';
+import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoMath';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'monitor' | 'logbook' | 'equipment'>('monitor');
@@ -20,20 +38,48 @@ export function App() {
     daysRemainingInTrial: 7,
   });
 
+  // Bean Vault & Multi-Grinder State
+  const [beans, setBeans] = useState<CoffeeBeanProfile[]>(() => loadBeans());
+  const [activeBeanId, setActiveBeanId] = useState<string>(() => loadBeans()[0]?.id || 'bean-ethiopia');
+  const [grinders, setGrinders] = useState<GrinderProfile[]>(() => loadGrinders());
+  const [isAddingBean, setIsAddingBean] = useState<boolean>(false);
+  const [newBeanName, setNewBeanName] = useState<string>('');
+  const [newBeanRoaster, setNewBeanRoaster] = useState<string>('');
+  const [newBeanRoastLevel, setNewBeanRoastLevel] = useState<RoastLevel>('medium');
+  const [newBeanRoastDate, setNewBeanRoastDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
+
+  // Active Bean derived
+  const currentBean = beans.find((b) => b.id === activeBeanId) || beans[0] || {
+    id: 'default',
+    name: 'Ethiopia Yirgacheffe',
+    roaster: 'Nomad Coffee',
+    roastDate: '2026-09-14',
+    roastLevel: 'light' as RoastLevel,
+    doseGrams: 18.0,
+    ratioStyle: 'lungo' as RatioStyle,
+    targetYieldGrams: 45.0,
+    grindSetting: '1.4',
+    grinderName: 'Eureka Mignon Specialita',
+  };
+
+  // Brewing & Equipment Parameters
+  const [doseGrams, setDoseGrams] = useState<number>(currentBean.doseGrams);
+  const [targetYieldGrams, setTargetYieldGrams] = useState<number>(currentBean.targetYieldGrams);
+  const [grinderName, setGrinderName] = useState<string>(currentBean.grinderName);
+  const [grindSetting, setGrindSetting] = useState<string>(currentBean.grindSetting);
+  const [machineName, setMachineName] = useState<string>('Sage / Breville Dual Boiler');
+  const [machinePreInfusion, setMachinePreInfusion] = useState<number>(6.0);
+  const [coffeeBeanName, setCoffeeBeanName] = useState<string>(currentBean.name);
+  const [roastDate, setRoastDate] = useState<string>(currentBean.roastDate);
+  const [roastLevel, setRoastLevel] = useState<RoastLevel>(currentBean.roastLevel);
+  const [ratioStyle, setRatioStyle] = useState<RatioStyle>(currentBean.ratioStyle);
+
   // Brewing State
   const [isBrewing, setIsBrewing] = useState<boolean>(false);
   const [currentPoints, setCurrentPoints] = useState<ShotDataPoint[]>([]);
   const [lastFinishedShot, setLastFinishedShot] = useState<ShotRecord | null>(null);
-
-  // Equipment Settings
-  const [doseGrams, setDoseGrams] = useState<number>(18.0);
-  const [targetYieldGrams, setTargetYieldGrams] = useState<number>(36.0);
-  const [grinderName, setGrinderName] = useState<string>('Eureka Mignon Specialita');
-  const [grindSetting, setGrindSetting] = useState<string>('1.4');
-  const [machineName, setMachineName] = useState<string>('Sage / Breville Dual Boiler');
-  const [machinePreInfusion, setMachinePreInfusion] = useState<number>(6.0);
-  const [coffeeBeanName, setCoffeeBeanName] = useState<string>('Ethiopia Yirgacheffe');
-  const [roastDate, setRoastDate] = useState<string>('2026-09-15');
 
   // Modals
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
@@ -54,6 +100,103 @@ export function App() {
       setLegalModalTab('support');
     }
   }, []);
+
+  const handleSelectBean = (beanId: string) => {
+    setActiveBeanId(beanId);
+    const selected = beans.find((b) => b.id === beanId);
+    if (selected) {
+      setCoffeeBeanName(selected.name);
+      setRoastDate(selected.roastDate);
+      setRoastLevel(selected.roastLevel);
+      setRatioStyle(selected.ratioStyle);
+      setDoseGrams(selected.doseGrams);
+      setTargetYieldGrams(selected.targetYieldGrams);
+      setGrinderName(selected.grinderName);
+      setGrindSetting(selected.grindSetting);
+    }
+  };
+
+  const handleSetRoastLevel = (level: RoastLevel) => {
+    setRoastLevel(level);
+    const preset = ROAST_PRESETS[level];
+    const newRatio = preset.defaultRatio;
+    setRatioStyle(newRatio);
+    const mult = RATIO_PRESETS[newRatio].multiplier;
+    const newYield = Math.round(doseGrams * mult * 10) / 10;
+    setTargetYieldGrams(newYield);
+
+    const updated = beans.map((b) =>
+      b.id === activeBeanId
+        ? { ...b, roastLevel: level, ratioStyle: newRatio, targetYieldGrams: newYield }
+        : b
+    );
+    setBeans(updated);
+    saveBeans(updated);
+  };
+
+  const handleSetRatioStyle = (style: RatioStyle) => {
+    setRatioStyle(style);
+    if (style !== 'custom') {
+      const mult = RATIO_PRESETS[style].multiplier;
+      const newYield = Math.round(doseGrams * mult * 10) / 10;
+      setTargetYieldGrams(newYield);
+
+      const updated = beans.map((b) =>
+        b.id === activeBeanId ? { ...b, ratioStyle: style, targetYieldGrams: newYield } : b
+      );
+      setBeans(updated);
+      saveBeans(updated);
+    }
+  };
+
+  const handleUpdateBeanField = (patch: Partial<CoffeeBeanProfile>) => {
+    const updated = beans.map((b) => (b.id === activeBeanId ? { ...b, ...patch } : b));
+    setBeans(updated);
+    saveBeans(updated);
+  };
+
+  const handleCreateNewBean = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBeanName.trim()) return;
+    const defaultRatio = ROAST_PRESETS[newBeanRoastLevel].defaultRatio;
+    const mult = RATIO_PRESETS[defaultRatio].multiplier;
+    const newBean: CoffeeBeanProfile = {
+      id: `bean-${Date.now()}`,
+      name: newBeanName.trim(),
+      roaster: newBeanRoaster.trim() || undefined,
+      roastDate: newBeanRoastDate,
+      roastLevel: newBeanRoastLevel,
+      doseGrams: 18.0,
+      ratioStyle: defaultRatio,
+      targetYieldGrams: Math.round(18.0 * mult * 10) / 10,
+      grindSetting: grindSetting,
+      grinderName: grinderName,
+    };
+
+    const updated = [newBean, ...beans];
+    setBeans(updated);
+    saveBeans(updated);
+    setActiveBeanId(newBean.id);
+    setCoffeeBeanName(newBean.name);
+    setRoastDate(newBean.roastDate);
+    setRoastLevel(newBean.roastLevel);
+    setRatioStyle(newBean.ratioStyle);
+    setDoseGrams(newBean.doseGrams);
+    setTargetYieldGrams(newBean.targetYieldGrams);
+    setIsAddingBean(false);
+    setNewBeanName('');
+    setNewBeanRoaster('');
+  };
+
+  const handleDeleteBean = (beanId: string) => {
+    if (beans.length <= 1) return;
+    const updated = beans.filter((b) => b.id !== beanId);
+    setBeans(updated);
+    saveBeans(updated);
+    if (activeBeanId === beanId && updated[0]) {
+      handleSelectBean(updated[0].id);
+    }
+  };
 
   const handleBrewStart = () => {
     setIsBrewing(true);
@@ -80,6 +223,8 @@ export function App() {
       timestamp: new Date().toISOString(),
       coffeeName: coffeeBeanName,
       roastDate: roastDate,
+      roastLevel: roastLevel,
+      ratioStyle: ratioStyle,
       doseGrams: doseGrams,
       targetYieldGrams: targetYieldGrams,
       actualYieldGrams: finalWeight,
@@ -141,7 +286,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.3.0
+                  v0.3.1
                 </span>
               </div>
               <p className="text-[11px] text-[#7A6E65] font-mono">
@@ -201,7 +346,7 @@ export function App() {
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
-            Grinder & Beans
+            Beans & Gear
           </button>
         </div>
       </header>
@@ -210,9 +355,32 @@ export function App() {
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
         {/* Quick Context Bar */}
         <div className="bg-[#FFFDF9] rounded-xl border border-[#E8DFD5] p-3 text-xs font-mono flex flex-wrap items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-[#7A6E65]">BEAN:</span>
-            <span className="font-semibold text-[#2C2018]">{coffeeBeanName}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[#7A6E65]">ACTIVE BEAN:</span>
+            <select
+              value={activeBeanId}
+              onChange={(e) => handleSelectBean(e.target.value)}
+              className="bg-white border border-[#E8DFD5] rounded-md px-2 py-1 font-bold text-[#2C2018] text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+            >
+              {beans.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name} ({b.roastLevel.toUpperCase()})
+                </option>
+              ))}
+            </select>
+            <span
+              className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${
+                roastLevel === 'light'
+                  ? 'bg-amber-50 text-amber-800 border-amber-300'
+                  : roastLevel === 'medium'
+                  ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                  : roastLevel === 'medium-dark'
+                  ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
+                  : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
+              }`}
+            >
+              {roastLevel}
+            </span>
             <span className="text-[#7A6E65]">({daysOffRoast}d off roast)</span>
             {isTooFresh && (
               <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
@@ -220,23 +388,25 @@ export function App() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div>
-              <span className="text-[#7A6E65]">MACHINE: </span>
-              <span className="font-semibold text-[#2C2018]">{machineName.split(' ')[0]}</span>
-              <span className="text-[#7A6E65]"> (Pre: {machinePreInfusion}s)</span>
+              <span className="text-[#7A6E65]">RATIO: </span>
+              <span className="font-semibold text-[#C26D52]">
+                1:{(doseGrams > 0 ? (targetYieldGrams / doseGrams).toFixed(1) : '2.0')}
+              </span>
             </div>
             <div>
               <span className="text-[#7A6E65]">DOSE: </span>
               <span className="font-semibold">{doseGrams}g</span>
             </div>
             <div>
-              <span className="text-[#7A6E65]">TARGET: </span>
+              <span className="text-[#7A6E65]">YIELD: </span>
               <span className="font-semibold">{targetYieldGrams}g</span>
             </div>
             <div>
               <span className="text-[#7A6E65]">GRIND: </span>
-              <span className="font-semibold text-[#C26D52]">{grindSetting}</span>
+              <span className="font-semibold text-[#2C2018]">{grindSetting}</span>
+              <span className="text-[10px] text-[#7A6E65]"> ({grinderName.split(' ')[0]})</span>
             </div>
           </div>
         </div>
@@ -275,137 +445,402 @@ export function App() {
           <Logbook shots={shots} />
         )}
 
-        {/* Tab 3: Grinder & Bean Calibration */}
+        {/* Tab 3: Beans & Gear */}
         {activeTab === 'equipment' && (
-          <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-6 shadow-xs space-y-6 font-mono text-xs">
-            <div>
-              <h3 className="text-sm font-bold text-[#2C2018] uppercase tracking-wider mb-1">
-                Equipment Dial-In & Extraction Profiles
-              </h3>
-              <p className="text-[#7A6E65]">
-                Configure your espresso machine, grinder steps, and coffee bean profile for precise extraction telemetri.
-              </p>
+          <div className="space-y-6 font-mono text-xs">
+            {/* Bean Vault (Active Bags & Roasts) */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Coffee className="w-4 h-4 text-[#C26D52]" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                      Coffee Bean Vault ({beans.length} Bags In Stock)
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-[#7A6E65] mt-0.5">
+                    Switch between active beans with 1 tap. Grind settings & extraction ratios are remembered per bag.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsAddingBean(!isAddingBean)}
+                  className="px-3 py-1.5 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{isAddingBean ? 'Close' : 'Add New Bag'}</span>
+                </button>
+              </div>
+
+              {/* Inline Add New Bean Form */}
+              {isAddingBean && (
+                <form
+                  onSubmit={handleCreateNewBean}
+                  className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3 animate-fadeIn"
+                >
+                  <div className="text-xs font-bold text-[#2C2018] uppercase">Add Coffee Bean To Vault</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Bean Origin / Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={newBeanName}
+                        onChange={(e) => setNewBeanName(e.target.value)}
+                        placeholder="e.g. Kenya Nyeri AA (Washed)"
+                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Roaster (Optional)</label>
+                      <input
+                        type="text"
+                        value={newBeanRoaster}
+                        onChange={(e) => setNewBeanRoaster(e.target.value)}
+                        placeholder="e.g. La Cabra, Tim Wendelboe, Nomad"
+                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Roast Level</label>
+                      <select
+                        value={newBeanRoastLevel}
+                        onChange={(e) => setNewBeanRoastLevel(e.target.value as RoastLevel)}
+                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
+                      >
+                        <option value="light">Light Roast (Floral / Citric / High Acidity)</option>
+                        <option value="medium">Medium Roast (Caramel / Chocolate / Sweet)</option>
+                        <option value="medium-dark">Medium-Dark (Rich Body / Crema)</option>
+                        <option value="dark">Dark Roast (Smoky / Dark Cacao / Low Acidity)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Roast Date</label>
+                      <input
+                        type="date"
+                        value={newBeanRoastDate}
+                        onChange={(e) => setNewBeanRoastDate(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-lg bg-[#2C2018] text-[#FAF7F2] font-semibold text-xs flex items-center gap-1.5 hover:bg-[#3D2D22] transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Save Bean to Vault
+                  </button>
+                </form>
+              )}
+
+              {/* Bean Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {beans.map((bean) => {
+                  const isActive = bean.id === activeBeanId;
+                  const beanRoastDate = new Date(bean.roastDate);
+                  const daysOff = Math.max(0, Math.floor((Date.now() - beanRoastDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+                  return (
+                    <div
+                      key={bean.id}
+                      onClick={() => handleSelectBean(bean.id)}
+                      className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                        isActive
+                          ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52] shadow-xs'
+                          : 'border-[#E8DFD5] bg-white hover:border-[#C26D52]/40'
+                      }`}
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${
+                              bean.roastLevel === 'light'
+                                ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                : bean.roastLevel === 'medium'
+                                ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                                : bean.roastLevel === 'medium-dark'
+                                ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
+                                : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
+                            }`}
+                          >
+                            {bean.roastLevel}
+                          </span>
+                          {isActive && (
+                            <span className="flex items-center gap-1 text-[10px] text-[#72806B] font-bold">
+                              <Check className="w-3 h-3" /> ACTIVE
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="font-bold text-[#2C2018] text-xs leading-snug">{bean.name}</div>
+                        {bean.roaster && (
+                          <div className="text-[10px] text-[#7A6E65]">{bean.roaster}</div>
+                        )}
+                        <div className="text-[10px] text-[#7A6E65]">
+                          {daysOff}d off roast • Dial: <strong className="text-[#C26D52]">{bean.grindSetting}</strong>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 pt-2 border-t border-[#E8DFD5]/60 flex items-center justify-between text-[10px]">
+                        <span className="text-[#7A6E65]">
+                          Ratio: {bean.doseGrams}g → {bean.targetYieldGrams}g
+                        </span>
+                        {beans.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteBean(bean.id);
+                            }}
+                            className="text-[#7A6E65]/50 hover:text-red-600 transition"
+                            title="Remove bean"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-[#7A6E65] uppercase">Espresso Machine</label>
-                <select
-                  value={machineName}
-                  onChange={(e) => {
-                    const selected = e.target.value;
-                    setMachineName(selected);
-                    if (selected.includes('Dual Boiler')) setMachinePreInfusion(6.0);
-                    else if (selected.includes('Barista')) setMachinePreInfusion(7.0);
-                    else if (selected.includes('Flow Control')) setMachinePreInfusion(8.0);
-                    else if (selected.includes('Micra') || selected.includes('Mini')) setMachinePreInfusion(4.0);
-                    else if (selected.includes('Straight 9-Bar')) setMachinePreInfusion(0.0);
-                    else if (selected.includes('Decent')) setMachinePreInfusion(6.0);
-                  }}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                >
-                  <option value="Sage / Breville Dual Boiler">Sage / Breville Dual Boiler (Default 6s)</option>
-                  <option value="Sage / Breville Barista Touch/Express">Sage / Breville Barista Series (Default 7s)</option>
-                  <option value="E61 Manual Flow Control">E61 Manual Flow Control (Default 8s)</option>
-                  <option value="La Marzocco Linea Micra / Mini">La Marzocco Linea Micra/Mini (Default 4s)</option>
-                  <option value="Straight 9-Bar Pump (Gaggia / Rancilio)">Straight 9-Bar Pump (0s pre-infusion)</option>
-                  <option value="Decent DE1 (Profiling)">Decent DE1 (Adaptive Profiling)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] text-[#7A6E65] uppercase">Pre-Infusion Target (Seconds)</label>
-                  <span className="font-bold text-[#C26D52]">{machinePreInfusion.toFixed(1)}s</span>
+            {/* Active Bean Dial-In & Chemistry Section */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-5">
+              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-3">
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-[#C26D52]" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                    Dial-In & Roast Profile: {coffeeBeanName}
+                  </h3>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="15"
-                  step="0.5"
-                  value={machinePreInfusion}
-                  onChange={(e) => setMachinePreInfusion(parseFloat(e.target.value) || 0)}
-                  className="w-full accent-[#C26D52] cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-[#7A6E65]">
-                  <span>0s (Direct 9 bar)</span>
-                  <span>5-8s (Standard specialty)</span>
-                  <span>15s (Long soak)</span>
+                <span className="text-[11px] text-[#7A6E65]">Customized for Current Bag</span>
+              </div>
+
+              {/* 1. Roast Level Selection */}
+              <div className="space-y-2">
+                <label className="text-[10px] text-[#7A6E65] uppercase tracking-wider font-semibold block">
+                  Select Bean Roast Level
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {(['light', 'medium', 'medium-dark', 'dark'] as RoastLevel[]).map((level) => {
+                    const preset = ROAST_PRESETS[level];
+                    const isSelected = roastLevel === level;
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => handleSetRoastLevel(level)}
+                        className={`p-2.5 rounded-xl border text-left transition ${
+                          isSelected
+                            ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52]'
+                            : 'border-[#E8DFD5] bg-white hover:bg-[#FAF7F2]/40'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold capitalize text-[#2C2018]">
+                            {preset.label}
+                          </span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#C26D52]" />}
+                        </div>
+                        <div className="text-[10px] text-[#7A6E65] leading-tight">
+                          Auto-suggests: {RATIO_PRESETS[preset.defaultRatio].label}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-[#7A6E65] uppercase">Coffee Bean Origin / Name</label>
-                <input
-                  type="text"
-                  value={coffeeBeanName}
-                  onChange={(e) => setCoffeeBeanName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                />
+              {/* 2. Beverage Style & Target Ratio Presets */}
+              <div className="space-y-2">
+                <label className="text-[10px] text-[#7A6E65] uppercase tracking-wider font-semibold block">
+                  Beverage Style & Extraction Ratio
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {(['ristretto', 'standard', 'lungo', 'allonge'] as RatioStyle[]).map((style) => {
+                    const preset = RATIO_PRESETS[style];
+                    const isSelected = ratioStyle === style;
+                    return (
+                      <button
+                        key={style}
+                        type="button"
+                        onClick={() => handleSetRatioStyle(style)}
+                        className={`p-2.5 rounded-xl border text-left transition ${
+                          isSelected
+                            ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52]'
+                            : 'border-[#E8DFD5] bg-white hover:bg-[#FAF7F2]/40'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-[#2C2018]">{preset.label}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#C26D52]" />}
+                        </div>
+                        <div className="text-[10px] text-[#7A6E65] leading-tight">{preset.shortDesc}</div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-[#7A6E65] uppercase">Roast Date</label>
-                <input
-                  type="date"
-                  value={roastDate}
-                  onChange={(e) => setRoastDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                />
+              {/* Barista Chemistry Advice Banner */}
+              <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[11px] text-[#2C2018] leading-relaxed flex items-start gap-2">
+                <span className="text-sm">🔬</span>
+                <div>
+                  <strong className="text-[#C26D52] uppercase text-[10px] tracking-wider block mb-0.5">
+                    Extraction Physics for {ROAST_PRESETS[roastLevel].label}:
+                  </strong>
+                  <span>{ROAST_PRESETS[roastLevel].advice}</span>
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-[#7A6E65] uppercase">Grinder Model</label>
-                <select
-                  value={grinderName}
-                  onChange={(e) => setGrinderName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                >
-                  <option value="Eureka Mignon Specialita">Eureka Mignon Specialita</option>
-                  <option value="DF64 Gen 2">DF64 Gen 2 (Single Dose)</option>
-                  <option value="Fellow Opus">Fellow Opus Conical</option>
-                  <option value="Niche Zero">Niche Zero</option>
-                  <option value="Sage / Breville Smart Grinder">Sage / Breville Smart Grinder Pro</option>
-                  <option value="Comandante C40">Comandante C40 (Hand Grinder)</option>
-                </select>
-              </div>
+              {/* Manual Tweaks Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#E8DFD5]/60">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-[#7A6E65] uppercase">Target Dry Dose (Grams)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={doseGrams}
+                    onChange={(e) => {
+                      const newDose = parseFloat(e.target.value) || 0;
+                      setDoseGrams(newDose);
+                      const mult = ratioStyle !== 'custom' ? RATIO_PRESETS[ratioStyle].multiplier : 2.0;
+                      const newYield = Math.round(newDose * mult * 10) / 10;
+                      setTargetYieldGrams(newYield);
+                      handleUpdateBeanField({ doseGrams: newDose, targetYieldGrams: newYield });
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                  />
+                </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-[#7A6E65] uppercase">Current Dial Setting</label>
-                <input
-                  type="text"
-                  value={grindSetting}
-                  onChange={(e) => setGrindSetting(e.target.value)}
-                  placeholder="e.g. 1.4 or 14 clicks"
-                  className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                />
-              </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-[#7A6E65] uppercase">Target Liquid Yield (Grams)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={targetYieldGrams}
+                    onChange={(e) => {
+                      const newYield = parseFloat(e.target.value) || 0;
+                      setTargetYieldGrams(newYield);
+                      setRatioStyle('custom');
+                      handleUpdateBeanField({ targetYieldGrams: newYield, ratioStyle: 'custom' });
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                  />
+                </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-[#7A6E65] uppercase">Target Dry Dose (Grams)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={doseGrams}
-                  onChange={(e) => setDoseGrams(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                />
-              </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-[#7A6E65] uppercase">Dialed Grinder for this Bean</label>
+                  <select
+                    value={grinderName}
+                    onChange={(e) => {
+                      const g = e.target.value;
+                      if (g === '__ADD_NEW__') {
+                        const custom = prompt('Enter custom grinder model:');
+                        if (custom && custom.trim()) {
+                          const newG: GrinderProfile = {
+                            id: `grinder-${Date.now()}`,
+                            name: custom.trim(),
+                            type: 'stepless',
+                            defaultSetting: '1.0',
+                            stepUnit: 'steps',
+                          };
+                          const updated = [...grinders, newG];
+                          setGrinders(updated);
+                          saveGrinders(updated);
+                          setGrinderName(newG.name);
+                          handleUpdateBeanField({ grinderName: newG.name });
+                        }
+                        return;
+                      }
+                      setGrinderName(g);
+                      handleUpdateBeanField({ grinderName: g });
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                  >
+                    {grinders.map((g) => (
+                      <option key={g.id} value={g.name}>
+                        {g.name} ({g.type})
+                      </option>
+                    ))}
+                    <option value="__ADD_NEW__">+ Add Custom Grinder...</option>
+                  </select>
+                </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] text-[#7A6E65] uppercase">Target Liquid Yield (Grams)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={targetYieldGrams}
-                  onChange={(e) => setTargetYieldGrams(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-[#7A6E65] uppercase">Dial Setting for this Bean</label>
+                  <input
+                    type="text"
+                    value={grindSetting}
+                    onChange={(e) => {
+                      const s = e.target.value;
+                      setGrindSetting(s);
+                      handleUpdateBeanField({ grindSetting: s });
+                    }}
+                    placeholder="e.g. 15 for Baratza ESP, 1.4 for Eureka"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[11px] text-[#7A6E65] leading-relaxed">
-              ☕ <strong className="text-[#2C2018]">Standard 1:2 Dial-In Target:</strong> With {doseGrams}g dose, aim for {targetYieldGrams}g yield in 26-30 seconds (Split: ~{machinePreInfusion}s pre-infusion + {Math.max(18, Math.round(28 - machinePreInfusion))}s active flow). Flow rate should remain steady around 1.2–1.6 g/s in the Golden Zone without premature flow spikes.
+            {/* Equipment: Espresso Machine & Pre-infusion */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#E8DFD5] pb-2">
+                <Layers className="w-4 h-4 text-[#C26D52]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                  Espresso Machine & Pump Setup
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-[#7A6E65] uppercase">Espresso Machine</label>
+                  <select
+                    value={machineName}
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      setMachineName(selected);
+                      if (selected.includes('Dual Boiler')) setMachinePreInfusion(6.0);
+                      else if (selected.includes('Barista')) setMachinePreInfusion(7.0);
+                      else if (selected.includes('Flow Control')) setMachinePreInfusion(8.0);
+                      else if (selected.includes('Micra') || selected.includes('Mini')) setMachinePreInfusion(4.0);
+                      else if (selected.includes('Straight 9-Bar')) setMachinePreInfusion(0.0);
+                      else if (selected.includes('Decent')) setMachinePreInfusion(6.0);
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                  >
+                    <option value="Sage / Breville Dual Boiler">Sage / Breville Dual Boiler (Default 6s)</option>
+                    <option value="Sage / Breville Barista Touch/Express">Sage / Breville Barista Series (Default 7s)</option>
+                    <option value="E61 Manual Flow Control">E61 Manual Flow Control (Default 8s)</option>
+                    <option value="La Marzocco Linea Micra / Mini">La Marzocco Linea Micra/Mini (Default 4s)</option>
+                    <option value="Straight 9-Bar Pump (Gaggia / Rancilio)">Straight 9-Bar Pump (0s pre-infusion)</option>
+                    <option value="Decent DE1 (Profiling)">Decent DE1 (Adaptive Profiling)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] text-[#7A6E65] uppercase">Pre-Infusion Target (Seconds)</label>
+                    <span className="font-bold text-[#C26D52]">{machinePreInfusion.toFixed(1)}s</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="15"
+                    step="0.5"
+                    value={machinePreInfusion}
+                    onChange={(e) => setMachinePreInfusion(parseFloat(e.target.value) || 0)}
+                    className="w-full accent-[#C26D52] cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-[#7A6E65]">
+                    <span>0s (Direct 9 bar)</span>
+                    <span>5-8s (Standard specialty)</span>
+                    <span>15s (Long soak)</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

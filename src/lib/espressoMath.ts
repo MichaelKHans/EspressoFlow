@@ -1,4 +1,4 @@
-import type { ShotDataPoint, TasteRating, ChannelingEvent } from '../types/espresso';
+import type { ShotDataPoint, TasteRating, ChannelingEvent, RoastLevel, RatioStyle } from '../types/espresso';
 
 /**
  * Specialty Coffee Golden Zone Parameters
@@ -10,6 +10,66 @@ export const THE_GOLDEN_ZONE = {
   OPTIMAL_PRE_INFUSION_MAX: 8.5,
   OPTIMAL_TOTAL_TIME_MIN: 26.0,
   OPTIMAL_TOTAL_TIME_MAX: 32.0,
+};
+
+export const RATIO_PRESETS: Record<RatioStyle, { label: string; multiplier: number; shortDesc: string; desc: string }> = {
+  ristretto: {
+    label: 'Ristretto (1:1.5)',
+    multiplier: 1.5,
+    shortDesc: 'Syrupy & dense body',
+    desc: 'Short, viscous shot. Best for dark roasts, milk drinks (Flat White / Cortado), or cutting harsh bitterness.',
+  },
+  standard: {
+    label: 'Standard Espresso (1:2.0)',
+    multiplier: 2.0,
+    shortDesc: 'Golden balance',
+    desc: 'The classic specialty standard. Perfect balance of bright acidity, caramelized sweetness, and clean crema.',
+  },
+  lungo: {
+    label: 'Modern Lungo (1:2.5)',
+    multiplier: 2.5,
+    shortDesc: 'Light roast sweet spot',
+    desc: 'Higher water volume dissolves stubborn complex sugars in dense light roasts. Delivers floral sweetness.',
+  },
+  allonge: {
+    label: 'Allongé (1:3.0)',
+    multiplier: 3.0,
+    shortDesc: 'Tea-like clarity',
+    desc: 'Extended pull emphasizing delicate floral aromas, citrus top-notes, and juicy body.',
+  },
+  custom: {
+    label: 'Custom Ratio',
+    multiplier: 2.0,
+    shortDesc: 'Manual target yield',
+    desc: 'Custom target yield specified in grams.',
+  },
+};
+
+export const ROAST_PRESETS: Record<RoastLevel, { label: string; defaultRatio: RatioStyle; defaultPreInfusion: number; advice: string }> = {
+  light: {
+    label: 'Light Roast',
+    defaultRatio: 'lungo',
+    defaultPreInfusion: 8.0,
+    advice: 'Dense, hard beans with high malic/citric acid. Use longer ratio (1:2.5) & 7-10s pre-infusion to unlock sweetness.',
+  },
+  medium: {
+    label: 'Medium Roast',
+    defaultRatio: 'standard',
+    defaultPreInfusion: 6.0,
+    advice: 'Balanced solubility with notes of chocolate and nuts. Optimal with standard 1:2.0 ratio and 26-30s total time.',
+  },
+  'medium-dark': {
+    label: 'Med-Dark Roast',
+    defaultRatio: 'standard',
+    defaultPreInfusion: 4.5,
+    advice: 'Rich crema and low acidity. Keep extraction controlled around 1:1.8–1:2.0 to avoid drying aftertaste.',
+  },
+  dark: {
+    label: 'Dark Roast',
+    defaultRatio: 'ristretto',
+    defaultPreInfusion: 3.0,
+    advice: 'Porøse bønner with fast solubility. Pull short (1:1.5 Ristretto) and keep contact time brief to prevent bitter ashiness.',
+  },
 };
 
 /**
@@ -98,11 +158,12 @@ export interface DialInAdvice {
   grindDeltaSteps: number;
   puckAdvice?: string;
   preInfusionAdvice?: string;
+  roastAdvice?: string;
   rationale: string;
 }
 
 /**
- * Generates barista tech dial-in advice from flow curve, pre-infusion, and user taste
+ * Generates barista tech dial-in advice from flow curve, pre-infusion, user taste, and roast level
  */
 export function generateDialInAdvice(
   totalTimeSeconds: number,
@@ -110,7 +171,8 @@ export function generateDialInAdvice(
   yieldGrams: number,
   channeling: boolean | ChannelingEvent,
   taste?: TasteRating,
-  preInfusionSeconds?: number
+  preInfusionSeconds?: number,
+  roastLevel?: RoastLevel
 ): DialInAdvice {
   const isChanneling = typeof channeling === 'boolean' ? channeling : channeling.detected;
   const channelingEvent = typeof channeling === 'object' ? channeling : undefined;
@@ -140,25 +202,41 @@ export function generateDialInAdvice(
     }
   }
 
+  // Roast-specific tailored advice
+  let roastNotice: string | undefined;
+  if (roastLevel === 'light') {
+    roastNotice = 'Light roasts require higher extraction energy. If acidic, extend ratio to 1:2.5 or lengthen pre-infusion.';
+  } else if (roastLevel === 'dark') {
+    roastNotice = 'Dark roasts extract rapidly. Pull as a Ristretto (1:1.5 - 1:1.8) with short contact time to avoid bitterness.';
+  }
+
   if (taste === 'sour' || totalTimeSeconds < 24) {
+    const extra = roastLevel === 'light'
+      ? ' For this Light Roast, consider pushing ratio to 1:2.5 (lungo) to extract ripe fruit sweetness.'
+      : '';
     return {
       summary: 'Under-extracted (Fast Flow / Sour)',
       grindAdvice: 'finer',
       grindDeltaSteps: 0.5,
       puckAdvice: 'Ensure even distribution before tamping.',
       preInfusionAdvice: preAdvice,
-      rationale: `The shot ran fast (${totalTimeSeconds.toFixed(1)}s for ${ratio}x ratio). Water rushed through too quickly. Grind finer by 0.5 steps to increase puck resistance.`,
+      roastAdvice: roastNotice,
+      rationale: `The shot ran fast (${totalTimeSeconds.toFixed(1)}s for ${ratio}x ratio). Water rushed through too quickly.${extra} Grind finer by 0.5 steps to increase puck resistance.`,
     };
   }
 
   if (taste === 'bitter' || totalTimeSeconds > 34) {
+    const extra = roastLevel === 'dark'
+      ? ' For this Dark Roast, stop the shot earlier as a Ristretto (1:1.5 ratio) to avoid bitter tannins.'
+      : '';
     return {
       summary: 'Over-extracted (Slow Flow / Bitter)',
       grindAdvice: 'coarser',
       grindDeltaSteps: 0.5,
       puckAdvice: 'Verify puck headspace and basket capacity.',
       preInfusionAdvice: preAdvice,
-      rationale: `The shot choked or dragged on (${totalTimeSeconds.toFixed(1)}s). The puck was too dense, extracting bitter tannins. Grind coarser by 0.5 steps for a smoother flow.`,
+      roastAdvice: roastNotice,
+      rationale: `The shot choked or dragged on (${totalTimeSeconds.toFixed(1)}s). The puck was too dense, extracting bitter tannins.${extra} Grind coarser by 0.5 steps for a smoother flow.`,
     };
   }
 
@@ -169,6 +247,7 @@ export function generateDialInAdvice(
       grindDeltaSteps: 0.5,
       puckAdvice: 'Increase dry dose by 0.5g while keeping target yield constant.',
       preInfusionAdvice: preAdvice,
+      roastAdvice: roastNotice,
       rationale: `Extraction lacked body and crema thickness. Grind slightly finer or increase dry dose to boost brew concentration.`,
     };
   }
@@ -178,6 +257,7 @@ export function generateDialInAdvice(
     grindAdvice: 'keep',
     grindDeltaSteps: 0,
     preInfusionAdvice: preAdvice || `First drip at ${preInfusionSeconds ? preInfusionSeconds.toFixed(1) + 's' : 'optimal time'}.`,
+    roastAdvice: roastNotice,
     rationale: `Superb extraction! ${yieldGrams.toFixed(1)}g yield in ${totalTimeSeconds.toFixed(1)}s with optimal flow rate in the Golden Zone (1.2–1.6 g/s).`,
   };
 }
