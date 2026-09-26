@@ -84,6 +84,7 @@ export interface UserAccessState {
 export type DrinkId =
   | 'cappuccino'
   | 'espresso'
+  | 'single-espresso'
   | 'flat-white'
   | 'cortado'
   | 'latte'
@@ -93,7 +94,13 @@ export type DrinkId =
   | 'americano'
   | 'affogato'
   | 'cafe-bombon'
-  | 'espresso-tonic';
+  | 'espresso-tonic'
+  | 'mocha'
+  | 'con-panna'
+  | 'iced-latte'
+  | 'shakerato'
+  | 'allonge'
+  | 'piccolo';
 
 export interface DrinkLayer {
   name: string;

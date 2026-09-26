@@ -4,6 +4,17 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.5.7] - 2026-09-26
+### Added
+- **Single Espresso / Solo (`single-espresso`):** Klassisk italiensk enkelt-shot ekstraktion (9.0g dosis $\rightarrow$ 18.0g yield på ~26s i demitasse) med skræddersyet kværn-vejledning til enkeltkurve (single baskets).
+- **Caffè Mocha (`mocha`):** 240ml højglas med ægte 70% mørk chokolade-ganache, dobbeltskud espresso, 140ml silkeblød mælk og kakao-pudret mikroskum.
+- **Espresso Con Panna (`con-panna`):** Dobbelt espresso toppet med en generøs krone af kold, fløjlsblød piskefløde i demitasse kop.
+- **Iced Caffè Latte (`iced-latte`):** Dobbelt espressoskud floatet over 180ml iskold sødmælk (4°C) og klare isterninger i højt glas.
+- **Caffè Shakerato (`shakerato`):** Den italienske sommer-ikon – dobbeltskud rystet kraftigt i cocktailshaker med is og sirup til et tykt, Guinness-lignende gyldent skumlag.
+- **Café Allongé (`allonge`):** Moderne nordisk/fransk forlænget specialty ekstraktion (1:3 ratio, 18g $\rightarrow$ 54g) for maksimal frugtsødme og floral klarhed.
+- **Piccolo Latte (`piccolo`):** Australsk barista-favorit i 100ml glas – enkelt ristretto (10g $\rightarrow$ 15g) toppet med mikro-tekstureret mælk og latte art.
+- **Udvidet Drikke-Bibliotek:** Kataloget rummer nu 19 specialitetsopskrifter med fulde lagdelte arkitektoniske vektor-kopper.
+
 ## [0.5.6] - 2026-09-26
 ### Fixed
 - **Synlighed af Fastgjorte Drikke i Quick Bar Deck:** Løst problemet med at kun 3 af de fastgjorte drikke var synlige på mobil. Baren ombryder nu automatisk (`flex flex-wrap`), så samtlige fastgjorte drikke (fx alle 6: Cappuccino, Double Espresso, Flat White, Cortado, Latte, Americano) vises på 2 kompakte rækker på mobilen uden at være gemt bag en usynlig vandret rullebjælke.

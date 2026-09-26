@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 – Single Espresso (Solo) & Udvidet Specialty Drikke-Bibliotek (v0.5.7)
+- **Single Espresso / Solo (`single-espresso`):** Klassisk 9g single basket ekstraktion $\rightarrow$ 18g yield i demitasse kop med dial-in råd til tragtformede kurve.
+- **6 Nye Specialty Drikke Tilføjet:** Caffè Mocha (mørk chokolade ganache + mikroskum), Espresso Con Panna (kold piskeflødekrone), Iced Caffè Latte (floatet shot over kold mælk og is), Caffè Shakerato (shaket kold espresso-fløjl), Café Allongé (1:3 forlenget ekstraktion) og Piccolo Latte (enkelt ristretto + micro-foam).
+- **19 Komplette Opskrifter:** Biblioteket rummer nu 19 verdenskendte specialitetsdrikke med fulde lagdelte arkitektoniske vektor-kopper.
+- **Opdateret DrinkId Typesystem:** Tilføjet samtlige nye drikke-ID'er til typesystemet i `espresso.ts`.
+
 ### 2026-09-26 – Quick Deck Synlighed, Direkte Drikkevalg & Switch Knap (v0.5.6)
 - **Fuld Synlighed for Alle Fastgjorte Drikke (`DrinkSelector.tsx`):** Hurtig-baren ombryder nu automatisk (`flex flex-wrap`), så alle 6 fastgjorte drikke (Cappuccino, Doppio, Flat White, Cortado, Latte, Americano) vises på 2 overskuelige rækker uden at være gemt bag en usynlig horisontal rullebjælke.
 - **Direkte Valg i Specialitets-Modalen:** Tryk på en hvilken som helst af de 12 drikke vælger og låser den straks til brygning og lukker modalen.
