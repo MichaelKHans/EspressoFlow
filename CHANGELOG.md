@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.6.5] - 2026-09-26
+### Added
+- **Pose- & Stregkodescanning direkte i Onboarding Wizard (Trin 3):**
+  - Tilføjet en markant `[Scan Bag]` knap direkte i velkomstguidens bønnetrin.
+  - Åbner kameraet/stregkodescanneren og udfylder automatisk bønnenavn, risteri, risteprofil og ristedato direkte ind i formularen.
+  - Førstegangsbrugere kan nu oprette hele deres kaffestation på sekunder ved blot at scanne deres pose.
+
 ## [0.6.4] - 2026-09-26
 ### Added
 - **Skip Mulighed i Førstegangs-Onboarding Wizard:**

@@ -441,7 +441,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.6.4
+                  v0.6.5
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">

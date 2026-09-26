@@ -11,6 +11,9 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Pose- & Stregkodescanning i Onboarding Wizard (v0.6.5)
+- **Pose- & Stregkodescanning i Onboarding (Trin 3):** Tilføjet `[Scan Bag]` med `BeanScannerModal` direkte i velkomstguidens trin 3, så nye brugere kan scanne posens stregkode/etiket og få udfyldt navn, risteri, risteprofil og dato automatisk.
+
 ### 2026-09-26 -- Skip Knap i Onboarding Wizard (v0.6.4)
 - **Skip Knap:** Tilføjet `[Skip ✕]` i toppen og `[Skip Setup]` i bunden af Onboarding Wizard, så brugere kan lukke velkomstguiden når som helst og gå direkte til appen.
 

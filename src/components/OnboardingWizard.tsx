@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Coffee, ChevronRight, Check, Settings2, Layers, ArrowRight, X } from 'lucide-react';
-import type { GrinderProfile, RoastLevel } from '../types/espresso';
+import { Coffee, ChevronRight, Check, Settings2, Layers, ArrowRight, X, Barcode, Sparkles } from 'lucide-react';
+import type { GrinderProfile, RoastLevel, CoffeeBeanProfile } from '../types/espresso';
+import { BeanScannerModal } from './BeanScannerModal';
 
 interface OnboardingWizardProps {
   grinders: GrinderProfile[];
@@ -61,6 +62,17 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   const [roastDate, setRoastDate] = useState<string>(
     new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
+  const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
+  const [scannedFeedback, setScannedFeedback] = useState<string | null>(null);
+
+  const handleScannedBean = (scanned: CoffeeBeanProfile) => {
+    setBeanName(scanned.name);
+    if (scanned.roaster) setRoaster(scanned.roaster);
+    setRoastLevel(scanned.roastLevel);
+    setRoastDate(scanned.roastDate);
+    setScannedFeedback(`Scanned & applied: "${scanned.name}"`);
+    setIsScannerOpen(false);
+  };
 
   const handleFinish = () => {
     const machine = selectedMachine === 'Other' ? customMachine : selectedMachine;
@@ -230,16 +242,32 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
           {/* STEP 3: First Bean */}
           {step === 3 && (
             <div className="space-y-3 animate-fadeIn">
-              <div className="flex items-center gap-2">
-                <Coffee className="w-4 h-4 text-[#C26D52]" />
-                <h3 className="text-xs sm:text-sm font-bold text-[#2C2018] font-mono">
-                  Your First Coffee Bean
-                </h3>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Coffee className="w-4 h-4 text-[#C26D52]" />
+                  <h3 className="text-xs sm:text-sm font-bold text-[#2C2018] font-mono">
+                    Your First Coffee Bean
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsScannerOpen(true)}
+                  className="px-2.5 py-1 rounded-xl border border-[#72806B] bg-[#72806B]/10 hover:bg-[#72806B]/20 text-[#72806B] text-[11px] font-mono font-bold flex items-center gap-1.5 transition shadow-xs"
+                  title="Scan coffee bag barcodes, packaging labels, and roast date stamps"
+                >
+                  <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>Scan Bag</span>
+                </button>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono leading-relaxed">
-                Add the bean you have open right now. You can always add more
-                to your Bean Vault later, or scan the bag label with your camera.
+                Add the bean you have open right now, or tap <strong className="text-[#72806B]">Scan Bag</strong> to scan with your camera or barcode.
               </p>
+              {scannedFeedback && (
+                <div className="p-2 rounded-lg bg-[#72806B]/15 border border-[#72806B]/30 text-[11px] font-mono text-[#72806B] flex items-center gap-1.5 animate-fadeIn">
+                  <Sparkles className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
+                  <span className="truncate">{scannedFeedback}</span>
+                </div>
+              )}
 
               <div className="space-y-2.5">
                 <div>
@@ -351,6 +379,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
           )}
         </div>
       </div>
+
+      {/* Bean Bag & Barcode Vision Scanner Modal */}
+      <BeanScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onSaveBean={handleScannedBean}
+        currentGrinderName={grinders.find((g) => g.id === selectedGrinderId)?.name || grinders[0]?.name || 'Baratza Encore ESP Pro'}
+        grinders={grinders}
+      />
     </div>
   );
 };
