@@ -4,6 +4,22 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.5.9] - 2026-09-26
+### Added
+- **Førstegangs-Onboarding Wizard (3-Step Station Setup):** Ny brugere mødes nu af en elegant 3-trins velkomstguide, der samler hele espressostationen:
+  - **Trin 1 -- Vælg Din Kværn:** 22 præ-kalibrerede kværn-profiler fra CremaShop.dk kataloget (Baratza, Eureka, Varia, Niche, DF64, Sage, Fellow, Comandante m.fl.) med automatisk micro-step fysik.
+  - **Trin 2 -- Vælg Din Maskine:** 18 populære espressomaskiner (Sage, Rancilio, Lelit, ECM, La Marzocco, Rocket, Gaggia, Flair, Cafelat Robot m.fl.) med mulighed for at skrive en brugerdefineret model.
+  - **Trin 3 -- Din Første Bønne:** Indtast navn, risteri, ristningsgrad og ristdato for den kaffebønne du har åben lige nu. Appen sætter automatisk ratio, yield og kværnindstilling baseret på ristningsgraden.
+- **Smart Bønne-Anbefaling (Bean Vault Match Engine):**
+  - Hver drik viser nu et `Bean Vault Match` kort med en procentuel match-score for den aktive bønne baseret på en matematisk **Roast Compatibility Matrix** (`light/medium/medium-dark/dark` kryds-score) og friskhedsfaktor (dage off roast).
+  - Hvis der findes en bedre bønne i din Bean Vault, anbefales den med en direkte `[Switch]` knap, der straks skifter den aktive bønne og opdaterer hele stationen.
+- **19 Opskrifter med Rist-Profilmatch (`idealRoastLevels`):**
+  - Alle 19 drikke-opskrifter har nu en deklareret `idealRoastLevels` egenskab:
+    - **Light roast-drikke:** Modern Lungo, Espresso Tonic, Cafe Allonge.
+    - **Medium/Med-Dark-drikke:** Cappuccino, Flat White, Latte, Americano, Cortado, Iced Latte, Shakerato, Piccolo.
+    - **Dark roast-drikke:** Ristretto, Macchiato, Affogato, Cafe Bombon, Mocha, Con Panna.
+- **Persistent Machine Name:** Maskinnavnet gemmes nu i `localStorage` og huskes mellem sessioner.
+
 ## [0.5.8] - 2026-09-26
 ### Added
 - **Kollapsbart Drikke-Bibliotek (Collapsible Drink Library):** Det store katalog med alle 19 specialitetsdrikke og arkitektoniske vektor-kopper er nu som standard elegant sammenfoldet under en ren *"Specialty Drink Library (19 recipes)"* expander. Hovedskærmen viser udelukkende den aktivt valgte drik, dens nøjagtige brygparametre, mælke/vand-guide og kværnhukommelse, så siden er super overskuelig uden endeløs rulning.

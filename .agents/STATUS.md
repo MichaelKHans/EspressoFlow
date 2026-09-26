@@ -11,7 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
-### 2026-09-26 – Kollapsbart Drikke-Bibliotek & Per-Drik Kværnhukommelse (v0.5.8)
+### 2026-09-26 -- Onboarding Wizard, Bean Vault Match Engine & Rist-Profilmatch (v0.5.9)
+- **3-Step Onboarding Wizard (`OnboardingWizard.tsx`):** Ny brugere guides gennem kværn-valg (22 modeller), maskine-valg (18 modeller) og oprettelse af deres første kaffebønne med auto-ratio.
+- **Bean Vault Match Engine (`beanMatcher.ts`):** Matematisk Roast Compatibility Matrix scorer alle bønner i vaulten mod den valgte drik. Viser match-procent og foreslår bedre bønner med 1-klik switch.
+- **`idealRoastLevels` på alle 19 opskrifter:** Light (Lungo, Tonic, Allonge), Medium/Med-Dark (Cappuccino, Flat White, Latte, Americano), Dark (Ristretto, Macchiato, Affogato, Bombon, Mocha, Con Panna).
+- **Persistent Machine Name:** Gemmes i `localStorage` og huskes mellem sessioner.
+
+### 2026-09-26 -- Kollapsbart Drikke-Bibliotek & Per-Drik Kvaernhukommelse (v0.5.8)
 - **Kollapsbart Drikke-Bibliotek:** Det store katalog med alle 19 specialitetsdrikke og arkitektoniske vektor-kopper er nu som standard elegant sammenfoldet under en ren *"Specialty Drink Library (19 recipes)"* expander. Hovedskærmen viser udelukkende den aktivt valgte drik, dens nøjagtige brygparametre, mælke/vand-guide og kværnhukommelse, så siden er super overskuelig uden endeløs rulning.
 - **Per-Drik Kværnhukommelse & Smart Forbedrings-Engine (Grind Memory Engine):**
   - Husker den nøjagtige kværnindstilling for **hver enkelt drik** parret med den aktive kaffebønne og kværnmodel (`localStorage` nøgle: `${beanId}_${drinkId}`).

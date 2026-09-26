@@ -26,17 +26,20 @@ import {
 } from '../lib/storage';
 import { GRINDER_CALIBRATIONS } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
+import { matchBeansForDrink, ROAST_LABELS } from '../lib/beanMatcher';
 
 interface DrinkSelectorProps {
   currentBean: CoffeeBeanProfile;
   currentGrinder: GrinderProfile;
   activeDrinkId: string;
   shots?: ShotRecord[];
+  allBeans?: CoffeeBeanProfile[];
   onSelectDrink: (drink: DrinkRecipe) => void;
   onLaunchScaleCam: (drink: DrinkRecipe) => void;
   onOpenDialInWizard: (drink: DrinkRecipe) => void;
   onOpenBeanVault: () => void;
   onGrindSettingChange?: (setting: string) => void;
+  onSwitchBean?: (beanId: string) => void;
 }
 
 export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
@@ -44,11 +47,13 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   currentGrinder,
   activeDrinkId,
   shots,
+  allBeans,
   onSelectDrink,
   onLaunchScaleCam,
   onOpenDialInWizard,
   onOpenBeanVault,
   onGrindSettingChange,
+  onSwitchBean,
 }) => {
   const [activeDeckIds, setActiveDeckIds] = useState<string[]>(() => loadActiveBarDrinkIds());
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState<boolean>(false);
@@ -625,6 +630,84 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 4b. Bean Vault Match -- Smart recommendation from vault */}
+      {allBeans && allBeans.length > 1 && (() => {
+        const matches = matchBeansForDrink(allBeans, selectedDrink);
+        const currentMatch = matches.find((m) => m.bean.id === currentBean.id);
+        const bestMatch = matches[0];
+        const currentScore = currentMatch?.matchScore ?? 0;
+        const hasBetterOption = bestMatch && bestMatch.bean.id !== currentBean.id && bestMatch.matchScore > currentScore + 5;
+
+        return (
+          <div className="border border-[#E8DFD5] bg-[#FFFDF9] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
+            <div className="flex items-center gap-2 mb-2">
+              <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
+              <span className="text-xs font-bold text-[#2C2018] font-mono">
+                Bean Vault Match
+              </span>
+            </div>
+
+            {/* Current bean match */}
+            <div className={`p-2.5 rounded-xl border text-[11px] font-mono flex items-start gap-2 ${
+              currentScore >= 80
+                ? 'bg-[#72806B]/10 border-[#72806B]/30'
+                : currentScore >= 60
+                ? 'bg-[#FAF7F2] border-[#E8DFD5]'
+                : 'bg-amber-50 border-amber-200'
+            }`}>
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-[#2C2018] text-[10px] sm:text-[11px]">
+                    {currentBean.name}
+                  </span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                    currentScore >= 80
+                      ? 'bg-[#72806B]/20 text-[#72806B]'
+                      : currentScore >= 60
+                      ? 'bg-[#E8DFD5] text-[#7A6E65]'
+                      : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {currentScore}% match
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#7A6E65] leading-relaxed">
+                  {currentMatch?.reason || `${ROAST_LABELS[currentBean.roastLevel]} bean.`}
+                </p>
+              </div>
+            </div>
+
+            {/* Better option suggestion */}
+            {hasBetterOption && bestMatch && (
+              <div className="mt-2 p-2.5 rounded-xl border border-[#C26D52]/30 bg-[#C26D52]/5 text-[11px] font-mono">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1">
+                    <span className="text-[10px] text-[#C26D52] font-bold">Better match in vault:</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="font-bold text-[#2C2018] text-[10px] sm:text-[11px]">
+                        {bestMatch.bean.name}
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#72806B]/20 text-[#72806B]">
+                        {bestMatch.matchScore}%
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-[#7A6E65] mt-0.5">{bestMatch.reason}</p>
+                  </div>
+                  {onSwitchBean && (
+                    <button
+                      type="button"
+                      onClick={() => onSwitchBean(bestMatch.bean.id)}
+                      className="px-2.5 py-1.5 rounded-xl bg-[#C26D52] hover:bg-[#A0523C] text-white text-[10px] font-mono font-bold transition shrink-0"
+                    >
+                      Switch
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* 5. Complete Specialty Drink Menu (Collapsible - Collapsed by default) */}
       <div className="border border-[#E8DFD5] bg-[#FFFDF9] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs transition-all">

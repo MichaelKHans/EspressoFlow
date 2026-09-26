@@ -8,6 +8,8 @@ import { PaywallModal } from './components/PaywallModal';
 import { LegalModal } from './components/LegalModal';
 import { DrinkSelector } from './components/DrinkSelector';
 import { DialInWizardModal } from './components/DialInWizardModal';
+import { OnboardingWizard } from './components/OnboardingWizard';
+import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
 import type {
   ShotDataPoint,
@@ -31,6 +33,10 @@ import {
   loadGrinders,
   saveGrinders,
   loadDrinkGrindSettings,
+  loadOnboardingComplete,
+  saveOnboardingComplete,
+  loadMachineName,
+  saveMachineName,
 } from './lib/storage';
 import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoMath';
 import { parseCoffeeBagPhoto } from './lib/bagScanner';
@@ -46,6 +52,9 @@ export function App() {
     isWithinTrial: true,
     daysRemainingInTrial: 7,
   });
+
+  // Onboarding State
+  const [isOnboardingDone, setIsOnboardingDone] = useState<boolean>(() => loadOnboardingComplete());
 
   // Bean Vault & Multi-Grinder State
   const [beans, setBeans] = useState<CoffeeBeanProfile[]>(() => loadBeans());
@@ -81,7 +90,7 @@ export function App() {
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(currentBean.targetYieldGrams);
   const [grinderName, setGrinderName] = useState<string>(currentBean.grinderName);
   const [grindSetting, setGrindSetting] = useState<string>(currentBean.grindSetting);
-  const [machineName, setMachineName] = useState<string>('Sage / Breville Dual Boiler');
+  const [machineName, setMachineName] = useState<string>(() => loadMachineName());
   const [machinePreInfusion, setMachinePreInfusion] = useState<number>(6.0);
   const [coffeeBeanName, setCoffeeBeanName] = useState<string>(currentBean.name);
   const [roastDate, setRoastDate] = useState<string>(currentBean.roastDate);
@@ -164,6 +173,49 @@ export function App() {
   const handleProceedFromWizard = () => {
     setIsDialInWizardOpen(false);
     setActiveTab('monitor');
+  };
+
+  const handleOnboardingComplete = (result: OnboardingResult) => {
+    // 1. Set grinder
+    const chosenGrinder = grinders.find((g) => g.id === result.grinderId);
+    if (chosenGrinder) {
+      setGrinderName(chosenGrinder.name);
+    }
+
+    // 2. Set machine
+    setMachineName(result.machineName);
+    saveMachineName(result.machineName);
+
+    // 3. Create first bean and set as active
+    const newBeanId = `bean-${Date.now()}`;
+    const newBean: CoffeeBeanProfile = {
+      id: newBeanId,
+      name: result.beanName,
+      roaster: result.roaster || undefined,
+      roastDate: result.roastDate,
+      roastLevel: result.roastLevel,
+      doseGrams: 18.0,
+      ratioStyle: result.roastLevel === 'light' ? 'lungo' : result.roastLevel === 'dark' ? 'ristretto' : 'standard',
+      targetYieldGrams: result.roastLevel === 'light' ? 45.0 : result.roastLevel === 'dark' ? 27.0 : 36.0,
+      grindSetting: chosenGrinder?.defaultSetting || '15',
+      grinderName: chosenGrinder?.name || 'Baratza Encore ESP Pro',
+    };
+
+    const updatedBeans = [newBean, ...beans];
+    setBeans(updatedBeans);
+    saveBeans(updatedBeans);
+    setActiveBeanId(newBeanId);
+    setCoffeeBeanName(newBean.name);
+    setRoastDate(newBean.roastDate);
+    setRoastLevel(newBean.roastLevel);
+    setRatioStyle(newBean.ratioStyle);
+    setDoseGrams(newBean.doseGrams);
+    setTargetYieldGrams(newBean.targetYieldGrams);
+    setGrindSetting(newBean.grindSetting);
+
+    // 4. Mark onboarding done
+    saveOnboardingComplete();
+    setIsOnboardingDone(true);
   };
 
   const handleSetRoastLevel = (level: RoastLevel) => {
@@ -367,7 +419,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.5.8
+                  v0.5.9
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -466,11 +518,13 @@ export function App() {
             currentGrinder={currentGrinder}
             activeDrinkId={activeDrinkId}
             shots={shots}
+            allBeans={beans}
             onSelectDrink={handleSelectDrink}
             onLaunchScaleCam={handleLaunchScaleCam}
             onOpenDialInWizard={handleOpenDialInWizard}
             onOpenBeanVault={() => setActiveTab('equipment')}
             onGrindSettingChange={setGrindSetting}
+            onSwitchBean={handleSelectBean}
           />
         )}
 
@@ -1054,6 +1108,14 @@ export function App() {
         currentGrinder={currentGrinder}
         onProceedToScaleCam={handleProceedFromWizard}
       />
+
+      {/* First-Time Onboarding Wizard */}
+      {!isOnboardingDone && (
+        <OnboardingWizard
+          grinders={grinders}
+          onComplete={handleOnboardingComplete}
+        />
+      )}
     </div>
   );
 }

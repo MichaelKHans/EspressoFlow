@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   MACHINE: 'espressoflow_machine_v1',
   ACTIVE_BAR_DRINKS: 'espressoflow_active_bar_drinks_v1',
   DRINK_GRINDS: 'espressoflow_drink_grinds_v1',
+  ONBOARDING_COMPLETE: 'espressoflow_onboarding_done_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -477,3 +478,34 @@ export function saveDrinkGrindSetting(key: string, setting: string): void {
   }
 }
 
+export function loadOnboardingComplete(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETE) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function saveOnboardingComplete(): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETE, 'true');
+  } catch (err) {
+    console.error('Failed to save onboarding state', err);
+  }
+}
+
+export function loadMachineName(): string {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.MACHINE) || 'Espresso Machine';
+  } catch {
+    return 'Espresso Machine';
+  }
+}
+
+export function saveMachineName(name: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.MACHINE, name);
+  } catch (err) {
+    console.error('Failed to save machine name', err);
+  }
+}

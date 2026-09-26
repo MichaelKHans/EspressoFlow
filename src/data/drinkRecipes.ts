@@ -14,6 +14,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 180,
     glassStyle: 'cup',
     isDefaultActive: true,
+    idealRoastLevels: ['medium', 'medium-dark'],
     milkGuide: {
       volumeMl: 120,
       tempCelsius: 62,
@@ -41,6 +42,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 60,
     glassStyle: 'demitasse',
     isDefaultActive: true,
+    idealRoastLevels: ['medium', 'medium-dark', 'dark'],
     layers: [
       { name: 'Tiger Crema', percentage: 20, color: '#C26D52', description: 'Aromatic emulsified lipids and CO2 micro-bubbles', volumeMl: 12 },
       { name: 'Espresso Body', percentage: 80, color: '#2C2018', description: 'Rich chocolate body, balanced acidity and long finish', volumeMl: 48 },
@@ -61,6 +63,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 40,
     glassStyle: 'demitasse',
     isDefaultActive: true,
+    idealRoastLevels: ['medium', 'medium-dark', 'dark'],
     layers: [
       { name: 'Dense Crema', percentage: 25, color: '#C26D52', description: 'Rich aromatic golden crema cap', volumeMl: 8 },
       { name: 'Single Origin Nectar', percentage: 75, color: '#2C2018', description: 'Concentrated 18g syrupy extraction body', volumeMl: 24 },
@@ -81,6 +84,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 160,
     glassStyle: 'cup',
     isDefaultActive: true,
+    idealRoastLevels: ['medium', 'medium-dark'],
     milkGuide: {
       volumeMl: 120,
       tempCelsius: 60,
@@ -108,6 +112,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 90,
     glassStyle: 'glass',
     isDefaultActive: true,
+    idealRoastLevels: ['medium', 'medium-dark', 'dark'],
     milkGuide: {
       volumeMl: 45,
       tempCelsius: 58,
@@ -135,6 +140,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 250,
     glassStyle: 'tall-glass',
     isDefaultActive: true,
+    idealRoastLevels: ['medium', 'medium-dark'],
     milkGuide: {
       volumeMl: 200,
       tempCelsius: 63,
@@ -162,6 +168,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 75,
     glassStyle: 'demitasse',
     isDefaultActive: false,
+    idealRoastLevels: ['medium-dark', 'dark'],
     milkGuide: {
       volumeMl: 25,
       tempCelsius: 60,
@@ -188,6 +195,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 30,
     glassStyle: 'demitasse',
     isDefaultActive: false,
+    idealRoastLevels: ['medium-dark', 'dark'],
     layers: [
       { name: 'Dense Crema', percentage: 30, color: '#A0523C', description: 'Concentrated dark amber crema', volumeMl: 10 },
       { name: 'Ristretto Nectar', percentage: 70, color: '#1F1610', description: 'Ultra-concentrated early solubles', volumeMl: 20 },
@@ -208,6 +216,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 90,
     glassStyle: 'cup',
     isDefaultActive: true,
+    idealRoastLevels: ['light', 'medium'],
     layers: [
       { name: 'Blonde Crema', percentage: 15, color: '#D4956A', description: 'Delicate, lighter crema', volumeMl: 15 },
       { name: 'Clarity Core', percentage: 85, color: '#3D2D22', description: 'Tea-like floral notes, peach sweetness and clarity', volumeMl: 75 },
@@ -228,6 +237,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 180,
     glassStyle: 'cup',
     isDefaultActive: true,
+    idealRoastLevels: ['medium', 'medium-dark'],
     waterGuide: {
       volumeMl: 110,
       tempCelsius: 78,
@@ -255,6 +265,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 120,
     glassStyle: 'glass',
     isDefaultActive: false,
+    idealRoastLevels: ['medium-dark', 'dark'],
     layers: [
       { name: 'Espresso Crema Foam', percentage: 25, color: '#C26D52', description: 'Hot crema coating ice cream', volumeMl: 30 },
       { name: 'Melting Espresso Cream', percentage: 35, color: '#6A4A35', description: 'Fusion of bitter coffee and sweet cream', volumeMl: 40 },
@@ -276,6 +287,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 80,
     glassStyle: 'glass',
     isDefaultActive: false,
+    idealRoastLevels: ['medium-dark', 'dark'],
     layers: [
       { name: 'Thin Crema Film', percentage: 10, color: '#C26D52', description: 'Golden crema layer', volumeMl: 8 },
       { name: 'Espresso Layer', percentage: 45, color: '#2C2018', description: 'Bold black espresso floating on top', volumeMl: 36 },
@@ -297,6 +309,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 220,
     glassStyle: 'tall-glass',
     isDefaultActive: false,
+    idealRoastLevels: ['light', 'medium'],
     layers: [
       { name: 'Effervescent Crema', percentage: 20, color: '#C26D52', description: 'Airy aromatic foam reacting with tonic', volumeMl: 40 },
       { name: 'Espresso Float', percentage: 20, color: '#2C2018', description: '36g double shot chilled over ice', volumeMl: 40 },
@@ -318,6 +331,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 240,
     glassStyle: 'tall-glass',
     isDefaultActive: false,
+    idealRoastLevels: ['medium-dark', 'dark'],
     milkGuide: {
       volumeMl: 140,
       tempCelsius: 63,
@@ -346,6 +360,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 80,
     glassStyle: 'demitasse',
     isDefaultActive: false,
+    idealRoastLevels: ['medium-dark', 'dark'],
     layers: [
       { name: 'Whipped Cream Crown', percentage: 40, color: '#FFFDF9', description: 'Chilled, lightly sweetened heavy cream dollop', volumeMl: 32 },
       { name: 'Golden Crema Film', percentage: 10, color: '#C26D52', description: 'Crema boundary meeting cold cream', volumeMl: 8 },
@@ -367,6 +382,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 280,
     glassStyle: 'tall-glass',
     isDefaultActive: false,
+    idealRoastLevels: ['medium', 'medium-dark'],
     milkGuide: {
       volumeMl: 180,
       tempCelsius: 4,
@@ -394,6 +410,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 150,
     glassStyle: 'glass',
     isDefaultActive: false,
+    idealRoastLevels: ['medium', 'medium-dark'],
     layers: [
       { name: 'Dense Aerated Foam', percentage: 35, color: '#D4956A', description: 'Silky, ice-aerated golden coffee froth head', volumeMl: 50 },
       { name: 'Chilled Espresso Core', percentage: 65, color: '#2C2018', description: 'Ice-cold, concentrated sweet espresso liqueur', volumeMl: 90 },
@@ -414,6 +431,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 120,
     glassStyle: 'cup',
     isDefaultActive: false,
+    idealRoastLevels: ['light', 'medium'],
     layers: [
       { name: 'Fine Amber Crema', percentage: 15, color: '#C26D52', description: 'Delicate aromatic crema layer', volumeMl: 15 },
       { name: 'Clarity Extraction', percentage: 85, color: '#3A271D', description: 'Sweet, tea-like origin clarity without harsh bitterness', volumeMl: 85 },
@@ -434,6 +452,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 100,
     glassStyle: 'glass',
     isDefaultActive: false,
+    idealRoastLevels: ['medium', 'medium-dark'],
     milkGuide: {
       volumeMl: 65,
       tempCelsius: 60,

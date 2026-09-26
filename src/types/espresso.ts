@@ -123,6 +123,7 @@ export interface DrinkRecipe {
   cupVolumeMl?: number;
   glassStyle?: 'cup' | 'glass' | 'tall-glass' | 'demitasse';
   isDefaultActive?: boolean;
+  idealRoastLevels?: RoastLevel[];
   milkGuide?: {
     volumeMl: number;
     tempCelsius: number;
