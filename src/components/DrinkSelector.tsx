@@ -3,7 +3,6 @@ import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile } from '../types/es
 import { DRINK_RECIPES } from '../data/drinkRecipes';
 import {
   Coffee,
-  Sparkles,
   ChevronRight,
   Sliders,
   CheckCircle2,
@@ -76,7 +75,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 relative z-10">
           <div>
             <div className="flex items-center gap-1.5 mb-1">
-              <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+              <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
               <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-[#E8DFD5]/80 font-bold">
                 Digital Barista Deck
               </span>

@@ -4,6 +4,16 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.5.5] - 2026-09-26
+### Fixed
+- **Crema & Væskelag Retning i Koppen (`ArchitecturalCup.tsx`):** Rettet den kritiske beregningsfejl, hvor væskelagene blev tegnet nedefra og op, hvilket placerede crema/skum i bunden og kaffen i toppen. Alle 12 drikke renderes nu korrekt fra toppen og ned: Crema og mikroskum ligger elegant øverst, mens espressokrop, dampet vand og sød kondenseret mælk ligger i bunden.
+- **Drik-Specifikke Væskehøjder:** Præcise koordinater for demitasse (`yTop=26`), almindelig kop (`yTop=16`), facetglas (`yTop=16`) og højt glas (`yTop=14`), så lagene flugter perfekt med glaskanten.
+
+### Changed
+- **Løft af Hovedmenuen & Taktil Segmenteret Kontrol:** Den flade tekstmenu med bundstreg er udskiftet med en eksklusiv, taktil segmenteret pill-navigationsbjælke (`bg-[#F0E8DC]`) med mørkristede aktive knapper (`#2C2018`) og diskret feltjournal-tæller på Logbook.
+- **Fjernelse af Stjerner på Coffee Bar:** Udskiftet `<Sparkles>` med en ren, professionel `<Coffee>` espressokop på Coffee Bar fanen og i Digital Barista Deck banneret.
+- **Scale Cam Fane Ikon:** Fanebladet for Scale Cam har nu fået et logisk og præcist `<Camera>` vektorikon i stedet for kaffekoppen, så man tydeligt skelner mellem kaffebaren og kamera-monitoren.
+
 ## [0.5.4] - 2026-09-26
 ### Added
 - **Steamed Water Guide til Americano & Long Black:** Implementeret barista-teknikken med mikroskopisk damp-luftet varmt vand i stedet for almindeligt kedelvand for en markant blødere og rundere smagsprofil.

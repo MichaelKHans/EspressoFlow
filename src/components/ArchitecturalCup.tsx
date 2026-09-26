@@ -30,17 +30,24 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
   const clipId = `cup-clip-${drink.id}-${size}`;
 
   // SVG coordinates space: 140 x 100
-  // Liquid interior limits: yTop = 16, yBottom = 84. Total liquid height = 68.
-  const yTop = 16;
-  const yBottom = 84;
+  // Style-specific interior liquid limits (y=0 is top, y=100 is bottom)
+  const styleBounds: Record<string, { yTop: number; yBottom: number }> = {
+    cup: { yTop: 16, yBottom: 84 },
+    demitasse: { yTop: 26, yBottom: 84 },
+    glass: { yTop: 16, yBottom: 82 },
+    'tall-glass': { yTop: 14, yBottom: 84 },
+  };
+
+  const { yTop, yBottom } = styleBounds[glassStyle] || styleBounds.cup;
   const totalLiquidHeight = yBottom - yTop;
 
-  // Compute accumulated layer positions from bottom up
-  let currentBottomY = yBottom;
+  // Compute accumulated layer positions from TOP DOWN
+  // In coffee physics, layer[0] is top (Crema / Foam) and the last layer is bottom (Espresso / Steamed Water / Milk)
+  let currentTopY = yTop;
   const renderedLayers = drink.layers.map((layer) => {
     const layerHeight = (layer.percentage / 100) * totalLiquidHeight;
-    const y = currentBottomY - layerHeight;
-    currentBottomY = y;
+    const y = currentTopY;
+    currentTopY += layerHeight;
     return {
       ...layer,
       y,

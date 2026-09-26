@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 – Crema Top-Down Fysik, Menuløft & Ikon-Sanering (v0.5.5)
+- **Crema & Væskelag Retning Løst (`ArchitecturalCup.tsx`):** Rettet renderingen så væskerne opbygges oppefra og ned. Crema og mikroskum ligger nu øverst i koppen som i virkeligheden, mens espresso, vand og mælk danner bunden.
+- **Drik-Specifikke Top- og Bundgrænser:** Justeret koordinater for demitasse (26px), standard kop (16px), facetglas (16px) og højt glas (14px) for perfekt kophøjde.
+- **Hovedmenu Løft & Taktil Segmenteret Kontrol:** Den flade tekststreg i navigationen er udskiftet med en eksklusiv segmenteret kapselbjælke med mørkristede aktive knapper (`#2C2018`) og ren badge-tæller på Logbook.
+- **Stjerner Fjernet fra Coffee Bar:** Udskiftet `<Sparkles>` med det korrekte `<Coffee>` kop-ikon på fanen og i Digital Barista Deck.
+- **Scale Cam Fane Ikon:** Udskiftet kop-ikon med et præcist `<Camera>` vektorikon til kameravægt-OCR.
+
 ### 2026-09-26 – Steamed Water Guide til Americano/Long Black & Micro-Aeration (v0.5.4)
 - **Steamed Water Guide til Americano / Long Black:** Integreret barista-metoden med mikroskopisk damp-luftet varmt vand (~78°C, 110ml) i stedet for fladt kedelvand.
 - **Dedikeret Steamed Water Guide i DrinkSelector:** Viser temperatur, volumen og dampmetode i Masterkortet på lige fod med mælkeguider.
