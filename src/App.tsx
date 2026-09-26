@@ -37,10 +37,20 @@ export function App() {
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'privacy' | 'terms' | 'support' | null>(null);
 
-  // Load persistence on mount
+  // Load persistence and handle legal deep links on mount
   useEffect(() => {
     setShots(loadShots());
     setAccessState(loadUserAccess());
+
+    // Deep link router for App Store / Google Play review URLs
+    const path = window.location.pathname.toLowerCase();
+    if (path.includes('privacy')) {
+      setLegalModalTab('privacy');
+    } else if (path.includes('terms') || path.includes('eula')) {
+      setLegalModalTab('terms');
+    } else if (path.includes('support') || path.includes('faq')) {
+      setLegalModalTab('support');
+    }
   }, []);
 
   const handleBrewStart = () => {
