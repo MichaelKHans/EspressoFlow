@@ -63,10 +63,10 @@
 - [x] **Fase 1: Østasien Specialty Epicentre (v0.8.0):**
   - [x] 🇰🇷 **Sydkorea (한국어 - `ko.ts`):** Komplet ordbog med SCA specialty barista-termer.
   - [x] 🇯🇵 **Japan (日本語 - `ja.ts`):** Komplet ordbog med kissaten- & specialty præcisionstermer.
-- [ ] **Fase 2: Asiatisk Vækst & Golfens Luksusmarked:**
-  - [ ] 🇨🇳 Kina (简体中文 - `zh-CN.ts`)
-  - [ ] 🇹🇼 Taiwan (繁體中文 - `zh-TW.ts`)
-  - [ ] 🇦🇪/🇸🇦 Dubai & Golfen (العربية - `ar.ts` med RTL support)
+- [x] **Fase 2: Asiatisk Vækst & Golfens Luksusmarked (v0.9.0):**
+  - [x] 🇨🇳 **Kina (简体中文 - `zh-CN.ts`):** Komplet ordbog tilpasset Kinas eksploderende specialty coffee marked (Shanghai m.fl.) med SCA standardtermer.
+  - [x] 🇹🇼 **Taiwan (繁體中文 - `zh-TW.ts`):** Komplet ordbog tilpasset Taiwans barista-mesterskabs standarder.
+  - [x] 🇦🇪/🇸🇦 **Dubai & Golfen (العربية - `ar.ts`):** Komplet arabisk ordbog med automatisk RTL (`dir="rtl"`) layout-understøttelse.
 - [ ] **Fase 3: Sydeuropas Kaffekultur:**
   - [ ] 🇮🇹 Italien (Italiano - `it.ts`)
   - [ ] 🇪🇸 Spanien & Latinamerika (Español - `es.ts`)

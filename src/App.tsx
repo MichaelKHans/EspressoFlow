@@ -449,7 +449,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.8.1
+                  v0.9.0
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -1302,7 +1302,7 @@ export function App() {
                 <p className="text-[11px] text-[#7A6E65] leading-relaxed">
                   Select your preferred language. Barista specialty coffee terms remain international.
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {supportedLanguages.map((lang) => (
                     <button
                       key={lang.code}

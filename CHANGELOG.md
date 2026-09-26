@@ -4,6 +4,15 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.9.0] - 2026-09-26
+### Added
+- **Global i18n Fase 2: Asiatisk Vækst & Golfens Luksusmarked (Kina, Taiwan & Dubai/UAE):**
+  - **Kina (`zh-CN` - 简体中文):** 100% komplet ordbog (87 nøgler) tilpasset Kinas gigantiske specialty coffee marked (Shanghai, Beijing, Shenzhen) med SCA terminologi (粉水比, 咖啡粉重, 萃取液重, 研磨度, 预浸泡, 通道效应, 校准).
+  - **Taiwan (`zh-TW` - 繁體中文):** 100% komplet ordbog (87 nøgler) skræddersyet til Taiwans verdensberømte barista- og risterimiljø (粉水比, 咖啡粉重, 萃取量, 研磨刻度, 預浸潤, 通道效應).
+  - **Dubai & Golfen (`ar` - العربية):** 100% komplet arabisk ordbog (87 nøgler) henvendt til De Forenede Arabiske Emirater og Mellemøstens luksuskaffescene (قهوة مختصة, نسبة الاستخلاص, جرعة البن, محصول الاستخلاص, درجة الطحن, الترطيب المسبق, التدفق القنوي).
+  - **Dynamisk RTL (Højre-mod-venstre) Support:** `document.documentElement.dir` skifter automatisk til `rtl`, når arabisk vælges, og tilbage til `ltr` for øvrige sprog.
+  - **Opdateret Sprogvælger:** Nu med 8 globale sprog (`🇬🇧 EN`, `🇩🇪 DE`, `🇩🇰 DA`, `🇰🇷 KO`, `🇯🇵 JA`, `🇨🇳 ZH-CN`, `🇹🇼 ZH-TW`, `🇦🇪 AR`).
+
 ## [0.8.1] - 2026-09-26
 ### Added & Improved
 - **Dybdegående Fuld-App Lokalisering (Onboarding Wizard, Paywall & Legal Center):**

@@ -4,8 +4,11 @@ import { de } from './locales/de';
 import { da } from './locales/da';
 import { ko } from './locales/ko';
 import { ja } from './locales/ja';
+import { zhCN } from './locales/zh-CN';
+import { zhTW } from './locales/zh-TW';
+import { ar } from './locales/ar';
 
-export type SupportedLanguage = 'en' | 'de' | 'da' | 'ko' | 'ja';
+export type SupportedLanguage = 'en' | 'de' | 'da' | 'ko' | 'ja' | 'zh-CN' | 'zh-TW' | 'ar';
 
 export interface LanguageInfo {
   code: SupportedLanguage;
@@ -19,6 +22,9 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
   { code: 'da', label: 'Dansk', flag: '🇩🇰' },
   { code: 'ko', label: '한국어', flag: '🇰🇷' },
   { code: 'ja', label: '日本語', flag: '🇯🇵' },
+  { code: 'zh-CN', label: '简体中文', flag: '🇨🇳' },
+  { code: 'zh-TW', label: '繁體中文', flag: '🇹🇼' },
+  { code: 'ar', label: 'العربية', flag: '🇦🇪' },
 ];
 
 const dictionaries: Record<SupportedLanguage, Partial<Record<TranslationKeys, string>>> = {
@@ -27,6 +33,9 @@ const dictionaries: Record<SupportedLanguage, Partial<Record<TranslationKeys, st
   da,
   ko,
   ja,
+  'zh-CN': zhCN,
+  'zh-TW': zhTW,
+  ar,
 };
 
 const STORAGE_KEY = 'espressoflow_lang';
@@ -38,7 +47,8 @@ const EVENT_NAME = 'espressoflow_lang_change';
 export function getInitialLanguage(): SupportedLanguage {
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as SupportedLanguage | null;
-    if (saved && (saved === 'en' || saved === 'de' || saved === 'da' || saved === 'ko' || saved === 'ja')) {
+    const validCodes: SupportedLanguage[] = ['en', 'de', 'da', 'ko', 'ja', 'zh-CN', 'zh-TW', 'ar'];
+    if (saved && validCodes.includes(saved)) {
       return saved;
     }
 
@@ -47,6 +57,9 @@ export function getInitialLanguage(): SupportedLanguage {
     if (browserLang.startsWith('da')) return 'da';
     if (browserLang.startsWith('ko')) return 'ko';
     if (browserLang.startsWith('ja')) return 'ja';
+    if (browserLang.startsWith('ar')) return 'ar';
+    if (browserLang === 'zh-tw' || browserLang === 'zh-hk' || browserLang.includes('hant')) return 'zh-TW';
+    if (browserLang.startsWith('zh')) return 'zh-CN';
   } catch {
     // Fallback if localStorage or navigator is unavailable
   }
@@ -91,6 +104,11 @@ export function useTranslation() {
     window.addEventListener(EVENT_NAME, handleLangChange);
     return () => window.removeEventListener(EVENT_NAME, handleLangChange);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+  }, [language]);
 
   const setLanguage = (newLang: SupportedLanguage) => {
     try {

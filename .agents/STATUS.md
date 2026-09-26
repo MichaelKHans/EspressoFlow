@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Global i18n Fase 2: Kina, Taiwan & Dubai/UAE (v0.9.0)
+- **Kina (简体中文 - `zh-CN.ts`):** 100% ordbog (87 nøgler) for det massive kinesiske specialty marked med standard SCA termer (粉水比, 咖啡粉重, 萃取液重, 研磨度, 预浸泡, 通道效应, 校准).
+- **Taiwan (繁體中文 - `zh-TW.ts`):** 100% ordbog (87 nøgler) for det taiwanske mesterskabs barista-miljø.
+- **Dubai & Golfen (العربية - `ar.ts`):** 100% arabisk ordbog (87 nøgler) med dynamisk RTL (`dir="rtl"`) understøttelse i HTML/CSS.
+- **8 Globale Sprog:** Sprogvælger i header og settings opdateret til 8 flag (`🇬🇧`, `🇩🇪`, `🇩🇰`, `🇰🇷`, `🇯🇵`, `🇨🇳`, `🇹🇼`, `🇦🇪`).
+
 ### 2026-09-26 -- Fuld-App Lokalisering: Onboarding, Paywall & Legal (v0.8.1)
 - **Onboarding Wizard (`OnboardingWizard.tsx`):** Tilkoblet `useTranslation()` med komplette tekster for alle 3 trin (kværn, maskine, bønne, ristegrader, skip og pose-scanning) på EN, DA, DE, KO og JA.
 - **Paywall Modal (`PaywallModal.tsx`):** Komplet oversat for Lifetime Pro adgang, prøveperiode-tæller, feature-liste og Restore Purchases.
