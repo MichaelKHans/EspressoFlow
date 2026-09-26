@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- 100% Mobil-Responsiv Top-Nav & Scale Cam Viewfinder Fixes (v0.6.3)
+- **Top-Navigation Fix:** Omlagt til `grid grid-cols-4 w-full` med responsive etiketter (`Bar`, `Scale`, `Logs`, `Gear`), så ingen knapper klippes af på smalle mobilskærme.
+- **Scale Cam Mobiloptimeret Header:** Fjernet horisontalt overløb; Live OCR vs Simulator er nu en tydelig farvekodet knap (`[📷 Live OCR]` / `[🧪 Start Camera]`), så man altid kan se og skifte til det rigtige kamera.
+- **Standard til Rigtigt Live Kamera:** Scale Cam forsøger nu at starte mobilens rigtige kamera som standard med adaptiv binarisering til 7-segment ciffer-OCR.
+- **Fjernet Tekstkollision i Viewfinder:** Tare-status og Target Yield-vejledning er samlet i én harmonisk statuslinje i bunden af viewfinderen uden overlap.
+
 ### 2026-09-26 -- De'Longhi Dedica EC685 Support & Mobiloptimeret Inline Bean Tuner (v0.6.2)
 - **De'Longhi Dedica EC685 Profil:** Tilføjet i Onboarding Wizard og Equipment Setup med fabrikskalibreret 2.0s puls pre-infusion for 15-bars thermoblock-systemet.
 - **Inline Quick Dial-In Tuner i Bønnekort:** Når en bønne i Bean Vault er aktiv, foldes en kompakt justeringsmenu ud direkte inde i kortet med `[-]` `[+]` kværnjustering, 1-tap risteprofil, dose/yield og kværnvælger. Fjerner behovet for lang rulning på mobilen.

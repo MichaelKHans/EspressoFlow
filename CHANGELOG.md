@@ -4,6 +4,19 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.6.3] - 2026-09-26
+### Added & Fixed
+- **100% Mobil-Responsiv Top-Navigation (`grid grid-cols-4`):**
+  - Fixet afskæring af knapperne i toppen på mobilskærme (`Coffee Bar` og `Beans & Gear` blev tidligere klippet i kanterne).
+  - Skiftet fra horisontalt overflow til et perfekt balanceret 4-kolonne grid (`Bar`, `Scale`, `Logs`, `Gear`), der altid passer 100% på alle mobilskærme fra 320px til 480px uden afskæring.
+- **Scale Cam Mobiloptimeret Viewfinder Header & Kontrol-Bar:**
+  - Fixet horisontalt overløb hvor `[Live Camera]` knappen blev skåret af i højre side på mobil.
+  - Gjort kamera/simulator skifteren super tydelig: `[📷 Live OCR]` vs `[🧪 Start Camera]` med farvekodning.
+  - Standardiseret så Scale Cam forsøger at tænde det rigtige kamera automatisk som standard, med elegant fejlhåndtering og fallback til simulatorsæt, hvis kameraet er spærret.
+- **Fjernet Tekst-Overlap i Viewfinder (Tare & Target):**
+  - `Step 0 Tare: 0.0g` og `Target: 18g in -> 36g out` kolliderede tidligere og overlappede hinanden på små skærme.
+  - Samlet i en ren, enkelt bund-statusbjælke i viewfinderen, der aldrig kan kollidere.
+
 ## [0.6.2] - 2026-09-26
 ### Added
 - **De'Longhi Dedica EC685 / EC680 Espressomaskine Support:**

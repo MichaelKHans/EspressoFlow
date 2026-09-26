@@ -32,7 +32,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [elapsedTime, setElapsedTime] = useState<number>(0.0);
   const [isZeroDetected, setIsZeroDetected] = useState<boolean>(true);
   const [displayInverted, setDisplayInverted] = useState<boolean>(false);
-  const [useRealCamera, setUseRealCamera] = useState<boolean>(false);
+  const [useRealCamera, setUseRealCamera] = useState<boolean>(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Split-Timer state
@@ -73,7 +73,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         setCameraError(null);
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: 'environment',
+            facingMode: { ideal: 'environment' },
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
@@ -81,10 +81,15 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          try {
+            await videoRef.current.play();
+          } catch (e) {
+            console.debug('video play prevented', e);
+          }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn('Camera access error or unsupported:', err);
-        setCameraError('Camera access not available or permission denied. Running in sensor simulation mode.');
+        setCameraError('Camera access not available or permission denied. Switched to Demo Simulator.');
         setUseRealCamera(false);
       }
     }
@@ -270,46 +275,57 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   return (
     <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] shadow-xs overflow-hidden">
-      {/* Viewfinder Header */}
-      <div className="px-4 py-3 border-b border-[#E8DFD5] flex items-center justify-between bg-[#FAF7F2]">
+      {/* Viewfinder Header - Responsive on mobile */}
+      <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-[#E8DFD5] bg-[#FAF7F2] flex flex-wrap items-center justify-between gap-2">
+        {/* Left: Mode Status with Pulsating Indicator */}
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#72806B] animate-pulse" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#2C2018] font-mono">
-            {useRealCamera ? `OCR Active (${ocrFps} FPS)` : 'Demo Extraction Mode'}
+          <div className={`w-2.5 h-2.5 rounded-full ${useRealCamera ? 'bg-[#72806B] animate-pulse' : 'bg-amber-500'}`} />
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
+            {useRealCamera ? `OCR Active (${ocrFps} FPS)` : 'Demo Simulator'}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Right / Controls: Compact Action Chips */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Primary Camera vs Simulator Toggle */}
+          <button
+            onClick={() => {
+              setCameraError(null);
+              setUseRealCamera(!useRealCamera);
+            }}
+            className={`text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border font-mono font-bold transition flex items-center gap-1 shadow-xs ${
+              useRealCamera
+                ? 'border-[#72806B] bg-[#72806B]/15 text-[#72806B]'
+                : 'border-[#C26D52] bg-[#C26D52] text-white'
+            }`}
+            title="Toggle between Live Real Scale Camera OCR and Simulator Mode"
+          >
+            <Camera className="w-3 h-3" />
+            <span>{useRealCamera ? 'Live OCR' : 'Start Camera'}</span>
+          </button>
+
           {/* Action-Oriented Align Scale Button */}
           <button
             onClick={() => setShowInspector(!showInspector)}
-            className={`text-[11px] px-2.5 py-1 rounded-md border font-mono transition flex items-center gap-1.5 ${
+            className={`text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border font-mono transition flex items-center gap-1 ${
               showInspector
-                ? 'border-[#C26D52] bg-[#C26D52] text-white shadow-xs'
+                ? 'border-[#C26D52] bg-[#C26D52] text-white shadow-xs font-bold'
                 : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018]'
             }`}
             title="Align scale with viewfinder crosshair and verify digit recognition"
           >
             <Scan className="w-3 h-3" />
-            <span>Align Scale</span>
+            <span>Align</span>
           </button>
 
           {/* Scale Screen Type (LED vs LCD) */}
           <button
             onClick={() => setDisplayInverted(!displayInverted)}
-            className="text-[11px] px-2 py-1 rounded-md border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
-            title="Toggle between LED (illuminated digits) and LCD (dark digits on grey)"
+            className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
+            title="Toggle between LED (illuminated digits) and LCD (dark digits on grey background)"
           >
             <Eye className="w-3 h-3" />
-            <span>{displayInverted ? 'Display: LCD' : 'Display: LED'}</span>
-          </button>
-
-          {/* Camera vs Demo Mode */}
-          <button
-            onClick={() => setUseRealCamera(!useRealCamera)}
-            className="text-[11px] px-2 py-1 rounded-md border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
-          >
-            <Camera className="w-3 h-3" />
-            <span>{useRealCamera ? 'Demo Mode' : 'Live Camera'}</span>
+            <span>{displayInverted ? 'LCD' : 'LED'}</span>
           </button>
         </div>
       </div>
@@ -386,15 +402,15 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
         </div>
 
-        {/* Step 0 Zero/Tare indicator badge */}
-        <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 bg-[#2C2018]/90 text-[#FAF7F2] text-[11px] px-2.5 py-1 rounded-md border border-[#E8DFD5]/20 font-mono">
-          <CheckCircle2 className={`w-3.5 h-3.5 ${isZeroDetected ? 'text-[#72806B]' : 'text-amber-400'}`} />
-          <span>Step 0 Tare: {isZeroDetected ? '0.0g Locked' : 'Needs Tare'}</span>
-        </div>
-
-        {/* Target Yield Guidance Badge */}
-        <div className="absolute bottom-3 right-3 z-10 bg-[#2C2018]/90 text-[#FAF7F2] text-[11px] px-2.5 py-1 rounded-md border border-[#E8DFD5]/20 font-mono">
-          Target: {targetDose}g in → {targetYield}g out
+        {/* Viewfinder Bottom Telemetry Bar (Single responsive bar, zero collision) */}
+        <div className="absolute bottom-2 inset-x-2 z-10 flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg bg-[#1A1412]/90 border border-white/10 text-[10px] sm:text-[11px] font-mono text-[#FAF7F2]">
+          <div className="flex items-center gap-1.5 truncate">
+            <CheckCircle2 className={`w-3 h-3 shrink-0 ${isZeroDetected ? 'text-[#72806B]' : 'text-amber-400'}`} />
+            <span>Tare: <strong className={isZeroDetected ? 'text-[#72806B]' : 'text-amber-400'}>{isZeroDetected ? '0.0g Locked' : 'Needs Tare'}</strong></span>
+          </div>
+          <div className="text-[#FAF7F2]/80 shrink-0 font-medium">
+            Target: <strong className="text-[#C26D52]">{targetDose}g</strong> → <strong className="text-[#72806B]">{targetYield}g</strong>
+          </div>
         </div>
       </div>
 
