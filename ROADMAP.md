@@ -4,14 +4,14 @@
 
 ---
 
-## ☕ FASE 1: FUNDAMENT, DESIGN SYSTEM & DEPLOYMENT (I GANG)
+## ☕ FASE 1: FUNDAMENT, DESIGN SYSTEM & DEPLOYMENT (AFSLUTTET)
 - [x] Master Blueprint & Arkitektur Guide færdiggjort
 - [x] .agents/ governance opsætning (projektinstrukser, workflow, status)
-- [ ] Initialisering af React + Vite + TypeScript web app
-- [ ] Tailwind CSS konfiguration: "Espresso Warmth" palette (`parchment`, `latte`, `espresso`, `taupe`, `terracotta`)
-- [ ] `Courier Prime` skrivemaskine-typografi integration
-- [ ] GitHub repository opsætning (`MichaelKHans/EspressoFlow`)
-- [ ] Vercel deployment til `espressoflow.vercel.app` (med `/privacy`, `/terms`, `/support`)
+- [x] Initialisering af React 19 + Vite + TypeScript web app
+- [x] Tailwind CSS konfiguration: "Espresso Warmth" palette (`parchment`, `latte`, `espresso`, `taupe`, `terracotta`)
+- [x] `Courier Prime` skrivemaskine-typografi integration for jitter-frie tal
+- [x] GitHub repository opsætning (`MichaelKHans/EspressoFlow`)
+- [ ] Vercel underdomæne linkning (`espressoflow.vercel.app`)
 
 ---
 
