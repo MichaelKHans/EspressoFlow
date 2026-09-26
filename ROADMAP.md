@@ -26,6 +26,12 @@
   - [x] **Grøn Display Læsbarheds-Boks (Target Lock):** Viewfinder med dynamisk grøn bounding box (`#10B981`) og `[ LOCKED: 39.5g ]` statuschip i opstartsfasen, når OCR har fundet gyldige, læsbare cifre med $\ge 70\%$ tillid, før brygning.
   - [x] **Ergonomisk Placerings-Vejledning:** Integreret hjælpetekst i live standby: *"Du kan roligt placere telefonen på kaffestationen, på en kop eller mod maskinens drypbakke, så linsen peger mod vægtens display"*.
   - [x] **Dual-Display & Blue LED Tolerance:** Automatisk adskillelse af vægt og timerrække (`0:00`) samt Max-RGB binarisering til mættede blå, cyan og hvide LED-segmenter.
+- [x] **Universal Scale OCR Engine 2.0 (v1.1.0):**
+  - [x] **Bradley-Roth 2D Adaptiv Tærskling:** $O(1)$ integral-billede tærskling med lokal kontrastanalyse ($W/14$). Modstår ekstremt modlys, overhead spotlights og uens skygger.
+  - [x] **Zero-Tap Auto-Polaritet (LED & LCD):** Automatisk histogram-detektering af om vægten er LED (lysende tal) eller reflekterende LCD (mørke tal på lys baggrund, f.eks. traditionelle køkkenvægte).
+  - [x] **Rumlig Klyngedannelse (Side-by-Side Isolation):** Adskiller automatisk side-by-side timere (`0:15`) fra vægtmålingen (`18.5g`) på enkelt-linje displays (fx Acaia Lunar, Timemore Black Mirror).
+  - [x] **Topologisk Fast-Path for '1':** Sikrer 100% konfidens og nul misklassifikation for tynde '1'-cifre ($W/H < 0.42$).
+  - [x] **3-Frame Temporal Konsensus Filter:** Robust afvisning af 1-frame damp/finger-interferens med øjeblikkelig respons på reelle vægttrin.
 
 ---
 

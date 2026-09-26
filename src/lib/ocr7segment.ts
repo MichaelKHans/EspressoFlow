@@ -28,6 +28,9 @@ export interface OCRResult {
   thresholdUsed: number;
   isStableZero: boolean;
   boundingBox?: { x: number; y: number; width: number; height: number } | null;
+  detectedPolarity?: 'led' | 'lcd';
+  autoPolarityUsed?: 'led' | 'lcd';
+  layoutType?: 'single' | 'stacked' | 'side-by-side';
 }
 
 // 7-segment bit patterns for digits 0-9 and '-'
@@ -98,18 +101,41 @@ export function calculateOtsuThreshold(grayPixels: Uint8Array): number {
 }
 
 /**
- * Converts ImageData to a high-contrast binary map
- * @param isDarkDigitsOnLight: true for classic LCD (grey/black), false for LED (illuminated blue/white/red on black)
+ * Computes a 2D Integral Image (summed-area table) for O(1) constant-time local window filtering.
+ */
+export function computeIntegralImage(gray: Uint8Array, width: number, height: number): Int32Array {
+  const S = new Int32Array((width + 1) * (height + 1));
+  const sWidth = width + 1;
+
+  for (let y = 0; y < height; y++) {
+    let rowSum = 0;
+    const grayRowOffset = y * width;
+    const sPrevRowOffset = y * sWidth;
+    const sCurrRowOffset = (y + 1) * sWidth;
+
+    for (let x = 0; x < width; x++) {
+      rowSum += gray[grayRowOffset + x];
+      S[sCurrRowOffset + (x + 1)] = S[sPrevRowOffset + (x + 1)] + rowSum;
+    }
+  }
+
+  return S;
+}
+
+/**
+ * Converts ImageData to a high-contrast binary map with Bradley-Roth adaptive thresholding.
+ * Suppresses specular spotlight glare, handles deep shadows, and automatically distinguishes LED from LCD displays.
  */
 export function binarizeROI(
   imageData: ImageData,
-  isDarkDigitsOnLight: boolean = false
-): { binary: Uint8Array; width: number; height: number; threshold: number } {
+  isDarkDigitsOnLight: boolean = false,
+  useAdaptiveThreshold: boolean = true
+): { binary: Uint8Array; width: number; height: number; threshold: number; detectedPolarity: 'led' | 'lcd' } {
   const { width, height, data } = imageData;
   const numPixels = width * height;
   const gray = new Uint8Array(numPixels);
 
-  // Convert to grayscale
+  let sumLuminance = 0;
   for (let i = 0; i < numPixels; i++) {
     const idx = i * 4;
     const r = data[idx];
@@ -117,37 +143,76 @@ export function binarizeROI(
     const b = data[idx + 2];
     // Rec.601 standard luminance: Y = 0.299R + 0.587G + 0.114B
     const lum = (r * 77 + g * 150 + b * 29) >> 8;
+    sumLuminance += lum;
 
     if (isDarkDigitsOnLight) {
       gray[i] = lum;
     } else {
       // LED Mode: Coffee scales use vibrant Blue, Cyan, White or Red LEDs.
-      // Standard luminance squashes Blue (multiplier 0.114).
       // Max-RGB boost ensures saturated Blue/Cyan LEDs reach full 255 intensity.
       const maxC = Math.max(r, g, b);
       gray[i] = Math.max(maxC, lum);
     }
   }
 
-  // Calculate threshold with floor protection for LED mode to eliminate background camera sensor noise
-  const rawThreshold = calculateOtsuThreshold(gray);
-  const threshold = isDarkDigitsOnLight
-    ? Math.min(180, rawThreshold)
-    : Math.max(60, rawThreshold);
-
+  const avgLuminance = sumLuminance / numPixels;
+  const detectedPolarity: 'led' | 'lcd' = avgLuminance < 115 ? 'led' : 'lcd';
+  const otsuThreshold = calculateOtsuThreshold(gray);
   const binary = new Uint8Array(numPixels);
 
-  for (let i = 0; i < numPixels; i++) {
-    if (isDarkDigitsOnLight) {
-      // Dark digits = active pixels (1)
-      binary[i] = gray[i] < threshold ? 1 : 0;
-    } else {
-      // Light LED digits = active pixels (1)
-      binary[i] = gray[i] > threshold ? 1 : 0;
+  if (!useAdaptiveThreshold) {
+    const threshold = isDarkDigitsOnLight
+      ? Math.min(180, otsuThreshold)
+      : Math.max(60, otsuThreshold);
+    for (let i = 0; i < numPixels; i++) {
+      binary[i] = isDarkDigitsOnLight
+        ? (gray[i] < threshold ? 1 : 0)
+        : (gray[i] > threshold ? 1 : 0);
+    }
+    return { binary, width, height, threshold, detectedPolarity };
+  }
+
+  // 2D Integral Image for Bradley-Roth Adaptive Thresholding
+  const S = computeIntegralImage(gray, width, height);
+  const sWidth = width + 1;
+  const windowRadius = Math.max(8, Math.floor(width / 14)); // adaptive window ~22px
+
+  for (let y = 0; y < height; y++) {
+    const y1 = Math.max(0, y - windowRadius);
+    const y2 = Math.min(height - 1, y + windowRadius);
+    const rowOffset = y * width;
+
+    for (let x = 0; x < width; x++) {
+      const x1 = Math.max(0, x - windowRadius);
+      const x2 = Math.min(width - 1, x + windowRadius);
+
+      const count = (x2 - x1 + 1) * (y2 - y1 + 1);
+      const sum =
+        S[(y2 + 1) * sWidth + (x2 + 1)] -
+        S[y1 * sWidth + (x2 + 1)] -
+        S[(y2 + 1) * sWidth + x1] +
+        S[y1 * sWidth + x1];
+
+      const localAvg = sum / count;
+      const pixelVal = gray[rowOffset + x];
+
+      if (isDarkDigitsOnLight) {
+        // Classic LCD: active if locally darker than background
+        // and below maximum ceiling to reject bright spotlight glare
+        const isLocallyDark = pixelVal <= localAvg * 0.85;
+        const isGloballyDark = pixelVal < otsuThreshold * 1.15;
+        binary[rowOffset + x] = isLocallyDark && isGloballyDark ? 1 : 0;
+      } else {
+        // Illuminated LED: active if locally brighter than background
+        // and above noise floor to reject specular glare halos
+        const isLocallyBright = pixelVal >= localAvg * 1.16;
+        const isAboveFloor = pixelVal >= Math.max(50, Math.floor(otsuThreshold * 0.65));
+        binary[rowOffset + x] = isLocallyBright && isAboveFloor ? 1 : 0;
+      }
     }
   }
 
-  return { binary, width, height, threshold };
+  return { binary, width, height, threshold: otsuThreshold, detectedPolarity };
 }
 
 /**
@@ -211,13 +276,15 @@ function probeDigitSegments(
     g: sampleSegment(binary, canvasW, box, 0.50, 0.50, 'h'), // Center horizontal
   };
 
-  // Special fast-path for digit '1'
-  // Digital scales render '1' with very narrow aspect ratio (width / height < 0.45)
-  if (box.width / box.height < 0.45 && (seg.b || seg.c) && !seg.g && !seg.a && !seg.d) {
+  // Special fast-path for digit '1':
+  // In 7-segment digital displays, all digits (0, 2-9) require two vertical columns and an inner hollow space,
+  // giving them an aspect ratio of width / height >= 0.50.
+  // The digit '1' is the unique single-column character with a narrow aspect ratio (width / height < 0.42).
+  if (box.width / box.height < 0.42 && box.height >= 12) {
     return {
-      segments: seg,
+      segments: { a: false, b: true, c: true, d: false, e: false, f: false, g: false },
       matchChar: '1',
-      confidence: 0.95,
+      confidence: 1.0,
     };
   }
 
@@ -263,6 +330,14 @@ function probeDigitSegments(
   };
 }
 
+interface ParsedElement {
+  type: 'digit' | 'dot' | 'colon' | 'minus';
+  char: string;
+  box: { x: number; y: number; width: number; height: number };
+  confidence: number;
+  segments?: SegmentProbeResult;
+}
+
 interface RowCandidate {
   yStart: number;
   yEnd: number;
@@ -274,21 +349,21 @@ interface RowCandidate {
   hasDecimal: boolean;
   hasColon: boolean;
   boundingBox: { x: number; y: number; width: number; height: number } | null;
+  layoutType: 'single' | 'stacked' | 'side-by-side';
   score: number;
 }
 
 /**
- * Main OCR recognition routine for a scale Region-of-Interest (ROI)
- * Features dual-row awareness (Weight vs Timer separation) and tight digit bounds
+ * Parses scale digits from a binary map with dual-row (stacked) and side-by-side (Timer + Weight) layout detection
  */
-export function recognizeScaleDigits(
-  imageData: ImageData,
-  isDarkDigits: boolean = false
+function parseDigitsFromBinary(
+  binary: Uint8Array,
+  width: number,
+  height: number,
+  threshold: number,
+  detectedPolarity: 'led' | 'lcd'
 ): OCRResult {
-  const { binary, width, height, threshold } = binarizeROI(imageData, isDarkDigits);
-
   // 1. Horizontal Row Projection: Find vertical row bands
-  // Digital scales with dual display (Weight top, Timer bottom) produce 2 distinct row bands.
   const rowCounts = new Array(height).fill(0);
   for (let y = 0; y < height; y++) {
     let count = 0;
@@ -322,8 +397,8 @@ export function recognizeScaleDigits(
     rowBands.push({ start: rowStart, end: height });
   }
 
-  // Fallback to full frame if no clear row bands emerged
   const candidateBands = rowBands.length > 0 ? rowBands : [{ start: 0, end: height }];
+  const isStackedDual = candidateBands.length > 1;
 
   // 2. Parse Each Row Candidate
   const evaluatedRows: RowCandidate[] = [];
@@ -366,17 +441,10 @@ export function recognizeScaleDigits(
       spans.push({ start: spanStart, end: width });
     }
 
-    const digits: DigitDetection[] = [];
-    let parsedText = '';
-    let hasDecimal = false;
-    let hasColon = false;
-    let minBoxX = width;
-    let maxBoxX = 0;
-    let minBoxY = height;
-    let maxBoxY = 0;
+    const elements: ParsedElement[] = [];
+    let rowHasColon = false;
 
     for (const span of spans) {
-      // Find tight vertical bounding box within this column span
       let spanMinY = band.end;
       let spanMaxY = band.start;
       let activePixels = 0;
@@ -391,47 +459,71 @@ export function recognizeScaleDigits(
         }
       }
 
-      if (activePixels < 4) continue; // Skip noise artifact
+      if (activePixels < 4) continue; // Noise artifact
 
       const spanW = span.end - span.start + 1;
       const spanH = spanMaxY - spanMinY + 1;
 
-      // Check for Decimal Point (small blob in bottom third of row)
+      // Decimal Point check (small blob in bottom third)
       const isNarrow = spanW <= Math.max(6, bandH * 0.35);
       const isShort = spanH <= Math.max(8, bandH * 0.38);
       const isBottom = spanMinY >= band.start + bandH * 0.48;
 
       if (isNarrow && isShort && isBottom) {
-        parsedText += '.';
-        hasDecimal = true;
-        if (span.start < minBoxX) minBoxX = span.start;
-        if (span.end > maxBoxX) maxBoxX = span.end;
-        if (spanMinY < minBoxY) minBoxY = spanMinY;
-        if (spanMaxY > maxBoxY) maxBoxY = spanMaxY;
+        elements.push({
+          type: 'dot',
+          char: '.',
+          box: { x: span.start, y: spanMinY, width: spanW, height: spanH },
+          confidence: 1.0,
+        });
         continue;
       }
 
-      // Check for Timer Colon ':' (two dots or vertical separator in middle)
-      if (isNarrow && spanH >= bandH * 0.5) {
-        parsedText += ':';
-        hasColon = true;
-        continue;
+      // Timer Colon ':' (two dots with empty gap in vertical center)
+      if (isNarrow && spanH >= bandH * 0.40) {
+        let centerPixels = 0;
+        const midY1 = band.start + Math.floor(bandH * 0.42);
+        const midY2 = band.start + Math.floor(bandH * 0.58);
+        for (let y = midY1; y <= midY2; y++) {
+          for (let x = span.start; x <= span.end; x++) {
+            if (binary[y * width + x] === 1) centerPixels++;
+          }
+        }
+
+        // A true colon has NO active pixels in the vertical center gap between the two dots
+        if (centerPixels <= 1) {
+          elements.push({
+            type: 'colon',
+            char: ':',
+            box: { x: span.start, y: spanMinY, width: spanW, height: spanH },
+            confidence: 0.95,
+          });
+          rowHasColon = true;
+          continue;
+        }
       }
 
-      // Check for Minus Sign '-' (horizontal bar in vertical middle)
+      // Minus Sign '-' (horizontal bar in center)
       const isMinusAspect = spanW >= spanH * 1.2;
       const isCenterVertical = spanMinY >= band.start + bandH * 0.3 && spanMaxY <= band.start + bandH * 0.7;
       if (isMinusAspect && isShort && isCenterVertical) {
-        parsedText += '-';
-        if (span.start < minBoxX) minBoxX = span.start;
-        if (span.end > maxBoxX) maxBoxX = span.end;
-        if (spanMinY < minBoxY) minBoxY = spanMinY;
-        if (spanMaxY > maxBoxY) maxBoxY = spanMaxY;
+        elements.push({
+          type: 'minus',
+          char: '-',
+          box: { x: span.start, y: spanMinY, width: spanW, height: spanH },
+          confidence: 0.90,
+        });
+        continue;
+      }
+
+      // Unit letter filtering ('g', 'oz', 'ml' on far right with non-digit bit pattern)
+      if (spanW <= bandH * 0.45 && spanH <= bandH * 0.45 && span.start > width * 0.65) {
+        // Skip isolated unit markers
         continue;
       }
 
       // 7-Segment Digit
-      if (spanH >= bandH * 0.40) {
+      if (spanH >= bandH * 0.38) {
         const box = {
           x: span.start,
           y: spanMinY,
@@ -441,41 +533,150 @@ export function recognizeScaleDigits(
 
         const result = probeDigitSegments(binary, width, box);
         if (result.matchChar !== '?') {
-          digits.push({
+          elements.push({
+            type: 'digit',
             char: result.matchChar,
-            confidence: result.confidence,
             box,
+            confidence: result.confidence,
             segments: result.segments,
           });
-          parsedText += result.matchChar;
-
-          if (box.x < minBoxX) minBoxX = box.x;
-          if (box.x + box.width > maxBoxX) maxBoxX = box.x + box.width;
-          if (box.y < minBoxY) minBoxY = box.y;
-          if (box.y + box.height > maxBoxY) maxBoxY = box.y + box.height;
         }
       }
     }
 
-    // Clean text and extract weight
+    // 3. Spatial Token Clustering: Group elements into contiguous tokens based on spatial proximity
+    // Consecutive digits within the same number are spaced close together (gap <= bandH * 0.50)
+    // Wide gaps or colons indicate a distinct token (e.g. side-by-side timer vs weight, or isolated glare)
+    const clusters: ParsedElement[][] = [];
+    let currentCluster: ParsedElement[] = [];
+
+    for (let i = 0; i < elements.length; i++) {
+      const el = elements[i];
+      if (currentCluster.length === 0) {
+        currentCluster.push(el);
+      } else {
+        const prev = currentCluster[currentCluster.length - 1];
+        const gap = el.box.x - (prev.box.x + prev.box.width);
+        const maxGap = Math.max(12, bandH * 0.55);
+
+        if (gap > maxGap || el.type === 'colon' || prev.type === 'colon') {
+          clusters.push(currentCluster);
+          currentCluster = [el];
+        } else {
+          currentCluster.push(el);
+        }
+      }
+    }
+    if (currentCluster.length > 0) {
+      clusters.push(currentCluster);
+    }
+
+    // Evaluate each cluster in the row band
+    // The winning cluster in this row is the one that has a decimal point (weight)
+    // or the primary numeric cluster with highest confidence
+    interface ClusterEval {
+      cluster: ParsedElement[];
+      text: string;
+      weight: number | null;
+      hasDecimal: boolean;
+      hasColon: boolean;
+      confidence: number;
+      score: number;
+    }
+
+    const evaluatedClusters: ClusterEval[] = [];
+
+    for (const cl of clusters) {
+      let clText = '';
+      let clHasDecimal = false;
+      let clHasColon = false;
+      const digitsInCl: DigitDetection[] = [];
+
+      for (const el of cl) {
+        clText += el.char;
+        if (el.type === 'dot') clHasDecimal = true;
+        if (el.type === 'colon') clHasColon = true;
+        if (el.type === 'digit') {
+          digitsInCl.push({
+            char: el.char,
+            confidence: el.confidence,
+            box: el.box,
+            segments: el.segments || { a: false, b: false, c: false, d: false, e: false, f: false, g: false },
+          });
+        }
+      }
+
+      const cleanNum = clText.replace(/[^0-9.-]/g, '');
+      const parsed = parseFloat(cleanNum);
+      const valid = !isNaN(parsed) && parsed >= -20 && parsed <= 2000;
+      const conf = digitsInCl.length > 0 ? digitsInCl.reduce((s, d) => s + d.confidence, 0) / digitsInCl.length : 0;
+
+      let clScore = conf * 20;
+      if (clHasDecimal) clScore += 70; // Big bonus for 0.1g coffee scale decimal
+      if (valid) clScore += 30;
+      if (clHasColon) clScore -= 80; // Timer penalty
+      if (digitsInCl.length >= 2) clScore += 15; // Realistic multi-digit number
+
+      evaluatedClusters.push({
+        cluster: cl,
+        text: clText,
+        weight: valid ? parsed : null,
+        hasDecimal: clHasDecimal,
+        hasColon: clHasColon,
+        confidence: conf,
+        score: clScore,
+      });
+    }
+
+    evaluatedClusters.sort((a, b) => b.score - a.score);
+    const bestCluster = evaluatedClusters[0];
+    const isSideBySide = clusters.length > 1 && (rowHasColon || evaluatedClusters.some(c => c.hasColon));
+    const layoutType: 'single' | 'stacked' | 'side-by-side' = isSideBySide ? 'side-by-side' : (isStackedDual ? 'stacked' : 'single');
+
+    let selectedDigits: DigitDetection[] = [];
+    let parsedText = '';
+    let parsedWeight: number | null = null;
+    let hasDec = false;
+
+    if (bestCluster) {
+      parsedText = bestCluster.text;
+      parsedWeight = bestCluster.weight;
+      hasDec = bestCluster.hasDecimal;
+      selectedDigits = bestCluster.cluster
+        .filter(el => el.type === 'digit')
+        .map(el => ({
+          char: el.char,
+          confidence: el.confidence,
+          box: el.box,
+          segments: el.segments || { a: false, b: false, c: false, d: false, e: false, f: false, g: false },
+        }));
+    }
+
     const cleanNumeric = parsedText.replace(/[^0-9.-]/g, '');
-    const parsedWeight = parseFloat(cleanNumeric);
-    const isValidNumber = !isNaN(parsedWeight) && parsedWeight >= -20 && parsedWeight <= 2000;
-    const weight = isValidNumber ? parsedWeight : null;
-    const isStableZero = weight === 0.0 || cleanNumeric === '0.0' || cleanNumeric === '0';
+    const isStableZero = parsedWeight === 0.0 || cleanNumeric === '0.0' || cleanNumeric === '0';
 
     const avgConfidence =
-      digits.length > 0
-        ? digits.reduce((sum, d) => sum + d.confidence, 0) / digits.length
+      selectedDigits.length > 0
+        ? selectedDigits.reduce((sum, d) => sum + d.confidence, 0) / selectedDigits.length
         : 0;
 
-    // Weight candidate ranking score:
-    // Coffee scale weights have decimal points (0.1g resolution) and no colons
     let score = avgConfidence * 20;
-    if (hasDecimal) score += 60; // Huge bonus: coffee scales measure 0.1g
-    if (isValidNumber) score += 30;
-    if (hasColon) score -= 60; // Penalty: this is a timer row like 0:00
-    if (rIdx === 0 && candidateBands.length > 1) score += 10; // Top row preference for dual displays
+    if (hasDec) score += 60;
+    if (parsedWeight !== null) score += 30;
+    if (rowHasColon && layoutType !== 'side-by-side') score -= 60; // Penalize timer-only row
+    if (rIdx === 0 && candidateBands.length > 1) score += 10; // Top row bonus for stacked
+
+    let minBoxX = width;
+    let maxBoxX = 0;
+    let minBoxY = height;
+    let maxBoxY = 0;
+
+    for (const d of selectedDigits) {
+      if (d.box.x < minBoxX) minBoxX = d.box.x;
+      if (d.box.x + d.box.width > maxBoxX) maxBoxX = d.box.x + d.box.width;
+      if (d.box.y < minBoxY) minBoxY = d.box.y;
+      if (d.box.y + d.box.height > maxBoxY) maxBoxY = d.box.y + d.box.height;
+    }
 
     const boundingBox =
       maxBoxX > minBoxX && maxBoxY > minBoxY
@@ -485,19 +686,19 @@ export function recognizeScaleDigits(
     evaluatedRows.push({
       yStart: band.start,
       yEnd: band.end,
-      weight,
+      weight: parsedWeight,
       rawText: parsedText,
       confidence: avgConfidence,
-      digits,
+      digits: selectedDigits,
       isStableZero,
-      hasDecimal,
-      hasColon,
+      hasDecimal: hasDec,
+      hasColon: rowHasColon,
       boundingBox,
+      layoutType,
       score,
     });
   }
 
-  // Sort rows to select the most probable coffee scale weight
   evaluatedRows.sort((a, b) => b.score - a.score);
   const best = evaluatedRows[0] || {
     weight: null,
@@ -506,6 +707,7 @@ export function recognizeScaleDigits(
     digits: [],
     isStableZero: false,
     boundingBox: null,
+    layoutType: 'single' as const,
   };
 
   return {
@@ -516,15 +718,78 @@ export function recognizeScaleDigits(
     thresholdUsed: threshold,
     isStableZero: best.isStableZero,
     boundingBox: best.boundingBox,
+    detectedPolarity,
+    layoutType: best.layoutType,
   };
 }
 
 /**
- * Espresso Shot Outlier Filter: Rejects single-frame steam artifacts or hand occlusions
+ * Main OCR recognition routine for a scale Region-of-Interest (ROI)
+ * Supports 'auto' zero-tap auto-polarity detection with Bradley-Roth adaptive thresholding
+ */
+export function recognizeScaleDigits(
+  imageData: ImageData,
+  displayMode: 'auto' | 'led' | 'lcd' | boolean = 'auto'
+): OCRResult {
+  // Determine execution mode
+  if (displayMode === 'lcd' || displayMode === true) {
+    const { binary, width, height, threshold, detectedPolarity } = binarizeROI(imageData, true);
+    const res = parseDigitsFromBinary(binary, width, height, threshold, detectedPolarity);
+    res.autoPolarityUsed = 'lcd';
+    return res;
+  }
+
+  if (displayMode === 'led' || displayMode === false) {
+    const { binary, width, height, threshold, detectedPolarity } = binarizeROI(imageData, false);
+    const res = parseDigitsFromBinary(binary, width, height, threshold, detectedPolarity);
+    res.autoPolarityUsed = 'led';
+    return res;
+  }
+
+  // AUTO POLARITY MODE: Automatically recognizes whether scale is LED or LCD
+  // 1. Try LED mode first (most common for espresso scales: Acaia, Timemore, MHW-3BOMBER)
+  const ledBinarized = binarizeROI(imageData, false);
+  const resLED = parseDigitsFromBinary(
+    ledBinarized.binary,
+    ledBinarized.width,
+    ledBinarized.height,
+    ledBinarized.threshold,
+    ledBinarized.detectedPolarity
+  );
+
+  // If LED result has high confidence and valid weight, return immediately
+  if (resLED.confidence >= 0.70 && resLED.weight !== null && ledBinarized.detectedPolarity === 'led') {
+    resLED.autoPolarityUsed = 'led';
+    return resLED;
+  }
+
+  // 2. Try LCD mode (classic kitchen scales: Soehnle, Taylor, Amazon basics)
+  const lcdBinarized = binarizeROI(imageData, true);
+  const resLCD = parseDigitsFromBinary(
+    lcdBinarized.binary,
+    lcdBinarized.width,
+    lcdBinarized.height,
+    lcdBinarized.threshold,
+    lcdBinarized.detectedPolarity
+  );
+
+  if (resLCD.confidence > resLED.confidence && resLCD.weight !== null) {
+    resLCD.autoPolarityUsed = 'lcd';
+    return resLCD;
+  }
+
+  resLED.autoPolarityUsed = 'led';
+  return resLED;
+}
+
+/**
+ * Espresso Shot Outlier & Stability Filter with 3-Frame Temporal Consensus Buffer
+ * Rejects steam artifacts, hand occlusions, and eliminates 1-frame micro-jitters
  */
 export class ScaleReadingFilter {
   private lastValidWeight: number = 0;
   private consecutiveSameCount: number = 0;
+  private recentWindow: number[] = [];
 
   public sanitize(
     newReading: number | null,
@@ -534,19 +799,37 @@ export class ScaleReadingFilter {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
-    // Maximum physically possible flow rate from an espresso pump is ~6 g/s
-    // Jumps greater than 1.5g in 0.1s are optical glitches (steam / glare)
-    const maxDelta = Math.max(0.5, deltaTimeSeconds * 8.0);
-    const delta = Math.abs(newReading - this.lastValidWeight);
-
-    // Initial zero tare is always accepted
+    // Always accept tare lock (0.0g - 0.2g when starting)
     if (this.lastValidWeight === 0 && newReading <= 0.2) {
       this.lastValidWeight = newReading;
+      this.recentWindow = [newReading];
       return { weight: newReading, isOutlier: false };
     }
 
-    if (delta > maxDelta && this.consecutiveSameCount < 3) {
-      // Possible outlier - increment verification counter
+    // Maximum physically possible flow rate from an espresso extraction is ~6.0 g/s
+    const maxDelta = Math.max(0.6, deltaTimeSeconds * 8.0);
+    const delta = Math.abs(newReading - this.lastValidWeight);
+
+    // Keep sliding 3-frame buffer
+    this.recentWindow.push(newReading);
+    if (this.recentWindow.length > 3) {
+      this.recentWindow.shift();
+    }
+
+    if (delta > maxDelta && this.consecutiveSameCount < 2) {
+      // Possible optical glitch or legitimate cup placement:
+      // Verify whether at least 2 frames in window agree on the new reading
+      if (this.recentWindow.length >= 2) {
+        const lastTwoDiff = Math.abs(
+          this.recentWindow[this.recentWindow.length - 1] - this.recentWindow[this.recentWindow.length - 2]
+        );
+        if (lastTwoDiff <= 0.2) {
+          // Agreement confirmed on legitimate step change!
+          this.lastValidWeight = newReading;
+          this.consecutiveSameCount = 0;
+          return { weight: newReading, isOutlier: false };
+        }
+      }
       this.consecutiveSameCount++;
       return { weight: this.lastValidWeight, isOutlier: true };
     }
@@ -560,5 +843,6 @@ export class ScaleReadingFilter {
   public reset(initialWeight: number = 0) {
     this.lastValidWeight = initialWeight;
     this.consecutiveSameCount = 0;
+    this.recentWindow = [];
   }
 }

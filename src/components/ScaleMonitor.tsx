@@ -35,7 +35,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [currentFlow, setCurrentFlow] = useState<number>(0.0);
   const [elapsedTime, setElapsedTime] = useState<number>(0.0);
   const [isZeroDetected, setIsZeroDetected] = useState<boolean>(false);
-  const [displayInverted, setDisplayInverted] = useState<boolean>(false);
+  const [displayMode, setDisplayMode] = useState<'auto' | 'led' | 'lcd'>('auto');
   const [cameraState, setCameraState] = useState<'standby' | 'live' | 'demo'>('standby');
   const [cameraError, setCameraError] = useState<string | null>(null);
 
@@ -136,8 +136,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       ctx.drawImage(video, roiX, roiY, roiW, roiH, 0, 0, offscreen.width, offscreen.height);
       const imgData = ctx.getImageData(0, 0, offscreen.width, offscreen.height);
 
-      // Perform 7-segment digit recognition
-      const result = recognizeScaleDigits(imgData, displayInverted);
+      // Perform 7-segment digit recognition with universal auto-polarity and glare rejection
+      const result = recognizeScaleDigits(imgData, displayMode);
       setLastOcrResult(result);
 
       if (inspectorCanvasRef.current) {
@@ -188,7 +188,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     return () => {
       if (ocrIntervalRef.current) clearInterval(ocrIntervalRef.current);
     };
-  }, [cameraState, displayInverted, isZeroDetected, isBrewing, onBrewStart]);
+  }, [cameraState, displayMode, isZeroDetected, isBrewing, onBrewStart]);
 
   // Handle Shot Timeline, Split-Timer & Simulation
   useEffect(() => {
@@ -400,12 +400,22 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
               <button
                 type="button"
-                onClick={() => setDisplayInverted(!displayInverted)}
+                onClick={() => {
+                  setDisplayMode((prev) => {
+                    if (prev === 'auto') return 'led';
+                    if (prev === 'led') return 'lcd';
+                    return 'auto';
+                  });
+                }}
                 className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
-                title="Toggle between LED and LCD digits"
+                title="Cycle display mode: Auto (auto-polarity), LED (light on dark), LCD (dark on light)"
               >
                 <Eye className="w-3 h-3" />
-                <span>{displayInverted ? 'LCD' : 'LED'}</span>
+                <span>
+                  {displayMode === 'auto'
+                    ? `Auto (${lastOcrResult?.autoPolarityUsed ? lastOcrResult.autoPolarityUsed.toUpperCase() : 'LED'})`
+                    : displayMode.toUpperCase()}
+                </span>
               </button>
             </>
           ) : (
@@ -484,7 +494,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             autoPlay
             playsInline
             muted
-            className={`absolute inset-0 w-full h-full object-cover ${displayInverted ? 'invert' : ''}`}
+            className={`absolute inset-0 w-full h-full object-cover ${
+              displayMode === 'lcd' || (displayMode === 'auto' && lastOcrResult?.autoPolarityUsed === 'lcd')
+                ? 'invert'
+                : ''
+            }`}
           />
         ) : (
           <div className="absolute inset-0 bg-radial from-[#2C2018] to-[#120E0B] flex flex-col items-center justify-center p-6 select-none">
@@ -627,6 +641,29 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 <span className="text-[#E8DFD5]/60">Confidence: </span>
                 <span className="text-[#72806B] font-semibold">
                   {lastOcrResult ? `${Math.round(lastOcrResult.confidence * 100)}%` : '100%'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[#E8DFD5]/60">Display Mode: </span>
+                <span className="text-[#FAF7F2]">
+                  {displayMode === 'auto'
+                    ? `Auto (${lastOcrResult?.autoPolarityUsed?.toUpperCase() || 'LED'})`
+                    : displayMode.toUpperCase()}
+                  {lastOcrResult?.detectedPolarity && (
+                    <span className="text-[#E8DFD5]/50 ml-1">
+                      [sensor: {lastOcrResult.detectedPolarity.toUpperCase()}]
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div>
+                <span className="text-[#E8DFD5]/60">Layout: </span>
+                <span className="text-[#FAF7F2]">
+                  {lastOcrResult?.layoutType === 'side-by-side'
+                    ? 'Side-by-side (Isolated Timer)'
+                    : lastOcrResult?.layoutType === 'stacked'
+                    ? 'Stacked Dual-Row'
+                    : 'Single Row'}
                 </span>
               </div>
               <div>
