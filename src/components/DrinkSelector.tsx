@@ -12,6 +12,7 @@ import {
   X,
   Lightbulb,
   Layers,
+  Plus,
 } from 'lucide-react';
 import { loadActiveBarDrinkIds, saveActiveBarDrinkIds } from '../lib/storage';
 import { ArchitecturalCup } from './ArchitecturalCup';
@@ -122,20 +123,21 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/10">
           <div className="flex items-center justify-between mb-2">
             <div className="text-[9px] sm:text-[10px] font-mono text-[#E8DFD5]/70 uppercase tracking-wider font-bold">
-              Your Active Bar Deck ({activeDeckIds.length} pinned):
+              Your Active Bar Deck ({activeDeckIds.length} of {DRINK_RECIPES.length} pinned):
             </div>
             <button
               type="button"
               onClick={() => setIsCustomizeModalOpen(true)}
               className="text-[10px] sm:text-[11px] font-mono text-[#FAF7F2] hover:text-[#FFFDF9] bg-white/10 hover:bg-white/20 border border-white/15 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition"
-              title="Customize which drinks appear on your quick bar"
+              title="Browse all 12 drinks or customize quick deck"
             >
               <Settings2 className="w-3 h-3 text-[#C26D52]" />
-              <span>Customize Bar</span>
+              <span>All Drinks & Deck</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {/* Quick Deck Buttons: Wrapped so all pinned drinks are instantly visible! */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {DRINK_RECIPES.filter((d) => activeDeckIds.includes(d.id)).map((drink) => {
               const isSelected = drink.id === selectedDrink.id;
               const shortName = drink.name.split('/')[0].trim();
@@ -143,9 +145,9 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                 <button
                   key={drink.id}
                   onClick={() => onSelectDrink(drink)}
-                  className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-mono font-medium transition shrink-0 flex items-center gap-2 ${
+                  className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium transition flex items-center gap-1.5 sm:gap-2 ${
                     isSelected
-                      ? 'bg-[#C26D52] text-white shadow-xs font-bold scale-[1.02]'
+                      ? 'bg-[#C26D52] text-white shadow-xs font-bold ring-2 ring-white/30 scale-[1.02]'
                       : 'bg-white/10 text-[#FAF7F2] hover:bg-white/20 border border-white/10'
                   }`}
                 >
@@ -154,6 +156,17 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                 </button>
               );
             })}
+
+            {/* "+ More Drinks" button right in the ribbon */}
+            <button
+              type="button"
+              onClick={() => setIsCustomizeModalOpen(true)}
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium bg-white/5 hover:bg-white/15 border border-dashed border-white/30 text-[#E8DFD5] transition flex items-center gap-1.5"
+              title="Browse all 12 specialty recipes"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#C26D52]" />
+              <span>More ({DRINK_RECIPES.length - activeDeckIds.length})</span>
+            </button>
           </div>
         </div>
       </div>
@@ -192,9 +205,20 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               )}
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-bold font-serif text-[#2C2018]">
-              {selectedDrink.name}
-            </h3>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h3 className="text-xl sm:text-2xl font-bold font-serif text-[#2C2018]">
+                {selectedDrink.name}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsCustomizeModalOpen(true)}
+                className="text-[10px] sm:text-[11px] font-mono text-[#C26D52] hover:text-[#2C2018] flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5]/50 transition shrink-0"
+                title="Switch to another specialty drink"
+              >
+                <span>Switch</span>
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
             <p className="text-xs text-[#7A6E65] leading-relaxed line-clamp-2 sm:line-clamp-none">
               {selectedDrink.description}
             </p>
@@ -449,15 +473,15 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         </div>
       </div>
 
-      {/* 6. Customize Coffee Bar Modal */}
+      {/* 6. All Drinks & Deck Customizer Modal */}
       {isCustomizeModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#E8DFD5] max-w-md w-full p-4 sm:p-6 shadow-xl space-y-4 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-[#E8DFD5]">
               <div className="flex items-center gap-2">
-                <Settings2 className="w-4 h-4 text-[#C26D52]" />
+                <Coffee className="w-4 h-4 text-[#C26D52]" />
                 <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-                  Customize Bar Deck
+                  Specialty Drink Deck & Menu
                 </h3>
               </div>
               <button
@@ -469,47 +493,79 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               </button>
             </div>
 
-            <p className="text-[11px] text-[#7A6E65] font-mono">
-              Toggle which drinks appear in your top 1-tap quick bar. Keep your daily workflow fast and clutter-free.
+            <p className="text-[11px] text-[#7A6E65] font-mono leading-relaxed">
+              <strong>Tap any drink</strong> to select and brew it immediately. Use the <strong>Pin</strong> button to customize which drinks appear on your top 1-tap quick bar.
             </p>
 
             {/* Drink Selection List */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
               {DRINK_RECIPES.map((drink) => {
                 const isActive = activeDeckIds.includes(drink.id);
+                const isSelected = drink.id === selectedDrink.id;
                 return (
-                  <button
+                  <div
                     key={drink.id}
-                    type="button"
-                    onClick={() => toggleDeckDrink(drink.id)}
-                    className={`w-full p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition flex items-center justify-between ${
-                      isActive
-                        ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52]'
-                        : 'border-[#E8DFD5] bg-white hover:bg-[#FAF7F2]/50'
+                    className={`w-full p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border transition flex items-center justify-between gap-2.5 ${
+                      isSelected
+                        ? 'border-[#C26D52] bg-[#FAF7F2] ring-2 ring-[#C26D52]/20 shadow-xs'
+                        : 'border-[#E8DFD5] bg-white hover:border-[#C26D52]/40 hover:bg-[#FAF7F2]/40'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
+                    {/* Main Clickable Area: Select Drink for Brewing */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectDrink(drink);
+                        setIsCustomizeModalOpen(false);
+                      }}
+                      className="flex items-center gap-2.5 flex-1 min-w-0 text-left group cursor-pointer"
+                      title={`Select ${drink.name} for brewing`}
+                    >
                       <ArchitecturalCup drink={drink} size="sm" />
-                      <div>
-                        <div className="text-xs font-bold text-[#2C2018] font-serif">
-                          {drink.name}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-[#2C2018] font-serif group-hover:text-[#C26D52] transition truncate">
+                            {drink.name}
+                          </span>
+                          {isSelected && (
+                            <span className="text-[8px] font-mono uppercase font-bold px-1.5 py-0.2 rounded-full bg-[#C26D52] text-white">
+                              Active
+                            </span>
+                          )}
                         </div>
-                        <div className="text-[10px] text-[#7A6E65] font-mono mt-0.5">
+                        <div className="text-[10px] text-[#7A6E65] font-mono mt-0.5 truncate">
                           {drink.cupVolumeMl}ml • {drink.category} • 1:{drink.targetRatio} ratio
                         </div>
                       </div>
-                    </div>
+                    </button>
 
-                    <div
-                      className={`w-5 h-5 rounded-lg border flex items-center justify-center transition shrink-0 ${
+                    {/* Quick Bar Pin Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDeckDrink(drink.id);
+                      }}
+                      className={`text-[10px] font-mono px-2 py-1 rounded-lg border flex items-center gap-1 transition shrink-0 ${
                         isActive
-                          ? 'bg-[#C26D52] border-[#C26D52] text-white'
-                          : 'border-[#E8DFD5] bg-white'
+                          ? 'bg-[#C26D52]/10 border-[#C26D52] text-[#C26D52] font-semibold'
+                          : 'bg-[#FAF7F2] border-[#E8DFD5] text-[#7A6E65] hover:text-[#2C2018]'
                       }`}
+                      title={isActive ? 'Remove from top quick bar' : 'Pin to top quick bar'}
                     >
-                      {isActive && <Check className="w-3.5 h-3.5" />}
-                    </div>
-                  </button>
+                      {isActive ? (
+                        <>
+                          <Check className="w-3 h-3 text-[#C26D52]" />
+                          <span>Pinned</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3 h-3 text-[#7A6E65]" />
+                          <span>Pin</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 );
               })}
             </div>

@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.5.6] - 2026-09-26
+### Fixed
+- **Synlighed af Fastgjorte Drikke i Quick Bar Deck:** Løst problemet med at kun 3 af de fastgjorte drikke var synlige på mobil. Baren ombryder nu automatisk (`flex flex-wrap`), så samtlige fastgjorte drikke (fx alle 6: Cappuccino, Double Espresso, Flat White, Cortado, Latte, Americano) vises på 2 kompakte rækker på mobilen uden at være gemt bag en usynlig vandret rullebjælke.
+- **Direkte Valg af Drikke i Vælger-Modalen:** I modulet med alle 12 specialitetsdrikke kan man nu trykke direkte på hvilken som helst drik for øjeblikkeligt at vælge den til brygning og lukke modalen. Samtidig har hver drik fået en dedikeret "Pin / Pinned"-knap til at tilføje/fjerne den fra sin hurtig-bar.
+- **Hurtig-Skift Knap på Masterkortet:** Tilføjet en "Switch"-knap direkte ved siden af drikkens navn i Masterkortet, så man altid med 1 tryk kan skifte til en vilkårlig af de 12 kaffeopskrifter uden at skulle lede.
+- **"+ More" Knap i Quick Baren:** Tilføjet en stiplet `+ More (X)` knap direkte i forlængelse af de fastgjorte drikke, der åbner det samlede drikkekatalog.
+
 ## [0.5.5] - 2026-09-26
 ### Fixed
 - **Crema & Væskelag Retning i Koppen (`ArchitecturalCup.tsx`):** Rettet den kritiske beregningsfejl, hvor væskelagene blev tegnet nedefra og op, hvilket placerede crema/skum i bunden og kaffen i toppen. Alle 12 drikke renderes nu korrekt fra toppen og ned: Crema og mikroskum ligger elegant øverst, mens espressokrop, dampet vand og sød kondenseret mælk ligger i bunden.

@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 – Quick Deck Synlighed, Direkte Drikkevalg & Switch Knap (v0.5.6)
+- **Fuld Synlighed for Alle Fastgjorte Drikke (`DrinkSelector.tsx`):** Hurtig-baren ombryder nu automatisk (`flex flex-wrap`), så alle 6 fastgjorte drikke (Cappuccino, Doppio, Flat White, Cortado, Latte, Americano) vises på 2 overskuelige rækker uden at være gemt bag en usynlig horisontal rullebjælke.
+- **Direkte Valg i Specialitets-Modalen:** Tryk på en hvilken som helst af de 12 drikke vælger og låser den straks til brygning og lukker modalen.
+- **Dedikerede "Pin / Pinned" Knapper:** Hver drik i modalen har sin egen faste pin-knap til at tilføje/fjerne den fra topbaren.
+- **Hurtig-Skift Knap på Masterkortet:** Tilføjet "Switch"-knap direkte ved siden af drikkens overskrift for lynhurtigt skift mellem opskrifter.
+- **"+ More" Knap på Baren:** Viser det resterende antal drikke direkte i bjælken med 1-klik adgang til alle opskrifter.
+
 ### 2026-09-26 – Crema Top-Down Fysik, Menuløft & Ikon-Sanering (v0.5.5)
 - **Crema & Væskelag Retning Løst (`ArchitecturalCup.tsx`):** Rettet renderingen så væskerne opbygges oppefra og ned. Crema og mikroskum ligger nu øverst i koppen som i virkeligheden, mens espresso, vand og mælk danner bunden.
 - **Drik-Specifikke Top- og Bundgrænser:** Justeret koordinater for demitasse (26px), standard kop (16px), facetglas (16px) og højt glas (14px) for perfekt kophøjde.
