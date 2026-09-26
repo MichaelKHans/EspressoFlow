@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.6.6] - 2026-09-26
+### Improved
+- **Intelligent Mellem-Skærm Top-Navigation (Breakpoints til 380px+):**
+  - Justeret menulinjens responsive breakpoints med ny `--breakpoint-xs: 380px`.
+  - Viser fulde navne (`Coffee Bar`, `Scale Cam`, `Logbook`, `Beans & Gear`) på alle standard og større mobiltelefoner samt tablets, hvor der er plads.
+  - Bevarer ultrakompakte etiketter (`Bar`, `Scale`, `Logs`, `Gear`) udelukkende på skærme under 380px for at garantere nul layout-brud.
+
 ## [0.6.5] - 2026-09-26
 ### Added
 - **Pose- & Stregkodescanning direkte i Onboarding Wizard (Trin 3):**

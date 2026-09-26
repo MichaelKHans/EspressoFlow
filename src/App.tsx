@@ -441,7 +441,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.6.5
+                  v0.6.6
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -469,11 +469,11 @@ export function App() {
         </div>
 
         {/* Tab Navigation (Elevated Tactile Segmented Bar - 100% Mobile Responsive) */}
-        <div className="max-w-4xl mx-auto px-2.5 sm:px-4 pb-2.5 pt-1">
-          <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#E8DFD5] text-[10px] sm:text-xs font-mono shadow-inner">
+        <div className="max-w-4xl mx-auto px-2 xs:px-2.5 sm:px-4 pb-2.5 pt-1">
+          <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#E8DFD5] text-[10px] xs:text-[11px] sm:text-xs font-mono shadow-inner">
             <button
               onClick={() => setActiveTab('drinks')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
+              className={`py-1.5 sm:py-2 px-1 xs:px-1.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
                 activeTab === 'drinks'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -481,14 +481,14 @@ export function App() {
             >
               <Coffee className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'drinks' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="sm:hidden">Bar</span>
-                <span className="hidden sm:inline">Coffee Bar</span>
+                <span className="xs:hidden">Bar</span>
+                <span className="hidden xs:inline">Coffee Bar</span>
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('monitor')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
+              className={`py-1.5 sm:py-2 px-1 xs:px-1.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
                 activeTab === 'monitor'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -496,14 +496,14 @@ export function App() {
             >
               <Camera className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'monitor' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="sm:hidden">Scale</span>
-                <span className="hidden sm:inline">Scale Cam</span>
+                <span className="xs:hidden">Scale</span>
+                <span className="hidden xs:inline">Scale Cam</span>
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('logbook')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
+              className={`py-1.5 sm:py-2 px-1 xs:px-1.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
                 activeTab === 'logbook'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -511,8 +511,8 @@ export function App() {
             >
               <BookOpen className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'logbook' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="sm:hidden">Logs</span>
-                <span className="hidden sm:inline">Logbook</span>
+                <span className="xs:hidden">Logs</span>
+                <span className="hidden xs:inline">Logbook</span>
               </span>
               {shots.length > 0 && (
                 <span
@@ -529,7 +529,7 @@ export function App() {
 
             <button
               onClick={() => setActiveTab('equipment')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
+              className={`py-1.5 sm:py-2 px-1 xs:px-1.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
                 activeTab === 'equipment'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -537,8 +537,8 @@ export function App() {
             >
               <Sliders className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'equipment' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="sm:hidden">Gear</span>
-                <span className="hidden sm:inline">Beans & Gear</span>
+                <span className="xs:hidden">Gear</span>
+                <span className="hidden xs:inline">Beans & Gear</span>
               </span>
             </button>
           </nav>

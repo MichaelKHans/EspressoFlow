@@ -11,6 +11,9 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Adaptiv Mellem-Skærm Top-Navigation (v0.6.6)
+- **Top-Navigation Breakpoint (380px+):** Implementeret `--breakpoint-xs: 380px`, så fulde titler (`Coffee Bar`, `Scale Cam`, `Logbook`, `Beans & Gear`) vises på alle normale smartphones og tablets, mens ultrakompakte titler (`Bar`, `Gear` osv.) reserveres til ekstremt smalle skærme (<380px).
+
 ### 2026-09-26 -- Pose- & Stregkodescanning i Onboarding Wizard (v0.6.5)
 - **Pose- & Stregkodescanning i Onboarding (Trin 3):** Tilføjet `[Scan Bag]` med `BeanScannerModal` direkte i velkomstguidens trin 3, så nye brugere kan scanne posens stregkode/etiket og få udfyldt navn, risteri, risteprofil og dato automatisk.
 
