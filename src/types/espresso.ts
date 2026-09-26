@@ -79,3 +79,34 @@ export interface UserAccessState {
   daysRemainingInTrial: number;
 }
 
+export type DrinkId = 'espresso' | 'cappuccino' | 'flat-white' | 'cortado' | 'lungo' | 'americano';
+
+export interface DrinkLayer {
+  name: string;
+  percentage: number; // 0-100
+  color: string;
+  description: string;
+}
+
+export interface DrinkRecipe {
+  id: DrinkId;
+  name: string;
+  subtitle: string;
+  category: 'black' | 'milk';
+  defaultDoseGrams: number;
+  targetYieldGrams: number;
+  targetRatio: number;
+  ratioStyle: RatioStyle;
+  expectedTimeSeconds: number;
+  milkGuide?: {
+    volumeMl: number;
+    tempCelsius: number;
+    foamStyle: string;
+    ratioDescription: string;
+  };
+  layers: DrinkLayer[];
+  description: string;
+  dialInTip: string;
+}
+
+

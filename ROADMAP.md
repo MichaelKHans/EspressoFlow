@@ -36,13 +36,17 @@
 
 ---
 
-## 🏷️ FASE 4: BEAN VAULT, CREMASHOP KVÆRNKATALOG & DIAL-IN ENGINE (AFSLUTTET)
+## 🏷️ FASE 4: BEAN VAULT, CREMASHOP KVÆRNKATALOG, DIAL-IN ENGINE & DIGITAL BARISTA DECK (AFSLUTTET)
 - [x] Kaffe-journal og logbog over tidligere bryg med split-tider og kanalisering
 - [x] Coffee Bean Vault (multi-bag management) med husket formalingsgrad og ratio per pose
 - [x] CremaShop.dk Kværnkatalog (Baratza Encore ESP Pro, Eureka Specialità/Libra/Zero/Manuale, Varia VS3/VS4/VS6, Sage Smart/Dose, Timemore, DF64, Niche, Fellow m.fl.)
 - [x] Matematisk kværn-kalibreringsberegner (`GRINDER_CALIBRATIONS`) med præcise micro-steps/divisions
 - [x] Ristegrads-profiler (Light, Medium, Med-Dark, Dark) og ratio-presets (Ristretto, Standard, Lungo, Allongé)
 - [x] AI fotoscanning af kaffepose (`parseCoffeeBagPhoto`) via mobil kamera-trigger
+- [x] Digital Barista Deck (`DrinkSelector.tsx`): Smart touch-dashboard som på digitale luksusmaskiner
+- [x] Cappuccino & Specialty Drinks Menu (1:1:1 Cappuccino med mikroskum-guide, Flat White, Espresso, Cortado, Lungo, Americano)
+- [x] Visuel kop-anatomi med lagdelt volumen- og farvevisning
+- [x] 3-Step Dial-In Wizard (`DialInWizardModal.tsx`) for hurtig 1-tap kalibrering af nye bønner
 - [x] $CO_2$ afgasnings-alarm ved friskristede bønner (< 4 dage)
 
 ---

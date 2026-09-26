@@ -6,6 +6,9 @@ import { TasteFeedback } from './components/TasteFeedback';
 import { Logbook } from './components/Logbook';
 import { PaywallModal } from './components/PaywallModal';
 import { LegalModal } from './components/LegalModal';
+import { DrinkSelector } from './components/DrinkSelector';
+import { DialInWizardModal } from './components/DialInWizardModal';
+import { DRINK_RECIPES } from './data/drinkRecipes';
 import type {
   ShotDataPoint,
   ShotRecord,
@@ -15,6 +18,7 @@ import type {
   GrinderProfile,
   RoastLevel,
   RatioStyle,
+  DrinkRecipe,
 } from './types/espresso';
 import {
   loadShots,
@@ -30,7 +34,9 @@ import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoM
 import { parseCoffeeBagPhoto } from './lib/bagScanner';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'monitor' | 'logbook' | 'equipment'>('monitor');
+  const [activeTab, setActiveTab] = useState<'drinks' | 'monitor' | 'logbook' | 'equipment'>('drinks');
+  const [activeDrinkId, setActiveDrinkId] = useState<string>('cappuccino');
+  const [isDialInWizardOpen, setIsDialInWizardOpen] = useState<boolean>(false);
   const [shots, setShots] = useState<ShotRecord[]>([]);
   const [accessState, setAccessState] = useState<UserAccessState>({
     isProLifetime: false,
@@ -66,6 +72,15 @@ export function App() {
     targetYieldGrams: 45.0,
     grindSetting: '1.4',
     grinderName: 'Eureka Mignon Specialita',
+  };
+
+  // Active Grinder derived
+  const currentGrinder = grinders.find((g) => g.name === grinderName) || grinders[0] || {
+    id: 'default',
+    name: 'Baratza Encore ESP Pro',
+    type: 'stepped' as const,
+    defaultSetting: '15',
+    stepUnit: 'micro-steps',
   };
 
   // Brewing & Equipment Parameters
@@ -118,6 +133,28 @@ export function App() {
       setGrinderName(selected.grinderName);
       setGrindSetting(selected.grindSetting);
     }
+  };
+
+  const handleSelectDrink = (drink: DrinkRecipe) => {
+    setActiveDrinkId(drink.id);
+    setDoseGrams(drink.defaultDoseGrams);
+    setTargetYieldGrams(drink.targetYieldGrams);
+    setRatioStyle(drink.ratioStyle);
+  };
+
+  const handleLaunchScaleCam = (drink: DrinkRecipe) => {
+    handleSelectDrink(drink);
+    setActiveTab('monitor');
+  };
+
+  const handleOpenDialInWizard = (drink: DrinkRecipe) => {
+    handleSelectDrink(drink);
+    setIsDialInWizardOpen(true);
+  };
+
+  const handleProceedFromWizard = () => {
+    setIsDialInWizardOpen(false);
+    setActiveTab('monitor');
   };
 
   const handleSetRoastLevel = (level: RoastLevel) => {
@@ -312,7 +349,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.4.0
+                  v0.5.0
                 </span>
               </div>
               <p className="text-[11px] text-[#7A6E65] font-mono">
@@ -340,17 +377,28 @@ export function App() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="max-w-4xl mx-auto px-4 flex border-t border-[#E8DFD5]/60 text-xs font-mono">
+        <div className="max-w-4xl mx-auto px-4 flex border-t border-[#E8DFD5]/60 text-xs font-mono overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setActiveTab('drinks')}
+            className={`py-2.5 px-4 flex items-center gap-1.5 border-b-2 transition shrink-0 ${
+              activeTab === 'drinks'
+                ? 'border-[#C26D52] text-[#2C2018] font-bold'
+                : 'border-transparent text-[#7A6E65] hover:text-[#2C2018]'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+            Coffee Bar
+          </button>
           <button
             onClick={() => setActiveTab('monitor')}
-            className={`py-2.5 px-4 flex items-center gap-1.5 border-b-2 transition ${
+            className={`py-2.5 px-4 flex items-center gap-1.5 border-b-2 transition shrink-0 ${
               activeTab === 'monitor'
                 ? 'border-[#C26D52] text-[#2C2018] font-bold'
                 : 'border-transparent text-[#7A6E65] hover:text-[#2C2018]'
             }`}
           >
             <Coffee className="w-3.5 h-3.5" />
-            Live Scale Cam
+            Scale Cam
           </button>
           <button
             onClick={() => setActiveTab('logbook')}
@@ -379,7 +427,21 @@ export function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
-        {/* Quick Context Bar */}
+        {/* Tab 0: Digital Barista Deck & Drink Selector */}
+        {activeTab === 'drinks' && (
+          <DrinkSelector
+            currentBean={currentBean}
+            currentGrinder={currentGrinder}
+            activeDrinkId={activeDrinkId}
+            onSelectDrink={handleSelectDrink}
+            onLaunchScaleCam={handleLaunchScaleCam}
+            onOpenDialInWizard={handleOpenDialInWizard}
+            onOpenBeanVault={() => setActiveTab('equipment')}
+          />
+        )}
+
+        {/* Quick Context Bar (Shown for Monitor, Logbook, and Equipment) */}
+        {activeTab !== 'drinks' && (
         <div className="bg-[#FFFDF9] rounded-xl border border-[#E8DFD5] p-3 text-xs font-mono flex flex-wrap items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[#7A6E65]">ACTIVE BEAN:</span>
@@ -436,6 +498,7 @@ export function App() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Tab 1: Live Monitor & Flow Dynamics */}
         {activeTab === 'monitor' && (
@@ -946,6 +1009,16 @@ export function App() {
         isOpen={legalModalTab !== null}
         onClose={() => setLegalModalTab(null)}
         initialTab={legalModalTab || 'privacy'}
+      />
+
+      {/* Dial-In Wizard Modal */}
+      <DialInWizardModal
+        isOpen={isDialInWizardOpen}
+        onClose={() => setIsDialInWizardOpen(false)}
+        drink={DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0]}
+        currentBean={currentBean}
+        currentGrinder={currentGrinder}
+        onProceedToScaleCam={handleProceedFromWizard}
       />
     </div>
   );
