@@ -30,6 +30,7 @@ import {
   saveBeans,
   loadGrinders,
   saveGrinders,
+  loadDrinkGrindSettings,
 } from './lib/storage';
 import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoMath';
 import { parseCoffeeBagPhoto } from './lib/bagScanner';
@@ -141,6 +142,13 @@ export function App() {
     setDoseGrams(drink.defaultDoseGrams);
     setTargetYieldGrams(drink.targetYieldGrams);
     setRatioStyle(drink.ratioStyle);
+
+    // Sync active grind setting to this drink's saved calibration if present
+    const drinkGrinds = loadDrinkGrindSettings();
+    const key = `${activeBeanId}_${drink.id}`;
+    if (drinkGrinds[key]) {
+      setGrindSetting(drinkGrinds[key]);
+    }
   };
 
   const handleLaunchScaleCam = (drink: DrinkRecipe) => {
@@ -359,7 +367,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.5.7
+                  v0.5.8
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -457,10 +465,12 @@ export function App() {
             currentBean={currentBean}
             currentGrinder={currentGrinder}
             activeDrinkId={activeDrinkId}
+            shots={shots}
             onSelectDrink={handleSelectDrink}
             onLaunchScaleCam={handleLaunchScaleCam}
             onOpenDialInWizard={handleOpenDialInWizard}
             onOpenBeanVault={() => setActiveTab('equipment')}
+            onGrindSettingChange={setGrindSetting}
           />
         )}
 

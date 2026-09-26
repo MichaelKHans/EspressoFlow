@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   ACTIVE_GRINDER_ID: 'espressoflow_active_grinder_v1',
   MACHINE: 'espressoflow_machine_v1',
   ACTIVE_BAR_DRINKS: 'espressoflow_active_bar_drinks_v1',
+  DRINK_GRINDS: 'espressoflow_drink_grinds_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -454,6 +455,25 @@ export function saveActiveBarDrinkIds(drinkIds: string[]): void {
     localStorage.setItem(STORAGE_KEYS.ACTIVE_BAR_DRINKS, JSON.stringify(drinkIds));
   } catch (err) {
     console.error('Failed to save active bar drinks', err);
+  }
+}
+
+export function loadDrinkGrindSettings(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.DRINK_GRINDS);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveDrinkGrindSetting(key: string, setting: string): void {
+  try {
+    const current = loadDrinkGrindSettings();
+    current[key] = setting;
+    localStorage.setItem(STORAGE_KEYS.DRINK_GRINDS, JSON.stringify(current));
+  } catch (err) {
+    console.error('Failed to save drink grind setting', err);
   }
 }
 

@@ -44,8 +44,12 @@
 - [x] Ristegrads-profiler (Light, Medium, Med-Dark, Dark) og ratio-presets (Ristretto, Standard, Lungo, Allongé)
 - [x] AI fotoscanning af kaffepose (`parseCoffeeBagPhoto`) via mobil kamera-trigger
 - [x] Digital Barista Deck (`DrinkSelector.tsx`): Smart touch-dashboard som på digitale luksusmaskiner
-- [x] Cappuccino & Specialty Drinks Menu (1:1:1 Cappuccino med mikroskum-guide, Flat White, Espresso, Cortado, Lungo, Americano)
-- [x] Visuel kop-anatomi med lagdelt volumen- og farvevisning
+- [x] Udvidet Specialty Drinks Menu (19 opskrifter: Cappuccino, Flat White, Espresso, Single Espresso, Shakerato, Allongé m.fl.)
+- [x] Kollapsbart Drikke-Bibliotek med lynhurtig kategori-filtrering (All, Milk, Black, Dessert)
+- [x] Per-Drik Kværnhukommelse (`${beanId}_${drinkId}`) med trin-justering og låsning
+- [x] Matematisk Smart Forbedrings-Engine (sammenligner $\Delta t$ mod mål og foreslår præcise kværntrin med 1-klik `[Apply]`)
+- [x] Visuel arkitektonisk kop-anatomi med realistisk top-down lagdeling og volumen-fordeling
+- [x] Steamed Water Guide til Americano & Long Black (Micro-Aeration ved 78°C)
 - [x] 3-Step Dial-In Wizard (`DialInWizardModal.tsx`) for hurtig 1-tap kalibrering af nye bønner
 - [x] $CO_2$ afgasnings-alarm ved friskristede bønner (< 4 dage)
 
