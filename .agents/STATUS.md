@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Per-Bønne Kværn-Tilknytning & Kværnvælger i Bean Vault (v0.6.1)
+- **Kværnvælger ved Oprettelse:** "Add Coffee Bean To Vault" formularen har fået en "Assigned Grinder" dropdown.
+- **Tydelig Kværnvisning i Bønnekort:** Viser kværnmodel og indstilling (fx `Eureka: 1.4` eller `Baratza: 15`).
+- **Kværnvælger i Vision Scanner Modal:** Brugeren kan vælge hvilken kværn den scannede bønne skal parres med.
+- **Auto-Sync:** Valg af bønne i Bean Vault skifter automatisk den aktive kværnmodel.
+
 ### 2026-09-26 -- Bean & Barcode Vision Scanner Modal, Open Food Facts & Multi-Format Date OCR (v0.6.0)
 - **Bean & Barcode Vision Scanner Modal (`BeanScannerModal.tsx`):**
   - Live kamera-viewfinder med scan-reticle og laser-linje.

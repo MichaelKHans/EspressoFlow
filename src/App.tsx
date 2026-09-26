@@ -65,6 +65,7 @@ export function App() {
   const [newBeanName, setNewBeanName] = useState<string>('');
   const [newBeanRoaster, setNewBeanRoaster] = useState<string>('');
   const [newBeanRoastLevel, setNewBeanRoastLevel] = useState<RoastLevel>('medium');
+  const [newBeanGrinderName, setNewBeanGrinderName] = useState<string>('');
   const [newBeanRoastDate, setNewBeanRoastDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
@@ -264,6 +265,7 @@ export function App() {
     if (!newBeanName.trim()) return;
     const defaultRatio = ROAST_PRESETS[newBeanRoastLevel].defaultRatio;
     const mult = RATIO_PRESETS[defaultRatio].multiplier;
+    const chosenGrinder = grinders.find((g) => g.name === (newBeanGrinderName || grinderName)) || currentGrinder;
     const newBean: CoffeeBeanProfile = {
       id: `bean-${Date.now()}`,
       name: newBeanName.trim(),
@@ -273,8 +275,8 @@ export function App() {
       doseGrams: 18.0,
       ratioStyle: defaultRatio,
       targetYieldGrams: Math.round(18.0 * mult * 10) / 10,
-      grindSetting: grindSetting,
-      grinderName: grinderName,
+      grindSetting: chosenGrinder.defaultSetting || grindSetting,
+      grinderName: chosenGrinder.name,
     };
 
     const updated = [newBean, ...beans];
@@ -287,9 +289,12 @@ export function App() {
     setRatioStyle(newBean.ratioStyle);
     setDoseGrams(newBean.doseGrams);
     setTargetYieldGrams(newBean.targetYieldGrams);
+    setGrinderName(chosenGrinder.name);
+    setGrindSetting(newBean.grindSetting);
     setIsAddingBean(false);
     setNewBeanName('');
     setNewBeanRoaster('');
+    setNewBeanGrinderName('');
     setScanMessage(null);
   };
 
@@ -431,7 +436,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.6.0
+                  v0.6.1
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -742,6 +747,20 @@ export function App() {
                         className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
                       />
                     </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Assigned Grinder</label>
+                      <select
+                        value={newBeanGrinderName || grinderName}
+                        onChange={(e) => setNewBeanGrinderName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs font-semibold text-[#2C2018]"
+                      >
+                        {grinders.map((g) => (
+                          <option key={g.id} value={g.name}>
+                            {g.name} ({g.type})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <button
                     type="submit"
@@ -796,8 +815,12 @@ export function App() {
                         {bean.roaster && (
                           <div className="text-[10px] text-[#7A6E65]">{bean.roaster}</div>
                         )}
-                        <div className="text-[10px] text-[#7A6E65]">
-                          {daysOff}d off roast • Dial: <strong className="text-[#C26D52]">{bean.grindSetting}</strong>
+                        <div className="text-[10px] text-[#7A6E65] flex items-center justify-between gap-1 pt-0.5">
+                          <span>{daysOff}d off roast</span>
+                          <span className="font-mono bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.5 rounded text-[10px] inline-flex items-center gap-1">
+                            <span className="text-[#7A6E65]">{bean.grinderName ? bean.grinderName.split(' ')[0] : 'Grind'}:</span>
+                            <strong className="text-[#C26D52] font-bold">{bean.grindSetting}</strong>
+                          </span>
                         </div>
                       </div>
 
@@ -1136,6 +1159,7 @@ export function App() {
         onClose={() => setIsBeanScannerOpen(false)}
         onSaveBean={handleSaveBeanFromScanner}
         currentGrinderName={currentGrinder.name}
+        grinders={grinders}
       />
     </div>
   );

@@ -4,6 +4,14 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.6.1] - 2026-09-26
+### Added
+- **Per-Bønne Kværn-Tilknytning (Assigned Grinder Per Bean):**
+  - **Kværnvælger ved Oprettelse:** "Add Coffee Bean To Vault" formularen har nu en dedikeret *"Assigned Grinder"* dropdown, så du kan parre enhver ny bønne med præcis den kværn, du bruger til den (fx en fladknivskværn til frugtige lysristede bønner og en konisk kværn til espresso blends).
+  - **Tydelig Kværn-Indikation i Bean Vault:** Bønnekortene viser nu kværn-brand og indstilling (fx `Eureka: 1.4` eller `Baratza: 15`) i stedet for kun et anonymt tal.
+  - **Kværnvælger i Bean & Barcode Vision Scanner:** `BeanScannerModal` tillader nu direkte valg mellem dine registrerede kværne ved scanning af nye poser.
+  - **Automatisk Kværn-Skift:** Når du trykker på en bønne i Bean Vault, opdateres den aktive kværnmodel automatisk på hele espressostationen.
+
 ## [0.6.0] - 2026-09-26
 ### Added
 - **Bean & Barcode Vision Scanner Modal (`BeanScannerModal.tsx`):**

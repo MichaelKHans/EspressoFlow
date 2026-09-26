@@ -14,7 +14,7 @@ import {
   Flame,
   Search,
 } from 'lucide-react';
-import type { CoffeeBeanProfile, RoastLevel, RatioStyle } from '../types/espresso';
+import type { CoffeeBeanProfile, RoastLevel, RatioStyle, GrinderProfile } from '../types/espresso';
 import {
   lookupBarcode,
   parseCoffeeBagPhoto,
@@ -29,6 +29,7 @@ interface BeanScannerModalProps {
   onClose: () => void;
   onSaveBean: (bean: CoffeeBeanProfile, makeActive?: boolean) => void;
   currentGrinderName: string;
+  grinders?: GrinderProfile[];
 }
 
 type ScanMode = 'barcode' | 'label_date';
@@ -38,8 +39,10 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   onClose,
   onSaveBean,
   currentGrinderName,
+  grinders = [],
 }) => {
   const [mode, setMode] = useState<ScanMode>('barcode');
+  const [selectedGrinderName, setSelectedGrinderName] = useState<string>(currentGrinderName);
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -243,7 +246,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       ratioStyle: editRatio,
       targetYieldGrams: editTargetYield,
       grindSetting: editGrindSetting,
-      grinderName: currentGrinderName || 'Baratza Encore ESP',
+      grinderName: selectedGrinderName || currentGrinderName || 'Baratza Encore ESP',
       notes: scannedResult?.notes || 'Added via Mobile Vision & Barcode Scanner.',
       barcode: scannedResult?.barcode,
     };
@@ -614,9 +617,23 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       <Flame className="w-3.5 h-3.5 text-[#C26D52]" />
                       <span>Calibrated Recipe Defaults</span>
                     </div>
-                    <span className="text-[10px] font-mono text-[#7A6E65]">
-                      {currentGrinderName}
-                    </span>
+                    {grinders && grinders.length > 1 ? (
+                      <select
+                        value={selectedGrinderName}
+                        onChange={(e) => setSelectedGrinderName(e.target.value)}
+                        className="text-[10px] font-mono text-[#2C2018] bg-white border border-[#E8DFD5] rounded px-1.5 py-0.5"
+                      >
+                        {grinders.map((g) => (
+                          <option key={g.id} value={g.name}>
+                            {g.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-[10px] font-mono text-[#7A6E65]">
+                        {selectedGrinderName || currentGrinderName}
+                      </span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
