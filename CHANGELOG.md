@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.5.4] - 2026-09-26
+### Added
+- **Steamed Water Guide til Americano & Long Black:** Implementeret barista-teknikken med mikroskopisk damp-luftet varmt vand i stedet for almindeligt kedelvand for en markant blødere og rundere smagsprofil.
+- **Dedikeret "Steamed Water Guide"-kort i DrinkSelector:** Viser præcis anbefalet temperatur (78°C), vandmængde (110ml) og metode (*Steam Wand Micro-Aeration*).
+- **Opdateret Lag-Fysik for Americano:** Koppens arkitektoniske tværsnit viser nu 110ml dampet varmt vand i bunden, 45ml fyldig espresso-krop og 25ml intakt crema på toppen, der bevares takket være overfladespændingen i det mikroluftede vand.
+- **Barista Dial-In Pro Tip:** Trin-for-trin instruktion i at dampe 110ml filtreret vand i kanden med dampdysen til ca. 78°C før espressoen trækkes direkte ovenpå.
+
 ## [0.5.3] - 2026-09-26
 ### Added
 - **Mobil & Tablet Først Responsive Ergonomi:** Komplet tilpasning af layouts til små telefonskærme (375px–430px iPhone SE, standard og Pro) samt tablets.

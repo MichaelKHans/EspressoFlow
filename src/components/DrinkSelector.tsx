@@ -310,6 +310,25 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               </div>
             )}
 
+            {/* Steamed Water Guide (e.g. Americano / Long Black with aerated water) */}
+            {selectedDrink.waterGuide && (
+              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FFFDF9] border border-[#E8DFD5] space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold text-[#2C2018] font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <Droplets className="w-3.5 h-3.5 text-[#C26D52]" />
+                    <span>Steamed Water Guide</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-[#7A6E65]">
+                    <span>Temp: <strong className="text-[#2C2018]">{selectedDrink.waterGuide.tempCelsius}°C</strong></span>
+                    <span>Water: <strong className="text-[#2C2018]">{selectedDrink.waterGuide.volumeMl}ml</strong></span>
+                  </div>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed">
+                  Method: <span className="text-[#2C2018] font-semibold">{selectedDrink.waterGuide.method}</span>. ({selectedDrink.waterGuide.techniqueDescription})
+                </p>
+              </div>
+            )}
+
             {/* Dial-In Pro Tip */}
             <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-[10px] sm:text-[11px] text-[#2C2018] leading-relaxed flex items-start gap-2">
               <Lightbulb className="w-3.5 h-3.5 text-[#C26D52] shrink-0 mt-0.5" />

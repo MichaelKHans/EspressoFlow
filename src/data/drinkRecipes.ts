@@ -198,7 +198,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
   {
     id: 'americano',
     name: 'Americano / Long Black',
-    subtitle: 'Double espresso poured over filtered hot water',
+    subtitle: 'Double espresso pulled over steamed aerated hot water',
     category: 'black',
     defaultDoseGrams: 18.0,
     targetYieldGrams: 36.0,
@@ -208,13 +208,19 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     cupVolumeMl: 180,
     glassStyle: 'cup',
     isDefaultActive: true,
+    waterGuide: {
+      volumeMl: 110,
+      tempCelsius: 78,
+      method: 'Steam Wand Micro-Aeration',
+      techniqueDescription: 'Steam 110ml filtered water in pitcher to ~78°C with steam wand before pulling espresso on top',
+    },
     layers: [
-      { name: 'Espresso Crema', percentage: 15, color: '#C26D52', description: 'Intact aromatic crema layer', volumeMl: 25 },
-      { name: 'Espresso Body', percentage: 25, color: '#2C2018', description: '36g double shot', volumeMl: 45 },
-      { name: 'Hot Water', percentage: 60, color: '#C7B9A9', description: '110g filtered 90°C brewing water', volumeMl: 110 },
+      { name: 'Espresso Crema', percentage: 15, color: '#C26D52', description: 'Intact, silky crema preserved by aerated water surface tension', volumeMl: 25 },
+      { name: 'Espresso Body', percentage: 25, color: '#2C2018', description: 'Full-bodied 36g double extraction', volumeMl: 45 },
+      { name: 'Steamed Hot Water', percentage: 60, color: '#D2C6B6', description: '110ml filtered water aerated with steam wand at ~78°C', volumeMl: 110 },
     ],
-    description: 'Crisp, lingering body reminiscent of filter coffee but with espresso aroma and intact crema.',
-    dialInTip: 'Pour hot water into the cup first, then extract the espresso directly on top for optimal crema.',
+    description: 'Specialty Long Black with steamed water. Steaming the water with your steam wand introduces gentle micro-aeration and thermal stability, softening mineral harshness and preserving a silky, intact crema crown.',
+    dialInTip: 'Barista Steamed Water Technique: Steam 110ml filtered water in your pitcher to ~78°C using the steam wand. Pour into cup first, then extract double espresso directly on top for silky mouthfeel and crema longevity.',
   },
   {
     id: 'affogato',

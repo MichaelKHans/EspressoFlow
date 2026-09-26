@@ -122,6 +122,12 @@ export interface DrinkRecipe {
     foamStyle: string;
     ratioDescription: string;
   };
+  waterGuide?: {
+    volumeMl: number;
+    tempCelsius: number;
+    method: string;
+    techniqueDescription: string;
+  };
   layers: DrinkLayer[];
   description: string;
   dialInTip: string;
