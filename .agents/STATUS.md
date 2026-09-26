@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Global i18n Fase 1: Sydkorea & Japan (v0.8.0)
+- **Sydkorea (한국어 - `ko.ts`):** Komplet ordbog implementeret med SCA specialty barista-terminologi (Ratio, Dose, Yield, Dial-In, Pre-infusion, Channeling).
+- **Japan (日本語 - `ja.ts`):** Komplet ordbog tilpasset Japans kissaten- og præcisionsekstraktionskultur.
+- **Sprogvælger & UI:** Header-dropdown og Settings-sprogkort opdateret til automatisk at liste alle tilgængelige sprog med flag (`🇰🇷 한국어`, `🇯🇵 日本語`).
+- **Browser-Detektering:** Automatisk registrering af `ko` og `ja` locale ved første opstart samt lagring i `localStorage`.
+
 ### 2026-09-26 -- Scale Cam Standby & Manuel Start Flow (v0.7.2)
 - **Standby Tilstand:** Scale Cam åbner nu i en rolig Standby-tilstand uden at tænde kameraet med det samme. Brugeren får ro og tid til at placere og vinkle telefonen mod vægtens display.
 - **Start Camera Knap:** Prominent `[📷 Start Camera]` knap i viewfinderen aktiverer videostrøm og OCR først, når brugeren er klar.

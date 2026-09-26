@@ -449,7 +449,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.7.2
+                  v0.8.0
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -466,9 +466,11 @@ export function App() {
               className="text-[10px] sm:text-[11px] font-mono px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full border border-[#E8DFD5] bg-[#FFFDF9] text-[#2C2018] cursor-pointer hover:border-[#C26D52] transition focus:outline-none"
               title="Select App Language"
             >
-              <option value="en">🇬🇧 EN</option>
-              <option value="de">🇩🇪 DE</option>
-              <option value="da">🇩🇰 DA</option>
+              {supportedLanguages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.code.toUpperCase()}
+                </option>
+              ))}
             </select>
 
             {/* Trial / Pro Badge */}
@@ -1300,7 +1302,7 @@ export function App() {
                 <p className="text-[11px] text-[#7A6E65] leading-relaxed">
                   Select your preferred language. Barista specialty coffee terms remain international.
                 </p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                   {supportedLanguages.map((lang) => (
                     <button
                       key={lang.code}

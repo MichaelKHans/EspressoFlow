@@ -53,6 +53,21 @@
 - [x] 3-Step Dial-In Wizard (`DialInWizardModal.tsx`) for hurtig 1-tap kalibrering af nye bønner
 - [x] $CO_2$ afgasnings-alarm ved friskristede bønner (< 4 dage)
 
+## 🌐 GLOBAL I18N FLERSPROGETHED (FASE-OPDELT UDRULNING)
+- [x] **Arkitektur & Fundament (v0.7.0):** Letvægts zero-dependency typesikker ordbog med automatisk fallback til engelsk.
+- [x] **Basis sprogpakker:** Engelsk (EN), Tysk (DE) og Dansk (DA).
+- [x] **Fase 1: Østasien Specialty Epicentre (v0.8.0):**
+  - [x] 🇰🇷 **Sydkorea (한국어 - `ko.ts`):** Komplet ordbog med SCA specialty barista-termer.
+  - [x] 🇯🇵 **Japan (日本語 - `ja.ts`):** Komplet ordbog med kissaten- & specialty præcisionstermer.
+- [ ] **Fase 2: Asiatisk Vækst & Golfens Luksusmarked:**
+  - [ ] 🇨🇳 Kina (简体中文 - `zh-CN.ts`)
+  - [ ] 🇹🇼 Taiwan (繁體中文 - `zh-TW.ts`)
+  - [ ] 🇦🇪/🇸🇦 Dubai & Golfen (العربية - `ar.ts` med RTL support)
+- [ ] **Fase 3: Sydeuropas Kaffekultur:**
+  - [ ] 🇮🇹 Italien (Italiano - `it.ts`)
+  - [ ] 🇪🇸 Spanien & Latinamerika (Español - `es.ts`)
+  - [ ] 🇫🇷 Frankrig (Français - `fr.ts`)
+
 ---
 
 ## 💎 FASE 5: REVENUECAT & STORE INTEGRATION

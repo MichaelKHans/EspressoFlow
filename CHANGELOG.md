@@ -4,6 +4,14 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.8.0] - 2026-09-26
+### Added
+- **Global i18n Fase 1: Østasien Specialty Epicentre (Sydkorea & Japan):**
+  - **Sydkorea (`ko` - 한국어):** Komplet 48-nøgles ordbog skræddersyet til Sydkoreas pulserende specialty kaffemiljø med SCA barista-terminologi (추출 비율, 도징량, 추출량, 분쇄도, 다이얼인).
+  - **Japan (`ja` - 日本語):** Komplet 48-nøgles ordbog med respekt for Japans legendariske kissaten- og specialty præcisionskultur (粉量, 抽出量, 挽き目, 比率, ダイヤルイン).
+  - **Dynamisk Sprogvælger:** Header dropdown og Settings sprogkort afspejler automatisk alle registrerede sprog dynamisk med landeflag (`🇰🇷 한국어`, `🇯🇵 日本語`).
+  - **Automatisk Detektering:** Genkender automatisk koreansk og japansk via `navigator.language` og persisterer i `localStorage`.
+
 ## [0.7.2] - 2026-09-26
 ### Added
 - **Intelligent Scale Cam Standby & Manuel "Start Camera" Flow:**

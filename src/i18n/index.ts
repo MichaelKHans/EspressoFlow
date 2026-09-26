@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { en, type TranslationKeys } from './locales/en';
 import { de } from './locales/de';
 import { da } from './locales/da';
+import { ko } from './locales/ko';
+import { ja } from './locales/ja';
 
-export type SupportedLanguage = 'en' | 'de' | 'da';
+export type SupportedLanguage = 'en' | 'de' | 'da' | 'ko' | 'ja';
 
 export interface LanguageInfo {
   code: SupportedLanguage;
@@ -15,12 +17,16 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
   { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
   { code: 'da', label: 'Dansk', flag: '🇩🇰' },
+  { code: 'ko', label: '한국어', flag: '🇰🇷' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵' },
 ];
 
 const dictionaries: Record<SupportedLanguage, Partial<Record<TranslationKeys, string>>> = {
   en,
   de,
   da,
+  ko,
+  ja,
 };
 
 const STORAGE_KEY = 'espressoflow_lang';
@@ -32,13 +38,15 @@ const EVENT_NAME = 'espressoflow_lang_change';
 export function getInitialLanguage(): SupportedLanguage {
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as SupportedLanguage | null;
-    if (saved && (saved === 'en' || saved === 'de' || saved === 'da')) {
+    if (saved && (saved === 'en' || saved === 'de' || saved === 'da' || saved === 'ko' || saved === 'ja')) {
       return saved;
     }
 
     const browserLang = navigator.language?.toLowerCase() || '';
     if (browserLang.startsWith('de')) return 'de';
     if (browserLang.startsWith('da')) return 'da';
+    if (browserLang.startsWith('ko')) return 'ko';
+    if (browserLang.startsWith('ja')) return 'ja';
   } catch {
     // Fallback if localStorage or navigator is unavailable
   }
