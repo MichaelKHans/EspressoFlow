@@ -348,21 +348,21 @@ export function App() {
     <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] flex flex-col font-sans">
       {/* Top Header */}
       <header className="border-b border-[#E8DFD5] bg-[#FAF7F2] sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#2C2018] flex items-center justify-center text-[#FAF7F2] shadow-xs">
-              <Coffee className="w-5 h-5" />
+              <Coffee className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-bold text-sm tracking-tight text-[#2C2018] font-mono">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="font-bold text-xs sm:text-sm tracking-tight text-[#2C2018] font-mono">
                   ESPRESSO FLOW
                 </h1>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.5.2
+                <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
+                  v0.5.3
                 </span>
               </div>
-              <p className="text-[11px] text-[#7A6E65] font-mono">
+              <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
                 Precision Scale OCR & Flow Dynamics
               </p>
             </div>
@@ -372,7 +372,7 @@ export function App() {
             {/* Trial / Pro Badge */}
             <button
               onClick={() => setIsPaywallOpen(true)}
-              className={`text-[11px] font-mono px-2.5 py-1 rounded-full border transition flex items-center gap-1.5 ${
+              className={`text-[10px] sm:text-[11px] font-mono px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border transition flex items-center gap-1.5 ${
                 accessState.isProLifetime
                   ? 'border-[#72806B] bg-[#72806B]/10 text-[#72806B] font-bold'
                   : 'border-[#C26D52] bg-[#C26D52]/10 text-[#C26D52] font-semibold hover:bg-[#C26D52]/20'
@@ -380,63 +380,63 @@ export function App() {
             >
               <Sparkles className="w-3 h-3" />
               {accessState.isProLifetime
-                ? 'LIFETIME PRO'
-                : `TRIAL: ${accessState.daysRemainingInTrial}D LEFT`}
+                ? 'PRO LIFETIME'
+                : `TRIAL: ${accessState.daysRemainingInTrial}D`}
             </button>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="max-w-4xl mx-auto px-4 flex border-t border-[#E8DFD5]/60 text-xs font-mono overflow-x-auto no-scrollbar">
+        {/* Tab Navigation (Horizontal Touch Scroll with no scrollbars) */}
+        <div className="max-w-4xl mx-auto px-2 sm:px-4 flex border-t border-[#E8DFD5]/60 text-[11px] sm:text-xs font-mono overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('drinks')}
-            className={`py-2.5 px-4 flex items-center gap-1.5 border-b-2 transition shrink-0 ${
+            className={`py-2 sm:py-2.5 px-3 sm:px-4 flex items-center gap-1.5 border-b-2 transition shrink-0 ${
               activeTab === 'drinks'
                 ? 'border-[#C26D52] text-[#2C2018] font-bold'
                 : 'border-transparent text-[#7A6E65] hover:text-[#2C2018]'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
-            Coffee Bar
+            <span>Coffee Bar</span>
           </button>
           <button
             onClick={() => setActiveTab('monitor')}
-            className={`py-2.5 px-4 flex items-center gap-1.5 border-b-2 transition shrink-0 ${
+            className={`py-2 sm:py-2.5 px-3 sm:px-4 flex items-center gap-1.5 border-b-2 transition shrink-0 ${
               activeTab === 'monitor'
                 ? 'border-[#C26D52] text-[#2C2018] font-bold'
                 : 'border-transparent text-[#7A6E65] hover:text-[#2C2018]'
             }`}
           >
             <Coffee className="w-3.5 h-3.5" />
-            Scale Cam
+            <span>Scale Cam</span>
           </button>
           <button
             onClick={() => setActiveTab('logbook')}
-            className={`py-2.5 px-4 flex items-center gap-1.5 border-b-2 transition ${
+            className={`py-2 sm:py-2.5 px-3 sm:px-4 flex items-center gap-1.5 border-b-2 transition shrink-0 ${
               activeTab === 'logbook'
                 ? 'border-[#C26D52] text-[#2C2018] font-bold'
                 : 'border-transparent text-[#7A6E65] hover:text-[#2C2018]'
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            Logbook ({shots.length})
+            <span>Logbook ({shots.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('equipment')}
-            className={`py-2.5 px-4 flex items-center gap-1.5 border-b-2 transition ${
+            className={`py-2 sm:py-2.5 px-3 sm:px-4 flex items-center gap-1.5 border-b-2 transition shrink-0 ${
               activeTab === 'equipment'
                 ? 'border-[#C26D52] text-[#2C2018] font-bold'
                 : 'border-transparent text-[#7A6E65] hover:text-[#2C2018]'
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
-            Beans & Gear
+            <span>Beans & Gear</span>
           </button>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
+      <main className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Tab 0: Digital Barista Deck & Drink Selector */}
         {activeTab === 'drinks' && (
           <DrinkSelector

@@ -16,12 +16,12 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
 }) => {
   const glassStyle = drink.glassStyle || (drink.category === 'milk' ? 'cup' : 'glass');
 
-  // Dimension scaling
+  // Mobile-first dimension scaling
   const pixelSizes = {
-    xs: { width: 36, height: 32 },
-    sm: { width: 56, height: 48 },
-    md: { width: 88, height: 74 },
-    lg: { width: 220, height: 180 },
+    xs: { width: 28, height: 24 },
+    sm: { width: 44, height: 36 },
+    md: { width: 68, height: 56 },
+    lg: { width: 140, height: 110 },
   };
 
   const { width, height } = pixelSizes[size];

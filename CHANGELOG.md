@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.5.3] - 2026-09-26
+### Added
+- **Mobil & Tablet Først Responsive Ergonomi:** Komplet tilpasning af layouts til små telefonskærme (375px–430px iPhone SE, standard og Pro) samt tablets.
+- **Kompakt Side-om-Side Masterkort:** På mobiler præsenteres den arkitektoniske kop og de 4 nøgletal (Dry Dose, Target Yield, Ratio, Target Time) nu i en overskuelig, integreret visning uden behov for uendelig scrolling.
+- **Ingen Vandrette Rullebjælker (`no-scrollbar`):** Tilføjet CSS utilities til at skjule browser-rullebjælker på vandrette touch-lister som Quick Bar Ribbon og kategori-filtre.
+- **Kompakte Kvik-Bar Piller:** Hurtig-knapperne i baren er optimeret med afkortede drikkenavne og mikro-kopper for hurtig 1-tap betjening på enhver skærmstørrelse.
+
 ## [0.5.2] - 2026-09-26
 ### Added
 - **Proportionalt Vektor-Kophåndtag (`ArchitecturalCup.tsx`):** Det tidligere firkantede/lille håndtag er fuldstændig redesignet som en harmonisk, organisk C-bue i ægte keramik-proportioner matchende Image 3 ("Coffee The Essential Guide").
