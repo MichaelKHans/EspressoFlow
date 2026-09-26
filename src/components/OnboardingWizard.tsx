@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Coffee, ChevronRight, Check, Settings2, Layers, ArrowRight, X, Barcode, Sparkles } from 'lucide-react';
 import type { GrinderProfile, RoastLevel, CoffeeBeanProfile } from '../types/espresso';
 import { BeanScannerModal } from './BeanScannerModal';
+import { useTranslation } from '../i18n';
 
 interface OnboardingWizardProps {
   grinders: GrinderProfile[];
@@ -23,6 +24,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   onComplete,
   onSkip,
 }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Step 1: Grinder
@@ -70,7 +72,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
     if (scanned.roaster) setRoaster(scanned.roaster);
     setRoastLevel(scanned.roastLevel);
     setRoastDate(scanned.roastDate);
-    setScannedFeedback(`Scanned & applied: "${scanned.name}"`);
+    setScannedFeedback(t('wizard.scanned_feedback', { name: scanned.name }));
     setIsScannerOpen(false);
   };
 
@@ -102,10 +104,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-[#2C2018] font-mono tracking-tight">
-                  Welcome to Espresso Flow
+                  {t('wizard.welcome_title')}
                 </h2>
                 <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
-                  Quick station setup -- 3 steps to your first perfect shot
+                  {t('wizard.welcome_subtitle')}
                 </p>
               </div>
             </div>
@@ -114,9 +116,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 type="button"
                 onClick={onSkip}
                 className="text-xs font-mono text-[#7A6E65] hover:text-[#2C2018] px-2.5 py-1.5 rounded-xl hover:bg-[#E8DFD5]/50 border border-[#E8DFD5] bg-white transition flex items-center gap-1 shrink-0"
-                title="Skip station setup and explore app"
+                title={t('wizard.skip_title')}
               >
-                <span>Skip</span>
+                <span>{t('wizard.skip')}</span>
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -140,7 +142,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <span className={`text-[10px] font-mono hidden sm:inline ${
                   s === step ? 'text-[#2C2018] font-bold' : 'text-[#7A6E65]'
                 }`}>
-                  {s === 1 ? 'Grinder' : s === 2 ? 'Machine' : 'First Bean'}
+                  {s === 1 ? t('wizard.step1_label') : s === 2 ? t('wizard.step2_label') : t('wizard.step3_label')}
                 </span>
                 {s < 3 && (
                   <div className={`flex-1 h-px ${s < step ? 'bg-[#72806B]' : 'bg-[#E8DFD5]'}`} />
@@ -158,12 +160,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               <div className="flex items-center gap-2">
                 <Settings2 className="w-4 h-4 text-[#C26D52]" />
                 <h3 className="text-xs sm:text-sm font-bold text-[#2C2018] font-mono">
-                  Select Your Grinder
+                  {t('wizard.step1_title')}
                 </h3>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono leading-relaxed">
-                Your grinder determines extraction precision. We have calibration data
-                for each model so we can calculate exact step adjustments.
+                {t('wizard.step1_desc')}
               </p>
 
               <div className="grid grid-cols-1 gap-1.5 max-h-[45vh] overflow-y-auto pr-1">
@@ -181,7 +182,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     <div>
                       <span className="font-bold text-[#2C2018]">{g.name}</span>
                       <span className="text-[10px] text-[#7A6E65] ml-2">
-                        {g.type === 'stepped' ? 'Stepped' : 'Stepless'} -- {g.stepUnit}
+                        {g.type === 'stepped' ? t('wizard.grinder_stepped') : t('wizard.grinder_stepless')} -- {g.stepUnit}
                       </span>
                     </div>
                     {selectedGrinderId === g.id && (
@@ -199,12 +200,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               <div className="flex items-center gap-2">
                 <Layers className="w-4 h-4 text-[#C26D52]" />
                 <h3 className="text-xs sm:text-sm font-bold text-[#2C2018] font-mono">
-                  Select Your Machine
+                  {t('wizard.step2_title')}
                 </h3>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono leading-relaxed">
-                Knowing your machine helps us optimize pre-infusion timing
-                and pressure profile recommendations.
+                {t('wizard.step2_desc')}
               </p>
 
               <div className="grid grid-cols-1 gap-1.5 max-h-[45vh] overflow-y-auto pr-1">
@@ -232,7 +232,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   type="text"
                   value={customMachine}
                   onChange={(e) => setCustomMachine(e.target.value)}
-                  placeholder="Enter your machine name..."
+                  placeholder={t('wizard.machine_placeholder')}
                   className="w-full p-2.5 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono text-[#2C2018] placeholder:text-[#7A6E65]/60 focus:outline-hidden focus:ring-2 focus:ring-[#C26D52]/30"
                 />
               )}
@@ -246,21 +246,21 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <div className="flex items-center gap-2">
                   <Coffee className="w-4 h-4 text-[#C26D52]" />
                   <h3 className="text-xs sm:text-sm font-bold text-[#2C2018] font-mono">
-                    Your First Coffee Bean
+                    {t('wizard.step3_title')}
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsScannerOpen(true)}
                   className="px-2.5 py-1 rounded-xl border border-[#72806B] bg-[#72806B]/10 hover:bg-[#72806B]/20 text-[#72806B] text-[11px] font-mono font-bold flex items-center gap-1.5 transition shadow-xs"
-                  title="Scan coffee bag barcodes, packaging labels, and roast date stamps"
+                  title={t('bean.scan_bag_desc')}
                 >
                   <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
-                  <span>Scan Bag</span>
+                  <span>{t('bean.scan_bag')}</span>
                 </button>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono leading-relaxed">
-                Add the bean you have open right now, or tap <strong className="text-[#72806B]">Scan Bag</strong> to scan with your camera or barcode.
+                {t('wizard.step3_desc')}
               </p>
               {scannedFeedback && (
                 <div className="p-2 rounded-lg bg-[#72806B]/15 border border-[#72806B]/30 text-[11px] font-mono text-[#72806B] flex items-center gap-1.5 animate-fadeIn">
@@ -272,33 +272,33 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               <div className="space-y-2.5">
                 <div>
                   <label className="text-[10px] font-mono text-[#7A6E65] font-bold uppercase tracking-wider">
-                    Bean Name / Origin
+                    {t('bean.name')}
                   </label>
                   <input
                     type="text"
                     value={beanName}
                     onChange={(e) => setBeanName(e.target.value)}
-                    placeholder="e.g. Ethiopia Yirgacheffe Washed"
+                    placeholder={t('wizard.bean_name_placeholder')}
                     className="w-full mt-1 p-2.5 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono text-[#2C2018] placeholder:text-[#7A6E65]/50 focus:outline-hidden focus:ring-2 focus:ring-[#C26D52]/30"
                   />
                 </div>
 
                 <div>
                   <label className="text-[10px] font-mono text-[#7A6E65] font-bold uppercase tracking-wider">
-                    Roaster (optional)
+                    {t('bean.roaster')}
                   </label>
                   <input
                     type="text"
                     value={roaster}
                     onChange={(e) => setRoaster(e.target.value)}
-                    placeholder="e.g. La Cabra, Tim Wendelboe, Nomad..."
+                    placeholder={t('wizard.roaster_placeholder')}
                     className="w-full mt-1 p-2.5 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono text-[#2C2018] placeholder:text-[#7A6E65]/50 focus:outline-hidden focus:ring-2 focus:ring-[#C26D52]/30"
                   />
                 </div>
 
                 <div>
                   <label className="text-[10px] font-mono text-[#7A6E65] font-bold uppercase tracking-wider">
-                    Roast Level
+                    {t('bean.roast_level')}
                   </label>
                   <div className="grid grid-cols-4 gap-1.5 mt-1">
                     {(['light', 'medium', 'medium-dark', 'dark'] as const).map((level) => (
@@ -312,7 +312,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                             : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:border-[#C26D52]/40'
                         }`}
                       >
-                        {level}
+                        {level === 'light'
+                          ? t('wizard.roast_level_light')
+                          : level === 'medium'
+                          ? t('wizard.roast_level_medium')
+                          : level === 'medium-dark'
+                          ? t('wizard.roast_level_medium_dark')
+                          : t('wizard.roast_level_dark')}
                       </button>
                     ))}
                   </div>
@@ -320,7 +326,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
                 <div>
                   <label className="text-[10px] font-mono text-[#7A6E65] font-bold uppercase tracking-wider">
-                    Roast Date
+                    {t('bean.roast_date')}
                   </label>
                   <input
                     type="date"
@@ -342,7 +348,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               onClick={() => setStep((step - 1) as 1 | 2 | 3)}
               className="px-3 py-2 rounded-xl text-xs font-mono font-bold text-[#7A6E65] hover:text-[#2C2018] transition"
             >
-              Back
+              {t('wizard.back')}
             </button>
           ) : onSkip ? (
             <button
@@ -350,7 +356,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               onClick={onSkip}
               className="px-3 py-2 rounded-xl text-xs font-mono font-semibold text-[#7A6E65] hover:text-[#2C2018] transition"
             >
-              Skip Setup
+              {t('wizard.skip_setup')}
             </button>
           ) : (
             <div />
@@ -363,7 +369,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               disabled={step === 1 ? !canProceedStep1 : !canProceedStep2}
               className="px-4 py-2.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center gap-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <span>Next</span>
+              <span>{t('wizard.next')}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           ) : (
@@ -373,7 +379,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               disabled={!canFinish}
               className="px-5 py-2.5 rounded-xl bg-[#C26D52] hover:bg-[#A0523C] text-white text-xs font-mono font-bold flex items-center gap-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             >
-              <span>Start Brewing</span>
+              <span>{t('wizard.start_brewing')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}

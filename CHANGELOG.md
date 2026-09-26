@@ -4,6 +4,14 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.8.1] - 2026-09-26
+### Added & Improved
+- **Dybdegående Fuld-App Lokalisering (Onboarding Wizard, Paywall & Legal Center):**
+  - **Onboarding Wizard (`OnboardingWizard.tsx`):** 100% flersproget station-opsætning (Kværnvælger, Maskinevalg, Første kaffebønne, Ristegrader, Skip-knap og Scan Pose) tilkoblet `useTranslation()` på tværs af alle 5 sprog (EN, DA, DE, KO, JA).
+  - **PRO Paywall Modal (`PaywallModal.tsx`):** Komplet oversættelse af livstidsadgang ($4.99 / 49,- DKK), 7-dages prøveperiode status, feature-liste, Restore Purchases og sikker in-app betaling.
+  - **Legal & Support Center (`LegalModal.tsx` & Footer):** Fuld oversættelse af Privacy Policy (100% lokal on-device OCR uden cloud-streaming garanti), EULA/brugervilkår, samt FAQ og support-kontakt på EN, DA, DE, KO og JA.
+  - **Varm Placerings-Vejledning i Viewfinder:** *"Du kan stille og roligt placere telefonen på kaffestationen, på en kop eller mod maskinens drypbakke, så linsen peger mod vægtens display"*.
+
 ## [0.8.0] - 2026-09-26
 ### Added
 - **Global i18n Fase 1: Østasien Specialty Epicentre (Sydkorea & Japan):**

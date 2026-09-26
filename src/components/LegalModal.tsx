@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Shield, FileText, HelpCircle, Mail } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 interface LegalModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
   onClose,
   initialTab = 'privacy',
 }) => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'privacy' | 'terms' | 'support'>(initialTab);
 
   if (!isOpen) return null;
@@ -24,7 +26,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#C26D52]" />
             <h2 className="text-base font-bold text-[#2C2018] font-mono">
-              Legal & Support Center
+              {t('legal.modal_title')}
             </h2>
           </div>
           <button
@@ -46,7 +48,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             }`}
           >
             <Shield className="w-3.5 h-3.5" />
-            Privacy Policy
+            {t('legal.tab_privacy')}
           </button>
           <button
             onClick={() => setTab('terms')}
@@ -57,7 +59,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            Terms of Service (EULA)
+            {t('legal.tab_terms')}
           </button>
           <button
             onClick={() => setTab('support')}
@@ -68,7 +70,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             }`}
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            Support & FAQ
+            {t('legal.tab_support')}
           </button>
         </div>
 
@@ -76,72 +78,72 @@ export const LegalModal: React.FC<LegalModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-4 text-xs text-[#2C2018] leading-relaxed">
           {tab === 'privacy' && (
             <div className="space-y-3">
-              <h3 className="text-sm font-bold text-[#2C2018]">Privacy Policy for Espresso Flow</h3>
-              <p className="text-[#7A6E65]">Last updated: September 26, 2026</p>
+              <h3 className="text-sm font-bold text-[#2C2018]">{t('legal.privacy_title')}</h3>
+              <p className="text-[#7A6E65]">{t('legal.privacy_updated')}</p>
               
-              <h4 className="font-semibold text-[#2C2018]">1. Camera & Video Data</h4>
+              <h4 className="font-semibold text-[#2C2018]">{t('legal.privacy_camera_h')}</h4>
               <p>
-                Espresso Flow accesses your device's camera exclusively to recognize digital numbers on your coffee scale. All optical character recognition (OCR) and canvas processing are performed <strong>100% locally on your device</strong>. Video frames and camera streams are never recorded, saved to cloud servers, or transmitted over the internet.
+                {t('legal.privacy_camera_p')}
               </p>
 
-              <h4 className="font-semibold text-[#2C2018]">2. Extraction & Logbook Data</h4>
+              <h4 className="font-semibold text-[#2C2018]">{t('legal.privacy_data_h')}</h4>
               <p>
-                Your brew profiles, grinder settings, and tasting logs are stored locally on your device. We do not sell, rent, or monetize your personal coffee notes or brewing habits.
+                {t('legal.privacy_data_p')}
               </p>
 
-              <h4 className="font-semibold text-[#2C2018]">3. In-App Purchases</h4>
+              <h4 className="font-semibold text-[#2C2018]">{t('legal.privacy_purchase_h')}</h4>
               <p>
-                Transactions are handled through Apple StoreKit and Google Play Billing via RevenueCat. We never access or store your credit card or financial credentials.
+                {t('legal.privacy_purchase_p')}
               </p>
             </div>
           )}
 
           {tab === 'terms' && (
             <div className="space-y-3">
-              <h3 className="text-sm font-bold text-[#2C2018]">Terms of Service (Standard EULA)</h3>
-              <p className="text-[#7A6E65]">Last updated: September 26, 2026</p>
+              <h3 className="text-sm font-bold text-[#2C2018]">{t('legal.terms_title')}</h3>
+              <p className="text-[#7A6E65]">{t('legal.terms_updated')}</p>
               
-              <h4 className="font-semibold text-[#2C2018]">1. Acceptance of Terms</h4>
+              <h4 className="font-semibold text-[#2C2018]">{t('legal.terms_acceptance_h')}</h4>
               <p>
-                By downloading, accessing, or using Espresso Flow, you agree to be bound by these Terms of Service. If you do not agree, please discontinue use immediately.
+                {t('legal.terms_acceptance_p')}
               </p>
 
-              <h4 className="font-semibold text-[#2C2018]">2. Lifetime Pro License</h4>
+              <h4 className="font-semibold text-[#2C2018]">{t('legal.terms_license_h')}</h4>
               <p>
-                Espresso Flow offers a 7-day full in-app trial followed by an optional one-time purchase of $4.99 USD (49 DKK) for Lifetime Pro access. Lifetime access grants unrestricted use of scale OCR vision, flow rate analysis, and bean logbooks for the lifetime of the application version.
+                {t('legal.terms_license_p')}
               </p>
 
-              <h4 className="font-semibold text-[#2C2018]">3. Disclaimer of Scale Calibration</h4>
+              <h4 className="font-semibold text-[#2C2018]">{t('legal.terms_disclaimer_h')}</h4>
               <p>
-                Espresso Flow provides flow rate estimates and dial-in recommendations based on optical reading. Lighting conditions, display reflection, and physical vibrations may affect readings. The app is provided on an "as is" and "as available" basis.
+                {t('legal.terms_disclaimer_p')}
               </p>
             </div>
           )}
 
           {tab === 'support' && (
             <div className="space-y-3">
-              <h3 className="text-sm font-bold text-[#2C2018]">Customer Support & Contact</h3>
-              <p className="text-[#7A6E65]">We are passionate coffee nerds and here to help you dial in.</p>
+              <h3 className="text-sm font-bold text-[#2C2018]">{t('legal.support_title')}</h3>
+              <p className="text-[#7A6E65]">{t('legal.support_subtitle')}</p>
               
               <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-2">
                 <div className="flex items-center gap-2 font-mono font-semibold text-[#2C2018]">
                   <Mail className="w-4 h-4 text-[#C26D52]" />
-                  <span>Direct Support: michaelkhansen@gmail.com</span>
+                  <span>{t('legal.support_email')}</span>
                 </div>
                 <p className="text-[11px] text-[#7A6E65]">
-                  Questions regarding scale calibration, grinder profiles, or restore purchases? Feel free to reach out anytime.
+                  {t('legal.support_questions')}
                 </p>
               </div>
 
-              <h4 className="font-semibold text-[#2C2018]">Frequently Asked Questions:</h4>
+              <h4 className="font-semibold text-[#2C2018]">{t('legal.faq_title')}</h4>
               <div className="space-y-2 text-[11px]">
                 <p>
-                  <strong>Q: Does my scale need Bluetooth?</strong><br />
-                  A: No! Espresso Flow works with any standard kitchen or coffee scale by reading the display with your phone's camera.
+                  <strong>{t('legal.faq_q1')}</strong><br />
+                  {t('legal.faq_a1')}
                 </p>
                 <p>
-                  <strong>Q: How do I restore my purchase on a new phone?</strong><br />
-                  A: Simply tap "Restore Purchases" in the PRO menu while signed in with your Apple ID or Google account.
+                  <strong>{t('legal.faq_q2')}</strong><br />
+                  {t('legal.faq_a2')}
                 </p>
               </div>
             </div>

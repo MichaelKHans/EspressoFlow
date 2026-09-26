@@ -1,5 +1,7 @@
+import React from 'react';
 import { X, Check, ShieldCheck, Sparkles, Coffee } from 'lucide-react';
 import type { UserAccessState } from '../types/espresso';
+import { useTranslation } from '../i18n';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -16,14 +18,16 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
   onUnlockPro,
   onOpenLegal,
 }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   const features = [
-    'Unlimited Real-Time Scale OCR & Computer Vision',
-    'Mathematical Channeling Detection & Flow Spikes',
-    'Analog Barista Logbook & Extraction History',
-    'Smart Grinder Dial-In Steps & Taste Feedback',
-    'CO2 Degassing Alerts & Coffee Bean Scanning',
+    t('paywall.feature_ocr'),
+    t('paywall.feature_flow'),
+    t('paywall.feature_logbook'),
+    t('paywall.feature_dialin'),
+    t('paywall.feature_co2'),
   ];
 
   return (
@@ -41,28 +45,28 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
         <div className="text-center mb-5">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-bold mb-3 border border-[#C26D52]/20">
             <Sparkles className="w-3.5 h-3.5" />
-            LIFETIME ACCESS • NO SUBSCRIPTION
+            {t('paywall.badge')}
           </div>
           <h2 className="text-2xl font-bold text-[#2C2018] tracking-tight">
-            Espresso Flow PRO
+            {t('paywall.title')}
           </h2>
           <p className="text-xs text-[#7A6E65] mt-1">
-            Transform any kitchen scale into a precision extraction lab.
+            {t('paywall.subtitle')}
           </p>
         </div>
 
         {/* Pricing Box */}
         <div className="bg-[#FAF7F2] rounded-xl border border-[#E8DFD5] p-4 text-center mb-5">
           <div className="text-3xl font-extrabold text-[#2C2018] font-mono">
-            $4.99 <span className="text-sm font-normal text-[#7A6E65]">/ 49,- DKK</span>
+            {t('paywall.price')}
           </div>
           <div className="text-[11px] font-mono text-[#C26D52] font-semibold mt-1">
-            Pay Once, Dial In Forever
+            {t('paywall.pay_once')}
           </div>
           <div className="text-[11px] text-[#7A6E65] mt-1">
             {accessState.isWithinTrial
-              ? `You currently have ${accessState.daysRemainingInTrial} days left in your free trial.`
-              : 'Unlock complete precision extraction capabilities.'}
+              ? t('paywall.trial_status', { days: accessState.daysRemainingInTrial })
+              : t('paywall.expired_status')}
           </div>
         </div>
 
@@ -85,32 +89,32 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
             className="w-full py-3 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white font-semibold text-sm shadow-md transition active:scale-98 flex items-center justify-center gap-2"
           >
             <Coffee className="w-4 h-4" />
-            Unlock Lifetime Pro ($4.99)
+            {t('paywall.unlock_btn')}
           </button>
 
           <button
             onClick={() => {
-              alert('Purchases restored successfully! Entitlement: Lifetime PRO active.');
+              alert(t('paywall.restore_success'));
               onUnlockPro();
             }}
             className="w-full py-2 text-xs font-mono text-[#7A6E65] hover:text-[#2C2018] transition"
           >
-            Restore Purchases
+            {t('paywall.restore_btn')}
           </button>
         </div>
 
         {/* Store Compliance Links */}
         <div className="mt-4 pt-3 border-t border-[#E8DFD5] flex items-center justify-center gap-4 text-[10px] text-[#7A6E65] font-mono">
           <button onClick={() => onOpenLegal('terms')} className="hover:underline">
-            Terms of Service
+            {t('footer.terms')}
           </button>
           <span>•</span>
           <button onClick={() => onOpenLegal('privacy')} className="hover:underline">
-            Privacy Policy
+            {t('footer.privacy')}
           </button>
           <span>•</span>
           <span className="flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-[#72806B]" /> Secure In-App
+            <ShieldCheck className="w-3 h-3 text-[#72806B]" /> {t('paywall.secure_notice')}
           </span>
         </div>
       </div>

@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Fuld-App Lokalisering: Onboarding, Paywall & Legal (v0.8.1)
+- **Onboarding Wizard (`OnboardingWizard.tsx`):** Tilkoblet `useTranslation()` med komplette tekster for alle 3 trin (kværn, maskine, bønne, ristegrader, skip og pose-scanning) på EN, DA, DE, KO og JA.
+- **Paywall Modal (`PaywallModal.tsx`):** Komplet oversat for Lifetime Pro adgang, prøveperiode-tæller, feature-liste og Restore Purchases.
+- **Legal & Compliance (`LegalModal.tsx` & Footer):** Privacy Policy (100% lokal OCR garanti), Terms of Service EULA, FAQ og support-links fuldt oversat på tværs af alle 5 sprog.
+- **Scale Cam Ergonomi:** Tilføjet varm instruktionstekst i standby og viewfindere, samt dokumenteret Scale Vision UX (Grøn Bounding Box for display-læsbarhed) i `ROADMAP.md`.
+
 ### 2026-09-26 -- Global i18n Fase 1: Sydkorea & Japan (v0.8.0)
 - **Sydkorea (한국어 - `ko.ts`):** Komplet ordbog implementeret med SCA specialty barista-terminologi (Ratio, Dose, Yield, Dial-In, Pre-infusion, Channeling).
 - **Japan (日本語 - `ja.ts`):** Komplet ordbog tilpasset Japans kissaten- og præcisionsekstraktionskultur.

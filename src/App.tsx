@@ -449,7 +449,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.8.0
+                  v0.8.1
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -1329,28 +1329,28 @@ export function App() {
       <footer className="border-t border-[#E8DFD5] bg-[#FAF7F2] py-4 text-center text-xs font-mono text-[#7A6E65]">
         <div className="max-w-4xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            Espresso Flow © {new Date().getFullYear()} • Global Specialty Coffee
+            {t('footer.rights', { year: new Date().getFullYear() })}
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setLegalModalTab('privacy')}
               className="hover:text-[#2C2018] underline transition"
             >
-              Privacy Policy
+              {t('footer.privacy')}
             </button>
             <span>•</span>
             <button
               onClick={() => setLegalModalTab('terms')}
               className="hover:text-[#2C2018] underline transition"
             >
-              Terms of Service
+              {t('footer.terms')}
             </button>
             <span>•</span>
             <button
               onClick={() => setLegalModalTab('support')}
               className="hover:text-[#2C2018] underline transition"
             >
-              Support
+              {t('footer.support')}
             </button>
           </div>
         </div>
