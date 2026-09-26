@@ -4,6 +4,20 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.6.2] - 2026-09-26
+### Added
+- **De'Longhi Dedica EC685 / EC680 Espressomaskine Support:**
+  - Integreret De'Longhi Dedica (EC680 / EC685 / EC885) og De'Longhi La Specialista i Onboarding Wizard og Equipment Setup.
+  - Automatisk pre-infusion kalibrering: 2.0s puls pre-infusion (svarer præcist til Dedicaens fabriksforvædning inden 15-bars vibrationstrykket topper).
+  - Permanent maskin-hukommelse via `saveMachineName()`.
+- **Mobiloptimeret Inline Quick Dial-In Tuner på Bønnekort:**
+  - Når et bønnekort i Bean Vault er aktivt, folder en superkompakt og taktil justeringssektion sig ud **direkte inde i selve bønnekortet**.
+  - **Kværntal med `[-]` og `[+]` mikrotrin (0.5 trin):** Juster kværnens collar direkte dér hvor fingeren er uden at rulle ned.
+  - **1-Tap Ristegradsvælger:** Hurtigskift mellem Light, Medium, Med-Dark og Dark med det samme.
+  - **Dose & Yield Real-Time Sync:** Finjuster kaffedosis (fx 18g) og målvægt (fx 36g) direkte på kortet.
+  - **Assigned Grinder Selector:** Skift hvilken kværn bønnen er tilknyttet med 1 klik.
+  - Løser mobil-udfordringen, hvor indstillingerne tidligere lå langt nede under skærmkanten.
+
 ## [0.6.1] - 2026-09-26
 ### Added
 - **Per-Bønne Kværn-Tilknytning (Assigned Grinder Per Bean):**

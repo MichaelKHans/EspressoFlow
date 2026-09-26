@@ -11,6 +11,10 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- De'Longhi Dedica EC685 Support & Mobiloptimeret Inline Bean Tuner (v0.6.2)
+- **De'Longhi Dedica EC685 Profil:** Tilføjet i Onboarding Wizard og Equipment Setup med fabrikskalibreret 2.0s puls pre-infusion for 15-bars thermoblock-systemet.
+- **Inline Quick Dial-In Tuner i Bønnekort:** Når en bønne i Bean Vault er aktiv, foldes en kompakt justeringsmenu ud direkte inde i kortet med `[-]` `[+]` kværnjustering, 1-tap risteprofil, dose/yield og kværnvælger. Fjerner behovet for lang rulning på mobilen.
+
 ### 2026-09-26 -- Per-Bønne Kværn-Tilknytning & Kværnvælger i Bean Vault (v0.6.1)
 - **Kværnvælger ved Oprettelse:** "Add Coffee Bean To Vault" formularen har fået en "Assigned Grinder" dropdown.
 - **Tydelig Kværnvisning i Bønnekort:** Viser kværnmodel og indstilling (fx `Eureka: 1.4` eller `Baratza: 15`).

@@ -436,7 +436,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.6.1
+                  v0.6.2
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -842,6 +842,163 @@ export function App() {
                           </button>
                         )}
                       </div>
+
+                      {/* Inline Quick Dial-In Tuner (Expands directly on active card) */}
+                      {isActive && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-3 pt-3 border-t border-[#E8DFD5] space-y-2.5 animate-fadeIn"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-[#C26D52] uppercase flex items-center gap-1 font-mono">
+                              <Sliders className="w-3 h-3" />
+                              <span>Quick Dial-In</span>
+                            </span>
+                            <span className="text-[9px] font-mono text-[#72806B] bg-[#72806B]/15 px-1.5 py-0.5 rounded font-semibold">
+                              Live Sync
+                            </span>
+                          </div>
+
+                          {/* 1. Quick Dial Setting with +/- buttons */}
+                          <div className="bg-white p-2 rounded-lg border border-[#E8DFD5] space-y-1">
+                            <div className="flex items-center justify-between text-[10px] text-[#7A6E65]">
+                              <span>Grind Dial ({bean.grinderName ? bean.grinderName.split(' ')[0] : 'Grind'}):</span>
+                              <span className="font-mono text-[9px]">
+                                {grinders.find((g) => g.name === bean.grinderName)?.stepUnit || 'steps'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const num = parseFloat(bean.grindSetting);
+                                  if (!isNaN(num)) {
+                                    const updated = (num - 0.5).toFixed(1);
+                                    setGrindSetting(updated);
+                                    handleUpdateBeanField({ grindSetting: updated });
+                                  }
+                                }}
+                                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] text-[#2C2018] font-bold text-sm hover:bg-[#E8DFD5] active:scale-95 transition"
+                                title="Finer / lower setting"
+                              >
+                                -
+                              </button>
+                              <input
+                                type="text"
+                                value={bean.grindSetting}
+                                onChange={(e) => {
+                                  setGrindSetting(e.target.value);
+                                  handleUpdateBeanField({ grindSetting: e.target.value });
+                                }}
+                                className="flex-1 text-center font-mono font-bold text-sm text-[#C26D52] bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg py-1"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const num = parseFloat(bean.grindSetting);
+                                  if (!isNaN(num)) {
+                                    const updated = (num + 0.5).toFixed(1);
+                                    setGrindSetting(updated);
+                                    handleUpdateBeanField({ grindSetting: updated });
+                                  }
+                                }}
+                                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] text-[#2C2018] font-bold text-sm hover:bg-[#E8DFD5] active:scale-95 transition"
+                                title="Coarser / higher setting"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* 2. Roast Level Quick Buttons */}
+                          <div className="space-y-1">
+                            <span className="text-[9px] uppercase font-bold text-[#7A6E65] block font-mono">
+                              Roast Profile
+                            </span>
+                            <div className="grid grid-cols-4 gap-1">
+                              {(['light', 'medium', 'medium-dark', 'dark'] as RoastLevel[]).map((level) => (
+                                <button
+                                  key={level}
+                                  type="button"
+                                  onClick={() => handleSetRoastLevel(level)}
+                                  className={`py-1 text-[9px] rounded font-semibold capitalize transition ${
+                                    bean.roastLevel === level
+                                      ? 'bg-[#C26D52] text-white shadow-xs font-bold'
+                                      : 'bg-white border border-[#E8DFD5] text-[#7A6E65] hover:bg-[#FAF7F2]'
+                                  }`}
+                                >
+                                  {level === 'medium-dark' ? 'Med-Dark' : level}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* 3. Dose & Yield Quick Ratio */}
+                          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                            <div className="p-1.5 rounded bg-white border border-[#E8DFD5]">
+                              <span className="text-[9px] text-[#7A6E65] uppercase block font-sans">Dose (In)</span>
+                              <div className="flex items-center justify-between mt-0.5">
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  value={bean.doseGrams}
+                                  onChange={(e) => {
+                                    const d = parseFloat(e.target.value) || 18;
+                                    setDoseGrams(d);
+                                    const mult = RATIO_PRESETS[bean.ratioStyle]?.multiplier || 2.0;
+                                    const newYield = Math.round(d * mult * 10) / 10;
+                                    setTargetYieldGrams(newYield);
+                                    handleUpdateBeanField({ doseGrams: d, targetYieldGrams: newYield });
+                                  }}
+                                  className="w-12 font-bold text-[#2C2018] bg-transparent text-xs"
+                                />
+                                <span className="text-[#A6998E]">g</span>
+                              </div>
+                            </div>
+                            <div className="p-1.5 rounded bg-white border border-[#E8DFD5]">
+                              <span className="text-[9px] text-[#7A6E65] uppercase block font-sans">Yield (Out)</span>
+                              <div className="flex items-center justify-between mt-0.5">
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  value={bean.targetYieldGrams}
+                                  onChange={(e) => {
+                                    const y = parseFloat(e.target.value) || 36;
+                                    setTargetYieldGrams(y);
+                                    handleUpdateBeanField({ targetYieldGrams: y });
+                                  }}
+                                  className="w-12 font-bold text-[#C26D52] bg-transparent text-xs"
+                                />
+                                <span className="text-[#A6998E]">g</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 4. Assigned Grinder Selector */}
+                          {grinders.length > 1 && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] uppercase font-bold text-[#7A6E65] block font-mono">
+                                Assigned Grinder
+                              </span>
+                              <select
+                                value={bean.grinderName}
+                                onChange={(e) => {
+                                  const g = e.target.value;
+                                  setGrinderName(g);
+                                  handleUpdateBeanField({ grinderName: g });
+                                }}
+                                className="w-full px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[11px] font-semibold text-[#2C2018]"
+                              >
+                                {grinders.map((g) => (
+                                  <option key={g.id} value={g.name}>
+                                    {g.name} ({g.type})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1045,20 +1202,27 @@ export function App() {
                     onChange={(e) => {
                       const selected = e.target.value;
                       setMachineName(selected);
-                      if (selected.includes('Dual Boiler')) setMachinePreInfusion(6.0);
+                      saveMachineName(selected);
+                      if (selected.includes('Dedica')) setMachinePreInfusion(2.0);
+                      else if (selected.includes('Dual Boiler')) setMachinePreInfusion(6.0);
                       else if (selected.includes('Barista')) setMachinePreInfusion(7.0);
+                      else if (selected.includes('Bambino')) setMachinePreInfusion(5.0);
                       else if (selected.includes('Flow Control')) setMachinePreInfusion(8.0);
                       else if (selected.includes('Micra') || selected.includes('Mini')) setMachinePreInfusion(4.0);
-                      else if (selected.includes('Straight 9-Bar')) setMachinePreInfusion(0.0);
+                      else if (selected.includes('Straight 9-Bar') || selected.includes('Gaggia') || selected.includes('Silvia')) setMachinePreInfusion(0.0);
                       else if (selected.includes('Decent')) setMachinePreInfusion(6.0);
                     }}
                     className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
                   >
+                    <option value="De'Longhi Dedica (EC680 / EC685 / EC885)">De'Longhi Dedica EC685 (15-Bar, 2s Pulse Pre-Infusion)</option>
+                    <option value="De'Longhi La Specialista">De'Longhi La Specialista (15-Bar, Dual Heating)</option>
                     <option value="Sage / Breville Dual Boiler">Sage / Breville Dual Boiler (Default 6s)</option>
                     <option value="Sage / Breville Barista Touch/Express">Sage / Breville Barista Series (Default 7s)</option>
+                    <option value="Sage Bambino / Bambino Plus">Sage Bambino / Bambino Plus (Default 5s)</option>
+                    <option value="Gaggia Classic Pro / Evo">Gaggia Classic Pro (Straight 9-Bar / 0s)</option>
+                    <option value="Rancilio Silvia / Silvia Pro X">Rancilio Silvia (Straight 9-Bar / 0s)</option>
                     <option value="E61 Manual Flow Control">E61 Manual Flow Control (Default 8s)</option>
                     <option value="La Marzocco Linea Micra / Mini">La Marzocco Linea Micra/Mini (Default 4s)</option>
-                    <option value="Straight 9-Bar Pump (Gaggia / Rancilio)">Straight 9-Bar Pump (0s pre-infusion)</option>
                     <option value="Decent DE1 (Profiling)">Decent DE1 (Adaptive Profiling)</option>
                   </select>
                 </div>
