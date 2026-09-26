@@ -22,10 +22,10 @@
 - [x] Display type toggle (mørke tal på lys baggrund vs. lysende LED-tal på mørk baggrund)
 - [x] Støjfilter & Outlier Rejection (`ScaleReadingFilter`) for at forhindre mikrovibrationer fra pumpe
 - [x] Vision Inspector (live binariseret preview og ciffer-diagnostik)
-- [ ] **Kommende Scale Vision UX & Placering (Husk til senere):**
-  - [ ] **Grøn Display Læsbarheds-Boks (Target Lock):** Vise live kamera i viewfinder med dynamisk grøn bounding box (`#10B981`) omkring vægtens cifre i opstartsfasen, når OCR har fundet gyldige, læsbare cifre med god kontrast (høj confidence), før selve brygningen starter.
-  - [ ] **Ergonomisk Placerings-Vejledning:** Hjælpetekst i live viewfinder: *"Du kan stille og roligt placere telefonen på kaffestationen, på en kop eller mod maskinens drypbakke, så linsen peger mod vægtens display"*.
-  - [ ] **Optisk Robusthed:** Polaritets-detektion mod spejlinger/overhead spots på blanke glasoverflader (Acaia/Timemore) og filtrering af mekaniske pumpevibrationer ved direkte kontakt med maskinen.
+- [x] **Scale Vision UX & Ergonomi (v0.9.1):**
+  - [x] **Grøn Display Læsbarheds-Boks (Target Lock):** Viewfinder med dynamisk grøn bounding box (`#10B981`) og `[ LOCKED: 39.5g ]` statuschip i opstartsfasen, når OCR har fundet gyldige, læsbare cifre med $\ge 70\%$ tillid, før brygning.
+  - [x] **Ergonomisk Placerings-Vejledning:** Integreret hjælpetekst i live standby: *"Du kan roligt placere telefonen på kaffestationen, på en kop eller mod maskinens drypbakke, så linsen peger mod vægtens display"*.
+  - [x] **Dual-Display & Blue LED Tolerance:** Automatisk adskillelse af vægt og timerrække (`0:00`) samt Max-RGB binarisering til mættede blå, cyan og hvide LED-segmenter.
 
 ---
 

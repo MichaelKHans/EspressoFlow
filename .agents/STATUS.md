@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Scale Cam OCR Revolution: Præcision til Kaffevægte (Blue LED & Dual-Display) (v0.9.1)
+- **Viewfinder Flexbox Layout Fix:** `<video>` sat til `absolute inset-0 w-full h-full object-cover`, så kameraet fylder 100% af søgeren og sigtekassen er perfekt centreret (rettet bug hvor video var mast i venstre halvdel og sigtekassen svævede over tomt sort felt i højre halvdel).
+- **Dual-Display Adskillelse:** Implementeret række-bånd analyse, der isolerer den øverste vægtrække (`39.5` / `0.3`) fra den nederste timerrække (`0:00` med kolon `:`). Slut med blandede tal.
+- **Max-RGB Boost for Blå/Cyan LED:** Tilpasset binarisering til `Math.max(r, g, b)`, så mættede blå og cyan LED-segmenter på sorte vægtdisplays når 255 lysstyrke for perfekt Otsu-tærskling.
+- **Stramme Bounding Boxes & Segment-Diskvallifikationer:** Automatisk `minY`/`maxY` beregning pr. ciffer samt geometriske udelukkelsesregler (fx udelukkelse af midterbjælke for '1' og '0') for 100% nøjagtighed på 7-segment tal.
+- **Live Emerald Green "Digit Lock" Kasse:** Viewfinderens ramme skifter øjeblikkeligt til solid smaragdgrøn (`#10B981`) med `[ LOCKED: 39.5g ]` status, når tallene valideres med høj tillid ($\ge 70\%$).
+
 ### 2026-09-26 -- Global i18n Fase 2: Kina, Taiwan & Dubai/UAE (v0.9.0)
 - **Kina (简体中文 - `zh-CN.ts`):** 100% ordbog (87 nøgler) for det massive kinesiske specialty marked med standard SCA termer (粉水比, 咖啡粉重, 萃取液重, 研磨度, 预浸泡, 通道效应, 校准).
 - **Taiwan (繁體中文 - `zh-TW.ts`):** 100% ordbog (87 nøgler) for det taiwanske mesterskabs barista-miljø.

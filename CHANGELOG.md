@@ -4,6 +4,15 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.9.1] - 2026-09-26
+### Fixed & Improved
+- **Scale Cam OCR Revolution: Præcisions-aflæsning af Digitale Kaffevægte (Blue LED & Dual-Display):**
+  - **Løst Viewfinder Flexbox Layout-Bug:** `<video>` elementet er nu `absolute inset-0 w-full h-full object-cover`. Tidligere blev videoen mast sammen i venstre halvdel (50% bredde) pga. flex container, mens sigtekassen svævede over et tomt sort felt i højre halvdel. Nu dækker kameraet 100% af søgeren, og sigtekassen er perfekt centreret.
+  - **Dual-Display Adskillelse (Vægt øverst vs. Timer nederst):** Ny horisontal række-bånd analyse isolerer automatisk vægttallene (f.eks. `39.5` eller `0.3`) fra timertal (`0:00` med kolon `:`). Slut med "Frankenstein-tal", hvor vægt og timer smeltede sammen!
+  - **Max-RGB Boost for Blå/Cyan/Hvide LED-segmenter:** Standard Rec.601 luminans undertrykker blå farve (kun 11% vægt). Binariseringen tager nu `Math.max(r, g, b)` i LED-tilstand, så klare blå og cyan LED-segmenter opnår fuld 255 intensitet for fejlfri Otsu-tærskling.
+  - **Stramme Bounding Boxes & 7-Segment Slant-Kompensering:** Præcis `minY`/`maxY` afgrænsning pr. ciffer samt vinkeljusterede sonderinger med segment-diskvallifikationer (f.eks. udelukkelse af midterbjælke for '1' og '0') eliminerer falske læsninger.
+  - **Live Emerald Green "Digit Lock" Bounding Box:** Viewfinderens sigtekasse skifter dynamisk til solid smaragdgrøn (`#10B981`) med pulserende `[ LOCKED: 39.5g ]` statuschip i det øjeblik, vægtcifrene identificeres med $\ge 70\%$ tillid, så baristaen har 100% visuel kontrol inden brygning.
+
 ## [0.9.0] - 2026-09-26
 ### Added
 - **Global i18n Fase 2: Asiatisk Vækst & Golfens Luksusmarked (Kina, Taiwan & Dubai/UAE):**

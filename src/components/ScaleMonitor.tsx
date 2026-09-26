@@ -144,6 +144,18 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         const inspCtx = inspectorCanvasRef.current.getContext('2d');
         if (inspCtx) {
           inspCtx.drawImage(offscreen, 0, 0, inspectorCanvasRef.current.width, inspectorCanvasRef.current.height);
+          if (result.boundingBox) {
+            const scaleX = inspectorCanvasRef.current.width / offscreen.width;
+            const scaleY = inspectorCanvasRef.current.height / offscreen.height;
+            inspCtx.strokeStyle = '#10B981';
+            inspCtx.lineWidth = 2;
+            inspCtx.strokeRect(
+              result.boundingBox.x * scaleX,
+              result.boundingBox.y * scaleY,
+              result.boundingBox.width * scaleX,
+              result.boundingBox.height * scaleY
+            );
+          }
         }
       }
 
@@ -472,7 +484,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             autoPlay
             playsInline
             muted
-            className={`w-full h-full object-cover ${displayInverted ? 'invert' : ''}`}
+            className={`absolute inset-0 w-full h-full object-cover ${displayInverted ? 'invert' : ''}`}
           />
         ) : (
           <div className="absolute inset-0 bg-radial from-[#2C2018] to-[#120E0B] flex flex-col items-center justify-center p-6 select-none">
@@ -482,17 +494,37 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         )}
 
         {/* OCR Region-of-Interest Targeting Crosshair (Step 0 Calibration) */}
-        <div className="relative z-10 w-4/5 max-w-sm aspect-2/1 border-2 border-dashed border-[#C26D52]/80 rounded-xl flex flex-col items-center justify-center p-4 backdrop-blur-[1px] bg-black/25">
-          {/* Target corner indicators */}
-          <div className="absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 border-[#C26D52]" />
-          <div className="absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 border-[#C26D52]" />
-          <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 border-[#C26D52]" />
-          <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 border-[#C26D52]" />
+        {(() => {
+          const isDigitLocked = (cameraState === 'live' && lastOcrResult !== null && lastOcrResult.weight !== null && lastOcrResult.confidence >= 0.70) || (cameraState === 'demo' && isBrewing);
+          return (
+            <div
+              className={`relative z-10 w-4/5 max-w-sm aspect-2/1 rounded-xl flex flex-col items-center justify-center p-4 backdrop-blur-[1px] transition-all duration-300 ${
+                isDigitLocked
+                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/10 shadow-[0_0_25px_rgba(16,185,129,0.35)]'
+                  : 'border-2 border-dashed border-[#C26D52]/80 bg-black/25'
+              }`}
+            >
+              {/* Target corner indicators */}
+              <div className={`absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
 
-          <div className="text-[10px] tracking-widest text-[#E8DFD5]/80 uppercase font-mono mb-1 flex items-center gap-1">
-            <Scan className="w-3 h-3 text-[#C26D52]" />
-            [ SCALE ROI TARGET ]
-          </div>
+              <div className="text-[10px] tracking-widest uppercase font-mono mb-1 flex items-center gap-1.5">
+                {isDigitLocked ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
+                    <span className="text-[#10B981] font-bold">
+                      [ {isZeroDetected ? 'TARE LOCKED (0.0g)' : `LOCKED: ${currentWeight.toFixed(1)}g`} ]
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Scan className="w-3 h-3 text-[#C26D52]" />
+                    <span className="text-[#E8DFD5]/80">[ {t('scale.roi_target')} ]</span>
+                  </>
+                )}
+              </div>
 
           {/* Monospace Jitter-Free Digits */}
           <div className="font-mono text-4xl sm:text-5xl font-bold tracking-wider text-[#FAF7F2] drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
@@ -528,6 +560,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             )}
           </div>
         </div>
+      );
+    })()}
 
         {/* Viewfinder Bottom Telemetry Bar (Single responsive bar, zero collision) */}
         <div className="absolute bottom-2 inset-x-2 z-10 flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg bg-[#1A1412]/90 border border-white/10 text-[10px] sm:text-[11px] font-mono text-[#FAF7F2]">
