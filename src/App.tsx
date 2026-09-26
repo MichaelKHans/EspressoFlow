@@ -8,7 +8,7 @@ import { PaywallModal } from './components/PaywallModal';
 import { LegalModal } from './components/LegalModal';
 import type { ShotDataPoint, ShotRecord, TasteRating, UserAccessState } from './types/espresso';
 import { loadShots, saveShot, loadUserAccess, saveProStatus } from './lib/storage';
-import { detectChanneling } from './lib/espressoMath';
+import { analyzeChanneling } from './lib/espressoMath';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'monitor' | 'logbook' | 'equipment'>('monitor');
@@ -30,6 +30,8 @@ export function App() {
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(36.0);
   const [grinderName, setGrinderName] = useState<string>('Eureka Mignon Specialita');
   const [grindSetting, setGrindSetting] = useState<string>('1.4');
+  const [machineName, setMachineName] = useState<string>('Sage / Breville Dual Boiler');
+  const [machinePreInfusion, setMachinePreInfusion] = useState<number>(6.0);
   const [coffeeBeanName, setCoffeeBeanName] = useState<string>('Ethiopia Yirgacheffe');
   const [roastDate, setRoastDate] = useState<string>('2026-09-15');
 
@@ -59,11 +61,17 @@ export function App() {
     setLastFinishedShot(null);
   };
 
-  const handleBrewFinish = (finalWeight: number, timeSeconds: number, points: ShotDataPoint[]) => {
+  const handleBrewFinish = (
+    finalWeight: number,
+    timeSeconds: number,
+    preInfusionSeconds: number,
+    flowTimeSeconds: number,
+    points: ShotDataPoint[]
+  ) => {
     setIsBrewing(false);
     setCurrentPoints(points);
 
-    const isChanneling = detectChanneling(points);
+    const channelingEvent = analyzeChanneling(points);
     const avgFlow = timeSeconds > 0 ? Math.round((finalWeight / timeSeconds) * 100) / 100 : 0;
     const peakFlow = points.reduce((max, p) => Math.max(max, p.flowRateGps), 0);
 
@@ -76,11 +84,15 @@ export function App() {
       targetYieldGrams: targetYieldGrams,
       actualYieldGrams: finalWeight,
       totalTimeSeconds: timeSeconds,
+      preInfusionSeconds: preInfusionSeconds,
+      flowTimeSeconds: flowTimeSeconds,
       averageFlowGps: avgFlow,
       peakFlowGps: peakFlow,
-      channelingDetected: isChanneling,
+      channeling: channelingEvent,
+      channelingDetected: channelingEvent.detected,
       grinderName: grinderName,
       grindSetting: grindSetting,
+      machineName: machineName,
       dataPoints: points,
     };
 
@@ -129,7 +141,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.2.0
+                  v0.3.0
                 </span>
               </div>
               <p className="text-[11px] text-[#7A6E65] font-mono">
@@ -210,6 +222,11 @@ export function App() {
           </div>
           <div className="flex items-center gap-3">
             <div>
+              <span className="text-[#7A6E65]">MACHINE: </span>
+              <span className="font-semibold text-[#2C2018]">{machineName.split(' ')[0]}</span>
+              <span className="text-[#7A6E65]"> (Pre: {machinePreInfusion}s)</span>
+            </div>
+            <div>
               <span className="text-[#7A6E65]">DOSE: </span>
               <span className="font-semibold">{doseGrams}g</span>
             </div>
@@ -233,12 +250,15 @@ export function App() {
               onBrewFinish={handleBrewFinish}
               targetDose={doseGrams}
               targetYield={targetYieldGrams}
+              machinePreInfusionSetting={machinePreInfusion}
             />
 
             <FlowChart
               points={currentPoints}
               targetYield={targetYieldGrams}
-              channelingDetected={detectChanneling(currentPoints)}
+              doseGrams={doseGrams}
+              channelingEvent={analyzeChanneling(currentPoints)}
+              preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
             />
 
             {lastFinishedShot && (
@@ -260,14 +280,60 @@ export function App() {
           <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-6 shadow-xs space-y-6 font-mono text-xs">
             <div>
               <h3 className="text-sm font-bold text-[#2C2018] uppercase tracking-wider mb-1">
-                Equipment Dial-In & Grinder Calibration
+                Equipment Dial-In & Extraction Profiles
               </h3>
               <p className="text-[#7A6E65]">
-                Configure your grinder steps and coffee bean profile for precise micro-adjustments.
+                Configure your espresso machine, grinder steps, and coffee bean profile for precise extraction telemetri.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] text-[#7A6E65] uppercase">Espresso Machine</label>
+                <select
+                  value={machineName}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    setMachineName(selected);
+                    if (selected.includes('Dual Boiler')) setMachinePreInfusion(6.0);
+                    else if (selected.includes('Barista')) setMachinePreInfusion(7.0);
+                    else if (selected.includes('Flow Control')) setMachinePreInfusion(8.0);
+                    else if (selected.includes('Micra') || selected.includes('Mini')) setMachinePreInfusion(4.0);
+                    else if (selected.includes('Straight 9-Bar')) setMachinePreInfusion(0.0);
+                    else if (selected.includes('Decent')) setMachinePreInfusion(6.0);
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                >
+                  <option value="Sage / Breville Dual Boiler">Sage / Breville Dual Boiler (Default 6s)</option>
+                  <option value="Sage / Breville Barista Touch/Express">Sage / Breville Barista Series (Default 7s)</option>
+                  <option value="E61 Manual Flow Control">E61 Manual Flow Control (Default 8s)</option>
+                  <option value="La Marzocco Linea Micra / Mini">La Marzocco Linea Micra/Mini (Default 4s)</option>
+                  <option value="Straight 9-Bar Pump (Gaggia / Rancilio)">Straight 9-Bar Pump (0s pre-infusion)</option>
+                  <option value="Decent DE1 (Profiling)">Decent DE1 (Adaptive Profiling)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] text-[#7A6E65] uppercase">Pre-Infusion Target (Seconds)</label>
+                  <span className="font-bold text-[#C26D52]">{machinePreInfusion.toFixed(1)}s</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="15"
+                  step="0.5"
+                  value={machinePreInfusion}
+                  onChange={(e) => setMachinePreInfusion(parseFloat(e.target.value) || 0)}
+                  className="w-full accent-[#C26D52] cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-[#7A6E65]">
+                  <span>0s (Direct 9 bar)</span>
+                  <span>5-8s (Standard specialty)</span>
+                  <span>15s (Long soak)</span>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-[11px] text-[#7A6E65] uppercase">Coffee Bean Origin / Name</label>
                 <input
@@ -339,7 +405,7 @@ export function App() {
             </div>
 
             <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[11px] text-[#7A6E65] leading-relaxed">
-              ☕ <strong className="text-[#2C2018]">Standard 1:2 Dial-In Target:</strong> With {doseGrams}g dose, aim for {targetYieldGrams}g yield in 26-30 seconds. Flow rate should remain steady around 1.2–1.5 g/s without premature flow spikes.
+              ☕ <strong className="text-[#2C2018]">Standard 1:2 Dial-In Target:</strong> With {doseGrams}g dose, aim for {targetYieldGrams}g yield in 26-30 seconds (Split: ~{machinePreInfusion}s pre-infusion + {Math.max(18, Math.round(28 - machinePreInfusion))}s active flow). Flow rate should remain steady around 1.2–1.6 g/s in the Golden Zone without premature flow spikes.
             </div>
           </div>
         )}

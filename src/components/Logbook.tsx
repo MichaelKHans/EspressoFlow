@@ -68,18 +68,31 @@ export const Logbook: React.FC<LogbookProps> = ({ shots }) => {
                   <div className="font-semibold text-[#2C2018]">
                     {shot.doseGrams}g → {shot.actualYieldGrams}g
                   </div>
+                  <div className="text-[10px] text-[#7A6E65] mt-0.5">
+                    1:{(shot.doseGrams > 0 ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1) : '2.0')} ratio
+                  </div>
                 </div>
                 <div>
                   <div className="text-[10px] text-[#7A6E65] uppercase">Time & Flow</div>
                   <div className="font-semibold text-[#2C2018]">
                     {shot.totalTimeSeconds}s @ {shot.averageFlowGps}g/s
                   </div>
+                  {shot.preInfusionSeconds !== undefined && (
+                    <div className="text-[10px] text-[#7A6E65] mt-0.5">
+                      Pre: {shot.preInfusionSeconds}s • Flow: {shot.flowTimeSeconds}s
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <div className="text-[10px] text-[#7A6E65] uppercase">Grinder</div>
+                  <div className="text-[10px] text-[#7A6E65] uppercase">Equipment</div>
                   <div className="font-semibold text-[#2C2018]">
                     {shot.grinderName.split(' ')[0]} @ {shot.grindSetting}
                   </div>
+                  {shot.machineName && (
+                    <div className="text-[10px] text-[#7A6E65] truncate mt-0.5">
+                      {shot.machineName}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="text-[10px] text-[#7A6E65] uppercase">Taste / Flow</div>
@@ -87,6 +100,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots }) => {
                     {shot.channelingDetected ? (
                       <span className="text-[#B85B48] flex items-center gap-1 text-[11px]">
                         <AlertCircle className="w-3 h-3" /> Channeling
+                        {shot.channeling?.flowSpikeGps ? ` (${shot.channeling.flowSpikeGps} g/s)` : ''}
                       </span>
                     ) : (
                       <span className="text-[#72806B] flex items-center gap-1 text-[11px]">

@@ -1,16 +1,22 @@
-import type { ShotDataPoint } from '../types/espresso';
-import { AlertCircle, TrendingUp, Gauge } from 'lucide-react';
+import React from 'react';
+import type { ShotDataPoint, ChannelingEvent } from '../types/espresso';
+import { AlertCircle, TrendingUp, Gauge, Sparkles } from 'lucide-react';
+import { THE_GOLDEN_ZONE } from '../lib/espressoMath';
 
 interface FlowChartProps {
   points: ShotDataPoint[];
   targetYield: number;
-  channelingDetected: boolean;
+  channelingEvent?: ChannelingEvent;
+  preInfusionSeconds?: number;
+  doseGrams?: number;
 }
 
 export const FlowChart: React.FC<FlowChartProps> = ({
   points,
   targetYield,
-  channelingDetected,
+  channelingEvent,
+  preInfusionSeconds,
+  doseGrams = 18.0,
 }) => {
   if (points.length === 0) {
     return (
@@ -31,10 +37,10 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const maxFlow = 4.0; // max scale for g/s
 
   const width = 600;
-  const height = 180;
+  const height = 200;
   const padLeft = 45;
   const padRight = 20;
-  const padTop = 15;
+  const padTop = 20;
   const padBottom = 25;
 
   const chartW = width - padLeft - padRight;
@@ -44,6 +50,10 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const getX = (t: number) => padLeft + (t / maxTime) * chartW;
   const getYWeight = (w: number) => padTop + chartH - (w / maxWeight) * chartH;
   const getYFlow = (f: number) => padTop + chartH - (Math.min(f, maxFlow) / maxFlow) * chartH;
+
+  // Golden Zone band coordinates
+  const yGoldenTop = getYFlow(THE_GOLDEN_ZONE.MAX_FLOW_GPS);
+  const yGoldenBottom = getYFlow(THE_GOLDEN_ZONE.MIN_FLOW_GPS);
 
   // Build SVG path strings
   const weightPath = points.reduce((acc, p, idx) => {
@@ -59,6 +69,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   }, '');
 
   const lastPoint = points[points.length - 1];
+  const currentRatio = doseGrams > 0 && lastPoint ? (lastPoint.weightGrams / doseGrams).toFixed(1) : '0.0';
 
   return (
     <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-4 shadow-xs">
@@ -70,10 +81,17 @@ export const FlowChart: React.FC<FlowChartProps> = ({
           </span>
         </div>
 
-        {channelingDetected && (
+        {channelingEvent?.detected ? (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#B85B48]/10 text-[#B85B48] text-xs font-mono font-semibold border border-[#B85B48]/30">
             <AlertCircle className="w-3.5 h-3.5" />
-            Channeling Detected!
+            <span>
+              Channeling @ {channelingEvent.timestampSeconds}s ({channelingEvent.flowSpikeGps} g/s)
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 text-[11px] font-mono text-[#72806B] bg-[#72806B]/10 px-2 py-0.5 rounded border border-[#72806B]/20">
+            <Sparkles className="w-3 h-3" />
+            <span>Optimal Flow Profile</span>
           </div>
         )}
       </div>
@@ -81,6 +99,27 @@ export const FlowChart: React.FC<FlowChartProps> = ({
       {/* SVG Canvas */}
       <div className="w-full overflow-x-auto">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto select-none font-mono text-[10px]">
+          {/* Golden Zone Flow Band (1.2 to 1.6 g/s) */}
+          <rect
+            x={padLeft}
+            y={yGoldenTop}
+            width={chartW}
+            height={yGoldenBottom - yGoldenTop}
+            fill="#72806B"
+            fillOpacity="0.12"
+          />
+          <text
+            x={width - padRight - 6}
+            y={yGoldenTop + 10}
+            textAnchor="end"
+            fill="#72806B"
+            fontSize="9"
+            fontWeight="bold"
+            opacity="0.8"
+          >
+            ★ GOLDEN ZONE (1.2–1.6 g/s)
+          </text>
+
           {/* Horizontal grid lines */}
           {[0, 15, 30, 45].map((w) => {
             const y = getYWeight(w);
@@ -120,6 +159,56 @@ export const FlowChart: React.FC<FlowChartProps> = ({
               </g>
             );
           })}
+
+          {/* Pre-Infusion First Drip Vertical Divider */}
+          {preInfusionSeconds && preInfusionSeconds > 0 && preInfusionSeconds < maxTime && (
+            <g>
+              <line
+                x1={getX(preInfusionSeconds)}
+                y1={padTop}
+                x2={getX(preInfusionSeconds)}
+                y2={padTop + chartH}
+                stroke="#C26D52"
+                strokeWidth="1.5"
+                strokeDasharray="3 3"
+              />
+              <text
+                x={getX(preInfusionSeconds) + 4}
+                y={padTop + 12}
+                fill="#C26D52"
+                fontSize="9"
+                fontWeight="bold"
+              >
+                First Drip ({preInfusionSeconds.toFixed(1)}s)
+              </text>
+            </g>
+          )}
+
+          {/* Channeling Marker on Curve */}
+          {channelingEvent?.detected &&
+            channelingEvent.timestampSeconds &&
+            channelingEvent.flowSpikeGps && (
+              <g>
+                <circle
+                  cx={getX(channelingEvent.timestampSeconds)}
+                  cy={getYFlow(channelingEvent.flowSpikeGps)}
+                  r="6"
+                  fill="#B85B48"
+                  stroke="#FFFDF9"
+                  strokeWidth="2"
+                />
+                <text
+                  x={getX(channelingEvent.timestampSeconds)}
+                  y={getYFlow(channelingEvent.flowSpikeGps) - 10}
+                  textAnchor="middle"
+                  fill="#B85B48"
+                  fontWeight="bold"
+                  fontSize="9"
+                >
+                  ⚠️ SPIKE {channelingEvent.flowSpikeGps} g/s
+                </text>
+              </g>
+            )}
 
           {/* Cumulative weight line (Espresso dark roast) */}
           <path
@@ -166,9 +255,13 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             <span className="w-3 h-1 bg-[#C26D52] rounded-full inline-block" />
             <span>Flow: {lastPoint?.flowRateGps.toFixed(1) || '0.0'} g/s</span>
           </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 bg-[#72806B]/30 rounded-xs inline-block" />
+            <span className="text-[#72806B]">Ratio: 1:{currentRatio}</span>
+          </div>
         </div>
         <div className="text-[11px]">
-          Target: {targetYield}g in 27-30s
+          Target: {targetYield}g (Dose {doseGrams}g)
         </div>
       </div>
     </div>

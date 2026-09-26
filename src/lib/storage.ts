@@ -61,7 +61,19 @@ export function saveProStatus(isPro: boolean): void {
 export function loadShots(): ShotRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SHOTS);
-    return raw ? JSON.parse(raw) : getSampleShots();
+    if (!raw) return getSampleShots();
+    const parsed = JSON.parse(raw) as ShotRecord[];
+    // Ensure backwards compatibility with older stored records
+    return parsed.map((s) => ({
+      ...s,
+      preInfusionSeconds: s.preInfusionSeconds ?? 5.0,
+      flowTimeSeconds: s.flowTimeSeconds ?? Math.max(0, s.totalTimeSeconds - 5.0),
+      channeling: s.channeling ?? {
+        detected: Boolean(s.channelingDetected),
+        severity: s.channelingDetected ? 'mild' : 'none',
+      },
+      channelingDetected: s.channelingDetected ?? false,
+    }));
   } catch {
     return getSampleShots();
   }
@@ -89,11 +101,15 @@ function getSampleShots(): ShotRecord[] {
       targetYieldGrams: 36.0,
       actualYieldGrams: 36.4,
       totalTimeSeconds: 29.2,
+      preInfusionSeconds: 5.5,
+      flowTimeSeconds: 23.7,
       averageFlowGps: 1.25,
       peakFlowGps: 1.6,
+      channeling: { detected: false, severity: 'none' },
       channelingDetected: false,
       grinderName: 'Eureka Mignon Specialita',
       grindSetting: '1.4',
+      machineName: 'Sage Dual Boiler',
       tasteRating: 'balanced',
       notes: 'Silky mouthfeel, bright bergamot and jasmine notes.',
       dataPoints: [],
@@ -108,11 +124,21 @@ function getSampleShots(): ShotRecord[] {
       targetYieldGrams: 38.0,
       actualYieldGrams: 39.1,
       totalTimeSeconds: 22.8,
+      preInfusionSeconds: 4.0,
+      flowTimeSeconds: 18.8,
       averageFlowGps: 1.71,
       peakFlowGps: 3.4,
+      channeling: {
+        detected: true,
+        severity: 'severe',
+        timestampSeconds: 14.5,
+        flowSpikeGps: 3.4,
+        message: 'Severe channeling spike (3.4 g/s at 14.5s). Water broke through puck.',
+      },
       channelingDetected: true,
       grinderName: 'DF64 Gen 2',
       grindSetting: '14.0',
+      machineName: 'E61 Manual Flow Control',
       tasteRating: 'sour',
       notes: 'Mid-shot channeling spike. Needs finer grind and more thorough WDT puck prep.',
       dataPoints: [],

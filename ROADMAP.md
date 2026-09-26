@@ -25,12 +25,14 @@
 
 ---
 
-## 📈 FASE 3: FLOW RATE MATEMATIK & KANALISERING
-- [ ] Auto-timer start, så snart vægten skifter fra `0.0g` til `0.1g`
-- [ ] Live flow rate beregning ($F(t) = \Delta Y / \Delta t$ i $g/s$)
-- [ ] Terracotta ekstraktionskurve i realtid
-- [ ] Matematisk kanalisering-alarm (hvis flowet springer voldsomt op undervejs)
-- [ ] "How did it taste?" feedback motor (Sour / Bitter / Balanced / Watery) med kværnanbefaling
+## 📈 FASE 3: FLOW RATE MATEMATIK, SPLIT-TIMER & KANALISERING (AFSLUTTET)
+- [x] Auto-timer start, så snart vægten skifter fra `0.0g` til `0.1g`
+- [x] Live flow rate beregning ($F(t) = \Delta Y / \Delta t$ i $g/s$) med støjfiltreret glidende gennemsnit
+- [x] Terracotta ekstraktionskurve i realtid med The Golden Zone (1.2–1.6 g/s)
+- [x] Hybrid Split-Timer for mætningstid ($T_{\text{pre}}$) og aktiv flowtid ($T_{\text{flow}}$)
+- [x] Espressomaskine pre-infusion profiler og skyder (0–15s)
+- [x] Matematisk kanalisering-alarm med flow spike-størrelse og tidsstempel
+- [x] "How did it taste?" feedback motor (Sour / Bitter / Balanced / Watery) med pre-infusion og kværnanbefaling
 
 ---
 

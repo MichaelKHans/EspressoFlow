@@ -7,9 +7,16 @@ import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib
 interface ScaleMonitorProps {
   isBrewing: boolean;
   onBrewStart: () => void;
-  onBrewFinish: (finalWeight: number, timeSeconds: number, points: ShotDataPoint[]) => void;
+  onBrewFinish: (
+    finalWeight: number,
+    totalTimeSeconds: number,
+    preInfusionSeconds: number,
+    flowTimeSeconds: number,
+    points: ShotDataPoint[]
+  ) => void;
   targetDose: number;
   targetYield: number;
+  machinePreInfusionSetting?: number;
 }
 
 export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
@@ -18,6 +25,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   onBrewFinish,
   targetDose,
   targetYield,
+  machinePreInfusionSetting = 5.0,
 }) => {
   const [currentWeight, setCurrentWeight] = useState<number>(0.0);
   const [currentFlow, setCurrentFlow] = useState<number>(0.0);
@@ -26,6 +34,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [displayInverted, setDisplayInverted] = useState<boolean>(false);
   const [useRealCamera, setUseRealCamera] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+
+  // Split-Timer state
+  const [firstDropTime, setFirstDropTime] = useState<number | null>(null);
+  const [preInfusionDuration, setPreInfusionDuration] = useState<number>(0.0);
+  const [activeFlowDuration, setActiveFlowDuration] = useState<number>(0.0);
 
   // Vision Inspector state
   const [showInspector, setShowInspector] = useState<boolean>(false);
@@ -41,6 +54,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const ocrIntervalRef = useRef<number | null>(null);
   const filterRef = useRef<ScaleReadingFilter>(new ScaleReadingFilter());
   const startTimeRef = useRef<number>(0);
+  const firstDropTimeRef = useRef<number | null>(null);
   const fpsCountRef = useRef<number>(0);
   const lastFpsCalcTimeRef = useRef<number>(Date.now());
 
@@ -91,7 +105,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       return;
     }
 
-    // Allocate single offscreen canvas for ROI extraction
     const offscreen = canvasRef.current || document.createElement('canvas');
     offscreen.width = 320;
     offscreen.height = 160;
@@ -118,7 +131,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       const result = recognizeScaleDigits(imgData, displayInverted);
       setLastOcrResult(result);
 
-      // Render binarized frame to Inspector canvas if open
       if (inspectorCanvasRef.current) {
         const inspCtx = inspectorCanvasRef.current.getContext('2d');
         if (inspCtx) {
@@ -126,7 +138,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         }
       }
 
-      // Update FPS counter
       fpsCountRef.current++;
       const now = Date.now();
       if (now - lastFpsCalcTimeRef.current >= 1000) {
@@ -158,7 +169,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     };
   }, [useRealCamera, displayInverted, isZeroDetected, isBrewing, onBrewStart]);
 
-  // Handle Shot Timeline & Simulation when no live scale is feeding
+  // Handle Shot Timeline, Split-Timer & Simulation
   useEffect(() => {
     if (!isBrewing) {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
@@ -166,35 +177,56 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     }
 
     startTimeRef.current = Date.now();
+    firstDropTimeRef.current = null;
     pointsRef.current = [];
     setCurrentWeight(0.0);
     setCurrentFlow(0.0);
     setElapsedTime(0.0);
+    setFirstDropTime(null);
+    setPreInfusionDuration(0.0);
+    setActiveFlowDuration(0.0);
     filterRef.current.reset(0);
 
     // Timer loop running at 10 Hz (every 100ms)
     timerIntervalRef.current = window.setInterval(() => {
       const seconds = (Date.now() - startTimeRef.current) / 1000;
-      setElapsedTime(Math.round(seconds * 10) / 10);
+      const roundedSeconds = Math.round(seconds * 10) / 10;
+      setElapsedTime(roundedSeconds);
 
       let weight = currentWeight;
 
-      // In simulation mode, generate a realistic fluid extraction curve
+      // In simulation mode, generate a realistic pre-infusion & extraction curve
       if (!useRealCamera) {
         let simulatedWeight = 0;
-        if (seconds < 5) {
-          simulatedWeight = Math.max(0, (seconds / 5) * 1.2);
+        // 0-6s: Pre-infusion saturation (pressure builds, drops start at ~5.5s)
+        if (seconds < 5.5) {
+          simulatedWeight = 0.0;
         } else if (seconds <= 26) {
-          simulatedWeight = 1.2 + (seconds - 5) * 1.5;
+          simulatedWeight = 0.1 + (seconds - 5.5) * 1.6;
         } else {
-          simulatedWeight = Math.min(targetYield + 0.4, 32.7 + (seconds - 26) * 0.8);
+          simulatedWeight = Math.min(targetYield + 0.4, 32.9 + (seconds - 26) * 0.8);
         }
         weight = Math.round(simulatedWeight * 10) / 10;
         setCurrentWeight(weight);
       }
 
+      // Check for First Drip (Split-Timer Pre-Infusion Lock)
+      if (weight >= 0.1) {
+        if (firstDropTimeRef.current === null) {
+          firstDropTimeRef.current = roundedSeconds;
+          setFirstDropTime(roundedSeconds);
+          setPreInfusionDuration(roundedSeconds);
+        } else {
+          const flowSec = Math.max(0, roundedSeconds - firstDropTimeRef.current);
+          setActiveFlowDuration(Math.round(flowSec * 10) / 10);
+        }
+      } else {
+        // Still in pre-infusion phase
+        setPreInfusionDuration(roundedSeconds);
+      }
+
       const newPoint: ShotDataPoint = {
-        timeSeconds: seconds,
+        timeSeconds: roundedSeconds,
         weightGrams: weight,
         flowRateGps: 0,
       };
@@ -204,7 +236,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       newPoint.flowRateGps = flow;
       setCurrentFlow(flow);
 
-      // Auto-finish if target reached in sim mode
+      // Auto-finish if target reached in demo mode
       if (!useRealCamera && weight >= targetYield && seconds > 25) {
         handleStopBrewing();
       }
@@ -223,7 +255,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     const finalWeight = currentWeight;
     const finalTime = elapsedTime;
-    onBrewFinish(finalWeight, finalTime, [...pointsRef.current]);
+    const finalPre = firstDropTimeRef.current !== null ? firstDropTimeRef.current : (machinePreInfusionSetting || 5.0);
+    const finalFlow = Math.max(0, Math.round((finalTime - finalPre) * 10) / 10);
+
+    onBrewFinish(finalWeight, finalTime, finalPre, finalFlow, [...pointsRef.current]);
   };
 
   const handleCalibrateTare = () => {
@@ -322,13 +357,32 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             <span className="text-xl sm:text-2xl font-normal text-[#FAF7F2]/70 ml-1">g</span>
           </div>
 
-          <div className="mt-2 flex items-center gap-3 text-xs font-mono">
-            <span className="text-[#C26D52] font-semibold bg-[#2C2018]/80 px-2 py-0.5 rounded border border-[#C26D52]/40">
-              {currentFlow.toFixed(1)} g/s
-            </span>
-            <span className="text-[#FAF7F2]/80">
-              {elapsedTime.toFixed(1)}s
-            </span>
+          {/* Real-Time Telemetry & Split-Timer */}
+          <div className="mt-2 flex flex-col items-center gap-1 font-mono">
+            <div className="flex items-center gap-3 text-xs">
+              <span className="text-[#C26D52] font-semibold bg-[#2C2018]/80 px-2 py-0.5 rounded border border-[#C26D52]/40">
+                {currentFlow.toFixed(1)} g/s
+              </span>
+              <span className="text-[#FAF7F2]/90 font-bold">
+                {elapsedTime.toFixed(1)}s
+              </span>
+            </div>
+
+            {/* Split-Timer Active Phase Display */}
+            {isBrewing && (
+              <div className="flex items-center gap-2 text-[10px] text-[#FAF7F2]/80 bg-black/50 px-2.5 py-0.5 rounded border border-white/10 mt-0.5">
+                {firstDropTime === null ? (
+                  <span className="text-amber-300 animate-pulse flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    Pre-infusion: {preInfusionDuration.toFixed(1)}s (Waiting for 1st drop)
+                  </span>
+                ) : (
+                  <span>
+                    Pre: <strong className="text-amber-300">{preInfusionDuration.toFixed(1)}s</strong> | Flow: <strong className="text-[#72806B]">{activeFlowDuration.toFixed(1)}s</strong>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -344,7 +398,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
       </div>
 
-      {/* Vision Inspector Drawer (Computer Vision Diagnostics) */}
+      {/* Vision Inspector Drawer (Action-Oriented Scale Alignment) */}
       {showInspector && (
         <div className="p-4 bg-[#1A1412] text-[#FAF7F2] border-t border-[#E8DFD5]/20 font-mono text-xs">
           <div className="flex items-center justify-between mb-2">
