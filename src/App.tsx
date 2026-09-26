@@ -352,6 +352,12 @@ export function App() {
     setLastFinishedShot(null);
   };
 
+  const handleBrewCancel = () => {
+    setIsBrewing(false);
+    setCurrentPoints([]);
+    setLastFinishedShot(null);
+  };
+
   const handleBrewFinish = (
     finalWeight: number,
     timeSeconds: number,
@@ -443,7 +449,7 @@ export function App() {
                   ESPRESSO FLOW
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.7.0
+                  v0.7.1
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
@@ -646,6 +652,7 @@ export function App() {
               isBrewing={isBrewing}
               onBrewStart={handleBrewStart}
               onBrewFinish={handleBrewFinish}
+              onBrewCancel={handleBrewCancel}
               targetDose={doseGrams}
               targetYield={targetYieldGrams}
               machinePreInfusionSetting={machinePreInfusion}

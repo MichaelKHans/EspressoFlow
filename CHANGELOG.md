@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.7.1] - 2026-09-26
+### Added & Fixed
+- **Shot Reset / Cancel Knap & Auto-Trigger Beskyttelse:**
+  - Tilføjet en prominent `[Reset]` knap ved siden af `[Stop & Save Shot]` samt direkte inde i viewfinderens statuslinje.
+  - Tillader øjeblikkelig afbrydelse og nulstilling af falske eller utilsigtede skudstarter uden at gemme fejlagtige målinger i logbogen.
+  - `isZeroDetected` starter nu som `false`, så kameraet ikke længere starter et skud af sig selv, før en gyldig `0.0g` tare eller et manuelt tryk på `[Tare (0.0g)]` er registreret.
+
 ## [0.7.0] - 2026-09-26
 ### Added
 - **Global-First Letvægts i18n Motor (Flersprogethed):**

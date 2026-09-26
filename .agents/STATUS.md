@@ -11,6 +11,10 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Shot Reset / Cancel & Tare Guard (v0.7.1)
+- **Reset Knap:** Tilføjet `[Reset]` (RotateCcw) i Scale Cam action bar og i viewfinderens bundlinje, så utilsigtede starter kan afbrydes straks uden at gemme falske shots i logbogen.
+- **Auto-Start Tare Guard:** `isZeroDetected` starter som `false`. Skuddet starter ikke længere automatisk før der reelt er registreret et gyldigt `0.0g` tare på vægten eller trykket på Tare.
+
 ### 2026-09-26 -- Global-First Letvægts i18n Motor (v0.7.0)
 - **i18n Arkitektur:** Etableret fjerlet, typesikker `src/i18n/` translations motor (0 KB eksterne afhængigheder).
 - **Sprogpakker:** Engelsk som Single Source of Truth + fail-safe fallback, pilotpakker for Tysk (DE) og Dansk (DA) med fuld bevarelse af universelle specialty barista-termer.
