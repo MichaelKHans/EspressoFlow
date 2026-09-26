@@ -12,6 +12,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 27,
     cupVolumeMl: 180,
+    glassStyle: 'cup',
     isDefaultActive: true,
     milkGuide: {
       volumeMl: 120,
@@ -38,6 +39,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 28,
     cupVolumeMl: 60,
+    glassStyle: 'demitasse',
     isDefaultActive: true,
     layers: [
       { name: 'Tiger Crema', percentage: 20, color: '#C26D52', description: 'Aromatic emulsified lipids and CO2 micro-bubbles', volumeMl: 12 },
@@ -57,6 +59,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'ristretto',
     expectedTimeSeconds: 24,
     cupVolumeMl: 160,
+    glassStyle: 'cup',
     isDefaultActive: true,
     milkGuide: {
       volumeMl: 120,
@@ -83,6 +86,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'ristretto',
     expectedTimeSeconds: 23,
     cupVolumeMl: 90,
+    glassStyle: 'glass',
     isDefaultActive: true,
     milkGuide: {
       volumeMl: 45,
@@ -109,6 +113,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 27,
     cupVolumeMl: 250,
+    glassStyle: 'tall-glass',
     isDefaultActive: true,
     milkGuide: {
       volumeMl: 200,
@@ -135,6 +140,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 28,
     cupVolumeMl: 75,
+    glassStyle: 'demitasse',
     isDefaultActive: false,
     milkGuide: {
       volumeMl: 25,
@@ -160,6 +166,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'ristretto',
     expectedTimeSeconds: 20,
     cupVolumeMl: 30,
+    glassStyle: 'demitasse',
     isDefaultActive: false,
     layers: [
       { name: 'Dense Crema', percentage: 30, color: '#A0523C', description: 'Concentrated dark amber crema', volumeMl: 10 },
@@ -179,6 +186,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'lungo',
     expectedTimeSeconds: 30,
     cupVolumeMl: 90,
+    glassStyle: 'cup',
     isDefaultActive: true,
     layers: [
       { name: 'Blonde Crema', percentage: 15, color: '#D4956A', description: 'Delicate, lighter crema', volumeMl: 15 },
@@ -198,6 +206,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 28,
     cupVolumeMl: 180,
+    glassStyle: 'cup',
     isDefaultActive: true,
     layers: [
       { name: 'Espresso Crema', percentage: 15, color: '#C26D52', description: 'Intact aromatic crema layer', volumeMl: 25 },
@@ -218,6 +227,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 26,
     cupVolumeMl: 120,
+    glassStyle: 'glass',
     isDefaultActive: false,
     layers: [
       { name: 'Espresso Crema Foam', percentage: 25, color: '#C26D52', description: 'Hot crema coating ice cream', volumeMl: 30 },
@@ -238,6 +248,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 28,
     cupVolumeMl: 80,
+    glassStyle: 'glass',
     isDefaultActive: false,
     layers: [
       { name: 'Thin Crema Film', percentage: 10, color: '#C26D52', description: 'Golden crema layer', volumeMl: 8 },
@@ -258,6 +269,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 27,
     cupVolumeMl: 220,
+    glassStyle: 'tall-glass',
     isDefaultActive: false,
     layers: [
       { name: 'Effervescent Crema', percentage: 20, color: '#C26D52', description: 'Airy aromatic foam reacting with tonic', volumeMl: 40 },

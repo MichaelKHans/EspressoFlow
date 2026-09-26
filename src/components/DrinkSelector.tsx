@@ -16,6 +16,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { loadActiveBarDrinkIds, saveActiveBarDrinkIds } from '../lib/storage';
+import { ArchitecturalCup } from './ArchitecturalCup';
 
 interface DrinkSelectorProps {
   currentBean: CoffeeBeanProfile;
@@ -26,68 +27,6 @@ interface DrinkSelectorProps {
   onOpenDialInWizard: (drink: DrinkRecipe) => void;
   onOpenBeanVault: () => void;
 }
-
-// Architectural Cup Visualization (Styled after "Coffee: The Essential Guide" - Image 3)
-const ArchitecturalCup: React.FC<{
-  drink: DrinkRecipe;
-  size?: 'sm' | 'md' | 'lg';
-  showLabels?: boolean;
-}> = ({ drink, size = 'md', showLabels = false }) => {
-  const dims =
-    size === 'sm'
-      ? { width: 'w-14', height: 'h-14', border: 'border-2', radius: 'rounded-b-xl' }
-      : size === 'lg'
-      ? { width: 'w-44', height: 'h-48', border: 'border-3 border-[#2C2018]', radius: 'rounded-b-3xl' }
-      : { width: 'w-20', height: 'h-20', border: 'border-2 border-[#2C2018]', radius: 'rounded-b-2xl' };
-
-  return (
-    <div className="flex flex-col items-center">
-      {/* Cup Outline with Handle */}
-      <div className="relative">
-        <div
-          className={`${dims.width} ${dims.height} ${dims.border} ${dims.radius} rounded-t-sm bg-[#FAF7F2] p-0.5 shadow-inner relative flex flex-col justify-end overflow-hidden border-[#2C2018]`}
-        >
-          {/* Cup Rim highlight */}
-          <div className="absolute top-0 inset-x-0 h-1 bg-[#2C2018]/15" />
-
-          {/* Render Stacked Liquid Layers */}
-          {drink.layers.map((layer, idx) => (
-            <div
-              key={idx}
-              style={{
-                height: `${layer.percentage}%`,
-                backgroundColor: layer.color,
-              }}
-              className="w-full flex items-center justify-between px-1.5 border-t border-black/10 transition-all relative"
-            >
-              {showLabels && size === 'lg' && (
-                <div className="w-full flex items-center justify-between text-[9px] font-mono font-bold text-[#2C2018] px-1 drop-shadow-2xs">
-                  <span className="truncate">{layer.name}</span>
-                  <span className="opacity-75 shrink-0 ml-1">
-                    {layer.volumeMl ? `${layer.volumeMl}ml` : `${layer.percentage}%`}
-                  </span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Minimalist Cup Handle */}
-        <div
-          className={`absolute top-2 -right-2.5 ${
-            size === 'sm' ? 'w-2 h-5' : size === 'lg' ? 'w-3.5 h-12 rounded-r-xl' : 'w-2.5 h-7 rounded-r-lg'
-          } border-2 border-l-0 border-[#2C2018] pointer-events-none`}
-        />
-      </div>
-
-      {size === 'lg' && drink.cupVolumeMl && (
-        <span className="text-[10px] font-mono text-[#7A6E65] mt-2 font-bold">
-          {drink.cupVolumeMl}ml Total Cup
-        </span>
-      )}
-    </div>
-  );
-};
 
 export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   currentBean,
@@ -209,9 +148,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                       : 'bg-white/10 text-[#FAF7F2] hover:bg-white/20 border border-white/10'
                   }`}
                 >
-                  <div className="scale-75 origin-center">
-                    <ArchitecturalCup drink={drink} size="sm" />
-                  </div>
+                  <ArchitecturalCup drink={drink} size="xs" />
                   <span>{drink.name}</span>
                 </button>
               );

@@ -114,6 +114,7 @@ export interface DrinkRecipe {
   ratioStyle: RatioStyle;
   expectedTimeSeconds: number;
   cupVolumeMl?: number;
+  glassStyle?: 'cup' | 'glass' | 'tall-glass' | 'demitasse';
   isDefaultActive?: boolean;
   milkGuide?: {
     volumeMl: number;

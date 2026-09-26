@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.5.2] - 2026-09-26
+### Added
+- **Proportionalt Vektor-Kophåndtag (`ArchitecturalCup.tsx`):** Det tidligere firkantede/lille håndtag er fuldstændig redesignet som en harmonisk, organisk C-bue i ægte keramik-proportioner matchende Image 3 ("Coffee The Essential Guide").
+- **Drik-Specifik Glasform:** Håndtag vises nu kun på rigtige kaffekopper (`cup` og `demitasse`), mens Cortado, Café Bombón, Affogato og Espresso Tonic vises i ægte facetterede glas-tumblere uden håndtag.
+- **Visuelle Drikke-Silhuetter i Logbogen (`Logbook.tsx`):** Hver enkelt log i den analoge logbog har nu sit eget dedikerede miniature-tværsnit af koppen afhængigt af den bryggede kaffetype (Cappuccino, Double Espresso, Flat White osv.), hvilket giver et eksklusivt og visuelt feltjournal-udtryk.
+- **Filter-Pills med Ikon-Miniaturer:** Filter-knapperne i toppen af logbogen viser nu også mini-kopper for hver registreret kaffetype.
+
 ## [0.5.1] - 2026-09-26
 ### Fixed
 - **Blank Screen Fix on Production (Vercel):** Løst Temporal Dead Zone (TDZ) ReferenceError i `src/App.tsx`, hvor `currentGrinder` refererede til `grinderName` før dets statserklæring.
