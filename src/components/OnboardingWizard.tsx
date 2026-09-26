@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Coffee, ChevronRight, Check, Settings2, Layers, ArrowRight } from 'lucide-react';
+import { Coffee, ChevronRight, Check, Settings2, Layers, ArrowRight, X } from 'lucide-react';
 import type { GrinderProfile, RoastLevel } from '../types/espresso';
 
 interface OnboardingWizardProps {
   grinders: GrinderProfile[];
   onComplete: (setup: OnboardingResult) => void;
+  onSkip?: () => void;
 }
 
 export interface OnboardingResult {
@@ -19,6 +20,7 @@ export interface OnboardingResult {
 export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   grinders,
   onComplete,
+  onSkip,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -81,18 +83,31 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
       <div className="bg-[#FAF7F2] rounded-2xl sm:rounded-3xl shadow-xl w-full max-w-lg border border-[#E8DFD5] max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-[#E8DFD5] shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-[#2C2018] flex items-center justify-center shrink-0">
-              <Coffee className="w-5 h-5 text-[#C26D52]" />
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-[#2C2018] flex items-center justify-center shrink-0">
+                <Coffee className="w-5 h-5 text-[#C26D52]" />
+              </div>
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-[#2C2018] font-mono tracking-tight">
+                  Welcome to Espresso Flow
+                </h2>
+                <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
+                  Quick station setup -- 3 steps to your first perfect shot
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-[#2C2018] font-mono tracking-tight">
-                Welcome to Espresso Flow
-              </h2>
-              <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
-                Quick station setup -- 3 steps to your first perfect shot
-              </p>
-            </div>
+            {onSkip && (
+              <button
+                type="button"
+                onClick={onSkip}
+                className="text-xs font-mono text-[#7A6E65] hover:text-[#2C2018] px-2.5 py-1.5 rounded-xl hover:bg-[#E8DFD5]/50 border border-[#E8DFD5] bg-white transition flex items-center gap-1 shrink-0"
+                title="Skip station setup and explore app"
+              >
+                <span>Skip</span>
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {/* Step Indicator */}
@@ -300,6 +315,14 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               className="px-3 py-2 rounded-xl text-xs font-mono font-bold text-[#7A6E65] hover:text-[#2C2018] transition"
             >
               Back
+            </button>
+          ) : onSkip ? (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="px-3 py-2 rounded-xl text-xs font-mono font-semibold text-[#7A6E65] hover:text-[#2C2018] transition"
+            >
+              Skip Setup
             </button>
           ) : (
             <div />

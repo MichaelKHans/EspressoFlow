@@ -11,6 +11,9 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Skip Knap i Onboarding Wizard (v0.6.4)
+- **Skip Knap:** Tilføjet `[Skip ✕]` i toppen og `[Skip Setup]` i bunden af Onboarding Wizard, så brugere kan lukke velkomstguiden når som helst og gå direkte til appen.
+
 ### 2026-09-26 -- 100% Mobil-Responsiv Top-Nav & Scale Cam Viewfinder Fixes (v0.6.3)
 - **Top-Navigation Fix:** Omlagt til `grid grid-cols-4 w-full` med responsive etiketter (`Bar`, `Scale`, `Logs`, `Gear`), så ingen knapper klippes af på smalle mobilskærme.
 - **Scale Cam Mobiloptimeret Header:** Fjernet horisontalt overløb; Live OCR vs Simulator er nu en tydelig farvekodet knap (`[📷 Live OCR]` / `[🧪 Start Camera]`), så man altid kan se og skifte til det rigtige kamera.

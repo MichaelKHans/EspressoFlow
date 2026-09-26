@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.6.4] - 2026-09-26
+### Added
+- **Skip Mulighed i Førstegangs-Onboarding Wizard:**
+  - Tilføjet en prominent `[Skip ✕]` knap i øverste højre hjørne af onboarding-vinduet.
+  - Tilføjet `[Skip Setup]` knap i navigationen på Trin 1.
+  - Brugeren kan nu til enhver tid springe velkomstguiden over og gå direkte til espressostationen med standardindstillingerne intakt.
+
 ## [0.6.3] - 2026-09-26
 ### Added & Fixed
 - **100% Mobil-Responsiv Top-Navigation (`grid grid-cols-4`):**
