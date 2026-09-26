@@ -15,12 +15,13 @@
 
 ---
 
-## 📷 FASE 2: LIVE SCALE SCANNER & STEP 0 KALIBRERING
-- [ ] Responsive kamera-viewfinder med sigtekorns-overlay
-- [ ] "Step 0" kalibrerings-flow (ret vinkel mod vægtdisplay, automatisk nul/tara-tjek `0.0g`)
-- [ ] Canvas-baseret 7-segment digitalvægt OCR-algoritme (lynhurtig, ultra-lav latenstid)
-- [ ] Display type toggle (mørke tal på lys baggrund vs. lysende LED-tal på mørk baggrund)
-- [ ] Støjfilter / Glidende gennemsnit (moving average) for at forhindre mikrovibrationer fra pumpe
+## 📷 FASE 2: LIVE SCALE SCANNER & STEP 0 KALIBRERING (AFSLUTTET)
+- [x] Responsive kamera-viewfinder med sigtekorns-overlay
+- [x] "Step 0" kalibrerings-flow (ret vinkel mod vægtdisplay, automatisk nul/tara-tjek `0.0g`)
+- [x] Canvas-baseret 7-segment digitalvægt OCR-algoritme (lynhurtig, ultra-lav latenstid)
+- [x] Display type toggle (mørke tal på lys baggrund vs. lysende LED-tal på mørk baggrund)
+- [x] Støjfilter & Outlier Rejection (`ScaleReadingFilter`) for at forhindre mikrovibrationer fra pumpe
+- [x] Vision Inspector (live binariseret preview og ciffer-diagnostik)
 
 ---
 

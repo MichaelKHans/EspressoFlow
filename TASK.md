@@ -4,12 +4,16 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 
 ---
 
-## 📌 Aktuelle / Planlagte Opgaver
-- [ ] Initialiser React + Vite + TypeScript web-applikationen med Tailwind CSS
-- [ ] Konfigurer "Espresso Warmth" designtema og Courier Prime typografi
-- [ ] Byg statiske juridiske sider for Vercel (`/privacy`, `/terms`, `/support`)
-- [ ] Opret GitHub repository `MichaelKHans/EspressoFlow` og deploy til Vercel
-- [ ] Implementer Live Scale OCR Vision & Step 0 Kalibrerings-interface
+## 📌 Aktuelle Opgaver (FASE 2: Live Scale OCR & Kalibrering)
+- [x] Initialiser React + Vite + TypeScript web-applikationen med Tailwind CSS
+- [x] Konfigurer "Espresso Warmth" designtema og Courier Prime typografi
+- [x] Byg statiske juridiske sider for Vercel (`/privacy`, `/terms`, `/support`)
+- [x] Opret GitHub repository `MichaelKHans/EspressoFlow` og deploy til Vercel
+- [ ] Byg ultra-let Canvas 7-segment OCR ciffer-dekoder (`src/lib/ocr7segment.ts`)
+- [ ] Implementer adaptiv thresholding (LED lysende tal vs. LCD mørke tal)
+- [ ] Byg "Vision Inspector" overlay (viser binariseret skærm, probes og ciffer-confidence)
+- [ ] Step 0 stabil auto-tare (`0.0g` lås) og auto-start timer (`>= 0.1g`)
+- [ ] Støj- og dampsky-filter (outlier rejection for mikrovibrationer)
 
 ---
 
