@@ -29,7 +29,7 @@ Espresso Flow transforms any ordinary kitchen or coffee scale into a high-precis
 - **Typography:** `Courier Prime` (Monospace stability) & `Inter`
 - **Mobile Bridge:** Capacitor v7/v8 (iOS & Android)
 - **In-App Purchases:** RevenueCat (`@revenuecat/purchases-capacitor`)
-- **Hosting:** Vercel (subdomain `espressoflow.vercel.app`)
+- **Hosting:** Vercel (subdomain `espressoflow-app.vercel.app`)
 
 ---
 
@@ -68,6 +68,6 @@ npm run build
 
 ## 📄 Legal & Compliance
 
-- [Privacy Policy](https://espressoflow.vercel.app/privacy)
-- [Terms of Service](https://espressoflow.vercel.app/terms)
-- [Support Center](https://espressoflow.vercel.app/support)
+- [Privacy Policy](https://espressoflow-app.vercel.app/privacy)
+- [Terms of Service](https://espressoflow-app.vercel.app/terms)
+- [Support Center](https://espressoflow-app.vercel.app/support)

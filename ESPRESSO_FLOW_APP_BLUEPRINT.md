@@ -48,13 +48,13 @@ De kræver udelukkende fungerende internet-adresser til:
 
 ### Sådan fungerer Vercel gratis subdomæner:
 Når du opretter dit projekt på Vercel og forbinder det til GitHub, tildeler Vercel dig automatisk et permanent, gratis, lynhurtigt SSL-krypteret underdomæne:
-- F.eks.: `https://espressoflow.vercel.app` eller `https://espresso-scale.vercel.app`
+- F.eks.: `https://espressoflow-app.vercel.app`
 
 Dette giver dig flg. kontaktpunkter helt kvit og frit på engelsk:
-* `https://espressoflow.vercel.app/privacy` (Privacy Policy til App Store Connect & Google Play)
-* `https://espressoflow.vercel.app/terms` (Terms of Service / EULA til App Store Connect)
-* `https://espressoflow.vercel.app/support` (Support & FAQ til App Store Connect)
-* `https://espressoflow.vercel.app/api/webhooks/revenuecat` (Webhook endpoint)
+* `https://espressoflow-app.vercel.app/privacy` (Privacy Policy til App Store Connect & Google Play)
+* `https://espressoflow-app.vercel.app/terms` (Terms of Service / EULA til App Store Connect)
+* `https://espressoflow-app.vercel.app/support` (Support & FAQ til App Store Connect)
+* `https://espressoflow-app.vercel.app/api/webhooks/revenuecat` (Webhook endpoint)
 
 ---
 
@@ -157,7 +157,7 @@ export function checkAccessStatus(isProPurchased: boolean, installedAtMs: number
 2. Tagline: *"No recurring fees. Pay once, dial in forever."*
 3. Features: *"Unlimited real-time scale OCR & flow curves, channeling detection, coffee bean journal, smart grind dial-in"*.
 4. Gendan-knap: *"Restore Purchases"* (`restorePurchases()`).
-5. Links: *"Terms of Service"* og *"Privacy Policy"* (`https://espressoflow.vercel.app/terms` og `/privacy`).
+5. Links: *"Terms of Service"* og *"Privacy Policy"* (`https://espressoflow-app.vercel.app/terms` og `/privacy`).
 
 ---
 
@@ -403,16 +403,16 @@ espresso-flow/
 ## 11. TRIN-FOR-TRIN KØREPLAN VED PROJEKTSTART
 
 1. **Opret nyt GitHub Repository (`MichaelKHans/EspressoFlow`)**:
-   - Initialiser projektet og forbind til Vercel (gratis underdomæne `espressoflow.vercel.app`).
+   - Initialiser projektet og forbind til Vercel (gratis underdomæne `espressoflow-app.vercel.app`).
 2. **Kopier de 5 GitHub Secrets over til iOS CI/CD**:
    - Genbrug dine eksisterende Apple secrets direkte fra TømrerAppen.
 3. **Klargør App ID i Apple Developer & Google Play Console**:
    - Sæt **Primary Language til English (US)** på begge platforme.
-   - Indsæt det gratis Vercel privacy link (`https://espressoflow.vercel.app/privacy`).
-4. **Opret Fælles Månedligt Abonnement i RevenueCat**:
+   - Indsæt det gratis Vercel privacy link (`https://espressoflow-app.vercel.app/privacy`).
+4. **Opret Fælles Lifetime Unlock i RevenueCat**:
    - Opret projekt *"Espresso Flow"*.
    - Knyt Apple App og Google Play App.
-   - Opret Entitlement `pro` ($3.99 / month med 7-day free trial).
+   - Opret Entitlement `pro_lifetime` ($4.99 / 49,- DKK med 7 dages in-app prøveperiode).
 5. **Opsæt "Espresso Warmth" Design Systemet**:
    - Konfigurer Tailwind med pergament (`#FAF7F2`), Claude terracotta (`#C26D52`) og Courier Prime skrivemaskine-skrift.
 6. **Byg Kamera Vægtaflæsning & Step 0 Kalibrering**:

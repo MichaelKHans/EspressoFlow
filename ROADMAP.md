@@ -11,7 +11,7 @@
 - [x] Tailwind CSS konfiguration: "Espresso Warmth" palette (`parchment`, `latte`, `espresso`, `taupe`, `terracotta`)
 - [x] `Courier Prime` skrivemaskine-typografi integration for jitter-frie tal
 - [x] GitHub repository opsætning (`MichaelKHans/EspressoFlow`)
-- [ ] Vercel underdomæne linkning (`espressoflow.vercel.app`)
+- [x] Vercel underdomæne live (`https://espressoflow-app.vercel.app`)
 
 ---
 
