@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, RefreshCw, Play, Square, Eye, AlertTriangle, CheckCircle2, Scan, Binary, Sparkles } from 'lucide-react';
+import { Camera, RefreshCw, Play, Square, Eye, AlertTriangle, CheckCircle2, Scan } from 'lucide-react';
 import type { ShotDataPoint } from '../types/espresso';
 import { calculateSmoothedFlowRate } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
@@ -240,41 +240,41 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-[#72806B] animate-pulse" />
           <span className="text-xs font-semibold uppercase tracking-wider text-[#2C2018] font-mono">
-            {useRealCamera ? `7-Segment OCR Active (${ocrFps} FPS)` : 'Precision Vision Simulator'}
+            {useRealCamera ? `OCR Active (${ocrFps} FPS)` : 'Demo Extraction Mode'}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {/* Vision Inspector Toggle */}
+          {/* Action-Oriented Align Scale Button */}
           <button
             onClick={() => setShowInspector(!showInspector)}
-            className={`text-[11px] px-2.5 py-1 rounded-md border font-mono transition flex items-center gap-1 ${
+            className={`text-[11px] px-2.5 py-1 rounded-md border font-mono transition flex items-center gap-1.5 ${
               showInspector
-                ? 'border-[#C26D52] bg-[#C26D52] text-white'
+                ? 'border-[#C26D52] bg-[#C26D52] text-white shadow-xs'
                 : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018]'
             }`}
-            title="Inspect 7-segment OCR threshold and probes"
+            title="Align scale with viewfinder crosshair and verify digit recognition"
           >
-            <Binary className="w-3 h-3" />
-            <span>Inspector</span>
+            <Scan className="w-3 h-3" />
+            <span>Align Scale</span>
           </button>
 
-          {/* LCD vs LED Invert */}
+          {/* Scale Screen Type (LED vs LCD) */}
           <button
             onClick={() => setDisplayInverted(!displayInverted)}
             className="text-[11px] px-2 py-1 rounded-md border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
-            title="Toggle between LED (light digits) and LCD (dark digits)"
+            title="Toggle between LED (illuminated digits) and LCD (dark digits on grey)"
           >
             <Eye className="w-3 h-3" />
-            {displayInverted ? 'Dark LCD' : 'Light LED'}
+            <span>{displayInverted ? 'Display: LCD' : 'Display: LED'}</span>
           </button>
 
-          {/* Live Cam vs Sim Toggle */}
+          {/* Camera vs Demo Mode */}
           <button
             onClick={() => setUseRealCamera(!useRealCamera)}
             className="text-[11px] px-2 py-1 rounded-md border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
           >
             <Camera className="w-3 h-3" />
-            {useRealCamera ? 'Sim Mode' : 'Live Cam'}
+            <span>{useRealCamera ? 'Demo Mode' : 'Live Camera'}</span>
           </button>
         </div>
       </div>
@@ -349,20 +349,20 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         <div className="p-4 bg-[#1A1412] text-[#FAF7F2] border-t border-[#E8DFD5]/20 font-mono text-xs">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+              <Scan className="w-3.5 h-3.5 text-[#C26D52]" />
               <span className="font-bold text-[#FAF7F2] uppercase tracking-wider text-[11px]">
-                Computer Vision Diagnostics
+                Scale Alignment & Optical Verification
               </span>
             </div>
             <div className="text-[11px] text-[#E8DFD5]/70">
-              Latency: &lt;3ms • Threshold: {lastOcrResult?.thresholdUsed || 128}
+              Latency: &lt;3ms • Contrast Threshold: {lastOcrResult?.thresholdUsed || 128}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
             {/* Binary canvas preview */}
             <div className="bg-black rounded-lg p-2 border border-[#E8DFD5]/20 flex flex-col items-center">
-              <div className="text-[10px] text-[#E8DFD5]/60 mb-1">PROCESSED BINARY ROI</div>
+              <div className="text-[10px] text-[#E8DFD5]/60 mb-1">PROCESSED DIGIT PROJECTION</div>
               <canvas
                 ref={inspectorCanvasRef}
                 width={240}
@@ -374,8 +374,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             {/* Digits recognition status */}
             <div className="space-y-1.5 text-[11px]">
               <div>
-                <span className="text-[#E8DFD5]/60">Raw OCR String: </span>
-                <span className="text-[#C26D52] font-bold text-sm bg-black/40 px-2 py-0.5 rounded">
+                <span className="text-[#E8DFD5]/60">Detected Digits: </span>
+                <span className="text-[#C26D52] font-bold text-sm bg-black/40 px-2 py-0.5 rounded font-mono">
                   {lastOcrResult?.rawText || '0.0'}
                 </span>
               </div>
