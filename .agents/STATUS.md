@@ -11,6 +11,11 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-26 -- Scale Cam Standby & Manuel Start Flow (v0.7.2)
+- **Standby Tilstand:** Scale Cam åbner nu i en rolig Standby-tilstand uden at tænde kameraet med det samme. Brugeren får ro og tid til at placere og vinkle telefonen mod vægtens display.
+- **Start Camera Knap:** Prominent `[📷 Start Camera]` knap i viewfinderen aktiverer videostrøm og OCR først, når brugeren er klar.
+- **Stop Camera Mulighed:** Tilføjet `[Stop Cam]` knap i headeren for at slå kameraet fra igen og spare batteri.
+
 ### 2026-09-26 -- Shot Reset / Cancel & Tare Guard (v0.7.1)
 - **Reset Knap:** Tilføjet `[Reset]` (RotateCcw) i Scale Cam action bar og i viewfinderens bundlinje, så utilsigtede starter kan afbrydes straks uden at gemme falske shots i logbogen.
 - **Auto-Start Tare Guard:** `isZeroDetected` starter som `false`. Skuddet starter ikke længere automatisk før der reelt er registreret et gyldigt `0.0g` tare på vægten eller trykket på Tare.

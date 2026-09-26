@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, RefreshCw, Play, Square, Eye, AlertTriangle, CheckCircle2, Scan, RotateCcw } from 'lucide-react';
+import { Camera, RefreshCw, Play, Square, Eye, AlertTriangle, CheckCircle2, Scan, RotateCcw, VideoOff } from 'lucide-react';
 import type { ShotDataPoint } from '../types/espresso';
 import { calculateSmoothedFlowRate } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
+import { useTranslation } from '../i18n';
 
 interface ScaleMonitorProps {
   isBrewing: boolean;
@@ -29,12 +30,13 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   targetYield,
   machinePreInfusionSetting = 5.0,
 }) => {
+  const { t } = useTranslation();
   const [currentWeight, setCurrentWeight] = useState<number>(0.0);
   const [currentFlow, setCurrentFlow] = useState<number>(0.0);
   const [elapsedTime, setElapsedTime] = useState<number>(0.0);
   const [isZeroDetected, setIsZeroDetected] = useState<boolean>(false);
   const [displayInverted, setDisplayInverted] = useState<boolean>(false);
-  const [useRealCamera, setUseRealCamera] = useState<boolean>(true);
+  const [cameraState, setCameraState] = useState<'standby' | 'live' | 'demo'>('standby');
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Split-Timer state
@@ -60,9 +62,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const fpsCountRef = useRef<number>(0);
   const lastFpsCalcTimeRef = useRef<number>(Date.now());
 
-  // Start / stop camera stream
+  // Start / stop camera stream based on cameraState
   useEffect(() => {
-    if (!useRealCamera) {
+    if (cameraState !== 'live') {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -92,7 +94,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       } catch (err: unknown) {
         console.warn('Camera access error or unsupported:', err);
         setCameraError('Camera access not available or permission denied. Switched to Demo Simulator.');
-        setUseRealCamera(false);
+        setCameraState('demo');
       }
     }
 
@@ -103,11 +105,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [useRealCamera]);
+  }, [cameraState]);
 
   // Real-time Canvas OCR processing loop (running at ~15 FPS when camera is active)
   useEffect(() => {
-    if (!useRealCamera) {
+    if (cameraState !== 'live') {
       if (ocrIntervalRef.current) clearInterval(ocrIntervalRef.current);
       return;
     }
@@ -174,7 +176,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     return () => {
       if (ocrIntervalRef.current) clearInterval(ocrIntervalRef.current);
     };
-  }, [useRealCamera, displayInverted, isZeroDetected, isBrewing, onBrewStart]);
+  }, [cameraState, displayInverted, isZeroDetected, isBrewing, onBrewStart]);
 
   // Handle Shot Timeline, Split-Timer & Simulation
   useEffect(() => {
@@ -203,7 +205,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       let weight = currentWeight;
 
       // In simulation mode, generate a realistic pre-infusion & extraction curve
-      if (!useRealCamera) {
+      if (cameraState === 'demo') {
         let simulatedWeight = 0;
         // 0-6s: Pre-infusion saturation (pressure builds, drops start at ~5.5s)
         if (seconds < 5.5) {
@@ -244,7 +246,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       setCurrentFlow(flow);
 
       // Auto-finish if target reached in demo mode
-      if (!useRealCamera && weight >= targetYield && seconds > 25) {
+      if (cameraState === 'demo' && weight >= targetYield && seconds > 25) {
         handleStopBrewing();
       }
     }, 100);
@@ -252,10 +254,31 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [isBrewing, targetYield, useRealCamera]);
+  }, [isBrewing, targetYield, cameraState]);
 
   const handleStartBrewing = () => {
+    if (cameraState === 'standby') {
+      setCameraState('live');
+    }
     onBrewStart();
+  };
+
+  const handleStartCamera = () => {
+    setCameraError(null);
+    setCameraState('live');
+  };
+
+  const handleStopCamera = () => {
+    setCameraState('standby');
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const handleStartDemo = () => {
+    setCameraError(null);
+    setCameraState('demo');
   };
 
   const handleCancelBrewing = () => {
@@ -299,54 +322,99 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-[#E8DFD5] bg-[#FAF7F2] flex flex-wrap items-center justify-between gap-2">
         {/* Left: Mode Status with Pulsating Indicator */}
         <div className="flex items-center gap-2">
-          <div className={`w-2.5 h-2.5 rounded-full ${useRealCamera ? 'bg-[#72806B] animate-pulse' : 'bg-amber-500'}`} />
+          <div
+            className={`w-2.5 h-2.5 rounded-full ${
+              cameraState === 'live'
+                ? 'bg-[#72806B] animate-pulse'
+                : cameraState === 'demo'
+                ? 'bg-amber-500'
+                : 'bg-[#7A6E65]'
+            }`}
+          />
           <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-            {useRealCamera ? `OCR Active (${ocrFps} FPS)` : 'Demo Simulator'}
+            {cameraState === 'live'
+              ? t('scale.ocr_active', { fps: ocrFps })
+              : cameraState === 'demo'
+              ? 'Demo Simulator'
+              : 'Standby (Camera Off)'}
           </span>
         </div>
 
         {/* Right / Controls: Compact Action Chips */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Primary Camera vs Simulator Toggle */}
-          <button
-            onClick={() => {
-              setCameraError(null);
-              setUseRealCamera(!useRealCamera);
-            }}
-            className={`text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border font-mono font-bold transition flex items-center gap-1 shadow-xs ${
-              useRealCamera
-                ? 'border-[#72806B] bg-[#72806B]/15 text-[#72806B]'
-                : 'border-[#C26D52] bg-[#C26D52] text-white'
-            }`}
-            title="Toggle between Live Real Scale Camera OCR and Simulator Mode"
-          >
-            <Camera className="w-3 h-3" />
-            <span>{useRealCamera ? 'Live OCR' : 'Start Camera'}</span>
-          </button>
+          {cameraState === 'standby' ? (
+            <>
+              <button
+                type="button"
+                onClick={handleStartCamera}
+                className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-[#72806B] bg-[#72806B]/15 hover:bg-[#72806B]/25 text-[#72806B] font-mono font-bold transition flex items-center gap-1 shadow-xs"
+              >
+                <Camera className="w-3 h-3" />
+                <span>{t('scale.start_cam_btn')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleStartDemo}
+                className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] font-mono transition"
+              >
+                {t('scale.demo_btn')}
+              </button>
+            </>
+          ) : cameraState === 'live' ? (
+            <>
+              <button
+                type="button"
+                onClick={handleStopCamera}
+                className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] font-mono font-medium transition flex items-center gap-1 shadow-xs"
+                title="Stop camera and return to standby"
+              >
+                <VideoOff className="w-3 h-3" />
+                <span>{t('scale.stop_cam_btn')}</span>
+              </button>
 
-          {/* Action-Oriented Align Scale Button */}
-          <button
-            onClick={() => setShowInspector(!showInspector)}
-            className={`text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border font-mono transition flex items-center gap-1 ${
-              showInspector
-                ? 'border-[#C26D52] bg-[#C26D52] text-white shadow-xs font-bold'
-                : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018]'
-            }`}
-            title="Align scale with viewfinder crosshair and verify digit recognition"
-          >
-            <Scan className="w-3 h-3" />
-            <span>Align</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setShowInspector(!showInspector)}
+                className={`text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border font-mono transition flex items-center gap-1 ${
+                  showInspector
+                    ? 'border-[#C26D52] bg-[#C26D52] text-white shadow-xs font-bold'
+                    : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018]'
+                }`}
+                title="Align scale with viewfinder crosshair and verify digit recognition"
+              >
+                <Scan className="w-3 h-3" />
+                <span>{t('scale.align')}</span>
+              </button>
 
-          {/* Scale Screen Type (LED vs LCD) */}
-          <button
-            onClick={() => setDisplayInverted(!displayInverted)}
-            className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
-            title="Toggle between LED (illuminated digits) and LCD (dark digits on grey background)"
-          >
-            <Eye className="w-3 h-3" />
-            <span>{displayInverted ? 'LCD' : 'LED'}</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => setDisplayInverted(!displayInverted)}
+                className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
+                title="Toggle between LED and LCD digits"
+              >
+                <Eye className="w-3 h-3" />
+                <span>{displayInverted ? 'LCD' : 'LED'}</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleStartCamera}
+                className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-[#72806B] bg-[#72806B]/15 text-[#72806B] font-mono font-bold flex items-center gap-1 shadow-xs"
+              >
+                <Camera className="w-3 h-3" />
+                <span>{t('scale.start_cam_btn')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleStopCamera}
+                className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] font-mono transition"
+              >
+                Standby
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -359,7 +427,46 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
       {/* Main Viewfinder Screen */}
       <div className="relative aspect-16/10 bg-[#1A1412] flex items-center justify-center overflow-hidden">
-        {useRealCamera ? (
+        {cameraState === 'standby' ? (
+          <div className="absolute inset-0 bg-[#1A1412] flex flex-col items-center justify-center p-4 sm:p-6 text-center z-20 select-none animate-fadeIn">
+            {/* Background subtle coffee dots */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#FAF7F2_1px,transparent_1px)] [background-size:16px_16px]" />
+
+            <div className="relative z-10 flex flex-col items-center max-w-sm">
+              <div className="w-12 h-12 rounded-2xl bg-[#2C2018] border border-[#E8DFD5]/20 flex items-center justify-center text-[#C26D52] mb-3 shadow-inner">
+                <Camera className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm sm:text-base font-bold text-[#FAF7F2] font-mono mb-1">
+                {t('scale.standby_title')}
+              </h4>
+              <p className="text-[11px] sm:text-xs text-[#E8DFD5]/75 font-mono mb-4 leading-relaxed px-2">
+                {t('scale.standby_desc')}
+              </p>
+
+              <div className="flex items-center gap-2.5 flex-wrap justify-center">
+                <button
+                  type="button"
+                  onClick={handleStartCamera}
+                  className="px-5 py-2.5 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-bold font-mono flex items-center gap-2 shadow-sm transition active:scale-95"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>{t('scale.start_cam_btn')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStartDemo}
+                  className="px-3.5 py-2.5 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-[#E8DFD5] text-xs font-mono transition"
+                >
+                  {t('scale.demo_btn')}
+                </button>
+              </div>
+
+              <div className="mt-4 text-[10px] text-[#E8DFD5]/50 font-mono">
+                Target: {targetDose}g in → {targetYield}g out
+              </div>
+            </div>
+          </div>
+        ) : cameraState === 'live' ? (
           <video
             ref={videoRef}
             autoPlay

@@ -4,6 +4,14 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [0.7.2] - 2026-09-26
+### Added
+- **Intelligent Scale Cam Standby & Manuel "Start Camera" Flow:**
+  - Scale Cam starter nu i en rolig, strømbesparende Standby-tilstand i stedet for at starte kameraet øjeblikkeligt ved fane-skift.
+  - Viser en flot vejledende standby-skærm, der giver brugeren god tid til at placere telefonen stabilt mod espressomaskinen eller på et stativ rettet mod vægtens display.
+  - Prominent `[📷 Start Camera]` knap aktiverer kamera og OCR-måling først når brugeren er klar.
+  - `[Stop Cam]` knap i headeren gør det nemt at slukke kamerastrømmen når som helst.
+
 ## [0.7.1] - 2026-09-26
 ### Added & Fixed
 - **Shot Reset / Cancel Knap & Auto-Trigger Beskyttelse:**

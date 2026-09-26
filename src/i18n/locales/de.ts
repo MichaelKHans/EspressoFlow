@@ -39,6 +39,14 @@ export const de: Partial<Record<TranslationKeys, string>> = {
   'deck.grind_setting': 'Mahlgrad-Einstellung',
 
   // Scale Monitor / Cam
+  'scale.standby_title': 'Scale Cam Bereitschaft',
+  'scale.standby_desc': 'Richte dein Telefon so aus, dass die Kamera freie Sicht auf das Waagendisplay hat.',
+  'scale.start_cam_btn': 'Kamera starten',
+  'scale.stop_cam_btn': 'Kamera stoppen',
+  'scale.demo_btn': 'Demo-Modus',
+  'scale.reset': 'Zurücksetzen',
+  'scale.reset_title': 'Shot verwerfen und ohne Speichern zurücksetzen',
+  'scale.start_shot': 'Shot starten',
   'scale.ocr_active': 'OCR AKTIV ({fps} FPS)',
   'scale.roi_target': 'WAAGEN-FOKUSBEREICH',
   'scale.live_ocr': 'Live OCR',

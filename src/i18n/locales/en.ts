@@ -37,6 +37,14 @@ export const en = {
   'deck.grind_setting': 'Grind Setting',
 
   // Scale Monitor / Cam
+  'scale.standby_title': 'Scale Cam Standby',
+  'scale.standby_desc': 'Position your phone so the camera points toward your digital scale display.',
+  'scale.start_cam_btn': 'Start Camera',
+  'scale.stop_cam_btn': 'Stop Cam',
+  'scale.demo_btn': 'Demo Mode',
+  'scale.reset': 'Reset',
+  'scale.reset_title': 'Cancel and discard this shot without saving',
+  'scale.start_shot': 'Start Extraction Shot',
   'scale.ocr_active': 'OCR ACTIVE ({fps} FPS)',
   'scale.roi_target': 'SCALE ROI TARGET',
   'scale.live_ocr': 'Live OCR',

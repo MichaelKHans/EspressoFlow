@@ -39,6 +39,14 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'deck.grind_setting': 'Kværnindstilling',
 
   // Scale Monitor / Cam
+  'scale.standby_title': 'Scale Cam Standby',
+  'scale.standby_desc': 'Placér telefonen stabilt, så kameraet peger direkte mod vægtens display.',
+  'scale.start_cam_btn': 'Start Kamera',
+  'scale.stop_cam_btn': 'Stop Kamera',
+  'scale.demo_btn': 'Demo-tilstand',
+  'scale.reset': 'Nulstil',
+  'scale.reset_title': 'Afbryd og nulstil dette shot uden at gemme',
+  'scale.start_shot': 'Start Brygning',
   'scale.ocr_active': 'OCR AKTIV ({fps} FPS)',
   'scale.roi_target': 'VÆGT FOKUSRAMME',
   'scale.live_ocr': 'Live OCR',
