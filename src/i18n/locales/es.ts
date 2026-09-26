@@ -42,7 +42,7 @@ export const es: Partial<Record<TranslationKeys, string>> = {
   'scale.standby_title': 'Scale Cam en Espera',
   'scale.standby_desc': 'Coloca tu teléfono con tranquilidad en tu estación de café, sobre una taza o la bandeja de goteo, apuntando la lente hacia la pantalla de tu báscula.',
   'scale.start_cam_btn': 'Iniciar Cámara',
-  'scale.stop_cam_btn': 'Detener Cámara',
+  'scale.stop_cam_btn': 'Detener Cam',
   'scale.demo_btn': 'Modo Demo',
   'scale.reset': 'Restablecer',
   'scale.reset_title': 'Cancelar y descartar esta extracción sin guardar',

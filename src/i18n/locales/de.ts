@@ -42,7 +42,7 @@ export const de: Partial<Record<TranslationKeys, string>> = {
   'scale.standby_title': 'Scale Cam Bereitschaft',
   'scale.standby_desc': 'Lege das Smartphone ruhig an der Kaffeestation, an einer Tasse oder an der Abtropfschale ab, sodass die Linse auf das Waagendisplay gerichtet ist.',
   'scale.start_cam_btn': 'Kamera starten',
-  'scale.stop_cam_btn': 'Kamera stoppen',
+  'scale.stop_cam_btn': 'Stop Cam',
   'scale.demo_btn': 'Demo-Modus',
   'scale.reset': 'Zurücksetzen',
   'scale.reset_title': 'Shot verwerfen und ohne Speichern zurücksetzen',

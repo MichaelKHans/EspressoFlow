@@ -331,9 +331,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   return (
     <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] shadow-xs overflow-hidden">
       {/* Viewfinder Header - Responsive on mobile */}
-      <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-[#E8DFD5] bg-[#FAF7F2] flex flex-wrap items-center justify-between gap-2">
+      <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-[#E8DFD5] bg-[#FAF7F2] flex items-center justify-between gap-2">
         {/* Left: Mode Status with Pulsating Indicator */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <div
             className={`w-2.5 h-2.5 rounded-full ${
               cameraState === 'live'
@@ -344,11 +344,16 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             }`}
           />
           <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-            {cameraState === 'live'
-              ? t('scale.ocr_active', { fps: ocrFps })
-              : cameraState === 'demo'
-              ? 'Demo Simulator'
-              : 'Standby (Camera Off)'}
+            {cameraState === 'live' ? (
+              <>
+                <span className="sm:hidden">LIVE {ocrFps} FPS</span>
+                <span className="hidden sm:inline">{t('scale.ocr_active', { fps: ocrFps })}</span>
+              </>
+            ) : cameraState === 'demo' ? (
+              'Demo'
+            ) : (
+              'Standby'
+            )}
           </span>
         </div>
 
@@ -577,11 +582,13 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       );
     })()}
 
-        {/* Viewfinder Bottom Telemetry Bar (Single responsive bar, zero collision) */}
-        <div className="absolute bottom-2 inset-x-2 z-10 flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg bg-[#1A1412]/90 border border-white/10 text-[10px] sm:text-[11px] font-mono text-[#FAF7F2]">
-          <div className="flex items-center gap-1.5 truncate">
+        {/* Viewfinder Bottom Telemetry Bar (Zero-clipping responsive bar) */}
+        <div className="absolute bottom-2 inset-x-2 z-10 flex items-center justify-between gap-2 px-2.5 py-1 rounded-lg bg-[#1A1412]/90 border border-white/10 text-[10px] sm:text-[11px] font-mono text-[#FAF7F2]">
+          <div className="flex items-center gap-1.5 shrink-0">
             <CheckCircle2 className={`w-3 h-3 shrink-0 ${isZeroDetected ? 'text-[#72806B]' : 'text-amber-400'}`} />
-            <span>Tare: <strong className={isZeroDetected ? 'text-[#72806B]' : 'text-amber-400'}>{isZeroDetected ? '0.0g Locked' : 'Needs Tare'}</strong></span>
+            <span className={isZeroDetected ? 'text-[#72806B] font-bold' : 'text-amber-400 font-semibold'}>
+              {isZeroDetected ? t('scale.tare_locked', { weight: '0.0' }) : 'Needs Tare'}
+            </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {isBrewing && (
@@ -595,8 +602,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 <span>Reset</span>
               </button>
             )}
-            <div className="text-[#FAF7F2]/80 font-medium">
-              Target: <strong className="text-[#C26D52]">{targetDose}g</strong> → <strong className="text-[#72806B]">{targetYield}g</strong>
+            <div className="text-[#FAF7F2]/80 font-medium whitespace-nowrap">
+              <span className="hidden xs:inline">Target: </span>
+              <strong className="text-[#C26D52]">{targetDose}g</strong>
+              <span className="mx-0.5 text-white/50">→</span>
+              <strong className="text-[#72806B]">{targetYield}g</strong>
             </div>
           </div>
         </div>

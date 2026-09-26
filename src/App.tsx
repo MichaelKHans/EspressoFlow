@@ -438,32 +438,29 @@ export function App() {
     <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] flex flex-col font-sans">
       {/* Top Header */}
       <header className="border-b border-[#E8DFD5] bg-[#FAF7F2] sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#2C2018] flex items-center justify-center text-[#FAF7F2] shadow-xs">
-              <Coffee className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
+          {/* Brand Logo & Title */}
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-[#2C2018] flex items-center justify-center text-[#C26D52] shadow-xs shrink-0">
+              <Coffee className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="font-bold text-xs sm:text-sm tracking-tight text-[#2C2018] font-mono">
-                  ESPRESSO FLOW
-                </h1>
-                <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8DFD5] text-[#7A6E65]">
-                  v0.9.0
-                </span>
-              </div>
-              <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono">
+            <div className="min-w-0">
+              <h1 className="font-bold text-xs sm:text-sm tracking-wider text-[#2C2018] font-mono whitespace-nowrap truncate">
+                ESPRESSO FLOW
+              </h1>
+              <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono hidden sm:block truncate">
                 {t('app.subtitle')}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Right Action Chips: Language & Access Badge */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Language Switcher */}
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
-              className="text-[10px] sm:text-[11px] font-mono px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full border border-[#E8DFD5] bg-[#FFFDF9] text-[#2C2018] cursor-pointer hover:border-[#C26D52] transition focus:outline-none"
+              className="text-[11px] font-mono px-2 py-1 rounded-xl border border-[#E8DFD5] bg-[#FFFDF9] text-[#2C2018] font-bold cursor-pointer hover:border-[#C26D52] transition shadow-2xs focus:outline-none"
               title="Select App Language"
             >
               {supportedLanguages.map((lang) => (
@@ -473,29 +470,37 @@ export function App() {
               ))}
             </select>
 
-            {/* Trial / Pro Badge */}
+            {/* Trial / Pro Access Chip */}
             <button
               onClick={() => setIsPaywallOpen(true)}
-              className={`text-[10px] sm:text-[11px] font-mono px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border transition flex items-center gap-1.5 ${
+              className={`text-[11px] sm:text-xs font-mono px-2 sm:px-2.5 py-1 rounded-xl border transition flex items-center gap-1 sm:gap-1.5 shrink-0 ${
                 accessState.isProLifetime
-                  ? 'border-[#72806B] bg-[#72806B]/10 text-[#72806B] font-bold'
-                  : 'border-[#C26D52] bg-[#C26D52]/10 text-[#C26D52] font-semibold hover:bg-[#C26D52]/20'
+                  ? 'border-[#72806B] bg-[#72806B]/15 text-[#72806B] font-bold'
+                  : 'border-[#C26D52]/40 bg-[#C26D52]/10 text-[#C26D52] font-semibold hover:bg-[#C26D52]/20'
               }`}
+              title="Pro Membership & License"
             >
-              <ShieldCheck className="w-3 h-3" />
-              {accessState.isProLifetime
-                ? t('app.pro_lifetime')
-                : t('app.trial_days', { days: accessState.daysRemainingInTrial })}
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              {/* Ultra-clean mobile badge that never wraps */}
+              <span className="sm:hidden font-bold">
+                {accessState.isProLifetime ? 'PRO' : `${accessState.daysRemainingInTrial}d`}
+              </span>
+              {/* Full descriptive label on larger screens */}
+              <span className="hidden sm:inline">
+                {accessState.isProLifetime
+                  ? t('app.pro_lifetime')
+                  : t('app.trial_days', { days: accessState.daysRemainingInTrial })}
+              </span>
             </button>
           </div>
         </div>
 
-        {/* Tab Navigation (Elevated Tactile Segmented Bar - 100% Mobile Responsive) */}
-        <div className="max-w-4xl mx-auto px-2 xs:px-2.5 sm:px-4 pb-2.5 pt-1">
-          <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#E8DFD5] text-[10px] xs:text-[11px] sm:text-xs font-mono shadow-inner">
+        {/* Tab Navigation (Segmented Tactile Bar - 100% Mobile Clean & Never Overflows) */}
+        <div className="max-w-4xl mx-auto px-2 sm:px-4 pb-2 pt-0.5">
+          <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#E8DFD5] text-[11px] sm:text-xs font-mono shadow-inner">
             <button
               onClick={() => setActiveTab('drinks')}
-              className={`py-1.5 sm:py-2 px-1 xs:px-1.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
+              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${
                 activeTab === 'drinks'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -503,14 +508,14 @@ export function App() {
             >
               <Coffee className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'drinks' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="xs:hidden">{t('nav.bar')}</span>
-                <span className="hidden xs:inline">{t('nav.coffee_bar')}</span>
+                <span className="sm:hidden">{t('nav.bar')}</span>
+                <span className="hidden sm:inline">{t('nav.coffee_bar')}</span>
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('monitor')}
-              className={`py-1.5 sm:py-2 px-1 xs:px-1.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
+              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${
                 activeTab === 'monitor'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -518,14 +523,14 @@ export function App() {
             >
               <Camera className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'monitor' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="xs:hidden">{t('nav.scale')}</span>
-                <span className="hidden xs:inline">{t('nav.scale_cam')}</span>
+                <span className="sm:hidden">{t('nav.scale')}</span>
+                <span className="hidden sm:inline">{t('nav.scale_cam')}</span>
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('logbook')}
-              className={`py-1.5 sm:py-2 px-1 xs:px-1.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
+              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${
                 activeTab === 'logbook'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -533,14 +538,14 @@ export function App() {
             >
               <BookOpen className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'logbook' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="xs:hidden">{t('nav.logs')}</span>
-                <span className="hidden xs:inline">{t('nav.logbook')}</span>
+                <span className="sm:hidden">{t('nav.logs')}</span>
+                <span className="hidden sm:inline">{t('nav.logbook')}</span>
               </span>
               {shots.length > 0 && (
                 <span
-                  className={`text-[9px] px-1 py-0.2 rounded-full font-mono font-bold shrink-0 ${
+                  className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold shrink-0 ${
                     activeTab === 'logbook'
-                      ? 'bg-[#3D2D22] text-[#FAF7F2]'
+                      ? 'bg-[#C26D52] text-white'
                       : 'bg-[#E8DFD5] text-[#7A6E65]'
                   }`}
                 >
@@ -551,7 +556,7 @@ export function App() {
 
             <button
               onClick={() => setActiveTab('equipment')}
-              className={`py-1.5 sm:py-2 px-1 xs:px-1.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-2 transition-all font-medium ${
+              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${
                 activeTab === 'equipment'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -559,8 +564,8 @@ export function App() {
             >
               <Sliders className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'equipment' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="xs:hidden">{t('nav.gear')}</span>
-                <span className="hidden xs:inline">{t('nav.beans_and_gear')}</span>
+                <span className="sm:hidden">{t('nav.gear')}</span>
+                <span className="hidden sm:inline">{t('nav.beans_and_gear')}</span>
               </span>
             </button>
           </nav>
@@ -589,62 +594,73 @@ export function App() {
 
         {/* Quick Context Bar (Shown for Monitor, Logbook, and Equipment) */}
         {activeTab !== 'drinks' && (
-        <div className="bg-[#FFFDF9] rounded-xl border border-[#E8DFD5] p-3 text-xs font-mono flex flex-wrap items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[#7A6E65]">{t('active_bean.title')}:</span>
-            <select
-              value={activeBeanId}
-              onChange={(e) => handleSelectBean(e.target.value)}
-              className="bg-white border border-[#E8DFD5] rounded-md px-2 py-1 font-bold text-[#2C2018] text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-            >
-              {beans.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} ({b.roastLevel.toUpperCase()})
-                </option>
-              ))}
-            </select>
-            <span
-              className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${
-                roastLevel === 'light'
-                  ? 'bg-amber-50 text-amber-800 border-amber-300'
-                  : roastLevel === 'medium'
-                  ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
-                  : roastLevel === 'medium-dark'
-                  ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
-                  : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
-              }`}
-            >
-              {roastLevel}
-            </span>
-            <span className="text-[#7A6E65]">({t('active_bean.days_off_roast', { days: daysOffRoast })})</span>
-            {isTooFresh && (
-              <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
-                <Flame className="w-3 h-3" /> CO2 Degassing
-              </span>
-            )}
+          <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-2.5 sm:p-3 text-xs font-mono shadow-xs space-y-2">
+            {/* Top row: Bean Selector + Days off roast */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <select
+                  value={activeBeanId}
+                  onChange={(e) => handleSelectBean(e.target.value)}
+                  className="bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg px-2 py-1 font-bold text-[#2C2018] text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52] truncate max-w-[170px] sm:max-w-xs"
+                >
+                  {beans.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+                <span
+                  className={`text-[9px] sm:text-[10px] uppercase font-bold px-1.5 sm:px-2 py-0.5 rounded-md border shrink-0 ${
+                    roastLevel === 'light'
+                      ? 'bg-amber-50 text-amber-800 border-amber-300'
+                      : roastLevel === 'medium'
+                      ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                      : roastLevel === 'medium-dark'
+                      ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
+                      : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
+                  }`}
+                >
+                  {roastLevel}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0 text-[11px] ml-auto">
+                <span className="text-[#7A6E65]">
+                  {t('active_bean.days_off_roast', { days: daysOffRoast })}
+                </span>
+                {isTooFresh && (
+                  <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded font-bold">
+                    <Flame className="w-3 h-3" /> CO₂
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom row: Clean 4-segment telemetry grid with hairline dividers */}
+            <div className="grid grid-cols-4 gap-1 pt-1.5 border-t border-[#E8DFD5]/60 text-[10px] sm:text-[11px] text-center">
+              <div className="px-1 py-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]/40">
+                <span className="text-[#7A6E65] text-[9px] block uppercase">{t('active_bean.ratio')}</span>
+                <span className="font-bold text-[#C26D52]">
+                  1:{(doseGrams > 0 ? (targetYieldGrams / doseGrams).toFixed(1) : '2.0')}
+                </span>
+              </div>
+              <div className="px-1 py-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]/40">
+                <span className="text-[#7A6E65] text-[9px] block uppercase">{t('active_bean.dose')}</span>
+                <span className="font-bold text-[#2C2018]">{doseGrams}g</span>
+              </div>
+              <div className="px-1 py-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]/40">
+                <span className="text-[#7A6E65] text-[9px] block uppercase">{t('active_bean.yield')}</span>
+                <span className="font-bold text-[#72806B]">{targetYieldGrams}g</span>
+              </div>
+              <div className="px-1 py-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]/40 truncate">
+                <span className="text-[#7A6E65] text-[9px] block uppercase">{t('active_bean.grind')}</span>
+                <span className="font-bold text-[#2C2018] truncate">
+                  {grindSetting}
+                  <span className="text-[9px] text-[#7A6E65] font-normal hidden sm:inline"> ({currentGrinder.name.split(' ')[0]})</span>
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div>
-              <span className="text-[#7A6E65]">{t('active_bean.ratio')}: </span>
-              <span className="font-semibold text-[#C26D52]">
-                1:{(doseGrams > 0 ? (targetYieldGrams / doseGrams).toFixed(1) : '2.0')}
-              </span>
-            </div>
-            <div>
-              <span className="text-[#7A6E65]">{t('active_bean.dose')}: </span>
-              <span className="font-semibold">{doseGrams}g</span>
-            </div>
-            <div>
-              <span className="text-[#7A6E65]">{t('active_bean.yield')}: </span>
-              <span className="font-semibold">{targetYieldGrams}g</span>
-            </div>
-            <div>
-              <span className="text-[#7A6E65]">{t('active_bean.grind')}: </span>
-              <span className="font-semibold text-[#2C2018]">{grindSetting}</span>
-              <span className="text-[10px] text-[#7A6E65]"> ({grinderName.split(' ')[0]})</span>
-            </div>
-          </div>
-        </div>
         )}
 
         {/* Tab 1: Live Monitor & Flow Dynamics */}
