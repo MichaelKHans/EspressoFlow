@@ -175,11 +175,27 @@ export function App() {
     doseGrams: number;
     targetYieldGrams: number;
     grindSetting: string;
+    grinderName?: string;
   }) => {
     // 1. Update active brewing state
     setDoseGrams(dialInData.doseGrams);
     setTargetYieldGrams(dialInData.targetYieldGrams);
     setGrindSetting(dialInData.grindSetting);
+    if (dialInData.grinderName) {
+      setGrinderName(dialInData.grinderName);
+      // Ensure the chosen grinder is marked inSetup
+      setGrinders((prev) => {
+        const found = prev.find((g) => g.name === dialInData.grinderName);
+        if (found && !found.inSetup) {
+          const updated = prev.map((g) =>
+            g.name === dialInData.grinderName ? { ...g, inSetup: true } : g
+          );
+          saveGrinders(updated);
+          return updated;
+        }
+        return prev;
+      });
+    }
 
     // 2. Persist directly onto active bean in vault
     const updated = beans.map((b) =>
@@ -189,6 +205,7 @@ export function App() {
             doseGrams: dialInData.doseGrams,
             targetYieldGrams: dialInData.targetYieldGrams,
             grindSetting: dialInData.grindSetting,
+            ...(dialInData.grinderName ? { grinderName: dialInData.grinderName } : {}),
           }
         : b
     );
@@ -1065,9 +1082,12 @@ export function App() {
                           {/* 4. Assigned Grinder Selector */}
                           {grinders.length > 1 && (
                             <div className="space-y-1">
-                              <span className="text-[9px] uppercase font-bold text-[#7A6E65] block font-mono">
-                                Assigned Grinder
-                              </span>
+                              <div className="flex items-center justify-between text-[9px] uppercase font-bold text-[#7A6E65] font-mono">
+                                <span>Assigned Grinder</span>
+                                {grinders.find((g) => g.name === bean.grinderName)?.inSetup && (
+                                  <span className="text-[#72806B] font-semibold">I dit setup</span>
+                                )}
+                              </div>
                               <select
                                 value={bean.grinderName}
                                 onChange={(e) => {
@@ -1077,11 +1097,26 @@ export function App() {
                                 }}
                                 className="w-full px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[11px] font-semibold text-[#2C2018]"
                               >
-                                {grinders.map((g) => (
-                                  <option key={g.id} value={g.name}>
-                                    {g.name} ({g.type})
-                                  </option>
-                                ))}
+                                <optgroup label="Kværne i dit setup">
+                                  {grinders
+                                    .filter((g) => g.inSetup)
+                                    .map((g) => (
+                                      <option key={g.id} value={g.name}>
+                                        {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                                      </option>
+                                    ))}
+                                </optgroup>
+                                {grinders.filter((g) => !g.inSetup).length > 0 && (
+                                  <optgroup label="Andre kværne i biblioteket">
+                                    {grinders
+                                      .filter((g) => !g.inSetup)
+                                      .map((g) => (
+                                        <option key={g.id} value={g.name}>
+                                          {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                                        </option>
+                                      ))}
+                                  </optgroup>
+                                )}
                               </select>
                             </div>
                           )}
@@ -1340,6 +1375,7 @@ export function App() {
                             type: 'stepless',
                             defaultSetting: '1.0',
                             stepUnit: 'steps',
+                            inSetup: true,
                           };
                           const updated = [...grinders, newG];
                           setGrinders(updated);
@@ -1354,11 +1390,26 @@ export function App() {
                     }}
                     className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
                   >
-                    {grinders.map((g) => (
-                      <option key={g.id} value={g.name}>
-                        {g.name} ({g.type})
-                      </option>
-                    ))}
+                    <optgroup label="Kværne i dit setup">
+                      {grinders
+                        .filter((g) => g.inSetup)
+                        .map((g) => (
+                          <option key={g.id} value={g.name}>
+                            {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                          </option>
+                        ))}
+                    </optgroup>
+                    {grinders.filter((g) => !g.inSetup).length > 0 && (
+                      <optgroup label="Andre kværne i biblioteket">
+                        {grinders
+                          .filter((g) => !g.inSetup)
+                          .map((g) => (
+                            <option key={g.id} value={g.name}>
+                              {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
                     <option value="__ADD_NEW__">+ Add Custom Grinder...</option>
                   </select>
                 </div>
@@ -1377,6 +1428,165 @@ export function App() {
                     className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Equipment: Grinder Setup & Personal Fleet (Mine Kværne i Kaffehjørnet) */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4 font-mono">
+              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-[#C26D52]" />
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                      Mit Kværn-Setup (Mine Kværne)
+                    </h3>
+                    <p className="text-[10px] text-[#7A6E65] font-sans">
+                      Vælg hvilke kværne du har i dit kaffehjørne, og hvilken kværn der er aktiv på baren.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-[#72806B] bg-[#72806B]/10 border border-[#72806B]/30 px-2 py-0.5 rounded-full shrink-0">
+                  {grinders.filter((g) => g.inSetup).length} i dit setup
+                </span>
+              </div>
+
+              {/* Grinders currently in user's setup */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {grinders
+                  .filter((g) => g.inSetup)
+                  .map((g) => {
+                    const isActive = g.name === grinderName;
+                    return (
+                      <div
+                        key={g.id}
+                        className={`p-3 rounded-xl border transition flex flex-col justify-between gap-2.5 ${
+                          isActive
+                            ? 'bg-[#FAF7F2] border-[#72806B] ring-1 ring-[#72806B]/40 shadow-xs'
+                            : 'bg-white border-[#E8DFD5] hover:border-[#C26D52]/40'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-bold text-[#2C2018]">{g.name}</span>
+                              <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#FAF7F2] border border-[#E8DFD5] text-[#7A6E65] uppercase">
+                                {g.type === 'stepless' ? 'Trinløs' : 'Trinvis'}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-[#7A6E65] block mt-0.5">
+                              Skala: {g.stepUnit || 'trin'}
+                            </span>
+                          </div>
+
+                          {isActive ? (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 flex items-center gap-1 shrink-0">
+                              <Check className="w-3 h-3" /> Aktiv på Baren
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setGrinderName(g.name);
+                                handleUpdateBeanField({ grinderName: g.name });
+                              }}
+                              className="text-[10px] font-bold text-[#C26D52] hover:text-[#9B533E] hover:underline shrink-0"
+                            >
+                              Gør Aktiv
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Card footer: info & remove button if more than 1 in setup */}
+                        <div className="flex items-center justify-between pt-1 border-t border-[#E8DFD5]/50 text-[10px]">
+                          <span className="text-[#A6998E]">
+                            Standard: {g.defaultSetting || '15'}
+                          </span>
+                          {grinders.filter((gr) => gr.inSetup).length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const remaining = grinders.map((gr) =>
+                                  gr.id === g.id ? { ...gr, inSetup: false } : gr
+                                );
+                                setGrinders(remaining);
+                                saveGrinders(remaining);
+                                if (isActive) {
+                                  const fallback = remaining.find((gr) => gr.inSetup) || remaining[0];
+                                  setGrinderName(fallback.name);
+                                  handleUpdateBeanField({ grinderName: fallback.name });
+                                }
+                              }}
+                              className="text-[#A6998E] hover:text-red-600 transition flex items-center gap-1"
+                              title="Fjern denne kværn fra dit aktive setup"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Fjern fra setup</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Add Grinder to Setup from Library or Custom */}
+              <div className="pt-2 border-t border-[#E8DFD5]/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                {grinders.filter((g) => !g.inSetup).length > 0 && (
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      if (!selectedId) return;
+                      const updated = grinders.map((g) =>
+                        g.id === selectedId ? { ...g, inSetup: true } : g
+                      );
+                      setGrinders(updated);
+                      saveGrinders(updated);
+                      const added = updated.find((g) => g.id === selectedId);
+                      if (added) {
+                        setGrinderName(added.name);
+                        handleUpdateBeanField({ grinderName: added.name });
+                      }
+                      e.target.value = '';
+                    }}
+                    className="flex-1 px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono text-[#2C2018] focus:outline-hidden"
+                  >
+                    <option value="" disabled>+ Tilføj kværn fra biblioteket til dit setup...</option>
+                    {grinders
+                      .filter((g) => !g.inSetup)
+                      .map((g) => (
+                        <option key={g.id} value={g.id}>
+                          + {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'}, {g.stepUnit})
+                        </option>
+                      ))}
+                  </select>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const customName = prompt('Indtast modelnavn på din kværn (f.eks. Niche Duo, Lagom P64, Kinu M47):');
+                    if (customName && customName.trim()) {
+                      const newG: GrinderProfile = {
+                        id: `grinder-${Date.now()}`,
+                        name: customName.trim(),
+                        type: 'stepless',
+                        defaultSetting: '2.0',
+                        stepUnit: 'trin / marks',
+                        inSetup: true,
+                      };
+                      const updated = [...grinders, newG];
+                      setGrinders(updated);
+                      saveGrinders(updated);
+                      setGrinderName(newG.name);
+                      handleUpdateBeanField({ grinderName: newG.name });
+                    }
+                  }}
+                  className="px-3 py-2 rounded-xl border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Opret Brugerdefineret Kværn</span>
+                </button>
               </div>
             </div>
 
@@ -1581,6 +1791,8 @@ export function App() {
         drink={DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0]}
         currentBean={currentBean}
         currentGrinder={currentGrinder}
+        availableGrinders={grinders.filter((g) => g.inSetup)}
+        allGrinders={grinders}
         onProceedToScaleCam={() => {
           setIsDialInWizardOpen(false);
           setActiveTab('monitor');

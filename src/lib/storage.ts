@@ -228,7 +228,17 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
 export function loadGrinders(): GrinderProfile[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.GRINDERS);
-    return raw ? JSON.parse(raw) : getDefaultGrinders();
+    const grinders: GrinderProfile[] = raw ? JSON.parse(raw) : getDefaultGrinders();
+    // Guarantee at least one or two grinders have inSetup: true
+    const hasAnyInSetup = grinders.some((g) => g.inSetup === true);
+    if (!hasAnyInSetup && grinders.length > 0) {
+      grinders[0].inSetup = true;
+      if (grinders.length > 1) {
+        grinders[1].inSetup = true;
+      }
+      saveGrinders(grinders);
+    }
+    return grinders;
   } catch {
     return getDefaultGrinders();
   }
@@ -251,6 +261,7 @@ export function getDefaultGrinders(): GrinderProfile[] {
       defaultSetting: '15',
       stepUnit: 'micro-steps (1-20)',
       secondsPerStep: 2.5,
+      inSetup: true,
     },
     {
       id: 'grinder-eureka-specialita',
@@ -259,6 +270,7 @@ export function getDefaultGrinders(): GrinderProfile[] {
       defaultSetting: '1.4',
       stepUnit: 'micrometric dial (0-5)',
       secondsPerStep: 6.0,
+      inSetup: true,
     },
     {
       id: 'grinder-varia-vs3',

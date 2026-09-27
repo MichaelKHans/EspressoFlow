@@ -68,6 +68,7 @@ export interface GrinderProfile {
   defaultSetting: string;
   stepUnit: string; // e.g. "clicks", "numbers", "marks"
   secondsPerStep?: number; // Approximate extraction time delta (seconds) per step
+  inSetup?: boolean; // Whether user has this grinder in their personal setup / coffee bar
 }
 
 export interface EspressoMachineProfile {

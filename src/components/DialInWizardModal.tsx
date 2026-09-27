@@ -8,11 +8,14 @@ interface DialInWizardModalProps {
   drink: DrinkRecipe;
   currentBean: CoffeeBeanProfile;
   currentGrinder: GrinderProfile;
+  availableGrinders?: GrinderProfile[];
+  allGrinders?: GrinderProfile[];
   onProceedToScaleCam: () => void;
   onSaveDialIn?: (updated: {
     doseGrams: number;
     targetYieldGrams: number;
     grindSetting: string;
+    grinderName: string;
   }) => void;
 }
 
@@ -22,13 +25,40 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   drink,
   currentBean,
   currentGrinder,
+  availableGrinders = [],
+  allGrinders = [],
   onProceedToScaleCam,
   onSaveDialIn,
 }) => {
+  // Grinder selection state: defaults to bean's dialed grinder or current bar grinder
+  const [selectedGrinderName, setSelectedGrinderName] = useState<string>(
+    currentBean.grinderName || currentGrinder.name
+  );
+
+  // Master pool of all available grinders
+  const pool = allGrinders.length > 0
+    ? allGrinders
+    : (availableGrinders.length > 0 ? availableGrinders : [currentGrinder]);
+
+  // Derived active grinder object in this modal
+  const activeGrinder =
+    pool.find((g) => g.name === selectedGrinderName) ||
+    currentGrinder ||
+    pool[0];
+
+  // Grinders that are marked inSetup (from user's personal setup in Gear)
+  const setupGrinders = pool.filter((g) => g.inSetup === true);
+  // Ensure the active grinder is always visible in the chips
+  const displayGrinders = setupGrinders.length > 0
+    ? (setupGrinders.some((g) => g.name === activeGrinder.name)
+        ? setupGrinders
+        : [activeGrinder, ...setupGrinders])
+    : pool.slice(0, 4);
+
   // Initialize state with current active bean & drink targets
   const initialDose = currentBean.doseGrams || drink.defaultDoseGrams || 18.0;
   const initialYield = drink.targetYieldGrams || currentBean.targetYieldGrams || 36.0;
-  const initialGrind = currentBean.grindSetting || currentGrinder.defaultSetting || '15';
+  const initialGrind = currentBean.grindSetting || activeGrinder.defaultSetting || '15';
 
   const [doseGrams, setDoseGrams] = useState<number>(initialDose);
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(initialYield);
@@ -38,23 +68,49 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   // Sync state whenever modal opens or bean/drink changes
   useEffect(() => {
     if (isOpen) {
+      const beanGrinder = currentBean.grinderName || currentGrinder.name;
+      setSelectedGrinderName(beanGrinder);
       setDoseGrams(drink.defaultDoseGrams || currentBean.doseGrams || 18.0);
       setTargetYieldGrams(drink.targetYieldGrams || currentBean.targetYieldGrams || 36.0);
       setGrindSetting(currentBean.grindSetting || currentGrinder.defaultSetting || '15');
       setIsSavedFeedback(false);
     }
-  }, [isOpen, drink.id, currentBean.id, currentBean.grindSetting, currentBean.doseGrams, currentBean.targetYieldGrams, currentGrinder.defaultSetting]);
+  }, [
+    isOpen,
+    drink.id,
+    currentBean.id,
+    currentBean.grinderName,
+    currentBean.grindSetting,
+    currentBean.doseGrams,
+    currentBean.targetYieldGrams,
+    currentGrinder.name,
+    currentGrinder.defaultSetting,
+  ]);
 
   if (!isOpen) return null;
 
   // Real-time calculated extraction ratio
   const ratio = doseGrams > 0 ? (targetYieldGrams / doseGrams).toFixed(1) : '2.0';
 
-  // Grind adjustment handlers
+  // Handle switching grinder in Dial-In Studio
+  const handleSelectGrinder = (grinder: GrinderProfile) => {
+    setSelectedGrinderName(grinder.name);
+    // If switching to this bean's existing grinder, keep bean's setting, else use grinder's defaultSetting
+    if (grinder.name === currentBean.grinderName && currentBean.grindSetting) {
+      setGrindSetting(currentBean.grindSetting);
+    } else {
+      setGrindSetting(grinder.defaultSetting || '15');
+    }
+  };
+
+  // Grind adjustment handlers (responsive to stepped vs stepless)
   const handleAdjustGrind = (delta: number) => {
     const parsed = parseFloat(grindSetting);
     if (!isNaN(parsed)) {
-      const next = Math.max(0.1, parsed + delta);
+      const stepDelta = activeGrinder.type === 'stepless'
+        ? (delta > 0 ? 0.2 : -0.2)
+        : (delta > 0 ? 0.5 : -0.5);
+      const next = Math.max(0.1, Math.round((parsed + stepDelta) * 10) / 10);
       // Format with 1 decimal if float, otherwise whole number
       const formatted = next % 1 === 0 ? next.toString() : next.toFixed(1);
       setGrindSetting(formatted);
@@ -81,7 +137,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   const handleResetToBaseline = () => {
     setDoseGrams(drink.defaultDoseGrams || 18.0);
     setTargetYieldGrams(drink.targetYieldGrams || 36.0);
-    setGrindSetting(currentBean.grindSetting || currentGrinder.defaultSetting || '15');
+    setGrindSetting(activeGrinder.defaultSetting || '15');
   };
 
   // Save changes & proceed
@@ -92,6 +148,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         doseGrams,
         targetYieldGrams,
         grindSetting,
+        grinderName: activeGrinder.name,
       });
     } else {
       onProceedToScaleCam();
@@ -135,7 +192,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                   {currentBean.roastLevel}
                 </span>
                 <span>•</span>
-                <span className="truncate">{currentGrinder.name}</span>
+                <span className="truncate font-semibold text-[#2C2018]">{activeGrinder.name}</span>
               </div>
             </div>
           </div>
@@ -149,28 +206,87 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         </div>
 
         {/* Step 1: Starting Burr Gap & Grind Setting */}
-        <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-2.5">
+        <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5" /> Trin 1: Kværnindstilling for Bønnen
+              <Target className="w-3.5 h-3.5" /> Trin 1: Kværn & Indstilling for Bønnen
             </span>
             <span className="text-[10px] font-mono text-[#7A6E65]">
-              {currentGrinder.name.split(' ')[0]} ({currentGrinder.stepUnit || 'steps'})
+              {activeGrinder.name.split(' ')[0]} ({activeGrinder.stepUnit || 'steps'})
             </span>
+          </div>
+
+          {/* Grinder selector from setup / library */}
+          <div className="space-y-1.5 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-[#7A6E65] uppercase font-bold flex items-center gap-1">
+                <span>Vælg Kværn til denne Bønne:</span>
+              </span>
+              <span className="text-[#C26D52] font-bold">
+                Valgt: {activeGrinder.name.split(' ')[0]}
+              </span>
+            </div>
+
+            {/* Tactile chips of grinders in setup */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {displayGrinders.map((g) => {
+                const isSelected = g.name === activeGrinder.name;
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => handleSelectGrinder(g)}
+                    className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono font-medium transition flex items-center gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-xs ring-1 ring-[#C26D52]'
+                        : 'bg-[#FAF7F2] hover:bg-[#E8DFD5]/50 text-[#7A6E65] border-[#E8DFD5]'
+                    }`}
+                  >
+                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#C26D52]" />}
+                    <span className="font-semibold">{g.name}</span>
+                    <span className="text-[9px] opacity-75">
+                      ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                    </span>
+                  </button>
+                );
+              })}
+
+              {/* If there are more grinders in the full library */}
+              {pool.length > displayGrinders.length && (
+                <div className="w-full pt-1">
+                  <select
+                    value={activeGrinder.name}
+                    onChange={(e) => {
+                      const found = pool.find((g) => g.name === e.target.value);
+                      if (found) handleSelectGrinder(found);
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-[11px] font-mono text-[#2C2018] focus:outline-hidden"
+                  >
+                    <option value="" disabled>Eller vælg fra alle kværne i biblioteket...</option>
+                    {pool.map((g) => (
+                      <option key={g.id} value={g.name}>
+                        {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'}, {g.stepUnit})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
             <div className="text-[11px] text-[#7A6E65] font-mono">
-              Indstilling på <strong className="text-[#2C2018]">{currentGrinder.name.split(' ')[0]}</strong>:
+              Indstilling på <strong className="text-[#2C2018]">{activeGrinder.name.split(' ')[0]}</strong>:
+              <span className="block text-[9px] text-[#A6998E]">({activeGrinder.stepUnit || 'steps'})</span>
             </div>
 
             {/* Grind Stepper */}
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => handleAdjustGrind(-0.5)}
+                onClick={() => handleAdjustGrind(-1)}
                 className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95"
-                title="Finere kværn (-0.5)"
+                title={`Finere kværn (-${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
@@ -183,9 +299,9 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               />
               <button
                 type="button"
-                onClick={() => handleAdjustGrind(0.5)}
+                onClick={() => handleAdjustGrind(1)}
                 className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95"
-                title="Grovre kværn (+0.5)"
+                title={`Grovere kværn (+${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -293,7 +409,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             </button>
           </div>
           <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed">
-            Dine ændringer gemmes direkte på <strong>{currentBean.name}</strong> og opdateres i <strong>Beans & Gear</strong>. Scale Cam sporer derefter automatisk mod dit mål på <strong>{targetYieldGrams.toFixed(1)}g</strong>!
+            Dine ændringer gemmes direkte på <strong>{currentBean.name}</strong> med <strong>{activeGrinder.name}</strong> som favoritkværn og opdateres i <strong>Beans & Gear</strong>. Scale Cam sporer derefter automatisk mod dit mål på <strong>{targetYieldGrams.toFixed(1)}g</strong>!
           </p>
         </div>
 

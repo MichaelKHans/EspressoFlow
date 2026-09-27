@@ -11,6 +11,11 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Kværn-Setup i Gear & Favoritkværn i Dial-In Studio (v1.2.5)
+- **Mit Kværn-Setup i Beans & Gear:** Dedikeret udstyrskort til kaffekværne, hvor baristaen kan vælge hvilke kværne der står på baren, skifte aktiv kværn med 1 klik, tilføje kendte kværne fra biblioteket eller oprette brugerdefinerede modeller.
+- **Vælg Favoritkværn i Dial-In Studio:** I Trin 1 i Dial-In Studio kan baristaen nu vælge mellem sine setup-kværne via taktile chips, se kværnens specifikke måleenhed og indstilling, og låse kværnen som bønnes faste favoritkværn.
+- **Fuld Krydssynkronisering:** Gemte valg på bønnen slår igennem i Bean Vault, Barista Deck og Scale Cam.
+
 ### 2026-09-27 -- Top-Right Bønnesletning & Favorit Bønne-Kardotek (v1.2.4)
 - **Slette-knap i Top-Højre Hjørne:** Flyttet skraldespandsknappen på bønnekortene op i øverste højre hjørne ved siden af `ACTIVE`-statussen for en ren og intuitiv UX.
 - **Favorit Bønne-Kardotek:** Implementeret et kompakt, smalt kardotek under bønnelageret med 1-klik interaktive guldstjerner (1-5 stjerner `★`), ristefarve-badges og hurtig-aktivering.

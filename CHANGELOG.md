@@ -4,6 +4,17 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.5] - 2026-09-27
+### Grinder Setup Management & Dial-In Favorite Grinder Picker
+- **Mit Kværn-Setup i Beans & Gear (Personal Grinder Fleet):**
+  - **Udstyrskort til Kaffekværne:** Tilføjet en dedikeret sektion *"Mit Kværn-Setup (Mine Kværne)"* i `Beans & Gear`, hvor baristaen kan overskue og konfigurere de kværne, der fysisk står på kaffebaren.
+  - **Aktiv på Baren Indikator & 1-Klik Skift:** Tydelig grøn *"Aktiv på Baren"* badge med direkte *"Gør Aktiv"* knap på hver kværn i setup'et.
+  - **Nem Tilføjelse & Fjernelse:** Tilføj eksisterende kvalitetskværne fra det indbyggede bibliotek (Baratza, Eureka, Niche, DF64, Varia, Sage, Comandante m.fl.) med 1 klik, eller opret helt brugerdefinerede kværne via *"Opret Brugerdefineret Kværn"*.
+- **Vælg Favoritkværn Direkte i Dial-In Studio:**
+  - **Taktil Kværnvælger i Trin 1:** Baristaen kan nu lynhurtigt vælge mellem kværnene i sit setup (eller fra hele biblioteket) direkte inde i Dial-In Studio via taktile chips (`Baratza Encore ESP`, `Eureka Specialita` osv.).
+  - **Automatisk Tilpasning af Skala & Kværntrin:** Når en kværn vælges, skifter skala-enheden (f.eks. fra `micro-steps (1-20)` til `micrometric dial (0-5)`) og inputværdien opdateres dynamisk til den pågældende kværns standard eller bønnespecifikke kalibrering.
+  - **Permanent Tilknytning til Bønnen:** Ved at trykke *"Lås Kalibrering på Bønnen"* gemmes den valgte kværn som bønnes faste favoritkværn (`bean.grinderName`) og synkroniseres 100% på tværs af Beans & Gear og Scale Monitor.
+
 ## [1.2.4] - 2026-09-27
 ### Mobile UX & Favorite Beans Rolodex
 - **Top-Right Bønnesletning & Favorit Bønne-Kardotek:**
