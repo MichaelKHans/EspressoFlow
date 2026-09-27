@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, ShotRecord } from '../types/espresso';
+import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, ShotRecord, RoastLevel } from '../types/espresso';
 import { DRINK_RECIPES } from '../data/drinkRecipes';
 import {
   Coffee,
@@ -29,6 +29,21 @@ import {
 import { GRINDER_CALIBRATIONS } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
 import { matchBeansForDrink, getOptimalBeanGuidanceForDrink } from '../lib/beanMatcher';
+
+export const getRoastBadgeStyles = (level: RoastLevel) => {
+  switch (level) {
+    case 'light':
+      return 'bg-amber-400/20 text-amber-300 border-amber-400/40';
+    case 'medium':
+      return 'bg-[#C26D52]/25 text-[#FFB6A0] border-[#C26D52]/45';
+    case 'medium-dark':
+      return 'bg-[#A3684A]/30 text-[#E8C2B0] border-[#A3684A]/50';
+    case 'dark':
+      return 'bg-black/60 text-[#FAF7F2] border-white/25';
+    default:
+      return 'bg-white/10 text-white/90 border-white/20';
+  }
+};
 
 interface DrinkSelectorProps {
   currentBean: CoffeeBeanProfile;
@@ -728,8 +743,15 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                             : 'border-white/10 bg-white/5 hover:bg-white/10'
                         }`}
                       >
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <div className="flex items-center gap-1.5">
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                                bean.roastLevel
+                              )}`}
+                            >
+                              {bean.roastLevel}
+                            </span>
                             <span className="text-xs font-bold text-[#FFFDF9] truncate">
                               {bean.name}
                             </span>
@@ -740,9 +762,13 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                             )}
                           </div>
                           <div className="text-[10px] text-[#E8DFD5]/70 flex items-center gap-2">
-                            <span className="capitalize">{bean.roastLevel} Roast</span>
-                            <span>•</span>
-                            <span>Grind: {bean.grindSetting}</span>
+                            <span>Grind: <strong className="text-white font-mono">{bean.grindSetting}</strong></span>
+                            {bean.roaster && (
+                              <>
+                                <span>•</span>
+                                <span className="truncate max-w-[130px]">{bean.roaster}</span>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -766,19 +792,24 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               ) : (
                 /* Single Bean Highlight Badge */
                 <div className="p-3 rounded-xl border border-white/15 bg-white/5 flex items-center justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                          currentBean.roastLevel
+                        )}`}
+                      >
+                        {currentBean.roastLevel}
+                      </span>
                       <span className="text-xs font-bold text-white">
                         {currentBean.name}
                       </span>
-                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#C26D52] text-white font-bold uppercase">
+                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#C26D52] text-white font-bold uppercase shrink-0">
                         Current Bag
                       </span>
                     </div>
                     <div className="text-[10px] text-[#E8DFD5]/70 flex items-center gap-2">
-                      <span className="capitalize">{currentBean.roastLevel} Roast</span>
-                      <span>•</span>
-                      <span>Grind Setting: {savedDrinkSetting}</span>
+                      <span>Grind Setting: <strong className="text-white font-mono">{savedDrinkSetting}</strong></span>
                       {currentBean.roaster && (
                         <>
                           <span>•</span>

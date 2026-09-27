@@ -119,9 +119,24 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                   Live Tuning
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono truncate">
-                {currentBean.name} • {currentGrinder.name}
-              </p>
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[#7A6E65] font-mono truncate">
+                <span className="truncate">{currentBean.name}</span>
+                <span
+                  className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${
+                    currentBean.roastLevel === 'light'
+                      ? 'bg-amber-50 text-amber-800 border-amber-300'
+                      : currentBean.roastLevel === 'medium'
+                      ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                      : currentBean.roastLevel === 'medium-dark'
+                      ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
+                      : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
+                  }`}
+                >
+                  {currentBean.roastLevel}
+                </span>
+                <span>•</span>
+                <span className="truncate">{currentGrinder.name}</span>
+              </div>
             </div>
           </div>
           <button

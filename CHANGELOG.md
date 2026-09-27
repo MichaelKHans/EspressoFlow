@@ -4,6 +4,16 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.3] - 2026-09-27
+### Visual Polish & Roast Level Badges
+- **Farvekodede Bønneristnings-Badges på Coffee Bar:**
+  - **Identisk Æstetik med Beans & Gear:** Bønnevælgeren på Coffee Bar (i det mørke Mokka-kort) og Dial-In Studio har nu fået nøjagtig samme karakteristiske, farvekodede pille-badges som under `Beans & Gear`:
+    - `LIGHT`: Varm rav/gylden pille (`bg-amber-400/20 text-amber-300 border-amber-400/40`).
+    - `MEDIUM`: Varm terracotta/fersken pille (`bg-[#C26D52]/25 text-[#FFB6A0] border-[#C26D52]/45`).
+    - `MEDIUM-DARK`: Dyb kastanjebrun pille (`bg-[#A3684A]/30 text-[#E8C2B0] border-[#A3684A]/50`).
+    - `DARK`: Mørk ristet espresso-pille med hvid kontrastkant (`bg-black/60 text-[#FAF7F2] border-white/25`).
+  - **Hurtigt Visuelt Overblik:** Baristaen kan med det samme afkode bønnernes ristegrad direkte i hurtigvælgeren uden at skulle læse små grå hjælpetekster.
+
 ## [1.2.2] - 2026-09-27
 ### Interactive Dial-In Studio & Cross-Tab Synchronization
 - **Fuld Interaktiv Dial-In Wizard & Bønnekalibrering (Mulighed 3):**

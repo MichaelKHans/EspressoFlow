@@ -11,6 +11,10 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Farvekodede Bønneristnings-Badges på Coffee Bar (v1.2.3)
+- **Ristnings-Farver på Coffee Bar:** Bønnevælger-knapperne i det mørke Mokka-kort og Dial-In Studio har nu fået nøjagtig samme visuelle pille-badges for ristegrad (`LIGHT` rav, `MEDIUM` terracotta, `DARK` espresso) som i Beans & Gear.
+- **Hurtig Visuel Identifikation:** Gør det legende let at skelne mellem lyse og mørke bønner direkte på kaffedisken uden at skulle nærlæse teksten.
+
 ### 2026-09-27 -- Interaktiv Dial-In Studio & Bønnesynkronisering i Beans & Gear (v1.2.2)
 - **Fuldt Interaktiv Dial-In Wizard:** Gjort Dial-In vinduet 100% aktivt med taktile steppere (`−` / `+`) til Kværntrin, Tør Dosis (In), Mål-Udbytte (Out) og realtids-ratio.
 - **Lås på Bønnen:** Kalibreringen gemmes permanent på den aktive bønne (`currentBean`) og afspejles øjeblikkeligt i Scale Monitor.
