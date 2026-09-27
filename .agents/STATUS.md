@@ -11,6 +11,11 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Top-Forankret Auto-Scroll & Hovedoverskrift som Anker (v1.2.1)
+- **Overskrift som Fikspunkt ved Drikkevalg:** Når baristaen trykker på en kaffedrik (både på hurtigbåndet, i "All Drinks & Deck" modalen og i oversigtskataloget), scroller appen automatisk så kaffens overskrift lander øverst lige under den faste header.
+- **Perfekt Overblik på Små Skærme:** Undgår at toppen af kortet med kaffens navn forsvinder ovenud på mobiler. Baristaen kan med det samme se, at den rigtige kaffe er valgt.
+- **Visuel Anker-Indikator:** Tilføjet en diskret pulserende terracotta-badge (`● AKTIV KAFFE / SELECTED DRINK`) og fremhævet typografi, så man aldrig mister orienteringen.
+
 ### 2026-09-27 -- Intelligent Kaffebønne-Pairing & Centreret Drikkestyring (v1.2.0)
 - **Auto-Scroll ved Valg af Drik:** Ved klik på en kaffedrik i hurtigbåndet eller oversigten scroller appen nu glidende og centrerer automatisk over drikkekortet og Scale Cam knappen.
 - **Bønnevælger Flyttet til Drikken:** Den forstyrrende bønneknap i toppen af Barista Deck er fjernet. Man vælger nu sin bønne direkte ved den konkrete kaffedrik.

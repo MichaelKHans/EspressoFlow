@@ -4,6 +4,13 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.1] - 2026-09-27
+### Mobile UX & Visual Anchoring
+- **Top-Forankret Auto-Scroll & Hovedoverskrift som Anker:**
+  - **Præcis Forankring under Sticky Navigation:** Når en kaffedrik vælges (via hurtigbåndet, "All Drinks & Deck" modalen eller oversigtskataloget), scroller skærmen nu med dynamisk offset (`window.scrollTo({ top: targetY, behavior: 'smooth' })`), så kaffens overskrift lander direkte i toppen af viewporten lige under den faste menulinje.
+  - **Slut med Desorientering på Små Skærme:** På mindre mobilskærme blev overskriften tidligere skubbet af skærmen ved lodret centrering. Nu er kaffens navn (f.eks. **Cortado / Piccolo**, **Flat White**) altid det første, der møder baristaens øjne.
+  - **Tydelig Visuel Anker-Badge:** Tilføjet pulserende terracotta-indikator (`● AKTIV KAFFE / SELECTED DRINK`) og fremhævet typografi på kaffens overskrift, så baristaen aldrig er i tvivl om, hvilken profil der brygges efter.
+
 ## [1.2.0] - 2026-09-27
 ### Added & Improved
 - **Intelligent Kaffebønne-Pairing & Centreret Drikkestyring:**

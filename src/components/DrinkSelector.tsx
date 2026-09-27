@@ -68,11 +68,34 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
   const selectedDrinkCardRef = useRef<HTMLDivElement>(null);
 
+  const scrollToActiveDrinkHeader = () => {
+    if (!selectedDrinkCardRef.current) return;
+    try {
+      const headerElement = document.querySelector('header');
+      const headerHeight = headerElement ? headerElement.getBoundingClientRect().height : 94;
+      const cardRect = selectedDrinkCardRef.current.getBoundingClientRect();
+      const currentScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+      // Exact top anchor right below the sticky header bar with 10px breathing room
+      const targetY = Math.max(0, currentScrollY + cardRect.top - headerHeight - 10);
+
+      window.scrollTo({
+        top: targetY,
+        behavior: 'smooth',
+      });
+    } catch {
+      // Fallback
+      selectedDrinkCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const handleSelectDrinkWithScroll = (drink: DrinkRecipe) => {
     onSelectDrink(drink);
-    setTimeout(() => {
-      selectedDrinkCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 60);
+    // Double requestAnimationFrame / short timeout ensures React state has updated the DOM before measuring
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        scrollToActiveDrinkHeader();
+      }, 50);
+    });
   };
 
   const selectedDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0];
@@ -308,12 +331,19 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
       {/* 3. Selected Drink Master Card (Mobile-First Architectural Layout) */}
       <div
         ref={selectedDrinkCardRef}
-        className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#E8DFD5] p-4 sm:p-6 shadow-xs space-y-4 sm:space-y-6"
+        id="active-drink-anchor"
+        className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#E8DFD5] p-4 sm:p-6 shadow-xs space-y-4 sm:space-y-6 scroll-mt-28"
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-6 pb-4 sm:pb-6 border-b border-[#E8DFD5]">
           {/* Drink Name & Header */}
-          <div className="space-y-1 max-w-xl">
+          <div className="space-y-1.5 max-w-xl">
+            {/* Visual Anchor Bar - Extra clear on small screens so barista never loses orientation */}
             <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#C26D52]/10 text-[#C26D52] border border-[#C26D52]/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C26D52] animate-pulse" />
+                <span>Aktiv Kaffe / Selected Drink</span>
+              </span>
+
               <span
                 className={`text-[9px] sm:text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full border ${
                   selectedDrink.category === 'milk'
@@ -342,8 +372,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               )}
             </div>
 
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h3 className="text-xl sm:text-2xl font-bold font-serif text-[#2C2018]">
+            <div className="flex items-center gap-2.5 flex-wrap pt-0.5">
+              <h3 className="text-2xl sm:text-3xl font-bold font-serif text-[#2C2018] tracking-tight">
                 {selectedDrink.name}
               </h3>
               <button
@@ -876,7 +906,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                 return (
                   <div
                     key={drink.id}
-                    onClick={() => onSelectDrink(drink)}
+                    onClick={() => handleSelectDrinkWithScroll(drink)}
                     className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition cursor-pointer flex flex-col justify-between ${
                       isSelected
                         ? 'border-[#C26D52] bg-[#FFFDF9] ring-2 ring-[#C26D52]/20 shadow-xs'
@@ -984,7 +1014,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        onSelectDrink(drink);
+                        handleSelectDrinkWithScroll(drink);
                         setIsCustomizeModalOpen(false);
                       }}
                       className="flex items-center gap-2.5 flex-1 min-w-0 text-left group cursor-pointer"
