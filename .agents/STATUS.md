@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Interaktiv Dial-In Studio & Bønnesynkronisering i Beans & Gear (v1.2.2)
+- **Fuldt Interaktiv Dial-In Wizard:** Gjort Dial-In vinduet 100% aktivt med taktile steppere (`−` / `+`) til Kværntrin, Tør Dosis (In), Mål-Udbytte (Out) og realtids-ratio.
+- **Lås på Bønnen:** Kalibreringen gemmes permanent på den aktive bønne (`currentBean`) og afspejles øjeblikkeligt i Scale Monitor.
+- **Hurtig-Dial i Mokka-Kortet:** Tilføjet en kompakt bønnekalibrerings-sektion direkte i det mørke mokkakort på Barista Deck med lynhurtig kværnjustering og genvej til studiet.
+- **Komplet Synk med Beans & Gear:** Alle justeringer opdaterer øjeblikkeligt `Beans & Gear` (`Bean Vault`), så bønnekortet og udstyrsfanen altid er 1:1 synkroniseret.
+
 ### 2026-09-27 -- Top-Forankret Auto-Scroll & Hovedoverskrift som Anker (v1.2.1)
 - **Overskrift som Fikspunkt ved Drikkevalg:** Når baristaen trykker på en kaffedrik (både på hurtigbåndet, i "All Drinks & Deck" modalen og i oversigtskataloget), scroller appen automatisk så kaffens overskrift lander øverst lige under den faste header.
 - **Perfekt Overblik på Små Skærme:** Undgår at toppen af kortet med kaffens navn forsvinder ovenud på mobiler. Baristaen kan med det samme se, at den rigtige kaffe er valgt.

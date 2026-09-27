@@ -43,6 +43,7 @@ interface DrinkSelectorProps {
   onGrindSettingChange?: (setting: string) => void;
   onSwitchBean?: (beanId: string) => void;
   onScanBean?: () => void;
+  onUpdateBeanDialIn?: (patch: Partial<CoffeeBeanProfile>) => void;
 }
 
 export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
@@ -58,6 +59,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onGrindSettingChange,
   onSwitchBean,
   onScanBean,
+  onUpdateBeanDialIn,
 }) => {
   const [activeDeckIds, setActiveDeckIds] = useState<string[]>(() => loadActiveBarDrinkIds());
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState<boolean>(false);
@@ -795,6 +797,95 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   </span>
                 </div>
               )}
+            </div>
+
+            {/* Live Bean Dial-In Tuning Row directly on the Mocha Card */}
+            <div className="p-3 sm:p-3.5 rounded-xl bg-black/40 border border-white/15 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-[#C26D52]">
+                  <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>Bønne Kalibrering / Live Dial-In</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onOpenDialInWizard(selectedDrink)}
+                  className="text-[10px] font-mono text-[#FAF7F2] hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition font-semibold"
+                  title="Åbn fuld Dial-In Studio med finjustering"
+                >
+                  <span>Åbn Studio</span>
+                  <ChevronRight className="w-3 h-3 text-[#C26D52]" />
+                </button>
+              </div>
+
+              {/* 3 Metrics: Grind Quick Adjust, Dose, and Yield */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                {/* 1. Grind Quick Notcher */}
+                <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
+                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Kværn ({currentGrinder.name.split(' ')[0]})</div>
+                  <div className="flex items-center justify-center gap-1 my-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const parsed = parseFloat(currentSettingInput);
+                        if (!isNaN(parsed)) {
+                          const next = Math.max(0.1, parsed - 0.5);
+                          const str = next % 1 === 0 ? next.toString() : next.toFixed(1);
+                          setCurrentSettingInput(str);
+                          if (onGrindSettingChange) onGrindSettingChange(str);
+                          if (onUpdateBeanDialIn) onUpdateBeanDialIn({ grindSetting: str });
+                          saveDrinkGrindSetting(`${currentBean.id}_${selectedDrink.id}`, str);
+                        }
+                      }}
+                      className="w-5 h-5 rounded bg-white/10 hover:bg-white/25 text-white flex items-center justify-center font-bold text-xs transition active:scale-95"
+                      title="-0.5"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="font-bold text-[#FFFDF9] text-xs px-1">
+                      {currentSettingInput}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const parsed = parseFloat(currentSettingInput);
+                        if (!isNaN(parsed)) {
+                          const next = Math.max(0.1, parsed + 0.5);
+                          const str = next % 1 === 0 ? next.toString() : next.toFixed(1);
+                          setCurrentSettingInput(str);
+                          if (onGrindSettingChange) onGrindSettingChange(str);
+                          if (onUpdateBeanDialIn) onUpdateBeanDialIn({ grindSetting: str });
+                          saveDrinkGrindSetting(`${currentBean.id}_${selectedDrink.id}`, str);
+                        }
+                      }}
+                      className="w-5 h-5 rounded bg-white/10 hover:bg-white/25 text-white flex items-center justify-center font-bold text-xs transition active:scale-95"
+                      title="+0.5"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="text-[8px] text-[#E8DFD5]/60">{grinderSpec.unitName}</div>
+                </div>
+
+                {/* 2. Dose */}
+                <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
+                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Dosis (In)</div>
+                  <div className="font-bold text-[#FFFDF9] text-xs my-0.5">
+                    {(currentBean.doseGrams || selectedDrink.defaultDoseGrams).toFixed(1)}g
+                  </div>
+                  <div className="text-[8px] text-[#E8DFD5]/60">Kurvmængde</div>
+                </div>
+
+                {/* 3. Target Yield & Ratio */}
+                <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
+                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Mål (Out)</div>
+                  <div className="font-bold text-[#C26D52] text-xs my-0.5">
+                    {(selectedDrink.targetYieldGrams || currentBean.targetYieldGrams).toFixed(1)}g
+                  </div>
+                  <div className="text-[8px] text-[#A4B39D] font-semibold">
+                    1:{selectedDrink.targetRatio.toFixed(1)}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Optimal Roast Blueprint for this specific beverage */}

@@ -4,6 +4,18 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.2] - 2026-09-27
+### Interactive Dial-In Studio & Cross-Tab Synchronization
+- **Fuld Interaktiv Dial-In Wizard & Bønnekalibrering (Mulighed 3):**
+  - **Taktile Steppere & Direkte Input:** Dial-In vinduet er transformeret fra en statisk vejledning til et fuldt interaktivt barista-værktøj. Baristaen kan nu justere:
+    - **Kværntrin (Burr Gap):** Finjuster med `−` / `+` knapper (eller tastatur) direkte tilknyttet den aktive kværn.
+    - **Tør Dosis (In):** Juster med `−` / `+` (0.5g trin).
+    - **Mål-Udbytte (Out):** Juster med `−` / `+` (1.0g trin).
+    - **Realtids-Ratio:** Beregner øjeblikkeligt forholdet ($Yield / Dose$, f.eks. 1:2.0) med profil-mærkning (*Ristretto*, *Standard Normale*, *Lungo*).
+  - **Lås Kalibrering på Bønnen:** Ved tryk på *"Lås Kalibrering på Bønnen & Start Scale Cam"* gemmes tallene permanent direkte på bønnen (`currentBean`), og Scale Cam måler mod de nye specifikke mål.
+  - **Live Bønne-Kalibrering i Mokka-Kortet:** På det mørke mokka-kort på Barista Deck kan baristaen nu justere kværntrin og se dosis og udbytte direkte uden at åbne en modal, samt trykke *"Åbn Studio"* for fuld finjustering.
+  - **100% Synkronisering med "Beans & Gear":** Ændringer foretaget i Dial-In Studio eller på Barista Deck slår øjeblikkeligt igennem i `Beans & Gear` (`Bean Vault`), hvor bønnekortet og hurtig-tuneren altid viser de senest kalibrerede værdier.
+
 ## [1.2.1] - 2026-09-27
 ### Mobile UX & Visual Anchoring
 - **Top-Forankret Auto-Scroll & Hovedoverskrift som Anker:**

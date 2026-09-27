@@ -35,6 +35,7 @@ import {
   loadGrinders,
   saveGrinders,
   loadDrinkGrindSettings,
+  saveDrinkGrindSetting,
   loadOnboardingComplete,
   saveOnboardingComplete,
   loadMachineName,
@@ -170,7 +171,35 @@ export function App() {
     setIsDialInWizardOpen(true);
   };
 
-  const handleProceedFromWizard = () => {
+  const handleSaveAndProceedFromWizard = (dialInData: {
+    doseGrams: number;
+    targetYieldGrams: number;
+    grindSetting: string;
+  }) => {
+    // 1. Update active brewing state
+    setDoseGrams(dialInData.doseGrams);
+    setTargetYieldGrams(dialInData.targetYieldGrams);
+    setGrindSetting(dialInData.grindSetting);
+
+    // 2. Persist directly onto active bean in vault
+    const updated = beans.map((b) =>
+      b.id === activeBeanId
+        ? {
+            ...b,
+            doseGrams: dialInData.doseGrams,
+            targetYieldGrams: dialInData.targetYieldGrams,
+            grindSetting: dialInData.grindSetting,
+          }
+        : b
+    );
+    setBeans(updated);
+    saveBeans(updated);
+
+    // 3. Save drink-specific grind setting mapping
+    const calibrationKey = `${activeBeanId}_${activeDrinkId}`;
+    saveDrinkGrindSetting(calibrationKey, dialInData.grindSetting);
+
+    // 4. Close wizard and launch scale monitor
     setIsDialInWizardOpen(false);
     setActiveTab('monitor');
   };
@@ -587,6 +616,7 @@ export function App() {
             onGrindSettingChange={setGrindSetting}
             onSwitchBean={handleSelectBean}
             onScanBean={() => setIsBeanScannerOpen(true)}
+            onUpdateBeanDialIn={handleUpdateBeanField}
           />
         )}
 
@@ -1442,7 +1472,11 @@ export function App() {
         drink={DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0]}
         currentBean={currentBean}
         currentGrinder={currentGrinder}
-        onProceedToScaleCam={handleProceedFromWizard}
+        onProceedToScaleCam={() => {
+          setIsDialInWizardOpen(false);
+          setActiveTab('monitor');
+        }}
+        onSaveDialIn={handleSaveAndProceedFromWizard}
       />
 
       {/* First-Time Onboarding Wizard */}
