@@ -11,6 +11,20 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Curator Hub & Periodisk Vedligeholdelses-Huskeliste i Admin Portal (v1.2.14)
+- **Curator Hub & Periodic Database Audit Faneblad (`/admin`):**
+  - Dedikeret 5. faneblad i Admin Portalen til systematisk administration af kaffebasen, ekspert-scores og kaffehøst.
+  - Dynamisk tidsmåling: Viser dage siden sidste fulde audit samt automatisk advarsel når 30-dages revisionscyklus forfalder.
+  - Knap til at logge gennemført revision med 1 klik (`Mark Complete Today`).
+- **Interaktiv Persistent Huskeliste (gemmes i browseren):**
+  - **Coffee Review Månedlig Cupping:** Gennemgå månedens blindtestede espresso-rapporter og tilføj nye 90+ point bønner.
+  - **Crowdsourced Bønne-Kø i Supabase:** Gennemgå nye bønner indsendt af brugere med direkte genvej til Supabase Vault.
+  - **Cup of Excellence & WBC Vindere:** Kvartalsvis kontrol af vinderlotter fra verdensmesterskaber og internationale auktioner.
+  - **Sæson- og Høstskift på Specialty Kaffe:** Halvårlig gennemgang af afrikanske og latinamerikanske høstårgange og arkivering af udgåede micro-lots.
+  - **Supermarkeds EAN-Audit:** Halvårlig kontrol af de mest scannede supermarkedsbønner (Lavazza, Illy, Peter Larsen, BKI, Starbucks) for nye stregkoder.
+  - **Apple Developer & RevenueCat Årshjul:** Årlig fornyelse af iOS TestFlight certifikater og verifikation af $4.99 købs-webhooks.
+- **Curator Fast Launchpad:** Direkte genveje til Coffee Review, Alliance For Coffee Excellence, Open Food Facts og Supabase Console.
+
 ### 2026-09-27 -- Supabase Cloud Bønnehub, Expert Score Felt & Nul-Latens Synkronisering (v1.2.13)
 - **Supabase Cloud Central Bean Vault:** Live forbundet til Frankfurt (`eu-central-1`) Supabase-databasen (`vdxfmvzdmcqfixbegumb.supabase.co`).
 - **Nul-Latens Garanti (< 0.1ms Cache):** Scanneren og appen slår op i lokal hukommelses-cache først og synkroniserer asynkront i baggrunden uden at blokere brugerfladen eller kameramotorerne.

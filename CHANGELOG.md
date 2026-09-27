@@ -4,6 +4,23 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.14] - 2026-09-27
+### Curator Hub & Periodic Maintenance Checklist in Admin Portal
+- **Curator Hub & Periodic Database Audit Tab (`/admin`):**
+  - Added dedicated 5th tab in the Admin Portal for database curators and specialty coffee maintenance.
+  - Automated audit schedule tracking with dynamic status badge: tracks days since last audit and alerts when the 30-day review cycle is due.
+  - One-click `Mark Complete Today` button to log completed review sessions.
+- **Interactive Persistent Curator Checklist:**
+  - **Coffee Review Monthly Cupping:** Monthly tracking of new 90+ point blind-tasted espresso lots.
+  - **Crowdsourced Bean Queue in Supabase:** Review pending user-scanned beans with direct shortcut to Cloud Vault.
+  - **Cup of Excellence & WBC Winning Lots:** Quarterly tracking of world competition lots and auction releases.
+  - **Specialty Crop Harvest & Seasonality Refresh:** Bi-annual review of harvest arrivals and archiving expired micro-lots.
+  - **Supermarket EAN-13 Packaging Audit:** Bi-annual audit of high-volume commercial blends (Lavazza, Illy, Peter Larsen, BKI, Starbucks) for barcode/packaging updates.
+  - **Apple Developer & RevenueCat Health Check:** Annual verification of iOS TestFlight distribution certificates & $4.99 unlock webhooks.
+  - Checkbox state dynamically saved to `localStorage` with real-time completion progress bar.
+- **Curator Fast Launchpad:**
+  - Direct 1-click external navigation to Coffee Review, Alliance For Coffee Excellence, Open Food Facts, and Supabase Frankfurt Console.
+
 ## [1.2.13] - 2026-09-27
 ### Supabase Central Bean Vault, Expert Score Badges & Zero-Latency Sync
 - **Supabase Cloud Infrastructure & Central Bean Vault:**

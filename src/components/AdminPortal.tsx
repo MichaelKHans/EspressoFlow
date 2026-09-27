@@ -22,6 +22,9 @@ import {
   RefreshCw,
   Globe,
   CheckCircle2,
+  ClipboardCheck,
+  Calendar,
+  Award,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, UserAccessState } from '../types/espresso';
 import {
@@ -35,6 +38,69 @@ interface AdminPortalProps {
   beans: CoffeeBeanProfile[];
   accessState: UserAccessState;
 }
+
+interface CuratorTask {
+  id: string;
+  title: string;
+  cadence: 'Monthly' | 'Quarterly' | 'Bi-Annual' | 'Annual';
+  category: 'Expert Ratings' | 'Crowdsourced Queue' | 'Competitions' | 'Seasonality' | 'Compliance';
+  description: string;
+  actionUrl?: string;
+  actionLabel?: string;
+}
+
+const CURATOR_TASKS: CuratorTask[] = [
+  {
+    id: 'coffee_review',
+    title: 'Coffee Review Monthly Espresso Cupping',
+    cadence: 'Monthly',
+    category: 'Expert Ratings',
+    description: 'Review monthly blind-tasted espresso cupping reports. Add new 90+ point specialty lots with official expert_score and cupping notes.',
+    actionUrl: 'https://www.coffeereview.com/all-reviews/?roast_profile=espresso',
+    actionLabel: 'Open Coffee Review',
+  },
+  {
+    id: 'supabase_queue',
+    title: 'Review Crowdsourced Bean Queue in Supabase',
+    cadence: 'Monthly',
+    category: 'Crowdsourced Queue',
+    description: 'Inspect pending user-scanned beans in the Supabase vault. Validate roaster name, origin, and roast profile to mark is_verified = true.',
+  },
+  {
+    id: 'coe_wbc',
+    title: 'Cup of Excellence & WBC Winning Lots',
+    cadence: 'Quarterly',
+    category: 'Competitions',
+    description: 'Inspect World Barista Championship & Cup of Excellence annual auction releases (Panama, Colombia, Ethiopia Geishas).',
+    actionUrl: 'https://allianceforcoffeeexcellence.org/cup-of-excellence/',
+    actionLabel: 'Alliance For Coffee Excellence',
+  },
+  {
+    id: 'seasonal_crops',
+    title: 'Specialty Crop Harvest & Seasonality Refresh',
+    cadence: 'Bi-Annual',
+    category: 'Seasonality',
+    description: 'Archive out-of-season micro-lots and update harvest arrival years (e.g. Ethiopian winter harvest vs Latin American autumn arrivals).',
+  },
+  {
+    id: 'supermarket_ean',
+    title: 'Supermarket EAN-13 Packaging & Barcode Audit',
+    cadence: 'Bi-Annual',
+    category: 'Compliance',
+    description: 'Verify if commercial roasters (Lavazza, Illy, Peter Larsen, BKI, Starbucks) updated barcodes, packaging designs or weights.',
+    actionUrl: 'https://world.openfoodfacts.org',
+    actionLabel: 'Open Food Facts Database',
+  },
+  {
+    id: 'apple_cert_health',
+    title: 'Apple Developer Distribution Certificate & RevenueCat Audit',
+    cadence: 'Annual',
+    category: 'Compliance',
+    description: 'Ensure iOS TestFlight distribution certs (< 12 months) are renewed & verify RevenueCat $4.99 lifetime transaction webhooks.',
+    actionUrl: 'https://appstoreconnect.apple.com',
+    actionLabel: 'App Store Connect',
+  },
+];
 
 const DEFAULT_ADMIN_PIN = '9246';
 const ALTERNATIVE_ADMIN_PASS = 'espresso2026';
@@ -52,7 +118,43 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [pinInput, setPinInput] = useState<string>('');
   const [pinError, setPinError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'security' | 'supabase'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'curator' | 'security' | 'supabase'>('metrics');
+
+  // Curator Hub & Periodic Audit State
+  const [lastAuditDate, setLastAuditDate] = useState<string>(() => {
+    return localStorage.getItem('espresso_last_curator_audit') || '2026-09-27';
+  });
+  const [checklistCompleted, setChecklistCompleted] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('espresso_curator_checklist') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  const toggleChecklistItem = (id: string) => {
+    setChecklistCompleted((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      localStorage.setItem('espresso_curator_checklist', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const markAuditCompleteToday = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setLastAuditDate(today);
+    localStorage.setItem('espresso_last_curator_audit', today);
+  };
+
+  const getDaysSinceAudit = (dateStr: string): number => {
+    const past = new Date(dateStr);
+    if (isNaN(past.getTime())) return 0;
+    const diff = Date.now() - past.getTime();
+    return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+  };
+
+  const daysSinceAudit = getDaysSinceAudit(lastAuditDate);
+  const auditDueInDays = Math.max(0, 30 - daysSinceAudit);
 
   // Master Passcode State (persists in localStorage)
   const [masterPin, setMasterPin] = useState<string>(() => {
@@ -427,6 +529,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             type="button"
+            onClick={() => setActiveTab('curator')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition shrink-0 ${
+              activeTab === 'curator'
+                ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                : 'bg-white hover:bg-[#FAF7F2] text-[#7A6E65] border border-[#E8DFD5]'
+            }`}
+          >
+            <ClipboardCheck className="w-3.5 h-3.5 text-[#C26D52]" />
+            <span>Curator Hub & Checklist</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('security')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition shrink-0 ${
               activeTab === 'security'
@@ -666,7 +781,246 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         )}
 
-        {/* TAB 3: Security & Master Passcode */}
+        {/* TAB 3: Curator Hub & Maintenance Checklist */}
+        {activeTab === 'curator' && (
+          <div className="space-y-6 animate-fadeIn font-mono">
+            {/* Header & Status Card */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E8DFD5] pb-3">
+                <div className="flex items-center gap-2">
+                  <ClipboardCheck className="w-4 h-4 text-[#C26D52]" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                    Curator Hub & Periodic Database Audit
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[10px] px-2.5 py-1 rounded-full font-bold flex items-center gap-1 ${
+                      daysSinceAudit <= 30
+                        ? 'bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}
+                  >
+                    <Calendar className="w-3 h-3" />
+                    <span>
+                      {daysSinceAudit <= 30
+                        ? `Audit Up to Date (Next due in ${auditDueInDays} days)`
+                        : `Audit Due (${daysSinceAudit} days since last audit)`}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={markAuditCompleteToday}
+                    className="px-3 py-1 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-bold flex items-center gap-1 transition"
+                  >
+                    <Check className="w-3 h-3 text-[#C26D52]" />
+                    <span>Mark Complete Today</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1">
+                  <span className="text-[10px] text-[#7A6E65] uppercase font-bold block">
+                    Last Full Audit:
+                  </span>
+                  <span className="font-bold text-[#2C2018]">{lastAuditDate}</span>
+                  <span className="text-[10px] text-[#7A6E65] block">
+                    {daysSinceAudit === 0 ? 'Today' : `${daysSinceAudit} days ago`}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1">
+                  <span className="text-[10px] text-[#7A6E65] uppercase font-bold block">
+                    Checklist Progress:
+                  </span>
+                  <span className="font-bold text-[#2C2018]">
+                    {Object.values(checklistCompleted).filter(Boolean).length} / {CURATOR_TASKS.length} Completed
+                  </span>
+                  <div className="w-full bg-[#E8DFD5] rounded-full h-1.5 mt-1 overflow-hidden">
+                    <div
+                      className="bg-[#C26D52] h-full transition-all duration-300"
+                      style={{
+                        width: `${Math.round(
+                          (Object.values(checklistCompleted).filter(Boolean).length / CURATOR_TASKS.length) * 100
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1">
+                  <span className="text-[10px] text-[#7A6E65] uppercase font-bold block">
+                    Recommended Cadence:
+                  </span>
+                  <span className="font-bold text-[#2C2018]">Monthly Review</span>
+                  <span className="text-[10px] text-[#72806B] block">
+                    Matches Coffee Review release cycles
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Checklist Tasks */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between text-xs font-bold uppercase text-[#2C2018]">
+                <span>Periodic Curator Checklist</span>
+                <span className="text-[10px] text-[#7A6E65]">Click checkboxes to track status</span>
+              </div>
+
+              <div className="space-y-2.5">
+                {CURATOR_TASKS.map((task) => {
+                  const isChecked = !!checklistCompleted[task.id];
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => toggleChecklistItem(task.id)}
+                      className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        isChecked
+                          ? 'bg-[#72806B]/5 border-[#72806B]/30'
+                          : 'bg-[#FAF7F2] border-[#E8DFD5] hover:border-[#C26D52]/50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition ${
+                            isChecked
+                              ? 'bg-[#72806B] border-[#72806B] text-white'
+                              : 'border-[#7A6E65]/40 bg-white'
+                          }`}
+                        >
+                          {isChecked && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span
+                              className={`text-xs font-bold ${
+                                isChecked ? 'line-through text-[#7A6E65]' : 'text-[#2C2018]'
+                              }`}
+                            >
+                              {task.title}
+                            </span>
+                            <span
+                              className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider ${
+                                task.cadence === 'Monthly'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : task.cadence === 'Quarterly'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : task.cadence === 'Bi-Annual'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-purple-100 text-purple-800'
+                              }`}
+                            >
+                              {task.cadence}
+                            </span>
+                            <span className="text-[9px] text-[#7A6E65] font-mono flex items-center gap-1">
+                              {task.category === 'Competitions' && <Award className="w-3 h-3 text-amber-600" />}
+                              [{task.category}]
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
+                            {task.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Links */}
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center" onClick={(e) => e.stopPropagation()}>
+                        {task.actionUrl && (
+                          <a
+                            href={task.actionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 rounded-lg border border-[#E8DFD5] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-[11px] font-semibold flex items-center gap-1 transition"
+                          >
+                            <span>{task.actionLabel || 'Visit Source'}</span>
+                            <ExternalLink className="w-3 h-3 text-[#C26D52]" />
+                          </a>
+                        )}
+                        {task.id === 'supabase_queue' && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('supabase')}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-[11px] font-semibold flex items-center gap-1 transition"
+                          >
+                            <span>Open Supabase Vault</span>
+                            <Database className="w-3 h-3 text-[#C26D52]" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Curator Fast Launchpad */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-3 font-sans">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#2C2018] font-mono">
+                <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+                <span>Curator Fast Launchpad (Direct Authoritative Repositories)</span>
+              </div>
+              <p className="text-xs text-[#7A6E65] leading-relaxed">
+                Use these verified industry sources when updating <code>expert_score</code>, registering competition winning micro-lots, and cross-checking barcodes:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1 text-xs font-mono">
+                <a
+                  href="https://www.coffeereview.com/all-reviews/?roast_profile=espresso"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] transition flex items-center justify-between group"
+                >
+                  <div>
+                    <strong className="block text-[#2C2018]">Coffee Review</strong>
+                    <span className="text-[10px] text-[#7A6E65]">Espresso 100-pt Blind Scores</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-[#7A6E65] group-hover:text-[#C26D52] transition" />
+                </a>
+
+                <a
+                  href="https://allianceforcoffeeexcellence.org/cup-of-excellence/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] transition flex items-center justify-between group"
+                >
+                  <div>
+                    <strong className="block text-[#2C2018]">Cup of Excellence</strong>
+                    <span className="text-[10px] text-[#7A6E65]">World Auction Winning Lots</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-[#7A6E65] group-hover:text-[#C26D52] transition" />
+                </a>
+
+                <a
+                  href="https://world.openfoodfacts.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] transition flex items-center justify-between group"
+                >
+                  <div>
+                    <strong className="block text-[#2C2018]">Open Food Facts</strong>
+                    <span className="text-[10px] text-[#7A6E65]">Global EAN Barcode Vault</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-[#7A6E65] group-hover:text-[#C26D52] transition" />
+                </a>
+
+                <a
+                  href="https://vdxfmvzdmcqfixbegumb.supabase.co"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] transition flex items-center justify-between group"
+                >
+                  <div>
+                    <strong className="block text-[#2C2018]">Supabase Console</strong>
+                    <span className="text-[10px] text-[#7A6E65]">Frankfurt eu-central-1 DB</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-[#7A6E65] group-hover:text-[#C26D52] transition" />
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: Security & Master Passcode */}
         {activeTab === 'security' && (
           <div className="space-y-6 animate-fadeIn font-mono">
             <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
