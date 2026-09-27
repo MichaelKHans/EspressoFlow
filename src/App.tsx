@@ -594,28 +594,28 @@ export function App() {
           <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#E8DFD5] text-[11px] sm:text-xs font-mono shadow-inner">
             <button
               onClick={() => setActiveTab('drinks')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${
+              className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
                 activeTab === 'drinks'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
               }`}
             >
               <Coffee className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'drinks' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
-              <span className="truncate">
+              <span className="whitespace-nowrap font-semibold text-[10.5px] sm:text-xs">
                 {t('nav.coffee_bar')}
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('monitor')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${
+              className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
                 activeTab === 'monitor'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
               }`}
             >
               <Camera className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'monitor' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
-              <span className="truncate">
+              <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
                 <span className="sm:hidden">{t('nav.scale')}</span>
                 <span className="hidden sm:inline">{t('nav.scale_cam')}</span>
               </span>
@@ -623,40 +623,29 @@ export function App() {
 
             <button
               onClick={() => setActiveTab('logbook')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${
+              className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
                 activeTab === 'logbook'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
               }`}
             >
               <BookOpen className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'logbook' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
-              <span className="truncate">
+              <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
                 <span className="sm:hidden">{t('nav.logs')}</span>
                 <span className="hidden sm:inline">{t('nav.logbook')}</span>
               </span>
-              {shots.length > 0 && (
-                <span
-                  className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold shrink-0 ${
-                    activeTab === 'logbook'
-                      ? 'bg-[#C26D52] text-white'
-                      : 'bg-[#E8DFD5] text-[#7A6E65]'
-                  }`}
-                >
-                  {shots.length}
-                </span>
-              )}
             </button>
 
             <button
               onClick={() => setActiveTab('equipment')}
-              className={`py-1.5 sm:py-2 px-1 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-1 sm:gap-1.5 transition-all ${
+              className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
                 activeTab === 'equipment'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
               }`}
             >
               <Sliders className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'equipment' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
-              <span className="truncate">
+              <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
                 <span className="sm:hidden">{t('nav.gear')}</span>
                 <span className="hidden sm:inline">{t('nav.beans_and_gear')}</span>
               </span>
@@ -696,12 +685,12 @@ export function App() {
         {activeTab !== 'drinks' && (
           <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-2.5 sm:p-3 text-xs font-mono shadow-xs space-y-2">
             {/* Top row: Bean Selector + Days off roast */}
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
                 <select
                   value={activeBeanId}
                   onChange={(e) => handleSelectBean(e.target.value)}
-                  className="bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg px-2 py-1 font-bold text-[#2C2018] text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52] truncate max-w-[170px] sm:max-w-xs"
+                  className="bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg px-2 py-1 font-bold text-[#2C2018] text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52] truncate max-w-[110px] xs:max-w-[145px] sm:max-w-xs shrink-0"
                 >
                   {beans.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -710,7 +699,7 @@ export function App() {
                   ))}
                 </select>
                 <span
-                  className={`text-[9px] sm:text-[10px] uppercase font-bold px-1.5 sm:px-2 py-0.5 rounded-md border shrink-0 ${
+                  className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
                     roastLevel === 'light'
                       ? 'bg-amber-50 text-amber-800 border-amber-300'
                       : roastLevel === 'medium'
@@ -724,13 +713,13 @@ export function App() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 text-[11px] ml-auto">
-                <span className="text-[#7A6E65]">
+              <div className="flex items-center gap-1 shrink-0 text-[10px] sm:text-[11px] text-[#7A6E65]">
+                <span>
                   {t('active_bean.days_off_roast', { days: daysOffRoast })}
                 </span>
                 {isTooFresh && (
-                  <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded font-bold">
-                    <Flame className="w-3 h-3" /> CO₂
+                  <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded font-bold">
+                    <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> CO₂
                   </span>
                 )}
               </div>
@@ -956,8 +945,14 @@ export function App() {
                       onClick={() => handleSelectBean(bean.id)}
                       className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
                         isActive
-                          ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52] shadow-xs'
-                          : 'border-[#E8DFD5] bg-white hover:border-[#C26D52]/40'
+                          ? 'border-[#C26D52] bg-white ring-2 ring-[#C26D52] shadow-md'
+                          : bean.roastLevel === 'light'
+                          ? 'border-amber-200 bg-amber-50/25 hover:border-amber-400 hover:bg-amber-50/45'
+                          : bean.roastLevel === 'medium'
+                          ? 'border-[#C26D52]/25 bg-[#C26D52]/5 hover:border-[#C26D52]/50 hover:bg-[#C26D52]/10'
+                          : bean.roastLevel === 'medium-dark'
+                          ? 'border-[#8C6046]/30 bg-[#8C6046]/5 hover:border-[#8C6046]/50 hover:bg-[#8C6046]/10'
+                          : 'border-[#2C2018]/25 bg-[#2C2018]/5 hover:border-[#2C2018]/50 hover:bg-[#2C2018]/10'
                       }`}
                     >
                       <div className="space-y-1.5">
@@ -1215,86 +1210,95 @@ export function App() {
                     return (
                       <div
                         key={`fav-${bean.id}`}
-                        className={`px-3 py-2 rounded-xl border text-xs font-mono transition flex items-center justify-between gap-2.5 ${
+                        onClick={() => handleSelectBean(bean.id)}
+                        className={`p-2.5 rounded-xl border text-xs font-mono transition cursor-pointer flex flex-col gap-1.5 ${
                           isActive
-                            ? 'bg-[#FAF7F2] border-[#C26D52]/40 ring-1 ring-[#C26D52]/20'
+                            ? 'bg-[#FAF7F2] border-[#C26D52] ring-1 ring-[#C26D52]/30 shadow-2xs'
                             : 'bg-white border-[#E8DFD5] hover:border-[#C26D52]/30'
                         }`}
                       >
-                        {/* Left: Interactive Star Rating (1-5 stars) */}
-                        <div className="flex items-center gap-0.5 shrink-0">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const newRating = rating === star ? 0 : star;
-                                const updated = beans.map((b) =>
-                                  b.id === bean.id
-                                    ? { ...b, rating: newRating, isFavorite: newRating >= 4 }
-                                    : b
-                                );
-                                setBeans(updated);
-                                saveBeans(updated);
-                              }}
-                              className="p-0.5 hover:scale-125 transition"
-                              title={`${star} stars`}
+                        {/* Top Line: Roast Badge + Full Bean Name + Action Button */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <span
+                              className={`text-[8px] uppercase font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${
+                                bean.roastLevel === 'light'
+                                  ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                  : bean.roastLevel === 'medium'
+                                  ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                                  : bean.roastLevel === 'medium-dark'
+                                  ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
+                                  : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
+                              }`}
                             >
-                              <Star
-                                className={`w-3.5 h-3.5 transition ${
-                                  star <= rating
-                                    ? 'text-amber-500 fill-amber-500 drop-shadow-xs'
-                                    : 'text-[#E8DFD5] hover:text-amber-300'
-                                }`}
-                              />
-                            </button>
-                          ))}
+                              {bean.roastLevel}
+                            </span>
+                            <span className="font-bold text-[#2C2018] text-xs truncate">
+                              {bean.name}
+                            </span>
+                          </div>
+
+                          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                            {isActive ? (
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 inline-flex items-center gap-1">
+                                <Check className="w-2.5 h-2.5" /> Active
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSelectBean(bean.id)}
+                                className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] transition"
+                              >
+                                Select
+                              </button>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Middle: Roast badge & Bean Name */}
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <span
-                            className={`text-[8px] uppercase font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${
-                              bean.roastLevel === 'light'
-                                ? 'bg-amber-50 text-amber-800 border-amber-300'
-                                : bean.roastLevel === 'medium'
-                                ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
-                                : bean.roastLevel === 'medium-dark'
-                                ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
-                                : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
-                            }`}
-                          >
-                            {bean.roastLevel}
-                          </span>
-                          <span className="font-bold text-[#2C2018] truncate text-[11px]">
-                            {bean.name}
-                          </span>
-                          {bean.roaster && (
-                            <span className="text-[10px] text-[#7A6E65] truncate hidden sm:inline">
-                              • {bean.roaster}
-                            </span>
-                          )}
-                        </div>
+                        {/* Bottom Line: 5 Interactive Stars + Roaster & Grind Setting */}
+                        <div className="flex items-center justify-between pt-1 border-t border-[#E8DFD5]/50 text-[10px]">
+                          {/* Left: Star Rating */}
+                          <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const newRating = rating === star ? 0 : star;
+                                  const updated = beans.map((b) =>
+                                    b.id === bean.id
+                                      ? { ...b, rating: newRating, isFavorite: newRating >= 4 }
+                                      : b
+                                  );
+                                  setBeans(updated);
+                                  saveBeans(updated);
+                                }}
+                                className="p-0.5 hover:scale-125 transition"
+                                title={`${star} stars`}
+                              >
+                                <Star
+                                  className={`w-3.5 h-3.5 transition ${
+                                    star <= rating
+                                      ? 'text-amber-500 fill-amber-500 drop-shadow-xs'
+                                      : 'text-[#E8DFD5] hover:text-amber-300'
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
 
-                        {/* Right: Grind & Selection */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-[10px] text-[#7A6E65] hidden sm:inline">
-                            Grind: {bean.grindSetting}
-                          </span>
-                          {isActive ? (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30">
-                              Active
+                          {/* Right: Roaster + Grind info */}
+                          <div className="flex items-center gap-2 text-[#7A6E65] text-[10px] truncate">
+                            {bean.roaster && (
+                              <span className="truncate max-w-[120px] sm:max-w-none">
+                                {bean.roaster}
+                              </span>
+                            )}
+                            <span className="font-mono bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.2 rounded text-[9px] shrink-0">
+                              Grind: <strong className="text-[#C26D52]">{bean.grindSetting}</strong>
                             </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleSelectBean(bean.id)}
-                              className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] transition"
-                            >
-                              Select
-                            </button>
-                          )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -1304,15 +1308,17 @@ export function App() {
             </div>
 
             {/* Active Bean Dial-In & Chemistry Section */}
-            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-5">
-              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-3">
+            <div className="bg-linear-to-b from-[#FDFBF7] to-[#F5EFEB] rounded-2xl border border-[#DECFC0] p-5 shadow-xs space-y-5">
+              <div className="flex items-center justify-between border-b border-[#DECFC0] pb-3">
                 <div className="flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-[#C26D52]" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
                     Dial-In & Roast Profile: {coffeeBeanName}
                   </h3>
                 </div>
-                <span className="text-[11px] text-[#7A6E65]">Customized for Current Bag</span>
+                <span className="text-[10px] font-bold text-[#C26D52] bg-[#C26D52]/10 border border-[#C26D52]/20 px-2 py-0.5 rounded-full shrink-0">
+                  Extraction Lab
+                </span>
               </div>
 
               {/* 1. Roast Level Selection */}
@@ -1331,8 +1337,8 @@ export function App() {
                         onClick={() => handleSetRoastLevel(level)}
                         className={`p-2.5 rounded-xl border text-left transition ${
                           isSelected
-                            ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52]'
-                            : 'border-[#E8DFD5] bg-white hover:bg-[#FAF7F2]/40'
+                            ? 'border-[#C26D52] bg-white ring-1 ring-[#C26D52] shadow-xs'
+                            : 'border-[#DECFC0] bg-white/70 hover:bg-white'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
@@ -1366,8 +1372,8 @@ export function App() {
                         onClick={() => handleSetRatioStyle(style)}
                         className={`p-2.5 rounded-xl border text-left transition ${
                           isSelected
-                            ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52]'
-                            : 'border-[#E8DFD5] bg-white hover:bg-[#FAF7F2]/40'
+                            ? 'border-[#C26D52] bg-white ring-1 ring-[#C26D52] shadow-xs'
+                            : 'border-[#DECFC0] bg-white/70 hover:bg-white'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
@@ -1382,10 +1388,10 @@ export function App() {
               </div>
 
               {/* Barista Chemistry Advice Banner */}
-              <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[11px] text-[#2C2018] leading-relaxed flex items-start gap-2">
-                <FlaskConical className="w-4 h-4 text-[#C26D52] shrink-0 mt-0.5" />
+              <div className="p-3.5 rounded-xl bg-[#72806B]/10 border border-[#72806B]/30 text-[11px] text-[#2C2018] leading-relaxed flex items-start gap-2">
+                <FlaskConical className="w-4 h-4 text-[#72806B] shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-[#C26D52] uppercase text-[10px] tracking-wider block mb-0.5">
+                  <strong className="text-[#72806B] uppercase text-[10px] tracking-wider block mb-0.5">
                     Extraction Physics for {ROAST_PRESETS[roastLevel].label}:
                   </strong>
                   <span>{ROAST_PRESETS[roastLevel].advice}</span>
@@ -1500,21 +1506,21 @@ export function App() {
             </div>
 
             {/* Equipment: Grinder Setup & Personal Fleet (Mine Kværne i Kaffehjørnet) */}
-            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4 font-mono">
-              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2.5">
+            <div className="bg-[#241A14] text-[#FAF7F2] rounded-2xl border border-[#3D2D22] p-5 shadow-md space-y-4 font-mono">
+              <div className="flex items-center justify-between border-b border-[#3D2D22] pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-[#C26D52]" />
+                  <Sliders className="w-4 h-4 text-[#D4A373]" />
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
                       Grinder Fleet & Bar Setup
                     </h3>
-                    <p className="text-[10px] text-[#7A6E65] font-sans">
+                    <p className="text-[10px] text-[#A6998E] font-sans">
                       Manage your home bar grinders and select which grinder is active on your station.
                     </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-[#72806B] bg-[#72806B]/10 border border-[#72806B]/30 px-2 py-0.5 rounded-full shrink-0">
-                  {grinders.filter((g) => g.inSetup).length} in your setup
+                <span className="text-[10px] font-bold text-[#A8BFA0] bg-[#72806B]/20 border border-[#72806B]/40 px-2.5 py-0.5 rounded-full shrink-0">
+                  ● {grinders.filter((g) => g.inSetup).length} in your setup
                 </span>
               </div>
 
@@ -1529,25 +1535,25 @@ export function App() {
                         key={g.id}
                         className={`p-3 rounded-xl border transition flex flex-col justify-between gap-2.5 ${
                           isActive
-                            ? 'bg-[#FAF7F2] border-[#72806B] ring-1 ring-[#72806B]/40 shadow-xs'
-                            : 'bg-white border-[#E8DFD5] hover:border-[#C26D52]/40'
+                            ? 'bg-[#2F221B] border-[#72806B] ring-1 ring-[#72806B] shadow-inner text-[#FAF7F2]'
+                            : 'bg-[#1C1410] border-[#3D2D22] text-[#D8CDC4] hover:border-[#D4A373]/50'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-xs font-bold text-[#2C2018]">{g.name}</span>
-                              <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#FAF7F2] border border-[#E8DFD5] text-[#7A6E65] uppercase">
+                              <span className={`text-xs font-bold ${isActive ? 'text-white' : 'text-[#E8DFD5]'}`}>{g.name}</span>
+                              <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#241A14] border border-[#3D2D22] text-[#A6998E] uppercase">
                                 {g.type === 'stepless' ? 'Stepless' : 'Stepped'}
                               </span>
                             </div>
-                            <span className="text-[10px] text-[#7A6E65] block mt-0.5">
+                            <span className="text-[10px] text-[#8C7E74] block mt-0.5">
                               Scale: {g.stepUnit || 'steps'}
                             </span>
                           </div>
 
                           {isActive ? (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 flex items-center gap-1 shrink-0">
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/25 text-[#A8BFA0] border border-[#72806B]/40 flex items-center gap-1 shrink-0">
                               <Check className="w-3 h-3" /> Active on Bar
                             </span>
                           ) : (
@@ -1557,7 +1563,7 @@ export function App() {
                                 setGrinderName(g.name);
                                 handleUpdateBeanField({ grinderName: g.name });
                               }}
-                              className="text-[10px] font-bold text-[#C26D52] hover:text-[#9B533E] hover:underline shrink-0"
+                              className="text-[10px] font-bold text-[#D4A373] hover:text-[#E8C29D] hover:underline shrink-0"
                             >
                               Set Active
                             </button>
@@ -1565,8 +1571,8 @@ export function App() {
                         </div>
 
                         {/* Card footer: info & remove button if more than 1 in setup */}
-                        <div className="flex items-center justify-between pt-1 border-t border-[#E8DFD5]/50 text-[10px]">
-                          <span className="text-[#A6998E]">
+                        <div className="flex items-center justify-between pt-1 border-t border-[#3D2D22]/60 text-[10px]">
+                          <span className="text-[#8C7E74]">
                             Default: {g.defaultSetting || '15'}
                           </span>
                           {grinders.filter((gr) => gr.inSetup).length > 1 && (
@@ -1584,7 +1590,7 @@ export function App() {
                                   handleUpdateBeanField({ grinderName: fallback.name });
                                 }
                               }}
-                              className="text-[#A6998E] hover:text-red-600 transition flex items-center gap-1"
+                              className="text-[#8C7E74] hover:text-red-400 transition flex items-center gap-1"
                               title="Remove this grinder from your active setup"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -1598,7 +1604,7 @@ export function App() {
               </div>
 
               {/* Add Grinder to Setup from Library or Custom */}
-              <div className="pt-2 border-t border-[#E8DFD5]/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="pt-2 border-t border-[#3D2D22]/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 {grinders.filter((g) => !g.inSetup).length > 0 && (
                   <select
                     defaultValue=""
@@ -1617,13 +1623,13 @@ export function App() {
                       }
                       e.target.value = '';
                     }}
-                    className="flex-1 px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono text-[#2C2018] focus:outline-hidden"
+                    className="flex-1 px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#1C1410] text-xs font-mono text-[#FAF7F2] focus:outline-hidden"
                   >
                     <option value="" disabled>+ Add grinder from library to your setup...</option>
                     {grinders
                       .filter((g) => !g.inSetup)
                       .map((g) => (
-                        <option key={g.id} value={g.id}>
+                        <option key={g.id} value={g.id} className="bg-[#1C1410] text-[#FAF7F2]">
                           + {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'}, {g.stepUnit})
                         </option>
                       ))}
@@ -1650,7 +1656,7 @@ export function App() {
                       handleUpdateBeanField({ grinderName: newG.name });
                     }
                   }}
-                  className="px-3 py-2 rounded-xl border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition shrink-0"
+                  className="px-3 py-2 rounded-xl border border-[#4D382B] bg-[#35251C] hover:bg-[#422F24] text-[#D4A373] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>+ Add Custom Grinder</span>
@@ -1659,12 +1665,17 @@ export function App() {
             </div>
 
             {/* Equipment: Espresso Machine & Pre-infusion */}
-            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#E8DFD5] pb-2">
-                <Layers className="w-4 h-4 text-[#C26D52]" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-                  Espresso Machine & Pump Setup
-                </h3>
+            <div className="bg-linear-to-b from-[#FFFDF9] to-[#FAF7F2] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-[#C26D52]" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                    Espresso Machine & Pump Setup
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold text-[#72806B] bg-[#72806B]/10 border border-[#72806B]/30 px-2 py-0.5 rounded-full shrink-0">
+                  Pump Dynamics
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

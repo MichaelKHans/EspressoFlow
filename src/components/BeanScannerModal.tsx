@@ -824,8 +824,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 
                 {/* Pre-calibrated Ratio & Grinder Setting */}
                 <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-[#2C2018]">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[11px] font-bold text-[#2C2018]">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <Flame className="w-3.5 h-3.5 text-[#C26D52]" />
                       <span>Calibrated Recipe Defaults</span>
                     </div>
@@ -833,7 +833,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       <select
                         value={resolveGrinder(selectedGrinderName, grinders)?.name || selectedGrinderName}
                         onChange={(e) => setSelectedGrinderName(e.target.value)}
-                        className="text-[10px] font-mono text-[#2C2018] bg-white border border-[#E8DFD5] rounded px-1.5 py-0.5"
+                        className="text-[10px] font-mono text-[#2C2018] bg-white border border-[#E8DFD5] rounded-lg px-2 py-1 max-w-full sm:max-w-[200px] truncate"
                       >
                         {grinders.map((g) => (
                           <option key={g.id} value={g.name}>
@@ -842,7 +842,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                         ))}
                       </select>
                     ) : (
-                      <span className="text-[10px] font-mono text-[#7A6E65]">
+                      <span className="text-[10px] font-mono text-[#7A6E65] truncate">
                         {selectedGrinderName || currentGrinderName}
                       </span>
                     )}

@@ -149,10 +149,22 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
               ? (`roast.${shot.roastLevel.replace('-', '_')}` as const)
               : null;
 
+            const isChanneling = shot.channelingDetected;
+            const isSourOrWatery = shot.tasteRating === 'sour' || shot.tasteRating === 'watery';
+            const isBitter = shot.tasteRating === 'bitter';
+
+            const statusBorder = isChanneling
+              ? 'border-l-4 border-l-red-500 hover:border-l-red-600'
+              : isSourOrWatery
+              ? 'border-l-4 border-l-amber-500 hover:border-l-amber-600'
+              : isBitter
+              ? 'border-l-4 border-l-[#8C6046] hover:border-l-[#6A4733]'
+              : 'border-l-4 border-l-[#72806B] hover:border-l-[#5A6754]';
+
             return (
               <div
                 key={shot.id}
-                className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-4 shadow-xs hover:border-[#C26D52]/40 transition font-mono flex flex-col sm:flex-row items-stretch sm:items-center gap-4"
+                className={`bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] ${statusBorder} p-3.5 sm:p-4 shadow-xs hover:border-[#C26D52]/40 transition font-mono flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-4`}
               >
                 {/* Visual Drink Cup Silhouette (Left Badge) */}
                 <div className="flex sm:flex-col items-center justify-between sm:justify-center p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] shrink-0 self-start sm:self-center w-full sm:w-20">
@@ -230,50 +242,53 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                     </div>
                   </div>
 
-                  {/* Extraction Metrics Row */}
+                  {/* Extraction Metrics Row - Crisp Instrument Chips */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-1">
-                    <div>
-                      <div className="text-[10px] text-[#7A6E65] uppercase">{t('logbook.ratio')}</div>
-                      <div className="font-semibold text-[#2C2018]">
-                        {shot.doseGrams}g → {shot.actualYieldGrams}g
+                    <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                      <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">{t('logbook.ratio')}</div>
+                      <div className="font-bold text-[#2C2018] text-xs mt-0.5">
+                        {shot.doseGrams}g → <span className="text-[#C26D52]">{shot.actualYieldGrams}g</span>
                       </div>
                       <div className="text-[10px] text-[#7A6E65] mt-0.5">
                         1:{(shot.doseGrams > 0 ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1) : '2.0')} ratio
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] text-[#7A6E65] uppercase">{t('logbook.time_and_flow')}</div>
-                      <div className="font-semibold text-[#2C2018]">
+
+                    <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                      <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">{t('logbook.time_and_flow')}</div>
+                      <div className="font-bold text-[#2C2018] text-xs mt-0.5">
                         {shot.totalTimeSeconds}s @ {shot.averageFlowGps}g/s
                       </div>
                       {shot.preInfusionSeconds !== undefined && (
-                        <div className="text-[10px] text-[#7A6E65] mt-0.5">
+                        <div className="text-[10px] text-[#7A6E65] mt-0.5 truncate">
                           {t('logbook.pre_abbr')}: {shot.preInfusionSeconds}s • {t('logbook.flow_abbr')}: {shot.flowTimeSeconds}s
                         </div>
                       )}
                     </div>
-                    <div>
-                      <div className="text-[10px] text-[#7A6E65] uppercase">{t('logbook.equipment')}</div>
-                      <div className="font-semibold text-[#2C2018]">
-                        {shot.grinderName.split(' ')[0]} @ {shot.grindSetting}
+
+                    <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                      <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">{t('logbook.equipment')}</div>
+                      <div className="font-bold text-[#2C2018] text-xs mt-0.5 truncate">
+                        {shot.grinderName.split(' ')[0]} @ <strong className="text-[#C26D52]">{shot.grindSetting}</strong>
                       </div>
                       {shot.machineName && (
                         <div className="text-[10px] text-[#7A6E65] truncate mt-0.5">
-                          {shot.machineName}
+                          {shot.machineName.split(' ')[0]}
                         </div>
                       )}
                     </div>
-                    <div>
-                      <div className="text-[10px] text-[#7A6E65] uppercase">{t('logbook.taste_flow')}</div>
-                      <div className="flex items-center gap-1 font-semibold capitalize text-[#2C2018]">
+
+                    <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                      <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">{t('logbook.taste_flow')}</div>
+                      <div className="flex items-center gap-1 font-semibold capitalize text-[#2C2018] mt-0.5">
                         {shot.channelingDetected ? (
-                          <span className="text-[#B85B48] flex items-center gap-1 text-[11px]">
-                            <AlertCircle className="w-3 h-3" /> {t('logbook.channeling')}
+                          <span className="text-[#B85B48] flex items-center gap-1 text-[11px] font-bold">
+                            <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {t('logbook.channeling')}
                             {shot.channeling?.flowSpikeGps ? ` (${shot.channeling.flowSpikeGps} g/s)` : ''}
                           </span>
                         ) : (
-                          <span className="text-[#72806B] flex items-center gap-1 text-[11px]">
-                            <CheckCircle className="w-3 h-3" />{' '}
+                          <span className="text-[#72806B] flex items-center gap-1 text-[11px] font-bold">
+                            <CheckCircle className="w-3.5 h-3.5 shrink-0" />{' '}
                             {shot.tasteRating
                               ? shot.tasteRating === 'sour'
                                 ? t('taste.sour_label')
@@ -290,8 +305,10 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                   </div>
 
                   {shot.notes && (
-                    <div className="pt-2 border-t border-[#E8DFD5]/60 text-[11px] text-[#7A6E65] italic">
-                      "{shot.notes}"
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[11px] text-[#2C2018] flex items-start gap-1.5 leading-relaxed">
+                      <span className="text-[#C26D52] font-serif text-sm font-bold select-none shrink-0 leading-none mt-0.5">“</span>
+                      <span className="italic flex-1">{shot.notes}</span>
+                      <span className="text-[#C26D52] font-serif text-sm font-bold select-none shrink-0 leading-none self-end">”</span>
                     </div>
                   )}
                 </div>

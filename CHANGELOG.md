@@ -4,6 +4,37 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.17] - 2026-09-27
+### Mobile Overflow Fixes, Nav Space Optimization & Rich Color Zoning for Beans, Gear & Logbook
+- **Top Navigation Bar Space Optimization & Clean Mobile Layout:**
+  - Fjernet skud-tælleren (`{shots.length}`) efter Logs i fanebjælken som anmodet af brugeren for at frigøre maksimal plads til "Coffee Bar".
+  - Ændret `Coffee Bar` fane-teksten til `whitespace-nowrap font-semibold text-[10.5px] sm:text-xs` samt optimeret padding (`px-0.5 sm:px-3`), så "Coffee Bar" aldrig mere forkortes med prikker (`Coffee ...`) på mobilskærme.
+  - Symmetrisk, harmonisk 4-faners fordeling over alle mobilbredder.
+- **Quick Context Bar (Ristegrad vs. Dage-siden-ristning Collision Fix):**
+  - Justeret `select`-menuens maksimale bredde (`max-w-[110px] xs:max-w-[145px] sm:max-w-xs`) og gjort afstanden mere responsiv, så `[MEDIUM-DARK]`-badge og `26d off roast` aldrig mere lapper over hinanden på smalle mobilskærme.
+- **Bean & Barcode Vision Scanner Modal (Recipe Defaults Overflow Fix):**
+  - Ændret headeren til `Calibrated Recipe Defaults` til `flex-col sm:flex-row gap-1.5` og tilføjet `truncate` og `max-w-[200px]` på kværn-dropdownen, så lange kværnnavne som *Baratza Encore ESP Pro* aldrig løber ud over kortets højre kant.
+- **Favorite Beans Rolodex (Slut med afkortede bønnenavne):**
+  - Omlagt favoritbønne-kardoteket til et 2-linjers responsivt kortlayout:
+    - *Linje 1:* Ristegrads-badge + fuldt bønnenavn (får hele bredden fri uden `Te...` eller `Ethiopi...` afkortning) + `[Active]` / `[Select]` knap.
+    - *Linje 2:* 5 interaktive stjerner + risteri + `Grind: X` kværnindstilling.
+- **Rig Farveopdeling & Taktil Rytme i Beans & Gear (Slut med monolitisk beige):**
+  - *Zone 1 - Bean Vault & Roasts:* Bønnekortene er nu ristegrads-kodede med subtile pasteltints og kanter (Gylden rav for Lys, Terracotta for Medium, Chokoladebrun for Mellem-Mørk, Mørk espresso for Mørk), mens det aktive kort fremhæves med en `ring-2 ring-[#C26D52] shadow-md bg-white`.
+  - *Zone 2 - Extraction & Dial-In Lab Studio:* Elegant blød pergament-gradient med `Extraction Lab`-badge og salviegrønt kemibanner (`bg-[#72806B]/10`).
+  - *Zone 3 - Grinder Fleet & Bar Setup (Hardware):* Machined dark espresso hardware metal-æstetik (`bg-[#241A14] text-[#FAF7F2] border-[#3D2D22]`) med glødende salviegrøn LED-indikator (`● Active on Bar`), messing-accenter (`#D4A373`) og mørke knapper, som matcher ægte kaffemaskine- og kværnhardware.
+  - *Zone 4 - Espresso Machine Setup:* Varm luksusgradient med `● Pump Dynamics`-mærkat.
+- **Logbook Artisan Tasting Journal (Diagnostisk farvekant & måleinstrument-chips):**
+  - Hvert kaffeskud har nu en venstrestatuskant:
+    - 🟢 Salviegrøn (`border-l-[#72806B]`): Sød og afbalanceret ekstraktion.
+    - 🔴 Crimson rød (`border-l-red-500`): Kanalisering (channeling flow spike detekteret).
+    - 🟡 Ravgylden (`border-l-amber-500`): Sur eller vandet ekstraktion.
+    - 🟤 Mørk ristet brun (`border-l-[#8C6046]`): Bitter ekstraktion.
+  - Telemetridata opdelt i 4 taktile instrument-chips (Ratio, Tid & Flow, Kværn & Maskine, Smag & Fysik).
+  - Baristanoter indrammet i et pergament-citatfelt med terracotta-anførselstegn (`“...”`).
+- **Kompilering & Test:** Verificeret 100% fejlfri build med `npm run build` (0 fejl, 414ms).
+
+---
+
 ## [1.2.16] - 2026-09-27
 ### Trial Countdown Bar ($4.99 Unlock) & Central Coffee Bean Vault Directory
 - **7-Dages Trial Countdown Banner (`TrialCountdownBanner.tsx`):**

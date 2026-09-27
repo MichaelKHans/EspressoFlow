@@ -11,6 +11,27 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Mobile Collisions Fixes, Nav Space Optimization & Rich Color Zoning (v1.2.17)
+- **Top Navigation Bar Space Optimization & Clean Mobile Layout:**
+  - Fjernet skud-tæller badge (`{shots.length}`) efter Logs i fanebjælken som anmodet for at give maksimal plads til "Coffee Bar".
+  - Ændret `Coffee Bar` fane-teksten til `whitespace-nowrap font-semibold text-[10.5px] sm:text-xs` samt optimeret padding (`px-0.5 sm:px-3`), så "Coffee Bar" aldrig mere forkortes med prikker (`Coffee ...`) på mobilskærme.
+  - Symmetrisk 4-faners grid på alle skærmstørrelser (iPhone SE til Pro Max).
+- **Quick Context Bar Collision Fix:**
+  - Justeret `select`-menuens breddegrænse og layout-afstandslogik, så `[MEDIUM-DARK]` og `26d off roast` aldrig mere lapper over hinanden på smalle mobilskærme.
+- **BeanScannerModal Recipe Defaults Overflow Fix:**
+  - Ændret headeren til `Calibrated Recipe Defaults` til responsiv `flex-col sm:flex-row gap-1.5` og tilføjet `truncate` og `max-w-[200px]` på kværn-dropdownen.
+- **Favorite Beans Rolodex 2-Line Layout:**
+  - Omlagt favoritbønne-kardoteket til et 2-linjers responsivt kortlayout, så bønnenavne aldrig afkortes (`Te...` $\rightarrow$ fuldt navn synligt).
+- **Rig Farveopdeling & Taktil Rytme i Beans & Gear:**
+  - *Bean Vault:* Ristegrads-kodede pasteltints (Gylden rav, Terracotta, Chokoladebrun, Mørk espresso) og `ring-2 ring-[#C26D52] shadow-md bg-white` for aktiv bønne.
+  - *Dial-In & Chemistry:* Blød pergament-gradient med `Extraction Lab`-badge og salviegrønt kemibanner (`bg-[#72806B]/10`).
+  - *Grinder Fleet (Hardware):* Machined dark espresso hardware metal-æstetik (`bg-[#241A14] text-[#FAF7F2] border-[#3D2D22]`) med glødende salviegrøn LED-indikator (`● Active on Bar`) og messing-accenter (`#D4A373`).
+  - *Espresso Machine Setup:* Varm luksusgradient med `● Pump Dynamics`-mærkat.
+- **Logbook Artisan Tasting Journal:**
+  - Diagnostiske statuskanter (Salviegrøn for afbalanceret, Rød for kanalisering, Rav for sur/vandet, Mørkebrun for bitter).
+  - Telemetridata i 4 taktile instrument-chips og barista-smagsnoter i pergament-citatkasser (`“...”`).
+- **Verificering:** `npm run build` kompileret 100% fejlfrit (0 fejl, 414ms).
+
 ### 2026-09-27 -- Trial Countdown Bar ($4.99 Unlock) & Central Bean Vault Directory (v1.2.16)
 - **7-Dages Trial Nedtæller-Bar (`TrialCountdownBanner.tsx`):**
   - Varm, minimalistisk Espresso Warmth bjælke placeret lige under navigationstabsne.
