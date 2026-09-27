@@ -956,7 +956,7 @@ export function App() {
                                   handleDeleteBean(bean.id);
                                 }}
                                 className="w-6 h-6 rounded-md flex items-center justify-center text-[#7A6E65]/50 hover:text-red-600 hover:bg-red-50 transition"
-                                title="Fjern bønne fra vault"
+                                title="Remove bean from vault"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1120,7 +1120,7 @@ export function App() {
                               <div className="flex items-center justify-between text-[9px] uppercase font-bold text-[#7A6E65] font-mono">
                                 <span>Assigned Grinder</span>
                                 {grinders.find((g) => g.name === bean.grinderName)?.inSetup && (
-                                  <span className="text-[#72806B] font-semibold">I dit setup</span>
+                                  <span className="text-[#72806B] font-semibold">In your setup</span>
                                 )}
                               </div>
                               <select
@@ -1132,22 +1132,22 @@ export function App() {
                                 }}
                                 className="w-full px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[11px] font-semibold text-[#2C2018]"
                               >
-                                <optgroup label="Kværne i dit setup">
+                                <optgroup label="Grinders in your setup">
                                   {grinders
                                     .filter((g) => g.inSetup)
                                     .map((g) => (
                                       <option key={g.id} value={g.name}>
-                                        {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                                        {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
                                       </option>
                                     ))}
                                 </optgroup>
                                 {grinders.filter((g) => !g.inSetup).length > 0 && (
-                                  <optgroup label="Andre kværne i biblioteket">
+                                  <optgroup label="Other grinders in library">
                                     {grinders
                                       .filter((g) => !g.inSetup)
                                       .map((g) => (
                                         <option key={g.id} value={g.name}>
-                                          {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                                          {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
                                         </option>
                                       ))}
                                   </optgroup>
@@ -1167,10 +1167,10 @@ export function App() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#2C2018] uppercase tracking-wider font-mono">
                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span>Favorit Bønne-Kardotek ({beans.filter((b) => (b.rating || 0) > 0 || b.isFavorite).length || beans.length})</span>
+                    <span>Favorite Beans Rolodex ({beans.filter((b) => (b.rating || 0) > 0 || b.isFavorite).length || beans.length})</span>
                   </div>
                   <span className="text-[10px] text-[#7A6E65] font-mono">
-                    Giv stjerner for at gemme favoritter
+                    Rate with stars to bookmark favorites
                   </span>
                 </div>
 
@@ -1206,7 +1206,7 @@ export function App() {
                                 saveBeans(updated);
                               }}
                               className="p-0.5 hover:scale-125 transition"
-                              title={`${star} stjerner`}
+                              title={`${star} stars`}
                             >
                               <Star
                                 className={`w-3.5 h-3.5 transition ${
@@ -1251,7 +1251,7 @@ export function App() {
                           </span>
                           {isActive ? (
                             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30">
-                              Aktiv
+                              Active
                             </span>
                           ) : (
                             <button
@@ -1259,7 +1259,7 @@ export function App() {
                               onClick={() => handleSelectBean(bean.id)}
                               className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] transition"
                             >
-                              Vælg
+                              Select
                             </button>
                           )}
                         </div>
@@ -1425,22 +1425,22 @@ export function App() {
                     }}
                     className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
                   >
-                    <optgroup label="Kværne i dit setup">
+                    <optgroup label="Grinders in your setup">
                       {grinders
                         .filter((g) => g.inSetup)
                         .map((g) => (
                           <option key={g.id} value={g.name}>
-                            {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                            {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
                           </option>
                         ))}
                     </optgroup>
                     {grinders.filter((g) => !g.inSetup).length > 0 && (
-                      <optgroup label="Andre kværne i biblioteket">
+                      <optgroup label="Other grinders in library">
                         {grinders
                           .filter((g) => !g.inSetup)
                           .map((g) => (
                             <option key={g.id} value={g.name}>
-                              {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                              {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
                             </option>
                           ))}
                       </optgroup>
@@ -1473,15 +1473,15 @@ export function App() {
                   <Sliders className="w-4 h-4 text-[#C26D52]" />
                   <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-                      Mit Kværn-Setup (Mine Kværne)
+                      Grinder Fleet & Bar Setup
                     </h3>
                     <p className="text-[10px] text-[#7A6E65] font-sans">
-                      Vælg hvilke kværne du har i dit kaffehjørne, og hvilken kværn der er aktiv på baren.
+                      Manage your home bar grinders and select which grinder is active on your station.
                     </p>
                   </div>
                 </div>
                 <span className="text-[10px] font-bold text-[#72806B] bg-[#72806B]/10 border border-[#72806B]/30 px-2 py-0.5 rounded-full shrink-0">
-                  {grinders.filter((g) => g.inSetup).length} i dit setup
+                  {grinders.filter((g) => g.inSetup).length} in your setup
                 </span>
               </div>
 
@@ -1505,17 +1505,17 @@ export function App() {
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-xs font-bold text-[#2C2018]">{g.name}</span>
                               <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#FAF7F2] border border-[#E8DFD5] text-[#7A6E65] uppercase">
-                                {g.type === 'stepless' ? 'Trinløs' : 'Trinvis'}
+                                {g.type === 'stepless' ? 'Stepless' : 'Stepped'}
                               </span>
                             </div>
                             <span className="text-[10px] text-[#7A6E65] block mt-0.5">
-                              Skala: {g.stepUnit || 'trin'}
+                              Scale: {g.stepUnit || 'steps'}
                             </span>
                           </div>
 
                           {isActive ? (
                             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 flex items-center gap-1 shrink-0">
-                              <Check className="w-3 h-3" /> Aktiv på Baren
+                              <Check className="w-3 h-3" /> Active on Bar
                             </span>
                           ) : (
                             <button
@@ -1526,7 +1526,7 @@ export function App() {
                               }}
                               className="text-[10px] font-bold text-[#C26D52] hover:text-[#9B533E] hover:underline shrink-0"
                             >
-                              Gør Aktiv
+                              Set Active
                             </button>
                           )}
                         </div>
@@ -1534,7 +1534,7 @@ export function App() {
                         {/* Card footer: info & remove button if more than 1 in setup */}
                         <div className="flex items-center justify-between pt-1 border-t border-[#E8DFD5]/50 text-[10px]">
                           <span className="text-[#A6998E]">
-                            Standard: {g.defaultSetting || '15'}
+                            Default: {g.defaultSetting || '15'}
                           </span>
                           {grinders.filter((gr) => gr.inSetup).length > 1 && (
                             <button
@@ -1552,10 +1552,10 @@ export function App() {
                                 }
                               }}
                               className="text-[#A6998E] hover:text-red-600 transition flex items-center gap-1"
-                              title="Fjern denne kværn fra dit aktive setup"
+                              title="Remove this grinder from your active setup"
                             >
                               <Trash2 className="w-3 h-3" />
-                              <span>Fjern fra setup</span>
+                              <span>Remove from setup</span>
                             </button>
                           )}
                         </div>
@@ -1586,12 +1586,12 @@ export function App() {
                     }}
                     className="flex-1 px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono text-[#2C2018] focus:outline-hidden"
                   >
-                    <option value="" disabled>+ Tilføj kværn fra biblioteket til dit setup...</option>
+                    <option value="" disabled>+ Add grinder from library to your setup...</option>
                     {grinders
                       .filter((g) => !g.inSetup)
                       .map((g) => (
                         <option key={g.id} value={g.id}>
-                          + {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'}, {g.stepUnit})
+                          + {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'}, {g.stepUnit})
                         </option>
                       ))}
                   </select>
@@ -1600,14 +1600,14 @@ export function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    const customName = prompt('Indtast modelnavn på din kværn (f.eks. Niche Duo, Lagom P64, Kinu M47):');
+                    const customName = prompt('Enter grinder model name (e.g. Niche Duo, Lagom P64, Kinu M47):');
                     if (customName && customName.trim()) {
                       const newG: GrinderProfile = {
                         id: `grinder-${Date.now()}`,
                         name: customName.trim(),
                         type: 'stepless',
                         defaultSetting: '2.0',
-                        stepUnit: 'trin / marks',
+                        stepUnit: 'steps / marks',
                         inSetup: true,
                       };
                       const updated = [...grinders, newG];
@@ -1620,7 +1620,7 @@ export function App() {
                   className="px-3 py-2 rounded-xl border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ Opret Brugerdefineret Kværn</span>
+                  <span>+ Add Custom Grinder</span>
                 </button>
               </div>
             </div>
@@ -1807,7 +1807,7 @@ export function App() {
                 setIsAdminRoute(true);
               }}
               className="hover:text-[#2C2018] transition flex items-center gap-1 opacity-70 hover:opacity-100"
-              title="Lukket Admin Portal (Kræver adgangskode)"
+              title="Admin Portal (Passcode protected)"
             >
               <span>Admin 🔒</span>
             </button>

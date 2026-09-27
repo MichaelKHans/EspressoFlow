@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- 100% Engelsk UI Standardisering (v1.2.7)
+- **Streng Engelsk UI-Standard:** Gennemgået og oversat samtlige brugerrettede tekster til professionelt engelsk specialty coffee-terminologi.
+- **Admin Portal (`/admin`):** Sikkerhedsgate (PIN, Restricted Area, keypad), metrikker (7-Day Active Trials, Lifetime Unlocks, Gross Revenue, Conversion Rate), kaffebønne-kardoteket og Supabase-synkronisering er nu 100% på engelsk.
+- **Dial-In Studio & Barista Deck:** Fuld engelsk sprogdragt (Grinder & Setting for Bean, Basket Dose, Liquid Yield, Time Window, Lock Calibration).
+- **Udstyr & Kværnflåde:** Grinder Fleet & Bar Setup, Active on Bar, Set Active, Remove from setup, og Add Custom Grinder standardiseret.
+- **Sprogpakke bevaret:** Sprogmotoren og sprogpakkerne (`src/i18n/locales/`) er intakte og parate til fremtidig sprogvælger efter lancering.
+
 ### 2026-09-27 -- Dedikeret Admin Portal & Sikkerhedslås på /admin (v1.2.6)
 - **Lukket Admin-Sektion (`/admin`):** Implementeret en separat admin-rute tilgængelig via `espressoflow.vercel.app/admin` og diskret link i appens footer.
 - **PIN/Kode Sikkerhedsgate:** Låst bag master-adgangskode (`9246` eller `espresso2026`) med numerisk tastatur, vis/skjul toggle, fejlhåndtering og session-hukommelse.

@@ -4,6 +4,15 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.7] - 2026-09-27
+### 100% English Global UI Across Admin Portal, Dial-In Studio & Equipment Fleet
+- **Strict English Standard across All User-Facing Components:**
+  - **Admin Portal (`/admin`):** Fully localized in professional English (Restricted Area PIN gate, trial metrics, lifetime unlocks, conversion rate, community bean star vault showcase, and Supabase cloud sync).
+  - **Dial-In Wizard Studio:** 100% English workflow (Grinder & Setting for Bean, Stepless/Stepped indicators, Finer/Coarser controls, Dose/Yield/Ratio tuning, and Lock Calibration).
+  - **Equipment & Grinder Fleet:** English UI for home bar grinder setup (Active on Bar, Set Active, Remove from setup, Add grinder from library, and Add Custom Grinder).
+  - **Bean Vault & Favorite Rolodex:** English star rating bookmarking (`Favorite Beans Rolodex`), roast profiles, and bean deletion.
+  - Multi-language engine preserved in background (`src/i18n/locales/`) for post-v1.0 localization packs.
+
 ## [1.2.6] - 2026-09-27
 ### Dedicated Admin Portal & Passcode Security Gate (/admin)
 - **Lukket Admin-Sektion på Separat URL (`espressoflow.vercel.app/admin`):**

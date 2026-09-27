@@ -831,19 +831,20 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             </div>
 
             {/* Live Bean Dial-In Tuning Row directly on the Mocha Card */}
+            {/* Live Bean Dial-In Tuning Row directly on the Mocha Card */}
             <div className="p-3 sm:p-3.5 rounded-xl bg-black/40 border border-white/15 space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-[#C26D52]">
                   <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
-                  <span>Bønne Kalibrering / Live Dial-In</span>
+                  <span>Bean Calibration & Live Dial-In</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => onOpenDialInWizard(selectedDrink)}
                   className="text-[10px] font-mono text-[#FAF7F2] hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition font-semibold"
-                  title="Åbn fuld Dial-In Studio med finjustering"
+                  title="Open full Dial-In Studio with step tuning"
                 >
-                  <span>Åbn Studio</span>
+                  <span>Open Studio</span>
                   <ChevronRight className="w-3 h-3 text-[#C26D52]" />
                 </button>
               </div>
@@ -852,7 +853,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
                 {/* 1. Grind Quick Notcher */}
                 <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
-                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Kværn ({currentGrinder.name.split(' ')[0]})</div>
+                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Grind ({currentGrinder.name.split(' ')[0]})</div>
                   <div className="flex items-center justify-center gap-1 my-0.5">
                     <button
                       type="button"
@@ -899,16 +900,16 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
                 {/* 2. Dose */}
                 <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
-                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Dosis (In)</div>
+                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Dose (In)</div>
                   <div className="font-bold text-[#FFFDF9] text-xs my-0.5">
                     {(currentBean.doseGrams || selectedDrink.defaultDoseGrams).toFixed(1)}g
                   </div>
-                  <div className="text-[8px] text-[#E8DFD5]/60">Kurvmængde</div>
+                  <div className="text-[8px] text-[#E8DFD5]/60">Basket Dose</div>
                 </div>
 
                 {/* 3. Target Yield & Ratio */}
                 <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
-                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Mål (Out)</div>
+                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Yield (Out)</div>
                   <div className="font-bold text-[#C26D52] text-xs my-0.5">
                     {(selectedDrink.targetYieldGrams || currentBean.targetYieldGrams).toFixed(1)}g
                   </div>

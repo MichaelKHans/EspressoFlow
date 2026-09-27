@@ -199,7 +199,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           <button
             onClick={onClose}
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-center text-[#7A6E65] hover:text-[#2C2018] transition shrink-0"
-            title="Luk"
+            title="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -209,7 +209,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5" /> Trin 1: Kværn & Indstilling for Bønnen
+              <Target className="w-3.5 h-3.5" /> Step 1: Grinder & Setting for Bean
             </span>
             <span className="text-[10px] font-mono text-[#7A6E65]">
               {activeGrinder.name.split(' ')[0]} ({activeGrinder.stepUnit || 'steps'})
@@ -220,10 +220,10 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           <div className="space-y-1.5 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
             <div className="flex items-center justify-between text-[10px] font-mono">
               <span className="text-[#7A6E65] uppercase font-bold flex items-center gap-1">
-                <span>Vælg Kværn til denne Bønne:</span>
+                <span>Select Grinder for this Bean:</span>
               </span>
               <span className="text-[#C26D52] font-bold">
-                Valgt: {activeGrinder.name.split(' ')[0]}
+                Selected: {activeGrinder.name.split(' ')[0]}
               </span>
             </div>
 
@@ -245,7 +245,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                     {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#C26D52]" />}
                     <span className="font-semibold">{g.name}</span>
                     <span className="text-[9px] opacity-75">
-                      ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'})
+                      ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
                     </span>
                   </button>
                 );
@@ -262,10 +262,10 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                     }}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-[11px] font-mono text-[#2C2018] focus:outline-hidden"
                   >
-                    <option value="" disabled>Eller vælg fra alle kværne i biblioteket...</option>
+                    <option value="" disabled>Or select from all grinders in library...</option>
                     {pool.map((g) => (
                       <option key={g.id} value={g.name}>
-                        {g.name} ({g.type === 'stepless' ? 'Trinløs' : 'Trinvis'}, {g.stepUnit})
+                        {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'}, {g.stepUnit})
                       </option>
                     ))}
                   </select>
@@ -276,7 +276,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
 
           <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
             <div className="text-[11px] text-[#7A6E65] font-mono">
-              Indstilling på <strong className="text-[#2C2018]">{activeGrinder.name.split(' ')[0]}</strong>:
+              Dial setting on <strong className="text-[#2C2018]">{activeGrinder.name.split(' ')[0]}</strong>:
               <span className="block text-[9px] text-[#A6998E]">({activeGrinder.stepUnit || 'steps'})</span>
             </div>
 
@@ -286,7 +286,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 type="button"
                 onClick={() => handleAdjustGrind(-1)}
                 className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95"
-                title={`Finere kværn (-${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
+                title={`Finer grind (-${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
@@ -295,13 +295,13 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 value={grindSetting}
                 onChange={(e) => setGrindSetting(e.target.value)}
                 className="w-16 text-center text-sm font-bold font-mono text-[#C26D52] bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg py-1 focus:outline-hidden focus:ring-1 focus:ring-[#C26D52]"
-                title="Indtast kværntrin"
+                title="Enter grind setting"
               />
               <button
                 type="button"
                 onClick={() => handleAdjustGrind(1)}
                 className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95"
-                title={`Grovere kværn (+${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
+                title={`Coarser grind (+${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -309,7 +309,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           </div>
 
           <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed">
-            Finere indstilling giver større modstand og langsommere flow ($g/s$). Grovere indstilling giver hurtigere gennemløb.
+            Finer setting increases puck resistance and slows flow rate (g/s). Coarser setting yields faster extraction.
           </p>
         </div>
 
@@ -317,7 +317,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
-              <Scale className="w-3.5 h-3.5" /> Trin 2: Dosis, Udbytte & Forhold
+              <Scale className="w-3.5 h-3.5" /> Step 2: Dose, Yield & Extraction Ratio
             </span>
             <span className="text-[10px] font-mono font-bold text-[#2C2018] bg-[#C26D52]/10 border border-[#C26D52]/30 px-2 py-0.5 rounded-full">
               Ratio 1:{ratio}
@@ -327,7 +327,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
             {/* Dry Dose Tuner */}
             <div className="bg-white p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-between">
-              <div className="text-[9px] text-[#7A6E65] uppercase font-bold">Tør Dosis (In)</div>
+              <div className="text-[9px] text-[#7A6E65] uppercase font-bold">Dry Dose (In)</div>
               <div className="flex items-center justify-between my-1">
                 <button
                   type="button"
@@ -349,12 +349,12 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                   <Plus className="w-3 h-3" />
                 </button>
               </div>
-              <div className="text-[9px] text-[#7A6E65] text-center">Kurvmængde</div>
+              <div className="text-[9px] text-[#7A6E65] text-center">Basket Dose</div>
             </div>
 
             {/* Target Yield Tuner */}
             <div className="bg-white p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-between">
-              <div className="text-[9px] text-[#7A6E65] uppercase font-bold">Mål-Udbytte (Out)</div>
+              <div className="text-[9px] text-[#7A6E65] uppercase font-bold">Target Yield (Out)</div>
               <div className="flex items-center justify-between my-1">
                 <button
                   type="button"
@@ -376,17 +376,17 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                   <Plus className="w-3 h-3" />
                 </button>
               </div>
-              <div className="text-[9px] text-[#7A6E65] text-center">Flydende kaffe</div>
+              <div className="text-[9px] text-[#7A6E65] text-center">Liquid Espresso</div>
             </div>
 
             {/* Window & Style Summary */}
             <div className="col-span-2 sm:col-span-1 bg-white p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-between text-center">
-              <div className="text-[9px] text-[#7A6E65] uppercase font-bold">Tidsvindue</div>
+              <div className="text-[9px] text-[#7A6E65] uppercase font-bold">Time Window</div>
               <div className="text-sm font-bold text-[#2C2018] my-1">
                 ~{drink.expectedTimeSeconds || 26}s
               </div>
               <div className="text-[9px] text-[#72806B] font-semibold truncate">
-                {parseFloat(ratio) < 1.8 ? 'Ristretto-profil' : parseFloat(ratio) > 2.3 ? 'Lungo-profil' : 'Standard Normale'}
+                {parseFloat(ratio) < 1.8 ? 'Ristretto Profile' : parseFloat(ratio) > 2.3 ? 'Lungo Profile' : 'Standard Normale'}
               </div>
             </div>
           </div>
@@ -396,20 +396,20 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1 text-xs text-[#2C2018]">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> Trin 3: Synkronisering & Klargøring
+              <Sparkles className="w-3.5 h-3.5" /> Step 3: Synchronization & Prep
             </span>
             <button
               type="button"
               onClick={handleResetToBaseline}
               className="text-[10px] font-mono text-[#7A6E65] hover:text-[#2C2018] flex items-center gap-1 transition"
-              title="Nulstil til opskriftens standard"
+              title="Reset to recipe baseline"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Nulstil</span>
+              <span>Reset</span>
             </button>
           </div>
           <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed">
-            Dine ændringer gemmes direkte på <strong>{currentBean.name}</strong> med <strong>{activeGrinder.name}</strong> som favoritkværn og opdateres i <strong>Beans & Gear</strong>. Scale Cam sporer derefter automatisk mod dit mål på <strong>{targetYieldGrams.toFixed(1)}g</strong>!
+            Your calibration is saved directly to <strong>{currentBean.name}</strong> with <strong>{activeGrinder.name}</strong> as dialed grinder and synchronized in <strong>Beans & Gear</strong>. Scale Cam will automatically track toward your target of <strong>{targetYieldGrams.toFixed(1)}g</strong>!
           </p>
         </div>
 
@@ -420,7 +420,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             onClick={onClose}
             className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#E8DFD5] text-xs font-mono font-medium text-[#7A6E65] hover:text-[#2C2018] transition text-center"
           >
-            Annuller
+            Cancel
           </button>
           <button
             type="button"
@@ -430,11 +430,11 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             {isSavedFeedback ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-[#72806B]" />
-                <span>Gemt på Bønnen!</span>
+                <span>Saved to Bean!</span>
               </>
             ) : (
               <>
-                <span>Lås Kalibrering på Bønnen & Start Scale Cam</span>
+                <span>Lock Calibration & Launch Scale Cam</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
               </>
             )}

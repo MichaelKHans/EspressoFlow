@@ -88,7 +88,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setPinError(null);
       setPinInput('');
     } else {
-      setPinError('Forkert adgangskode. Prøv igen.');
+      setPinError('Incorrect passcode. Please try again.');
       setPinInput('');
     }
   };
@@ -138,10 +138,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               className="text-xs text-[#7A6E65] hover:text-[#2C2018] flex items-center gap-1 transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Tilbage</span>
+              <span>Back</span>
             </button>
             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#2C2018] text-[#FAF7F2]">
-              Låst Sektion
+              Restricted Area
             </span>
           </div>
 
@@ -154,7 +154,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               Espresso Flow Admin
             </h1>
             <p className="text-xs text-[#7A6E65] leading-relaxed">
-              Indtast din master-kode for at få adgang til metrics, trial-data og kaffebønne-kardoteket.
+              Enter your master passcode to access telemetry, trial metrics, and bean star ratings.
             </p>
           </div>
 
@@ -169,14 +169,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   setPinInput(e.target.value);
                   setPinError(null);
                 }}
-                placeholder="Indtast kode..."
+                placeholder="Enter passcode..."
                 className="w-full text-center tracking-widest text-lg font-bold py-3 px-4 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] text-[#2C2018] focus:outline-hidden focus:ring-2 focus:ring-[#C26D52]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A6E65] hover:text-[#2C2018]"
-                title={showPassword ? 'Skjul' : 'Vis'}
+                title={showPassword ? 'Hide' : 'Show'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -206,7 +206,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onClick={handleKeypadDelete}
                 className="py-2.5 rounded-xl bg-[#FAF7F2] hover:bg-[#E8DFD5] active:scale-95 text-xs font-bold text-[#7A6E65] transition border border-[#E8DFD5]"
               >
-                Slet
+                Delete
               </button>
               <button
                 type="button"
@@ -219,7 +219,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 type="submit"
                 className="py-2.5 rounded-xl bg-[#C26D52] hover:bg-[#A8583F] active:scale-95 text-xs font-bold text-white transition shadow-sm"
               >
-                Lås Op
+                Unlock
               </button>
             </div>
 
@@ -228,13 +228,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               className="w-full py-3 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-bold transition flex items-center justify-center gap-2 shadow-md"
             >
               <Unlock className="w-4 h-4 text-[#C26D52]" />
-              <span>Åbn Admin Dashboard</span>
+              <span>Open Admin Dashboard</span>
             </button>
           </form>
 
           {/* Discrete Hint for Owner */}
           <div className="pt-2 text-center text-[10px] text-[#A6998E]">
-            Standard adminkode: <strong className="text-[#2C2018]">9246</strong> eller{' '}
+            Default master passcode: <strong className="text-[#2C2018]">9246</strong> or{' '}
             <strong className="text-[#2C2018]">espresso2026</strong>
           </div>
         </div>
@@ -253,10 +253,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               type="button"
               onClick={onBack}
               className="px-3 py-1.5 rounded-xl bg-[#FAF7F2]/10 hover:bg-[#FAF7F2]/20 text-[#FAF7F2] text-xs font-mono font-medium flex items-center gap-1.5 transition"
-              title="Gå til kaffebaren"
+              title="Return to Coffee Bar"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Kaffebaren</span>
+              <span>Coffee Bar</span>
             </button>
             <div className="h-4 w-px bg-white/20" />
             <div className="flex items-center gap-2">
@@ -278,10 +278,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               type="button"
               onClick={handleLock}
               className="px-3 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-mono font-semibold flex items-center gap-1.5 transition"
-              title="Lås admin sektion"
+              title="Lock admin session"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Lås</span>
+              <span>Lock</span>
             </button>
           </div>
         </div>
@@ -301,7 +301,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5 text-[#C26D52]" />
-            <span>Omsætning & 7-Dages Brugere</span>
+            <span>Revenue & 7-Day Trials</span>
           </button>
 
           <button
@@ -314,7 +314,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             }`}
           >
             <Star className="w-3.5 h-3.5 text-amber-500" />
-            <span>Kaffebønne Stjerner & Database</span>
+            <span>Bean Star Ratings & Database</span>
           </button>
 
           <button
@@ -327,7 +327,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             }`}
           >
             <Database className="w-3.5 h-3.5 text-[#72806B]" />
-            <span>Supabase Cloud Integration</span>
+            <span>Supabase Cloud Sync</span>
           </button>
         </div>
 
@@ -339,39 +339,39 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               {/* Card 1: 7-Day Trial Users */}
               <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-4 shadow-xs space-y-1">
                 <div className="flex items-center justify-between text-[#7A6E65]">
-                  <span className="text-[10px] uppercase font-bold">7-Dages Trial</span>
+                  <span className="text-[10px] uppercase font-bold">7-Day Active Trials</span>
                   <Users className="w-4 h-4 text-[#C26D52]" />
                 </div>
                 <div className="text-2xl font-bold text-[#2C2018]">
                   {simulatedTrialUsers}
                 </div>
                 <div className="text-[10px] text-[#72806B] font-semibold">
-                  +18 nye brugere denne uge
+                  +18 new users this week
                 </div>
               </div>
 
               {/* Card 2: Paid Lifetime Users */}
               <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-4 shadow-xs space-y-1">
                 <div className="flex items-center justify-between text-[#7A6E65]">
-                  <span className="text-[10px] uppercase font-bold">Livstids Betalere</span>
+                  <span className="text-[10px] uppercase font-bold">Lifetime Unlocks</span>
                   <ShieldCheck className="w-4 h-4 text-[#72806B]" />
                 </div>
                 <div className="text-2xl font-bold text-[#2C2018]">
                   {simulatedPaidUsers}
                 </div>
                 <div className="text-[10px] text-[#72806B] font-semibold">
-                  $4.99 / 49,- DKK per salg
+                  $4.99 / 49,- DKK per unlock
                 </div>
               </div>
 
               {/* Card 3: Total Revenue */}
               <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-4 shadow-xs space-y-1">
                 <div className="flex items-center justify-between text-[#7A6E65]">
-                  <span className="text-[10px] uppercase font-bold">Total Omsætning</span>
+                  <span className="text-[10px] uppercase font-bold">Gross Revenue</span>
                   <DollarSign className="w-4 h-4 text-amber-600" />
                 </div>
                 <div className="text-xl sm:text-2xl font-bold text-[#2C2018]">
-                  {totalRevenueDkk} kr.
+                  {totalRevenueDkk} DKK
                 </div>
                 <div className="text-[10px] text-[#7A6E65]">
                   ~${totalRevenueUsd} USD via RevenueCat
@@ -381,14 +381,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               {/* Card 4: Conversion Rate */}
               <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-4 shadow-xs space-y-1">
                 <div className="flex items-center justify-between text-[#7A6E65]">
-                  <span className="text-[10px] uppercase font-bold">Konvertering</span>
+                  <span className="text-[10px] uppercase font-bold">Conversion Rate</span>
                   <TrendingUp className="w-4 h-4 text-[#C26D52]" />
                 </div>
                 <div className="text-2xl font-bold text-[#2C2018]">
                   {conversionRate}%
                 </div>
                 <div className="text-[10px] text-[#72806B] font-semibold">
-                  Benchmark for kaffe-apps
+                  Specialty coffee app benchmark
                 </div>
               </div>
             </div>
@@ -399,29 +399,29 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="flex items-center gap-2">
                   <Coffee className="w-4 h-4 text-[#C26D52]" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-                    Forretningsmodel: 7 Dages Fri Trial $\rightarrow$ $4.99 Engangskøb
+                    Business Model: 7-Day Free Trial → $4.99 Lifetime
                   </h3>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C26D52]/10 text-[#C26D52] font-bold">
-                  Ingen månedlige abonnementer
+                  No monthly subscriptions
                 </span>
               </div>
 
               <p className="text-xs text-[#7A6E65] leading-relaxed">
-                Appen starter automatisk 7 dages fuld adgang ved første installation. Når de 7 dage er udløbet, låser appen elegant med en skærm, der tilbyder permanent adgang for <strong>49,- DKK / $4.99 USD</strong> via RevenueCat. Kunderne elsker den enkle model uden abonnements-udmattelse.
+                The app automatically starts a 7-day full access trial upon initial launch. Once the 7 days expire, the app prompts for permanent lifetime unlock for <strong>49,- DKK / $4.99 USD</strong> via RevenueCat. Zero subscription fatigue.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs font-mono">
                 <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]">
                   <span className="text-[10px] text-[#7A6E65] uppercase block mb-1">
-                    Lokal Enhed Status:
+                    Local Device Status:
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-[#2C2018]">
-                      {accessState.isProLifetime ? 'Livstidsadgang Betalt' : 'I 7-dages Trial'}
+                      {accessState.isProLifetime ? 'Lifetime Unlocked' : '7-Day Active Trial'}
                     </span>
                     <span className="text-[10px] text-[#C26D52]">
-                      ({accessState.daysRemainingInTrial} dage tilbage)
+                      ({accessState.daysRemainingInTrial} days remaining)
                     </span>
                   </div>
                 </div>
@@ -449,16 +449,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="flex items-center gap-2">
                   <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-                    Kaffebønne Stjerner & Ratings Kardotek
+                    Bean Star Ratings & Community Vault
                   </h3>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold">
-                  {totalStarredBeans} vurderede bønner
+                  {totalStarredBeans} rated beans
                 </span>
               </div>
 
               <p className="text-xs text-[#7A6E65] leading-relaxed font-sans">
-                Hver bruger tildeler stjerner (1 til 5) til sine yndlingsbønner i appen. I næste fase fodrer disse vurderinger til en central Supabase database, der driver en offentlig reklameside på nettet.
+                Users rate favorite beans from 1 to 5 stars. In the next phase, these ratings sync to a central Supabase database powering a public web showcase.
               </p>
 
               {/* Public DB Promo Banner */}
@@ -466,19 +466,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#FFB6A0]">
                     <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
-                    <span>Offentlig Kaffebønne-Database (Reklameside for Appen)</span>
+                    <span>Public Bean Vault (Web Promotion & Showcase)</span>
                   </div>
                   <p className="text-[11px] text-[#FAF7F2]/75 font-sans">
-                    En fast, åben hjemmeside på f.eks. <code>espressoflow.vercel.app/beans</code>, hvor alle kaffeelskere kan se de bedst bedømte bønner, og som reklamerer for at downloade appen.
+                    A standalone public web showcase at e.g. <code>espressoflow.vercel.app/beans</code> displaying the top community beans and driving app downloads.
                   </p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => alert('Forhåndsvisning: Denne åbne side er forberedt til Supabase integration i v1.3!')}
+                  onClick={() => alert('Preview: This public showcase is pre-configured for Supabase sync in v1.3!')}
                   className="px-3.5 py-2 rounded-xl bg-[#C26D52] hover:bg-[#A8583F] text-white text-xs font-bold flex items-center gap-1.5 transition shrink-0"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Preview Reklameside</span>
+                  <span>Preview Showcase</span>
                 </button>
               </div>
             </div>
@@ -486,8 +486,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             {/* List of Beans with Ratings */}
             <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-3">
               <div className="flex items-center justify-between text-xs font-bold uppercase text-[#2C2018]">
-                <span>Bønnelager & Vurderinger ({beans.length} Bønner i alt)</span>
-                <span className="text-[10px] text-[#7A6E65]">Gennemsnit: {avgLocalRating} ★</span>
+                <span>Bean Inventory & Ratings ({beans.length} Total Beans)</span>
+                <span className="text-[10px] text-[#7A6E65]">Average: {avgLocalRating} ★</span>
               </div>
 
               <div className="divide-y divide-[#E8DFD5]">
@@ -515,12 +515,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           </span>
                           {bean.isFavorite && (
                             <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 font-bold">
-                              Favorit
+                              Favorite
                             </span>
                           )}
                         </div>
                         <div className="text-[11px] text-[#7A6E65] mt-0.5">
-                          {bean.roaster || 'Specialty Roaster'} • Kværn: {bean.grinderName.split(' ')[0]} @ {bean.grindSetting}
+                          {bean.roaster || 'Specialty Roaster'} • Grinder: {bean.grinderName.split(' ')[0]} @ {bean.grindSetting}
                         </div>
                       </div>
 
@@ -553,16 +553,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="flex items-center gap-2">
                   <Database className="w-4 h-4 text-[#72806B]" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-                    Supabase Central Database Forbindelse
+                    Supabase Central Database Sync
                   </h3>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] font-bold">
-                  Klar til Tilslutning
+                  Ready for Sync
                 </span>
               </div>
 
               <p className="text-xs text-[#7A6E65] leading-relaxed font-sans">
-                For at samle stjerner fra alle app-brugere i en stor global kaffebase og vise statistik over 7-dages trials, kan du tilknytte dit Supabase projekt her. Tabellerne oprettes automatisk med Row Level Security (RLS).
+                Connect your Supabase project to aggregate community bean star ratings and track 7-day trial telemetry. Schema is provisioned with Row Level Security (RLS).
               </p>
 
               {/* Supabase Config Form */}
@@ -597,7 +597,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <div className="text-[10px] text-[#72806B]">
                     {isSavedSupabase && (
                       <span className="flex items-center gap-1 font-bold">
-                        <Check className="w-3 h-3" /> Konfiguration gemt!
+                        <Check className="w-3 h-3" /> Configuration saved!
                       </span>
                     )}
                   </div>
@@ -606,7 +606,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     className="px-4 py-2 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-bold flex items-center gap-1.5 transition"
                   >
                     <Check className="w-3.5 h-3.5 text-[#C26D52]" />
-                    <span>Gem Supabase Nøgler</span>
+                    <span>Save Supabase Credentials</span>
                   </button>
                 </div>
               </form>
@@ -616,14 +616,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#2C2018]">
                 <Layers className="w-3.5 h-3.5 text-[#C26D52]" />
-                <span>Forberedte Tabeller i Supabase</span>
+                <span>Provisioned Tables in Supabase</span>
               </div>
               <div className="text-[11px] text-[#7A6E65] space-y-2">
                 <div className="p-2.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5]">
-                  <strong className="text-[#2C2018]">community_beans:</strong> Samler bønnenavne, risterier, ristegrader og gennemsnitlige stjernevurderinger (1-5).
+                  <strong className="text-[#2C2018]">community_beans:</strong> Aggregates bean names, roasters, roast profiles, and community star ratings (1-5).
                 </div>
                 <div className="p-2.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5]">
-                  <strong className="text-[#2C2018]">app_telemetry:</strong> Registrerer anonyme 7-dages trial starter og bekræftede $4.99 RevenueCat engangskøb.
+                  <strong className="text-[#2C2018]">app_telemetry:</strong> Logs anonymous 7-day trial activations and verified $4.99 RevenueCat lifetime unlocks.
                 </div>
               </div>
             </div>
