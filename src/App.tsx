@@ -1732,37 +1732,44 @@ export function App() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* License & Full Access Card */}
-              <div className="bg-[#FFFDF9] rounded-xl sm:rounded-2xl border border-[#E8DFD5] p-4 sm:p-5 space-y-3 shadow-xs font-mono">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className={`w-4 h-4 ${accessState.isProLifetime ? 'text-[#72806B]' : 'text-[#C26D52]'}`} />
-                    <h3 className="font-bold text-xs sm:text-sm text-[#2C2018] uppercase tracking-wide">
-                      {accessState.isProLifetime ? 'Lifetime Access Active' : '7-Day Free Trial'}
+            {/* App Membership & Lifetime License (Separate Dedicated Card for Apple App Store Review Compliance) */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 space-y-3.5 shadow-xs font-mono">
+              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2.5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className={`w-4 h-4 ${accessState.isProLifetime ? 'text-[#72806B]' : 'text-[#C26D52]'}`} />
+                  <div>
+                    <h3 className="font-bold text-xs uppercase tracking-wide text-[#2C2018]">
+                      Membership & App License
                     </h3>
+                    <p className="text-[10px] text-[#7A6E65] font-sans">
+                      {accessState.isProLifetime ? 'Lifetime License (RevenueCat)' : '7-Day Free Trial Period'}
+                    </p>
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                    accessState.isProLifetime
-                      ? 'bg-[#72806B]/15 text-[#72806B] border-[#72806B]/30'
-                      : 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
-                  }`}>
-                    {accessState.isProLifetime ? 'UNLOCKED' : `${accessState.daysRemainingInTrial} DAYS LEFT`}
-                  </span>
                 </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  accessState.isProLifetime
+                    ? 'bg-[#72806B]/15 text-[#72806B] border-[#72806B]/30'
+                    : 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                }`}>
+                  {accessState.isProLifetime ? 'LIFETIME PRO' : `${accessState.daysRemainingInTrial} DAYS LEFT`}
+                </span>
+              </div>
 
-                <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
-                  {accessState.isProLifetime
-                    ? 'Your one-time purchase is active. Unlimited precision scale OCR, flow dynamics & logbook access forever.'
-                    : 'You are currently enjoying your 7-day free trial. After the trial, a single one-time payment of $4.99 / 49,- DKK unlocks the app permanently.'}
-                </p>
+              <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
+                {accessState.isProLifetime
+                  ? 'Your one-time purchase is active. Unlimited precision scale OCR, flow dynamics & logbook access forever.'
+                  : 'You are currently enjoying your 7-day free trial. After the trial, a single one-time payment of $4.99 / 49,- DKK unlocks the app permanently.'}
+              </p>
 
-                <div className="flex items-center gap-2 pt-1 flex-wrap">
+              <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
                   {!accessState.isProLifetime && (
                     <button
                       type="button"
                       onClick={() => setIsPaywallOpen(true)}
-                      className="px-3 py-2 rounded-xl bg-[#C26D52] text-white text-xs font-semibold hover:bg-[#b05d43] transition shadow-xs flex items-center gap-1.5"
+                      className="px-3.5 py-2 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-semibold transition shadow-xs flex items-center gap-1.5"
                     >
                       <Coffee className="w-3.5 h-3.5" />
                       <span>Unlock Lifetime Access ($4.99)</span>
@@ -1775,44 +1782,64 @@ export function App() {
                       handleUnlockPro();
                     }}
                     className="px-3 py-2 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] text-xs font-semibold transition"
+                    title="Restore prior purchase on this Apple ID / Google Account"
                   >
                     {t('paywall.restore_btn')}
                   </button>
                 </div>
-              </div>
 
-              {/* Language Selection Card (Hidden until post-launch multi-language update) */}
-              {isMultiLanguageEnabled && (
-                <div className="bg-[#FFFDF9] rounded-xl sm:rounded-2xl border border-[#E8DFD5] p-4 sm:p-5 space-y-3 shadow-xs">
-                  <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-[#C26D52]" />
-                    <h3 className="font-bold text-xs sm:text-sm text-[#2C2018] uppercase tracking-wide">
-                      {t('settings.language')}
-                    </h3>
-                  </div>
-                  <p className="text-[11px] text-[#7A6E65] leading-relaxed">
-                    Select your preferred language. Barista specialty coffee terms remain international.
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {supportedLanguages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        type="button"
-                        onClick={() => setLanguage(lang.code)}
-                        className={`p-2.5 rounded-xl border text-center transition flex items-center justify-center gap-2 font-mono text-xs ${
-                          language === lang.code
-                            ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52] font-bold text-[#2C2018]'
-                            : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:bg-[#FAF7F2]/50'
-                        }`}
-                      >
-                        <span className="text-base">{lang.flag}</span>
-                        <span>{lang.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                {/* Direct App Store Compliance links */}
+                <div className="flex items-center gap-2 text-[10px] text-[#7A6E65]">
+                  <button
+                    type="button"
+                    onClick={() => setLegalModalTab('terms')}
+                    className="hover:underline hover:text-[#2C2018]"
+                  >
+                    Terms of Use
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    onClick={() => setLegalModalTab('privacy')}
+                    className="hover:underline hover:text-[#2C2018]"
+                  >
+                    Privacy Policy
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
+
+            {/* Language Selection Card (Hidden until post-launch multi-language update) */}
+            {isMultiLanguageEnabled && (
+              <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 space-y-3 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-[#C26D52]" />
+                  <h3 className="font-bold text-xs sm:text-sm text-[#2C2018] uppercase tracking-wide">
+                    {t('settings.language')}
+                  </h3>
+                </div>
+                <p className="text-[11px] text-[#7A6E65] leading-relaxed">
+                  Select your preferred language. Barista specialty coffee terms remain international.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {supportedLanguages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => setLanguage(lang.code)}
+                      className={`p-2.5 rounded-xl border text-center transition flex items-center justify-center gap-2 font-mono text-xs ${
+                        language === lang.code
+                          ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52] font-bold text-[#2C2018]'
+                          : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:bg-[#FAF7F2]/50'
+                      }`}
+                    >
+                      <span className="text-base">{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

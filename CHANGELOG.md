@@ -22,7 +22,8 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
   - *Zone 1 - Bean Vault & Roasts:* Bønnekortene er nu ristegrads-kodede med subtile pasteltints og kanter (Gylden rav for Lys, Terracotta for Medium, Chokoladebrun for Mellem-Mørk, Mørk espresso for Mørk), mens det aktive kort fremhæves med en `ring-2 ring-[#C26D52] shadow-md bg-white`.
   - *Zone 2 - Extraction & Dial-In Lab Studio:* Elegant blød pergament-gradient med `Extraction Lab`-badge og salviegrønt kemibanner (`bg-[#72806B]/10`).
   - *Zone 3 - Grinder Fleet & Bar Setup (Hardware):* Machined dark espresso hardware metal-æstetik (`bg-[#241A14] text-[#FAF7F2] border-[#3D2D22]`) med glødende salviegrøn LED-indikator (`● Active on Bar`), messing-accenter (`#D4A373`) og mørke knapper, som matcher ægte kaffemaskine- og kværnhardware.
-  - *Zone 4 - Espresso Machine Setup:* Varm luksusgradient med `● Pump Dynamics`-mærkat.
+  - *Zone 4 - Espresso Machine Setup:* Varm luksusgradient med `● Pump Dynamics`-mærkat. Maskinen er nu 100% isoleret i sin egen hardware-boks.
+  - *Zone 5 - Membership & App License Card:* Licens- og prøveperiode-kortet er trukket helt ud af kaffemaskine-sektionen og etableret som sit eget selvstændige Apple App Store compliance-kort med tydelig status (`7 DAYS LEFT` / `LIFETIME PRO`), `Unlock Lifetime Access ($4.99)`, `Restore Purchases` og direkte links til Terms of Use og Privacy Policy.
 - **Logbook Artisan Tasting Journal (Diagnostisk farvekant & måleinstrument-chips):**
   - Hvert kaffeskud har nu en venstrestatuskant:
     - 🟢 Salviegrøn (`border-l-[#72806B]`): Sød og afbalanceret ekstraktion.

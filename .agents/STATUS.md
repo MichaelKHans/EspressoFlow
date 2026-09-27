@@ -26,7 +26,8 @@
   - *Bean Vault:* Ristegrads-kodede pasteltints (Gylden rav, Terracotta, Chokoladebrun, Mørk espresso) og `ring-2 ring-[#C26D52] shadow-md bg-white` for aktiv bønne.
   - *Dial-In & Chemistry:* Blød pergament-gradient med `Extraction Lab`-badge og salviegrønt kemibanner (`bg-[#72806B]/10`).
   - *Grinder Fleet (Hardware):* Machined dark espresso hardware metal-æstetik (`bg-[#241A14] text-[#FAF7F2] border-[#3D2D22]`) med glødende salviegrøn LED-indikator (`● Active on Bar`) og messing-accenter (`#D4A373`).
-  - *Espresso Machine Setup:* Varm luksusgradient med `● Pump Dynamics`-mærkat.
+  - *Espresso Machine Setup:* Varm luksusgradient med `● Pump Dynamics`-mærkat. Maskinen er nu 100% isoleret i sin egen hardware-boks.
+  - *Membership & App License Card:* Licens- og prøveperiode-kortet er trukket helt ud af kaffemaskine-sektionen og etableret som sit eget selvstændige Apple App Store compliance-kort med tydelig status (`7 DAYS LEFT` / `LIFETIME PRO`), `Unlock Lifetime Access ($4.99)`, `Restore Purchases` og direkte links til Terms of Use og Privacy Policy.
 - **Logbook Artisan Tasting Journal:**
   - Diagnostiske statuskanter (Salviegrøn for afbalanceret, Rød for kanalisering, Rav for sur/vandet, Mørkebrun for bitter).
   - Telemetridata i 4 taktile instrument-chips og barista-smagsnoter i pergament-citatkasser (`“...”`).
