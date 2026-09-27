@@ -1,5 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, RefreshCw, Play, Square, Eye, AlertTriangle, CheckCircle2, Scan, RotateCcw, VideoOff } from 'lucide-react';
+import {
+  Camera,
+  RefreshCw,
+  Play,
+  Square,
+  Eye,
+  AlertTriangle,
+  CheckCircle2,
+  Scan,
+  RotateCcw,
+  VideoOff,
+  Crosshair,
+  Zap,
+} from 'lucide-react';
 import type { ShotDataPoint } from '../types/espresso';
 import { calculateSmoothedFlowRate } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
@@ -39,6 +52,18 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [cameraState, setCameraState] = useState<'standby' | 'live' | 'demo'>('standby');
   const [cameraError, setCameraError] = useState<string | null>(null);
 
+  // Camera Optical Zoom & Interactive ROI Alignment state
+  const [zoomLevel, setZoomLevel] = useState<number>(1.8);
+  const [roiSize, setRoiSize] = useState<'compact' | 'standard'>('compact');
+  const [roiCenter, setRoiCenter] = useState<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
+  const [tapFeedback, setTapFeedback] = useState<{ x: number; y: number } | null>(null);
+  const [hasTorch, setHasTorch] = useState<boolean>(false);
+  const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
+
+  const zoomLevelRef = useRef<number>(1.8);
+  const roiSizeRef = useRef<'compact' | 'standard'>('compact');
+  const roiCenterRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
+
   // Split-Timer state
   const [firstDropTime, setFirstDropTime] = useState<number | null>(null);
   const [preInfusionDuration, setPreInfusionDuration] = useState<number>(0.0);
@@ -62,6 +87,88 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const fpsCountRef = useRef<number>(0);
   const lastFpsCalcTimeRef = useRef<number>(Date.now());
 
+  // Interactive Zoom, Torch & Recenter Handlers
+  const handleSetZoom = async (newZoom: number) => {
+    zoomLevelRef.current = newZoom;
+    setZoomLevel(newZoom);
+    if (streamRef.current) {
+      const track = streamRef.current.getVideoTracks()[0];
+      if (track && track.applyConstraints) {
+        try {
+          const caps: any = track.getCapabilities ? track.getCapabilities() : {};
+          if ('zoom' in caps && caps.zoom) {
+            const clamped = Math.max(caps.zoom.min || 1, Math.min(caps.zoom.max || 1, newZoom));
+            await track.applyConstraints({ advanced: [{ zoom: clamped } as any] });
+          }
+        } catch (e) {
+          console.debug('Hardware zoom not applicable, optical crop active', e);
+        }
+      }
+    }
+  };
+
+  const handleToggleTorch = async () => {
+    if (!streamRef.current) return;
+    const track = streamRef.current.getVideoTracks()[0];
+    if (!track || !track.applyConstraints) return;
+    try {
+      const next = !isTorchOn;
+      await track.applyConstraints({ advanced: [{ torch: next } as any] });
+      setIsTorchOn(next);
+    } catch (e) {
+      console.debug('Torch toggle error', e);
+    }
+  };
+
+  const handleSetRoiSize = (mode: 'compact' | 'standard') => {
+    roiSizeRef.current = mode;
+    setRoiSize(mode);
+  };
+
+  const handleRecenter = () => {
+    roiCenterRef.current = { x: 0.5, y: 0.5 };
+    setRoiCenter({ x: 0.5, y: 0.5 });
+  };
+
+  const handleTapViewfinder = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (cameraState !== 'live') return;
+    const container = e.currentTarget.getBoundingClientRect();
+    let clientX: number, clientY: number;
+    if ('touches' in e && (e as React.TouchEvent).touches.length > 0) {
+      clientX = (e as React.TouchEvent).touches[0].clientX;
+      clientY = (e as React.TouchEvent).touches[0].clientY;
+    } else if ('clientX' in e) {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    } else {
+      return;
+    }
+
+    const relX = Math.max(0.18, Math.min(0.82, (clientX - container.left) / container.width));
+    const relY = Math.max(0.18, Math.min(0.82, (clientY - container.top) / container.height));
+
+    const newCenter = { x: relX, y: relY };
+    roiCenterRef.current = newCenter;
+    setRoiCenter(newCenter);
+    setTapFeedback({ x: clientX - container.left, y: clientY - container.top });
+    setTimeout(() => setTapFeedback(null), 1400);
+
+    // Hardware continuous focus trigger on tap if supported
+    if (streamRef.current) {
+      const track = streamRef.current.getVideoTracks()[0];
+      if (track && track.applyConstraints) {
+        try {
+          const caps: any = track.getCapabilities ? track.getCapabilities() : {};
+          if ('focusMode' in caps && Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
+            track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] }).catch(() => {});
+          }
+        } catch (err) {
+          console.debug('hardware focus apply failed', err);
+        }
+      }
+    }
+  };
+
   // Start / stop camera stream based on cameraState
   useEffect(() => {
     if (cameraState !== 'live') {
@@ -78,11 +185,32 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 },
           },
         });
         streamRef.current = stream;
+
+        const track = stream.getVideoTracks()[0];
+        if (track) {
+          const caps: any = track.getCapabilities ? track.getCapabilities() : {};
+          if ('torch' in caps) setHasTorch(true);
+
+          const advanced: any = {};
+          if ('focusMode' in caps && Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
+            advanced.focusMode = 'continuous';
+          }
+          if ('zoom' in caps && caps.zoom) {
+            const desired = Math.max(caps.zoom.min || 1, Math.min(caps.zoom.max || 1, zoomLevelRef.current));
+            advanced.zoom = desired;
+          }
+          if (Object.keys(advanced).length > 0 && track.applyConstraints) {
+            track.applyConstraints({ advanced: [advanced] }).catch((e) => {
+              console.debug('applyConstraints not allowed on track', e);
+            });
+          }
+        }
+
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           try {
@@ -124,16 +252,27 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       if (!videoRef.current || videoRef.current.readyState < 2 || !ctx) return;
 
       const video = videoRef.current;
-      const vW = video.videoWidth || 640;
-      const vH = video.videoHeight || 480;
+      const vW = video.videoWidth || 1280;
+      const vH = video.videoHeight || 720;
 
-      // Extract center ROI matching viewfinder crosshair
-      const roiW = vW * 0.6;
-      const roiH = vH * 0.35;
-      const roiX = (vW - roiW) / 2;
-      const roiY = (vH - roiH) / 2;
+      // Dynamic optical crop based on size mode, zoom level, and interactive ROI center
+      const currentMode = roiSizeRef.current;
+      const currentZoom = zoomLevelRef.current;
+      const currentCenter = roiCenterRef.current;
 
-      ctx.drawImage(video, roiX, roiY, roiW, roiH, 0, 0, offscreen.width, offscreen.height);
+      const baseW = currentMode === 'compact' ? 0.44 : 0.60;
+      const baseH = currentMode === 'compact' ? 0.22 : 0.32;
+
+      const cropW = (vW * baseW) / currentZoom;
+      const cropH = (vH * baseH) / currentZoom;
+
+      const centerX = vW * currentCenter.x;
+      const centerY = vH * currentCenter.y;
+
+      const cropX = Math.max(0, Math.min(vW - cropW, centerX - cropW / 2));
+      const cropY = Math.max(0, Math.min(vH - cropH, centerY - cropH / 2));
+
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, offscreen.width, offscreen.height);
       const imgData = ctx.getImageData(0, 0, offscreen.width, offscreen.height);
 
       // Perform 7-segment digit recognition with universal auto-polarity and glare rejection
@@ -453,7 +592,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       )}
 
       {/* Main Viewfinder Screen */}
-      <div className="relative aspect-16/10 bg-[#1A1412] flex items-center justify-center overflow-hidden">
+      <div
+        onClick={handleTapViewfinder}
+        className="relative aspect-16/10 bg-[#1A1412] flex items-center justify-center overflow-hidden cursor-crosshair select-none"
+      >
         {cameraState === 'standby' ? (
           <div className="absolute inset-0 bg-[#1A1412] flex flex-col items-center justify-center p-4 sm:p-6 text-center z-20 select-none animate-fadeIn">
             {/* Background subtle coffee dots */}
@@ -494,17 +636,96 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             </div>
           </div>
         ) : cameraState === 'live' ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`absolute inset-0 w-full h-full object-cover ${
-              displayMode === 'lcd' || (displayMode === 'auto' && lastOcrResult?.autoPolarityUsed === 'lcd')
-                ? 'invert'
-                : ''
-            }`}
-          />
+          <>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`absolute inset-0 w-full h-full object-cover ${
+                displayMode === 'lcd' || (displayMode === 'auto' && lastOcrResult?.autoPolarityUsed === 'lcd')
+                  ? 'invert'
+                  : ''
+              }`}
+            />
+
+            {/* Floating Live Camera Toolbar: Zoom, ROI Size, Recenter, Torch */}
+            <div className="absolute top-2 inset-x-2 z-20 flex items-center justify-between pointer-events-none">
+              {/* Left: Optical / Digital Zoom Switcher */}
+              <div className="flex items-center gap-1 pointer-events-auto bg-black/60 backdrop-blur-md px-1.5 py-1 rounded-xl border border-white/15">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-[#FAF7F2]/60 hidden sm:inline mr-1">
+                  Zoom:
+                </span>
+                {[1.0, 1.8, 2.5].map((z) => (
+                  <button
+                    key={z}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSetZoom(z);
+                    }}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold transition ${
+                      zoomLevel === z
+                        ? 'bg-[#C26D52] text-white shadow-xs'
+                        : 'text-[#FAF7F2]/75 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {z}x
+                  </button>
+                ))}
+              </div>
+
+              {/* Right: ROI Box Size & Torch & Recenter */}
+              <div className="flex items-center gap-1.5 pointer-events-auto">
+                {(roiCenter.x !== 0.5 || roiCenter.y !== 0.5) && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRecenter();
+                    }}
+                    className="px-2 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 hover:bg-amber-500/30 text-[10px] font-mono font-bold flex items-center gap-1 backdrop-blur-md transition shadow-xs"
+                    title="Reset target box to center"
+                  >
+                    <Crosshair className="w-3 h-3" />
+                    <span>Recenter</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSetRoiSize(roiSize === 'compact' ? 'standard' : 'compact');
+                  }}
+                  className="px-2 py-1 rounded-xl bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono text-[#FAF7F2]/90 hover:text-white flex items-center gap-1 transition"
+                  title="Toggle targeting box size between Compact (Digits only) and Standard"
+                >
+                  <Scan className="w-3 h-3 text-[#C26D52]" />
+                  <span>{roiSize === 'compact' ? 'Compact Box' : 'Standard Box'}</span>
+                </button>
+
+                {hasTorch && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleTorch();
+                    }}
+                    className={`px-2 py-1 rounded-xl backdrop-blur-md border text-[10px] font-mono flex items-center gap-1 transition ${
+                      isTorchOn
+                        ? 'bg-amber-400 text-black border-amber-300 font-bold shadow-xs'
+                        : 'bg-black/60 border-white/15 text-[#FAF7F2]/80 hover:text-white'
+                    }`}
+                    title="Toggle flashlight / torch for dark scale displays"
+                  >
+                    <Zap className="w-3 h-3" />
+                    <span>{isTorchOn ? 'Torch ON' : 'Torch'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
         ) : (
           <div className="absolute inset-0 bg-radial from-[#2C2018] to-[#120E0B] flex flex-col items-center justify-center p-6 select-none">
             {/* Subtle grid pattern */}
@@ -517,7 +738,16 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           const isDigitLocked = (cameraState === 'live' && lastOcrResult !== null && lastOcrResult.weight !== null && lastOcrResult.confidence >= 0.70) || (cameraState === 'demo' && isBrewing);
           return (
             <div
-              className={`relative z-10 w-4/5 max-w-sm aspect-2/1 rounded-xl flex flex-col items-center justify-center p-4 backdrop-blur-[1px] transition-all duration-300 ${
+              style={{
+                left: `${roiCenter.x * 100}%`,
+                top: `${roiCenter.y * 100}%`,
+                transform: 'translate(-50%, -50%)',
+              }}
+              className={`absolute z-10 rounded-xl flex flex-col items-center justify-center p-3 sm:p-4 backdrop-blur-[1px] transition-all duration-200 pointer-events-none ${
+                roiSize === 'compact'
+                  ? 'w-[52%] max-w-[250px] aspect-21/9'
+                  : 'w-[68%] max-w-[320px] aspect-2/1'
+              } ${
                 isDigitLocked
                   ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/10 shadow-[0_0_25px_rgba(16,185,129,0.35)]'
                   : 'border-2 border-dashed border-[#C26D52]/80 bg-black/25'
@@ -529,7 +759,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
               <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
 
-              <div className="text-[10px] tracking-widest uppercase font-mono mb-1 flex items-center gap-1.5">
+              <div className="text-[9px] sm:text-[10px] tracking-widest uppercase font-mono mb-0.5 flex items-center gap-1.5">
                 {isDigitLocked ? (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
@@ -540,47 +770,61 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 ) : (
                   <>
                     <Scan className="w-3 h-3 text-[#C26D52]" />
-                    <span className="text-[#E8DFD5]/80">[ {t('scale.roi_target')} ]</span>
+                    <span className="text-[#E8DFD5]/80">[ AIM AT DIGITS • TAP TO ALIGN ]</span>
                   </>
                 )}
               </div>
 
-          {/* Monospace Jitter-Free Digits */}
-          <div className="font-mono text-4xl sm:text-5xl font-bold tracking-wider text-[#FAF7F2] drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-            {currentWeight.toFixed(1)}
-            <span className="text-xl sm:text-2xl font-normal text-[#FAF7F2]/70 ml-1">g</span>
-          </div>
+              {/* Monospace Jitter-Free Digits */}
+              <div className="font-mono text-3xl sm:text-5xl font-bold tracking-wider text-[#FAF7F2] drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
+                {currentWeight.toFixed(1)}
+                <span className="text-lg sm:text-2xl font-normal text-[#FAF7F2]/70 ml-1">g</span>
+              </div>
 
-          {/* Real-Time Telemetry & Split-Timer */}
-          <div className="mt-2 flex flex-col items-center gap-1 font-mono">
-            <div className="flex items-center gap-3 text-xs">
-              <span className="text-[#C26D52] font-semibold bg-[#2C2018]/80 px-2 py-0.5 rounded border border-[#C26D52]/40">
-                {currentFlow.toFixed(1)} g/s
-              </span>
-              <span className="text-[#FAF7F2]/90 font-bold">
-                {elapsedTime.toFixed(1)}s
-              </span>
-            </div>
+              {/* Real-Time Telemetry & Split-Timer */}
+              <div className="mt-1 flex flex-col items-center gap-1 font-mono">
+                <div className="flex items-center gap-2 sm:gap-3 text-xs">
+                  <span className="text-[#C26D52] font-semibold bg-[#2C2018]/80 px-2 py-0.5 rounded border border-[#C26D52]/40">
+                    {currentFlow.toFixed(1)} g/s
+                  </span>
+                  <span className="text-[#FAF7F2]/90 font-bold">
+                    {elapsedTime.toFixed(1)}s
+                  </span>
+                </div>
 
-            {/* Split-Timer Active Phase Display */}
-            {isBrewing && (
-              <div className="flex items-center gap-2 text-[10px] text-[#FAF7F2]/80 bg-black/50 px-2.5 py-0.5 rounded border border-white/10 mt-0.5">
-                {firstDropTime === null ? (
-                  <span className="text-amber-300 animate-pulse flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                    Pre-infusion: {preInfusionDuration.toFixed(1)}s (Waiting for 1st drop)
-                  </span>
-                ) : (
-                  <span>
-                    Pre: <strong className="text-amber-300">{preInfusionDuration.toFixed(1)}s</strong> | Flow: <strong className="text-[#72806B]">{activeFlowDuration.toFixed(1)}s</strong>
-                  </span>
+                {/* Split-Timer Active Phase Display */}
+                {isBrewing && (
+                  <div className="flex items-center gap-2 text-[10px] text-[#FAF7F2]/80 bg-black/50 px-2.5 py-0.5 rounded border border-white/10 mt-0.5">
+                    {firstDropTime === null ? (
+                      <span className="text-amber-300 animate-pulse flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        Pre-infusion: {preInfusionDuration.toFixed(1)}s (Waiting for 1st drop)
+                      </span>
+                    ) : (
+                      <span>
+                        Pre: <strong className="text-amber-300">{preInfusionDuration.toFixed(1)}s</strong> | Flow: <strong className="text-[#72806B]">{activeFlowDuration.toFixed(1)}s</strong>
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
+          );
+        })()}
+
+        {/* Tap-to-Focus Pulsing Ring Feedback */}
+        {tapFeedback && (
+          <div
+            className="absolute z-30 pointer-events-none -translate-x-1/2 -translate-y-1/2"
+            style={{ left: tapFeedback.x, top: tapFeedback.y }}
+          >
+            <div className="w-12 h-12 rounded-full border-2 border-emerald-400 animate-ping opacity-75" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-emerald-400 bg-emerald-400/30" />
+            <div className="absolute top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 text-emerald-300 font-mono text-[9px] font-bold border border-emerald-400/50 shadow-md whitespace-nowrap">
+              🎯 Aligned & Focused
+            </div>
           </div>
-        </div>
-      );
-    })()}
+        )}
 
         {/* Viewfinder Bottom Telemetry Bar (Zero-clipping responsive bar) */}
         <div className="absolute bottom-2 inset-x-2 z-10 flex items-center justify-between gap-2 px-2.5 py-1 rounded-lg bg-[#1A1412]/90 border border-white/10 text-[10px] sm:text-[11px] font-mono text-[#FAF7F2]">

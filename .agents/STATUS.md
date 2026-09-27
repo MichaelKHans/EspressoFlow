@@ -11,6 +11,14 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Scale Cam Optical Zoom, Tap-to-Align, Compact Reticle & Anti-Glare Engine (v1.2.8)
+- **Digital Optisk Zoom (1.0x, 1.8x, 2.5x):** Løst problemet med slørede tal ved at zoome direkte ind på vægtens display i canvas'et (standard 1.8x med taktile 1.0x, 1.8x, 2.5x piller). Tallene optræder nu skarpe og store i billedprocesseringen.
+- **Hardware Autofokus & Kontinuerlig Fokus:** Aktiveret `focusMode: 'continuous'` i `getUserMedia` og `MediaStreamTrack`, så telefonen automatisk stiller skarpt på vægten under espressomaskinen.
+- **Tap-to-Align & Recenter:** Brugeren kan trykke hvor som helst i kamerasøgeren for at flytte målefeltet over tallene (`🎯 Aligned & Focused` feedback-ring) samt trykke `⌖ Recenter` for hurtigt at centrere.
+- **Kompakt Tal-Felt (21:9):** Introduceret et ultra-kompakt måleretikel, der kun omslutter tallene og fjerner koppen, portafilteret og drypbakkens genskin fra analysen.
+- **Anti-Genskin & Indre Hulrum Validering i OCR-Motor:** Udelukker lysreflekser fra forkert at blive læst som '8'-taller ved at undersøge de indre huller i 7-segments cifre samt forkaste overfyldte lyspletter (fill density > 68%).
+- **Lommelygte / Torch Knap:** Integreret lommelygte-tænd/sluk direkte i søgeren til mørke kaffekroge.
+
 ### 2026-09-27 -- 100% Engelsk UI Standardisering (v1.2.7)
 - **Streng Engelsk UI-Standard:** Gennemgået og oversat samtlige brugerrettede tekster til professionelt engelsk specialty coffee-terminologi.
 - **Admin Portal (`/admin`):** Sikkerhedsgate (PIN, Restricted Area, keypad), metrikker (7-Day Active Trials, Lifetime Unlocks, Gross Revenue, Conversion Rate), kaffebønne-kardoteket og Supabase-synkronisering er nu 100% på engelsk.

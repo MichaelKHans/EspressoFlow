@@ -4,6 +4,25 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.8] - 2026-09-27
+### Scale Cam Optical Zoom, Tap-to-Align, Compact Reticle & Anti-Glare Vision Engine
+- **Digital Optical Zoom (1.0x, 1.8x, 2.5x):**
+  - Instant optical canvas magnification directly in the camera feed (`1.8x` by default, with `1.0x` and `2.5x` toggle pills).
+  - Digits now occupy large pixel-dense regions on the canvas, eliminating distance blur without needing to hold phone awkwardly close.
+  - Automatically queries and activates device hardware continuous autofocus (`focusMode: 'continuous'`) and hardware zoom when supported by the mobile sensor.
+- **Interactive Tap-to-Align & Recenter:**
+  - Barista can tap anywhere on the live viewfinder to target the scale display dynamically (`🎯 Aligned & Focused` feedback ring).
+  - Added dedicated *Recenter* button (`⌖ Recenter`) to instantly snap back to center.
+- **Ultra-Compact Digits-Only Reticle (21:9):**
+  - New *Compact* mode isolates only the active digits (aspect ratio 21:9), cutting out distracting cup surfaces, portafilter shadows, and drip tray glare.
+  - User can toggle between *Compact* and *Standard* ROI bounding boxes.
+- **Advanced 7-Segment Anti-Glare & Topological Filtering:**
+  - **Hollow Inner Cavity Verification:** Probes top and bottom loop cavities (`upperHole`, `lowerHole`, `centerHole`). If both cavities are filled with light, it's flagged as a specular glare/reflection and disqualified from being read as an `'8'`.
+  - **Fill Density Rejection:** Real 7-segment strokes have 20–55% fill density. Solid reflection smudges (>68% active pixels) are automatically rejected.
+  - **Aspect Ratio Rejection:** Discards wide streaks and reflections from chrome drip trays.
+- **Built-in Flashlight / Torch Toggle:**
+  - Integrated `Torch` button on the live viewfinder for dark coffee bar setups and under-machine scale displays.
+
 ## [1.2.7] - 2026-09-27
 ### 100% English Global UI Across Admin Portal, Dial-In Studio & Equipment Fleet
 - **Strict English Standard across All User-Facing Components:**

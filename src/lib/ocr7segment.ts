@@ -288,6 +288,12 @@ function probeDigitSegments(
     };
   }
 
+  // Probe inner hollow cavities to reject solid glares, reflections, and filled spots
+  // In true 7-segment digital characters, loops have empty dark cavities between strokes
+  const upperHole = sampleSegment(binary, canvasW, box, 0.50, 0.28, 'c');
+  const lowerHole = sampleSegment(binary, canvasW, box, 0.50, 0.72, 'c');
+  const centerHole = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'c');
+
   const sampleArray = [
     seg.a ? 1 : 0,
     seg.b ? 1 : 0,
@@ -303,13 +309,16 @@ function probeDigitSegments(
 
   for (const [digit, variants] of Object.entries(PATTERN_VARIANTS)) {
     for (const pattern of variants) {
-      // Disqualifications based on 7-segment topology:
+      // Disqualifications based on 7-segment topology & inner hollow cavities:
       if (digit === '1' && (seg.g || seg.a || seg.d)) continue;
       if (digit === '-' && (seg.b || seg.c || seg.e || seg.f || seg.a || seg.d)) continue;
-      if (digit === '0' && seg.g) continue;
+      if (digit === '0' && (seg.g || centerHole)) continue; // '0' center must be hollow
       if (digit === '7' && (seg.d || seg.g)) continue;
-      if (digit === '4' && (seg.a || seg.d)) continue;
+      if (digit === '4' && (seg.a || seg.d || upperHole)) continue; // '4' upper cavity must be hollow
       if (digit === '3' && (seg.e || seg.f)) continue;
+      if (digit === '8' && (upperHole && lowerHole)) continue; // Solid glare/blob filled in both loops is NOT an '8'!
+      if (digit === '6' && lowerHole) continue; // '6' bottom loop must be hollow
+      if (digit === '9' && upperHole) continue; // '9' top loop must be hollow
 
       let matchCount = 0;
       for (let i = 0; i < 7; i++) {
@@ -519,6 +528,20 @@ function parseDigitsFromBinary(
       // Unit letter filtering ('g', 'oz', 'ml' on far right with non-digit bit pattern)
       if (spanW <= bandH * 0.45 && spanH <= bandH * 0.45 && span.start > width * 0.65) {
         // Skip isolated unit markers
+        continue;
+      }
+
+      // Reject solid glares and specular reflections:
+      // True 7-segment digits consist of thin strokes with hollow loops (fill density ~20-55%).
+      // Solid glare spots, metal reflections, and light flares typically exceed 68% density.
+      const boxArea = spanW * spanH;
+      const fillDensity = activePixels / boxArea;
+      if (fillDensity > 0.68 && spanW >= 8 && spanH >= 12) {
+        continue;
+      }
+
+      // Reject non-character aspect ratios (too wide for a single 7-segment digit)
+      if (spanW > spanH * 1.35 && spanH >= 12) {
         continue;
       }
 
