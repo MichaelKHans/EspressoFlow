@@ -4,6 +4,17 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.9] - 2026-09-27
+### Hidden Passcode Gate & Custom Admin Passcode Settings
+- **Removed Passcode Hint from Login Screen:**
+  - Completely removed the default passcode label (`Default master passcode: 9246 or espresso2026`) from the `/admin` login view for absolute access privacy.
+- **Custom Admin Master Passcode:**
+  - Added dedicated *Security & Passcode* tab in the Admin Hub (`KeyRound` icon).
+  - Admin/owner can change the master passcode to any personal numeric PIN or alphanumeric password (minimum 4 characters).
+  - Passcode confirmation validation, show/hide password toggle, and instant visual success feedback.
+  - Option to reset back to factory default (`9246`) at any time.
+  - Custom passcode persists safely in local browser storage (`localStorage`), surviving page reloads and browser closures.
+
 ## [1.2.8] - 2026-09-27
 ### Scale Cam Optical Zoom, Tap-to-Align, Compact Reticle & Anti-Glare Vision Engine
 - **Digital Optical Zoom (1.0x, 1.8x, 2.5x):**

@@ -18,6 +18,7 @@ import {
   EyeOff,
   LogOut,
   Layers,
+  KeyRound,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, UserAccessState } from '../types/espresso';
 
@@ -43,7 +44,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [pinInput, setPinInput] = useState<string>('');
   const [pinError, setPinError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'supabase'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'security' | 'supabase'>('metrics');
+
+  // Master Passcode State (persists in localStorage)
+  const [masterPin, setMasterPin] = useState<string>(() => {
+    return localStorage.getItem('espresso_admin_master_pin') || DEFAULT_ADMIN_PIN;
+  });
+  const [newPasscodeInput, setNewPasscodeInput] = useState<string>('');
+  const [confirmPasscodeInput, setConfirmPasscodeInput] = useState<string>('');
+  const [passcodeSuccess, setPasscodeSuccess] = useState<string | null>(null);
+  const [passcodeError, setPasscodeError] = useState<string | null>(null);
+  const [showNewPasscode, setShowNewPasscode] = useState<boolean>(false);
 
   // Supabase & Cloud Config State
   const [supabaseUrl, setSupabaseUrl] = useState<string>(() => {
@@ -82,7 +93,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const handleUnlock = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const clean = pinInput.trim();
-    if (clean === DEFAULT_ADMIN_PIN || clean.toLowerCase() === ALTERNATIVE_ADMIN_PASS.toLowerCase()) {
+    const currentPass = localStorage.getItem('espresso_admin_master_pin') || DEFAULT_ADMIN_PIN;
+    const isMatch =
+      clean === currentPass ||
+      (currentPass === DEFAULT_ADMIN_PIN && clean.toLowerCase() === ALTERNATIVE_ADMIN_PASS.toLowerCase());
+
+    if (isMatch) {
       setIsAuthenticated(true);
       sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
       setPinError(null);
@@ -90,6 +106,45 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     } else {
       setPinError('Incorrect passcode. Please try again.');
       setPinInput('');
+    }
+  };
+
+  // Handle Master Passcode Change
+  const handleUpdateMasterPasscode = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasscodeError(null);
+    setPasscodeSuccess(null);
+
+    const cleanNew = newPasscodeInput.trim();
+    const cleanConfirm = confirmPasscodeInput.trim();
+
+    if (cleanNew.length < 4) {
+      setPasscodeError('Passcode must be at least 4 digits or characters long.');
+      return;
+    }
+
+    if (cleanNew !== cleanConfirm) {
+      setPasscodeError('The two passcodes do not match. Please verify.');
+      return;
+    }
+
+    localStorage.setItem('espresso_admin_master_pin', cleanNew);
+    setMasterPin(cleanNew);
+    setPasscodeSuccess('Master passcode successfully updated! Use your new code next time.');
+    setNewPasscodeInput('');
+    setConfirmPasscodeInput('');
+    setTimeout(() => setPasscodeSuccess(null), 4000);
+  };
+
+  // Reset Master Passcode to default (9246)
+  const handleResetToDefaultPin = () => {
+    if (window.confirm('Reset admin passcode to factory default (9246)?')) {
+      localStorage.removeItem('espresso_admin_master_pin');
+      setMasterPin(DEFAULT_ADMIN_PIN);
+      setPasscodeSuccess('Passcode reset to factory default (9246).');
+      setNewPasscodeInput('');
+      setConfirmPasscodeInput('');
+      setTimeout(() => setPasscodeSuccess(null), 3000);
     }
   };
 
@@ -231,12 +286,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <span>Open Admin Dashboard</span>
             </button>
           </form>
-
-          {/* Discrete Hint for Owner */}
-          <div className="pt-2 text-center text-[10px] text-[#A6998E]">
-            Default master passcode: <strong className="text-[#2C2018]">9246</strong> or{' '}
-            <strong className="text-[#2C2018]">espresso2026</strong>
-          </div>
         </div>
       </div>
     );
@@ -315,6 +364,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           >
             <Star className="w-3.5 h-3.5 text-amber-500" />
             <span>Bean Star Ratings & Database</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('security')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition shrink-0 ${
+              activeTab === 'security'
+                ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                : 'bg-white hover:bg-[#FAF7F2] text-[#7A6E65] border border-[#E8DFD5]'
+            }`}
+          >
+            <KeyRound className="w-3.5 h-3.5 text-[#C26D52]" />
+            <span>Security & Passcode</span>
           </button>
 
           <button
@@ -545,7 +607,127 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         )}
 
-        {/* TAB 3: Supabase & Cloud Backend Integration */}
+        {/* TAB 3: Security & Master Passcode */}
+        {activeTab === 'security' && (
+          <div className="space-y-6 animate-fadeIn font-mono">
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2.5">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-[#C26D52]" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                    Master Passcode & Access Control
+                  </h3>
+                </div>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    masterPin === DEFAULT_ADMIN_PIN
+                      ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                      : 'bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30'
+                  }`}
+                >
+                  {masterPin === DEFAULT_ADMIN_PIN ? 'Default PIN Active (9246)' : 'Custom Passcode Active'}
+                </span>
+              </div>
+
+              <p className="text-xs text-[#7A6E65] leading-relaxed font-sans">
+                Set your private master passcode to secure telemetry, trial metrics, and coffee bean ratings. You can use any numeric PIN or alphanumeric password (minimum 4 characters).
+              </p>
+
+              {/* Passcode Update Form */}
+              <form onSubmit={handleUpdateMasterPasscode} className="space-y-4 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-[#7A6E65] uppercase block font-bold">
+                      New Passcode / PIN:
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPasscode ? 'text' : 'password'}
+                        value={newPasscodeInput}
+                        onChange={(e) => {
+                          setNewPasscodeInput(e.target.value);
+                          setPasscodeError(null);
+                        }}
+                        placeholder="e.g. 5821 or mysecretcode"
+                        className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] text-xs text-[#2C2018] focus:outline-hidden focus:ring-1 focus:ring-[#C26D52] tracking-wider"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPasscode(!showNewPasscode)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7A6E65] hover:text-[#2C2018]"
+                      >
+                        {showNewPasscode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-[#7A6E65] uppercase block font-bold">
+                      Confirm New Passcode:
+                    </label>
+                    <input
+                      type={showNewPasscode ? 'text' : 'password'}
+                      value={confirmPasscodeInput}
+                      onChange={(e) => {
+                        setConfirmPasscodeInput(e.target.value);
+                        setPasscodeError(null);
+                      }}
+                      placeholder="Re-enter new passcode"
+                      className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] text-xs text-[#2C2018] focus:outline-hidden focus:ring-1 focus:ring-[#C26D52] tracking-wider"
+                    />
+                  </div>
+                </div>
+
+                {passcodeError && (
+                  <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5 flex items-center gap-1.5 animate-shake">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{passcodeError}</span>
+                  </div>
+                )}
+
+                {passcodeSuccess && (
+                  <div className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-lg p-2.5 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>{passcodeSuccess}</span>
+                  </div>
+                )}
+
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+                  {masterPin !== DEFAULT_ADMIN_PIN ? (
+                    <button
+                      type="button"
+                      onClick={handleResetToDefaultPin}
+                      className="text-xs text-[#7A6E65] hover:text-red-700 underline transition"
+                    >
+                      Reset to factory default (9246)
+                    </button>
+                  ) : <div />}
+
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-bold flex items-center gap-1.5 transition shadow-xs ml-auto"
+                  >
+                    <Check className="w-3.5 h-3.5 text-white" />
+                    <span>Save Master Passcode</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Storage & Privacy Architecture Card */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-3 font-sans">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase font-mono text-[#2C2018]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#72806B]" />
+                <span>Security & Device Storage</span>
+              </div>
+              <p className="text-xs text-[#7A6E65] leading-relaxed">
+                Your passcode is securely stored in device local storage and is never exposed on the login screen. It persists seamlessly across app sessions and browser reloads.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: Supabase & Cloud Backend Integration */}
         {activeTab === 'supabase' && (
           <div className="space-y-6 animate-fadeIn font-mono">
             <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">

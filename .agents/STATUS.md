@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Skjult Admin-Kode & Brugerdefineret Kodeord-Indstilling (v1.2.9)
+- **Fjernet Kode-Tekst fra Login-Skærmen:** Den afslørende tekst med standard master-passcode i bunden af `/admin` login-portalen er fjernet 100%, så ingen uvedkommende kan se koden.
+- **Mulighed for at Ændre Admin-Kode:** Tilføjet en dedikeret *"Security & Passcode"* fane i Admin Hub med nøgle-ikon (`KeyRound`).
+- **Valgfri Egen Kode:** Barista/ejer kan indtaste en valgfri ny PIN eller adgangskode (min. 4 tegn) med bekræftelsesfelt, vis/skjul øje-ikon og instant gem-feedback.
+- **Lokal Sikkerhed:** Koden gemmes persistent i `localStorage` (`espresso_admin_master_pin`) og overlever browser-genstart.
+- **Nulstil til Fabriksindstilling:** Knap til hurtigt at nulstille koden tilbage til standard (`9246`), hvis man skulle glemme sin kode.
+
 ### 2026-09-27 -- Scale Cam Optical Zoom, Tap-to-Align, Compact Reticle & Anti-Glare Engine (v1.2.8)
 - **Digital Optisk Zoom (1.0x, 1.8x, 2.5x):** Løst problemet med slørede tal ved at zoome direkte ind på vægtens display i canvas'et (standard 1.8x med taktile 1.0x, 1.8x, 2.5x piller). Tallene optræder nu skarpe og store i billedprocesseringen.
 - **Hardware Autofokus & Kontinuerlig Fokus:** Aktiveret `focusMode: 'continuous'` i `getUserMedia` og `MediaStreamTrack`, så telefonen automatisk stiller skarpt på vægten under espressomaskinen.
