@@ -41,6 +41,7 @@ import {
   saveOnboardingComplete,
   loadMachineName,
   saveMachineName,
+  resolveGrinder,
 } from './lib/storage';
 import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoMath';
 import { parseCoffeeBagPhoto } from './lib/bagScanner';
@@ -84,13 +85,16 @@ export function App() {
     ratioStyle: 'lungo' as RatioStyle,
     targetYieldGrams: 45.0,
     grindSetting: '1.4',
-    grinderName: 'Eureka Mignon Specialita',
+    grinderName: 'Eureka Mignon Specialita 16CR',
   };
 
   // Brewing & Equipment Parameters (Declared BEFORE currentGrinder to prevent TDZ crash)
   const [doseGrams, setDoseGrams] = useState<number>(currentBean.doseGrams);
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(currentBean.targetYieldGrams);
-  const [grinderName, setGrinderName] = useState<string>(currentBean.grinderName);
+  const [grinderName, setGrinderName] = useState<string>(() => {
+    const res = resolveGrinder(currentBean.grinderName, loadGrinders());
+    return res?.name || currentBean.grinderName;
+  });
   const [grindSetting, setGrindSetting] = useState<string>(currentBean.grindSetting);
   const [machineName, setMachineName] = useState<string>(() => loadMachineName());
   const [machinePreInfusion, setMachinePreInfusion] = useState<number>(6.0);
@@ -100,7 +104,7 @@ export function App() {
   const [ratioStyle, setRatioStyle] = useState<RatioStyle>(currentBean.ratioStyle);
 
   // Active Grinder derived safely after grinderName is declared
-  const currentGrinder = grinders.find((g) => g.name === grinderName) || grinders[0] || {
+  const currentGrinder = resolveGrinder(grinderName, grinders) || grinders[0] || {
     id: 'default',
     name: 'Baratza Encore ESP Pro',
     type: 'stepped' as const,
@@ -163,7 +167,8 @@ export function App() {
       setRatioStyle(selected.ratioStyle);
       setDoseGrams(selected.doseGrams);
       setTargetYieldGrams(selected.targetYieldGrams);
-      setGrinderName(selected.grinderName);
+      const res = resolveGrinder(selected.grinderName, grinders);
+      setGrinderName(res?.name || selected.grinderName);
       setGrindSetting(selected.grindSetting);
     }
   };
@@ -334,7 +339,7 @@ export function App() {
     if (!newBeanName.trim()) return;
     const defaultRatio = ROAST_PRESETS[newBeanRoastLevel].defaultRatio;
     const mult = RATIO_PRESETS[defaultRatio].multiplier;
-    const chosenGrinder = grinders.find((g) => g.name === (newBeanGrinderName || grinderName)) || currentGrinder;
+    const chosenGrinder = resolveGrinder(newBeanGrinderName || grinderName, grinders) || currentGrinder;
     const newBean: CoffeeBeanProfile = {
       id: `bean-${Date.now()}`,
       name: newBeanName.trim(),
@@ -887,7 +892,7 @@ export function App() {
                     <div className="sm:col-span-2">
                       <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Assigned Grinder</label>
                       <select
-                        value={newBeanGrinderName || grinderName}
+                        value={resolveGrinder(newBeanGrinderName || grinderName, grinders)?.name || newBeanGrinderName || grinderName}
                         onChange={(e) => setNewBeanGrinderName(e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs font-semibold text-[#2C2018]"
                       >
@@ -915,6 +920,10 @@ export function App() {
                   const isActive = bean.id === activeBeanId;
                   const beanRoastDate = new Date(bean.roastDate);
                   const daysOff = Math.max(0, Math.floor((Date.now() - beanRoastDate.getTime()) / (1000 * 60 * 60 * 24)));
+                  const beanGrinder = resolveGrinder(bean.grinderName, grinders);
+                  const grinderDisplayBrand = beanGrinder
+                    ? beanGrinder.name.split(' ')[0]
+                    : (bean.grinderName ? bean.grinderName.split(' ')[0] : 'Grind');
 
                   return (
                     <div
@@ -970,7 +979,7 @@ export function App() {
                         <div className="text-[10px] text-[#7A6E65] flex items-center justify-between gap-1 pt-0.5">
                           <span>{daysOff}d off roast</span>
                           <span className="font-mono bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.5 rounded text-[10px] inline-flex items-center gap-1">
-                            <span className="text-[#7A6E65]">{bean.grinderName ? bean.grinderName.split(' ')[0] : 'Grind'}:</span>
+                            <span className="text-[#7A6E65]">{grinderDisplayBrand}:</span>
                             <strong className="text-[#C26D52] font-bold">{bean.grindSetting}</strong>
                           </span>
                         </div>
@@ -1001,9 +1010,9 @@ export function App() {
                           {/* 1. Quick Dial Setting with +/- buttons */}
                           <div className="bg-white p-2 rounded-lg border border-[#E8DFD5] space-y-1">
                             <div className="flex items-center justify-between text-[10px] text-[#7A6E65]">
-                              <span>Grind Dial ({bean.grinderName ? bean.grinderName.split(' ')[0] : 'Grind'}):</span>
+                              <span>Grind Dial ({grinderDisplayBrand}):</span>
                               <span className="font-mono text-[9px]">
-                                {grinders.find((g) => g.name === bean.grinderName)?.stepUnit || 'steps'}
+                                {beanGrinder?.stepUnit || 'steps'}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5">
@@ -1118,12 +1127,12 @@ export function App() {
                             <div className="space-y-1">
                               <div className="flex items-center justify-between text-[9px] uppercase font-bold text-[#7A6E65] font-mono">
                                 <span>Assigned Grinder</span>
-                                {grinders.find((g) => g.name === bean.grinderName)?.inSetup && (
+                                {beanGrinder?.inSetup && (
                                   <span className="text-[#72806B] font-semibold">In your setup</span>
                                 )}
                               </div>
                               <select
-                                value={bean.grinderName}
+                                value={beanGrinder?.name || bean.grinderName}
                                 onChange={(e) => {
                                   const g = e.target.value;
                                   setGrinderName(g);
@@ -1397,7 +1406,7 @@ export function App() {
                 <div className="space-y-1.5">
                   <label className="text-[10px] text-[#7A6E65] uppercase">Dialed Grinder for this Bean</label>
                   <select
-                    value={grinderName}
+                    value={resolveGrinder(grinderName, grinders)?.name || grinderName}
                     onChange={(e) => {
                       const g = e.target.value;
                       if (g === '__ADD_NEW__') {

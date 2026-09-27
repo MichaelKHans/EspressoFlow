@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile } from '../types/espresso';
+import { resolveGrinder } from '../lib/storage';
 import { X, Sliders, ChevronRight, Target, Sparkles, Scale, Minus, Plus, RotateCcw, CheckCircle2 } from 'lucide-react';
 
 interface DialInWizardModalProps {
@@ -30,19 +31,21 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   onProceedToScaleCam,
   onSaveDialIn,
 }) => {
-  // Grinder selection state: defaults to bean's dialed grinder or current bar grinder
-  const [selectedGrinderName, setSelectedGrinderName] = useState<string>(
-    currentBean.grinderName || currentGrinder.name
-  );
-
   // Master pool of all available grinders
   const pool = allGrinders.length > 0
     ? allGrinders
     : (availableGrinders.length > 0 ? availableGrinders : [currentGrinder]);
 
+  // Grinder selection state: defaults to bean's dialed grinder or current bar grinder
+  const [selectedGrinderName, setSelectedGrinderName] = useState<string>(() => {
+    const raw = currentBean.grinderName || currentGrinder.name;
+    const res = resolveGrinder(raw, pool);
+    return res?.name || raw;
+  });
+
   // Derived active grinder object in this modal
   const activeGrinder =
-    pool.find((g) => g.name === selectedGrinderName) ||
+    resolveGrinder(selectedGrinderName, pool) ||
     currentGrinder ||
     pool[0];
 
@@ -68,8 +71,9 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   // Sync state whenever modal opens or bean/drink changes
   useEffect(() => {
     if (isOpen) {
-      const beanGrinder = currentBean.grinderName || currentGrinder.name;
-      setSelectedGrinderName(beanGrinder);
+      const raw = currentBean.grinderName || currentGrinder.name;
+      const res = resolveGrinder(raw, pool);
+      setSelectedGrinderName(res?.name || raw);
       setDoseGrams(drink.defaultDoseGrams || currentBean.doseGrams || 18.0);
       setTargetYieldGrams(drink.targetYieldGrams || currentBean.targetYieldGrams || 36.0);
       setGrindSetting(currentBean.grindSetting || currentGrinder.defaultSetting || '15');

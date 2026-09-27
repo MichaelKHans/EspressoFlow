@@ -11,6 +11,17 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Grinder Mismatch & Controlled Dropdown Resolution Fix (v1.2.15)
+- **Løst Kværn-Mismatch i Coffee Bean Vault:**
+  - Løst fejl hvor et aktivt bønnekort med Eureka-kværn viste `Grind Dial (Eureka): 1.4` øverst, men uventet viste `Baratza Encore ESP Pro (Stepped)` i dropdown-vælgeren nedenunder.
+  - Årsag: Bønnen i standardopsætningen havde navnet `Eureka Mignon Specialita`, mens CremaShop-kataloget navngav kværnen `Eureka Mignon Specialita 16CR`. Når ingen `<option>` matchede, faldt HTML `<select>` automatisk tilbage til den første option i DOM (`Baratza Encore ESP Pro`).
+- **3-Trins Intelligent Grinder Resolver (`resolveGrinder`):**
+  - Implementeret robust matching: (1) Eksakt case-insensitive match, (2) Substring / prefix match (`Eureka Mignon Specialita` $\leftrightarrow$ `Eureka Mignon Specialita 16CR`), (3) Brand match (`Eureka`, `DF64`, `Baratza`, `Niche`, `Varia`).
+  - Automatisk migrering af `localStorage` i `loadBeans()`.
+- **Controlled Dropdown Synkronisering:**
+  - Opdateret `App.tsx`, `DialInWizardModal.tsx` og `BeanScannerModal.tsx` så `<select>` altid binder til den fundne kværn uden desynkronisering.
+- **Validering:** 100% ren build med `npm run build` (0 fejl, 383ms).
+
 ### 2026-09-27 -- Curator Hub & Periodisk Vedligeholdelses-Huskeliste i Admin Portal (v1.2.14)
 - **Curator Hub & Periodic Database Audit Faneblad (`/admin`):**
   - Dedikeret 5. faneblad i Admin Portalen til systematisk administration af kaffebasen, ekspert-scores og kaffehøst.

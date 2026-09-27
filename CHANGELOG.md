@@ -4,6 +4,19 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.15] - 2026-09-27
+### Grinder Sync & Controlled Dropdown Resolution Fix in Bean Vault
+- **Løsning på Grinder Mismatch i Coffee Bean Vault:**
+  - Løst visuel desynkronisering mellem Quick Dial-In (`Grind Dial (Eureka): 1.4`) og Assigned Grinder dropdownen (`Baratza Encore ESP Pro (Stepped)`).
+  - Årsag lokaliseret: Standardbønnerne i databasen var gemt med `grinderName: 'Eureka Mignon Specialita'`, mens kværnkataloget navngav modellen `'Eureka Mignon Specialita 16CR'`. Fordi strengen ikke matchede nogen `<option>`, faldt HTML `<select>` tilbage til den første option i DOM'en (`Baratza Encore ESP Pro`), mens tekstoverskriften læste `bean.grinderName.split(' ')[0]`.
+- **Intelligent Grinder Resolver (`resolveGrinder`):**
+  - Implementeret 3-trins fallback matching i `src/lib/storage.ts`: (1) Exact case-insensitive match, (2) Substring / prefix match (`"Eureka Mignon Specialita"` $\leftrightarrow$ `"Eureka Mignon Specialita 16CR"`), (3) Brand prefix match (`Eureka`, `DF64`, `Baratza`, `Niche`, `Varia`).
+  - Automatisk migrering af `localStorage` ved opstart i `loadBeans()` så eksisterende gemte bønner på telefonen øjeblikkeligt normaliseres uden datatab.
+- **Controlled Select Binding i alle komponenter:**
+  - Opdateret `src/App.tsx`, `DialInWizardModal.tsx` og `BeanScannerModal.tsx` til at anvende `resolveGrinder` i `<select value={...}>`, så dropdown altid vælger og fremhæver den korrekte kværn.
+- **Kompilering & Test:**
+  - Verificeret 100% fejlfri build med `npm run build` i Vite & TypeScript.
+
 ## [1.2.14] - 2026-09-27
 ### Curator Hub & Periodic Maintenance Checklist in Admin Portal
 - **Curator Hub & Periodic Database Audit Tab (`/admin`):**

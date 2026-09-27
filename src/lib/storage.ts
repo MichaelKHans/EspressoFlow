@@ -125,7 +125,7 @@ function getSampleShots(): ShotRecord[] {
       peakFlowGps: 1.6,
       channeling: { detected: false, severity: 'none' },
       channelingDetected: false,
-      grinderName: 'Eureka Mignon Specialita',
+      grinderName: 'Eureka Mignon Specialita 16CR',
       grindSetting: '1.4',
       machineName: 'Sage Dual Boiler',
       tasteRating: 'balanced',
@@ -154,7 +154,7 @@ function getSampleShots(): ShotRecord[] {
         message: 'Severe channeling spike (3.4 g/s at 14.5s). Water broke through puck.',
       },
       channelingDetected: true,
-      grinderName: 'DF64 Gen 2',
+      grinderName: 'DF64 Gen 2 (Single Dose)',
       grindSetting: '14.0',
       machineName: 'E61 Manual Flow Control',
       tasteRating: 'sour',
@@ -164,10 +164,35 @@ function getSampleShots(): ShotRecord[] {
   ];
 }
 
+export function resolveGrinder(name: string | undefined, grinders: GrinderProfile[]): GrinderProfile | undefined {
+  if (!name || grinders.length === 0) return undefined;
+  // 1. Exact match
+  const exact = grinders.find((g) => g.name.toLowerCase() === name.toLowerCase());
+  if (exact) return exact;
+
+  // 2. Prefix or substring match (e.g. "Eureka Mignon Specialita" matches "Eureka Mignon Specialita 16CR")
+  const prefix = grinders.find(
+    (g) => g.name.toLowerCase().startsWith(name.toLowerCase()) || name.toLowerCase().startsWith(g.name.toLowerCase())
+  );
+  if (prefix) return prefix;
+
+  // 3. First brand word match (e.g. "Eureka", "DF64", "Baratza", "Niche", "Varia")
+  const firstWord = name.split(' ')[0].toLowerCase();
+  const brandMatch = grinders.find((g) => g.name.toLowerCase().startsWith(firstWord));
+  return brandMatch;
+}
+
 export function loadBeans(): CoffeeBeanProfile[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.BEANS);
-    return raw ? JSON.parse(raw) : getDefaultBeans();
+    const beans: CoffeeBeanProfile[] = raw ? JSON.parse(raw) : getDefaultBeans();
+    // Normalize grinder names to ensure 100% exact match with grinder catalog
+    return beans.map((b) => {
+      let gName = b.grinderName;
+      if (gName === 'Eureka Mignon Specialita') gName = 'Eureka Mignon Specialita 16CR';
+      if (gName === 'DF64 Gen 2') gName = 'DF64 Gen 2 (Single Dose)';
+      return { ...b, grinderName: gName };
+    });
   } catch {
     return getDefaultBeans();
   }
@@ -193,7 +218,7 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       ratioStyle: 'lungo',
       targetYieldGrams: 45.0,
       grindSetting: '1.4',
-      grinderName: 'Eureka Mignon Specialita',
+      grinderName: 'Eureka Mignon Specialita 16CR',
       notes: 'Floral jasmine, bergamot, peach sweetness.',
     },
     {
@@ -206,7 +231,7 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       ratioStyle: 'standard',
       targetYieldGrams: 36.0,
       grindSetting: '14.0',
-      grinderName: 'DF64 Gen 2',
+      grinderName: 'DF64 Gen 2 (Single Dose)',
       notes: 'Juicy red apple, cane sugar, creamy chocolate body.',
     },
     {
@@ -219,7 +244,7 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       ratioStyle: 'ristretto',
       targetYieldGrams: 27.0,
       grindSetting: '2.2',
-      grinderName: 'Eureka Mignon Specialita',
+      grinderName: 'Eureka Mignon Specialita 16CR',
       notes: 'Dark cacao, toasted hazelnuts, thick crema syrup.',
     },
   ];

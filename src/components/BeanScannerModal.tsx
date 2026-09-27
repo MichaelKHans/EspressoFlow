@@ -27,6 +27,7 @@ import {
   type ScannedBeanInfo,
 } from '../lib/bagScanner';
 import { upsertGlobalBean } from '../lib/supabase';
+import { resolveGrinder } from '../lib/storage';
 
 interface BeanScannerModalProps {
   isOpen: boolean;
@@ -47,7 +48,10 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<ScanMode>('barcode');
-  const [selectedGrinderName, setSelectedGrinderName] = useState<string>(currentGrinderName);
+  const [selectedGrinderName, setSelectedGrinderName] = useState<string>(() => {
+    const res = resolveGrinder(currentGrinderName, grinders);
+    return res?.name || currentGrinderName;
+  });
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -806,7 +810,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                     </div>
                     {grinders && grinders.length > 1 ? (
                       <select
-                        value={selectedGrinderName}
+                        value={resolveGrinder(selectedGrinderName, grinders)?.name || selectedGrinderName}
                         onChange={(e) => setSelectedGrinderName(e.target.value)}
                         className="text-[10px] font-mono text-[#2C2018] bg-white border border-[#E8DFD5] rounded px-1.5 py-0.5"
                       >
