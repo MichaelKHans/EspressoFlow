@@ -13,6 +13,8 @@ import {
   Info,
   Flame,
   Search,
+  Star,
+  Award,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, RoastLevel, RatioStyle, GrinderProfile } from '../types/espresso';
 import { useTranslation } from '../i18n';
@@ -24,6 +26,7 @@ import {
   KNOWN_BARCODE_DATABASE,
   type ScannedBeanInfo,
 } from '../lib/bagScanner';
+import { upsertGlobalBean } from '../lib/supabase';
 
 interface BeanScannerModalProps {
   isOpen: boolean;
@@ -296,7 +299,27 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       grinderName: selectedGrinderName || currentGrinderName || 'Baratza Encore ESP',
       notes: scannedResult?.notes || 'Added via Mobile Vision & Barcode Scanner.',
       barcode: scannedResult?.barcode,
+      purchaseCountry: scannedResult?.purchaseCountry || 'DK',
+      suitableFor: scannedResult?.suitableFor,
+      communityRating: scannedResult?.communityRating,
+      communityVotes: scannedResult?.communityVotes,
+      expertScore: scannedResult?.expertScore,
+      expertSource: scannedResult?.expertSource,
     };
+
+    // Fire-and-forget background cloud sync to Supabase (Zero UI latency)
+    if (scannedResult?.barcode) {
+      upsertGlobalBean({
+        barcode: scannedResult.barcode,
+        roaster: editRoaster.trim() || 'Specialty Roaster',
+        name: editName.trim(),
+        roast_level: editRoastLevel === 'medium-dark' ? 'dark' : editRoastLevel,
+        purchase_country: scannedResult?.purchaseCountry || 'DK',
+        expert_score: scannedResult?.expertScore,
+        expert_source: scannedResult?.expertSource,
+      }).catch((e) => console.debug('Background cloud bean sync skipped:', e));
+    }
+
     onSaveBean(newBean, makeActive);
     onClose();
   };
@@ -567,6 +590,43 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                   <span>Rescan</span>
                 </button>
               </div>
+
+              {/* Community Cloud Rating & Drink Suitability Badges */}
+              {/* Community Cloud Rating & Expert Score Badges */}
+              {((scannedResult.communityRating !== undefined && scannedResult.communityRating > 0) || scannedResult.expertScore) && (
+                <div className="p-3 rounded-xl bg-[#FFFDF9] border border-[#E8DFD5] shadow-2xs flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    {scannedResult.communityRating !== undefined && scannedResult.communityRating > 0 && (
+                      <div className="flex items-center gap-1.5 text-[#2C2018]">
+                        <Star className="w-4 h-4 fill-[#C26D52] text-[#C26D52]" />
+                        <span className="font-bold text-sm">{scannedResult.communityRating.toFixed(1)}</span>
+                        <span className="text-[10px] text-[#7A6E65]">
+                          ({scannedResult.communityVotes || 1} barista votes)
+                        </span>
+                      </div>
+                    )}
+                    {scannedResult.expertScore && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 font-bold text-[10px]">
+                        <Award className="w-3.5 h-3.5 text-amber-700" />
+                        <span>{scannedResult.expertScore.toFixed(0)} PTS</span>
+                        <span className="text-[9px] font-normal text-amber-800">({scannedResult.expertSource || 'Expert Review'})</span>
+                      </div>
+                    )}
+                  </div>
+                  {scannedResult.suitableFor && scannedResult.suitableFor.length > 0 && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {scannedResult.suitableFor.map((drink) => (
+                        <span
+                          key={drink}
+                          className="text-[9px] px-2 py-0.5 rounded-full bg-[#C26D52]/10 text-[#C26D52] font-semibold uppercase tracking-wider"
+                        >
+                          {drink.replace('_', ' ')}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Form Fields */}
               <div className="p-4 rounded-xl bg-white border border-[#E8DFD5] space-y-3 shadow-sm">

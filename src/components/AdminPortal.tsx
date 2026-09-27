@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Lock,
   Unlock,
@@ -19,8 +19,16 @@ import {
   LogOut,
   Layers,
   KeyRound,
+  RefreshCw,
+  Globe,
+  CheckCircle2,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, UserAccessState } from '../types/espresso';
+import {
+  testSupabaseConnection,
+  getSupabaseClient,
+  type GlobalCoffeeBean,
+} from '../lib/supabase';
 
 interface AdminPortalProps {
   onBack: () => void;
@@ -58,12 +66,63 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Supabase & Cloud Config State
   const [supabaseUrl, setSupabaseUrl] = useState<string>(() => {
-    return localStorage.getItem('espresso_supabase_url') || 'https://xyzcompany.supabase.co';
+    return (
+      localStorage.getItem('espresso_supabase_url') ||
+      import.meta.env.VITE_SUPABASE_URL ||
+      'https://vdxfmvzdmcqfixbegumb.supabase.co'
+    );
   });
   const [supabaseKey, setSupabaseKey] = useState<string>(() => {
-    return localStorage.getItem('espresso_supabase_anon_key') || '';
+    return (
+      localStorage.getItem('espresso_supabase_anon_key') ||
+      import.meta.env.VITE_SUPABASE_ANON_KEY ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkeGZtdnpkbWNxZml4YmVndW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTY3NzYsImV4cCI6MjEwNjA5Mjc3Nn0.8MlspGgPxNuIiRWH819Z59MKgVWzAQdqKPE3cqFv9P4'
+    );
   });
   const [isSavedSupabase, setIsSavedSupabase] = useState<boolean>(false);
+  const [connStatus, setConnStatus] = useState<{
+    ok: boolean;
+    message: string;
+    pingMs?: number;
+  } | null>(null);
+  const [isTestingConn, setIsTestingConn] = useState<boolean>(false);
+  const [cloudBeans, setCloudBeans] = useState<GlobalCoffeeBean[]>([]);
+  const [isLoadingCloudBeans, setIsLoadingCloudBeans] = useState<boolean>(false);
+
+  const testConnection = useCallback(async () => {
+    setIsTestingConn(true);
+    const res = await testSupabaseConnection();
+    setConnStatus(res);
+    setIsTestingConn(false);
+    if (res.ok) {
+      loadCloudBeans();
+    }
+  }, []);
+
+  const loadCloudBeans = useCallback(async () => {
+    setIsLoadingCloudBeans(true);
+    const client = getSupabaseClient();
+    if (client) {
+      try {
+        const { data } = await client
+          .from('global_coffee_beans')
+          .select('*')
+          .order('avg_rating', { ascending: false });
+        if (data) {
+          setCloudBeans(data as GlobalCoffeeBean[]);
+        }
+      } catch (err) {
+        console.debug('Failed to load cloud beans', err);
+      }
+    }
+    setIsLoadingCloudBeans(false);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      testConnection();
+    }
+  }, [isAuthenticated, testConnection]);
 
   // Simulated Global Community Telemetry (augmented with local real data)
   const totalStarredBeans = beans.filter((b) => (b.rating || 0) > 0 || b.isFavorite).length;
@@ -783,15 +842,136 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       </span>
                     )}
                   </div>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-bold flex items-center gap-1.5 transition"
-                  >
-                    <Check className="w-3.5 h-3.5 text-[#C26D52]" />
-                    <span>Save Supabase Credentials</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={testConnection}
+                      disabled={isTestingConn}
+                      className="px-3 py-2 rounded-xl border border-[#E8DFD5] hover:bg-[#FAF7F2] text-[#7A6E65] text-xs font-semibold flex items-center gap-1.5 transition"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isTestingConn ? 'animate-spin text-[#C26D52]' : ''}`} />
+                      <span>{isTestingConn ? 'Pinging...' : 'Test Connection'}</span>
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-bold flex items-center gap-1.5 transition"
+                    >
+                      <Check className="w-3.5 h-3.5 text-[#C26D52]" />
+                      <span>Save Supabase Credentials</span>
+                    </button>
+                  </div>
                 </div>
               </form>
+
+              {/* Live Connection Diagnostics */}
+              {connStatus && (
+                <div
+                  className={`p-3 rounded-xl border text-xs flex items-center justify-between ${
+                    connStatus.ok
+                      ? 'bg-[#72806B]/10 border-[#72806B]/30 text-[#2C2018]'
+                      : 'bg-[#C26D52]/10 border-[#C26D52]/30 text-[#C26D52]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {connStatus.ok ? (
+                      <CheckCircle2 className="w-4 h-4 text-[#72806B]" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-[#C26D52]" />
+                    )}
+                    <span className="font-semibold">{connStatus.message}</span>
+                  </div>
+                  {connStatus.pingMs !== undefined && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-[#E8DFD5]">
+                      {connStatus.pingMs} ms
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Live Global Coffee Beans from Supabase */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase text-[#2C2018]">
+                  <Globe className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>Central Bean Vault ({cloudBeans.length} Verified in Cloud)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={loadCloudBeans}
+                  disabled={isLoadingCloudBeans}
+                  className="text-[10px] text-[#7A6E65] hover:text-[#2C2018] flex items-center gap-1"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isLoadingCloudBeans ? 'animate-spin' : ''}`} />
+                  <span>Refresh Cloud Data</span>
+                </button>
+              </div>
+
+              {isLoadingCloudBeans ? (
+                <div className="py-6 text-center text-xs text-[#7A6E65] flex items-center justify-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-[#C26D52]" />
+                  <span>Loading cloud database records...</span>
+                </div>
+              ) : cloudBeans.length > 0 ? (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {cloudBeans.map((b) => (
+                    <div
+                      key={b.barcode}
+                      className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[#2C2018]">{b.name}</span>
+                          <span className="text-[10px] text-[#7A6E65]">({b.roaster})</span>
+                          {b.is_verified && (
+                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#72806B]/20 text-[#72806B] font-bold">
+                              Verified
+                            </span>
+                          )}
+                          {b.expert_score && (
+                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 font-bold">
+                              🏅 {Number(b.expert_score).toFixed(0)} PTS ({b.expert_source || 'Expert'})
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-[#7A6E65] font-mono">
+                          <span>EAN: {b.barcode}</span>
+                          <span>•</span>
+                          <span className="capitalize">{b.roast_level}</span>
+                          <span>•</span>
+                          <span>{b.purchase_country}</span>
+                        </div>
+                        {b.suitable_for && b.suitable_for.length > 0 && (
+                          <div className="flex items-center gap-1 pt-0.5">
+                            {b.suitable_for.map((drink) => (
+                              <span
+                                key={drink}
+                                className="text-[8px] px-1.5 py-0.2 rounded bg-[#C26D52]/10 text-[#C26D52] font-semibold uppercase"
+                              >
+                                {drink.replace('_', ' ')}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="text-right">
+                        <div className="flex items-center gap-1 font-bold text-[#2C2018]">
+                          <Star className="w-3.5 h-3.5 fill-[#C26D52] text-[#C26D52]" />
+                          <span>{Number(b.avg_rating).toFixed(1)}</span>
+                        </div>
+                        <span className="text-[10px] text-[#7A6E65] font-mono">
+                          {b.ratings_count} votes
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-xs text-[#7A6E65] text-center">
+                  No beans synced yet. Once the SQL schema is provisioned, kickstart seeds will appear here.
+                </div>
+              )}
             </div>
 
             {/* SQL Table Schemas Preview */}
@@ -802,10 +982,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
               <div className="text-[11px] text-[#7A6E65] space-y-2">
                 <div className="p-2.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5]">
-                  <strong className="text-[#2C2018]">community_beans:</strong> Aggregates bean names, roasters, roast profiles, and community star ratings (1-5).
+                  <strong className="text-[#2C2018]">global_coffee_beans:</strong> Primary Key = Barcode (EAN-13). Aggregates verified roasters, bean names, roast levels, country, drink suitability tags, and weighted community rating.
                 </div>
                 <div className="p-2.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5]">
-                  <strong className="text-[#2C2018]">app_telemetry:</strong> Logs anonymous 7-day trial activations and verified $4.99 RevenueCat lifetime unlocks.
+                  <strong className="text-[#2C2018]">bean_drink_ratings:</strong> Individual barista reviews with star ratings (1-5), drink category (Flat White, Pure Espresso, Cortado), device fingerprints, and brew ratios.
                 </div>
               </div>
             </div>

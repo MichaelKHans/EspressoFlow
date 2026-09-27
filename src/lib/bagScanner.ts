@@ -1,4 +1,5 @@
 import type { RoastLevel } from '../types/espresso';
+import { fetchGlobalBean } from './supabase';
 
 export interface ScannedBeanInfo {
   name: string;
@@ -11,6 +12,13 @@ export interface ScannedBeanInfo {
   detectedFormat?: string;
   isEstimatedFromBBD?: boolean;
   bestBeforeDate?: string;
+  purchaseCountry?: string;
+  suitableFor?: string[];
+  communityRating?: number;
+  communityVotes?: number;
+  isVerified?: boolean;
+  expertScore?: number;
+  expertSource?: string;
 }
 
 export interface ParsedRoastDateResult {
@@ -418,7 +426,35 @@ export async function lookupBarcode(barcode: string): Promise<ScannedBeanInfo | 
     };
   }
 
-  // 2. Query Open Food Facts API (Worldwide free food & coffee database)
+  // 2. Query Central Supabase Bean Vault (< 100ms with eu-central-1 Frankfurt)
+  try {
+    const cloudBean = await fetchGlobalBean(cleanCode);
+    if (cloudBean) {
+      return {
+        name: cloudBean.name,
+        roaster: cloudBean.roaster,
+        roastDate: '',
+        hasExplicitRoastDate: false,
+        roastLevel: cloudBean.roast_level as RoastLevel,
+        notes: cloudBean.flavor_notes?.length
+          ? `Notes: ${cloudBean.flavor_notes.join(', ')}`
+          : `Verified in Supabase Bean Vault (${cleanCode})`,
+        barcode: cleanCode,
+        detectedFormat: cloudBean.is_verified ? 'Supabase Verified Vault' : 'Community Bean Vault',
+        purchaseCountry: cloudBean.purchase_country,
+        suitableFor: cloudBean.suitable_for,
+        communityRating: cloudBean.avg_rating,
+        communityVotes: cloudBean.ratings_count,
+        isVerified: cloudBean.is_verified,
+        expertScore: cloudBean.expert_score,
+        expertSource: cloudBean.expert_source,
+      };
+    }
+  } catch (cloudErr) {
+    console.debug('Supabase cloud lookup skipped or failed', cloudErr);
+  }
+
+  // 3. Query Open Food Facts API (Worldwide free food & coffee database)
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);

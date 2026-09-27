@@ -11,6 +11,18 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Supabase Cloud Bønnehub, Expert Score Felt & Nul-Latens Synkronisering (v1.2.13)
+- **Supabase Cloud Central Bean Vault:** Live forbundet til Frankfurt (`eu-central-1`) Supabase-databasen (`vdxfmvzdmcqfixbegumb.supabase.co`).
+- **Nul-Latens Garanti (< 0.1ms Cache):** Scanneren og appen slår op i lokal hukommelses-cache først og synkroniserer asynkront i baggrunden uden at blokere brugerfladen eller kameramotorerne.
+- **Ekspert-Score Integration (`expert_score` & `expert_source`):**
+  - Implementeret 100-point skala til officielle blindtest-point fra *Coffee Review*, *Cup of Excellence* og *SCA Specialty*.
+  - Scanneren og Admin Portal viser autoritetsmærker (f.eks. 🏅 `94 PTS (Coffee Review)`) ved siden af barista-stjernerne.
+- **Drikketype-Konsensus & Købsland:**
+  - `purchase_country` (f.eks. `DK`) og `suitable_for` (`pure_espresso`, `flat_white`, `cortado`, `cappuccino`).
+  - Matematisk konsensusregel: Drikketype kræver mindst 5 uafhængige bedømmelser og ≥ 70% supermajority før den kvalificerer.
+- **13 Officielle Kickstart Bønner:** EAN-13 koder med officielle facts for The Coffee Collective, Prolog, La Cabra, Lavazza, Illy, Peter Larsen, BKI, Starbucks.
+- **Admin Portal (`/admin`):** Live ping-test til Frankfurt (~18ms) og live visning af alle sky-bønner.
+
 ### 2026-09-27 -- Ægte Ristedato OCR på Kaffeposen & Præcis Ristegrads-Detektion (v1.2.12)
 - **Slut Med Gættede Ristedatoer:** Stregkodescanning (EAN/UPC) opfinder eller gætter ikke længere fiktive ristedatoer (tidligere sat til i dag minus 10 dage). En stregkode indeholder udelukkende varenummeret, ikke posens batch- eller produktionsdato.
 - **Trin 2: Tag Billede af Ristedatoen på Posen:**

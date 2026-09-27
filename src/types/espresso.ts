@@ -31,6 +31,12 @@ export interface CoffeeBeanProfile {
   barcode?: string;
   rating?: number; // 1 to 5 stars
   isFavorite?: boolean;
+  purchaseCountry?: string; // e.g. 'DK', 'SE', 'NO', 'DE'
+  suitableFor?: string[]; // e.g. ['pure_espresso', 'flat_white', 'cortado', 'cappuccino']
+  communityRating?: number;
+  communityVotes?: number;
+  expertScore?: number; // 0-100 scale (e.g. 94.0 from Coffee Review or SCA Q-Grader)
+  expertSource?: string; // e.g. 'Coffee Review' | 'SCA Cupping' | 'Cup of Excellence'
 }
 
 export interface ShotRecord {
