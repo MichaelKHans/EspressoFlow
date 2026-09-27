@@ -72,6 +72,15 @@ export const en = {
   'bean.roast_level': 'Roast Level',
   'bean.roast_date': 'Roast Date',
   'bean.assigned_grinder': 'Assigned Grinder',
+  'bean.step2_scan_date': 'Step 2: Capture Roast Date on Bag',
+  'bean.barcode_no_date_desc': 'Barcodes only identify product type, not the batch roast date. Snap a quick photo of the date stamp on the back of the bag (Production Date or Best Before).',
+  'bean.snap_date_btn': 'Take Photo of Date Stamp',
+  'bean.date_found': 'Roast Date: {date}',
+  'bean.date_not_found': 'Could not detect date stamp in photo. Please select date manually below.',
+  'bean.rescan_date': 'Rescan Date',
+  'bean.confirm_roast_level': 'Check bag label to confirm (Blonde / Medium / Dark)',
+  'bean.roast_detected': 'Detected from bag: {level}',
+  'bean.scanning_date': 'Reading date stamp with Vision OCR...',
 
   // Onboarding Wizard
   'wizard.welcome_title': 'Welcome to Espresso Flow',

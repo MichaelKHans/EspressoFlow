@@ -11,6 +11,21 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Ægte Ristedato OCR på Kaffeposen & Præcis Ristegrads-Detektion (v1.2.12)
+- **Slut Med Gættede Ristedatoer:** Stregkodescanning (EAN/UPC) opfinder eller gætter ikke længere fiktive ristedatoer (tidligere sat til i dag minus 10 dage). En stregkode indeholder udelukkende varenummeret, ikke posens batch- eller produktionsdato.
+- **Trin 2: Tag Billede af Ristedatoen på Posen:**
+  - Når en stregkode scannes, vejledes baristaen til at scanne datostemplet bag på posen.
+  - Dedikeret knap: `Tag foto af datostempel`, som åbner kameraet direkte til at fotografere datofeltet.
+  - Optisk OCR genkender automatisk:
+    - **Produktionsdato:** Prioriterer eksplicit `Production date:` / `Produktionsdatum` / `Datum výroby` (f.eks. `13/05/2026`) som bekræftet ristedato.
+    - **Bedst Før:** Udregner estimeret ristedato (~12 måneder før), hvis kun Bedst Før er påtrykt.
+  - Viser den sande alder på bønnerne (f.eks. `137 dage siden ristning: Moden / Fuldstændig afgasset`) i stedet for falske påstande om friskristet kaffe.
+- **Præcis Ristegrads-Genkendelse:**
+  - Løst problem hvor mørkristede kaffer (som Starbucks Espresso Roast) fejlagtigt blev sat til `medium`.
+  - Søger efter ristegrads-spektrum i posens tekst (`DARK`, `Dark Roast`, `BLONDE`, `Intensity 10-12`, `Tueste Intenso`).
+  - Tilføjet vejledning i brugergrænsefladen til nemt at bekræfte ristegraden ud fra posens etiket.
+  - Rettet Open Food Facts bruger-tastefejl ("Whole Bear" $\rightarrow$ "Whole Bean").
+
 ### 2026-09-27 -- Rent Kamerasyn, Ekstern Kameraværktøjslinje & "Jeg er klar" Armér-Workflow (v1.2.11)
 - **"Coffee Bar" Tab Navigation:** Første navigationstab hedder nu `Coffee Bar` på alle skærmstørrelser (både mobil og desktop) i stedet for blot `Bar`.
 - **Rent Kamerasyn Uden Forstyrrelser:** Alle zoom-knapper, recenter, standard/compact boks og den nedre telemetribjælke er flyttet helt ud af kameravisningen. Kameravinduet viser nu udelukkende live feed og målerammen uden at dække for vægten.

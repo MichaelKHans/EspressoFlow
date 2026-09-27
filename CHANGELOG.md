@@ -4,6 +4,24 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.12] - 2026-09-27
+### Genuine Bag Date OCR, Zero Date-Guessing & Accurate Roast Level Detection
+- **Eliminated Fake/Guessed Roast Dates:**
+  - Barcode scanning (EAN/UPC) identifies product identity, brand, and origin, but no longer invents or fabricates fake roast dates (previously defaulted to `today - 10 days`).
+  - Barcode results now clearly state that retail barcodes lack batch production stamps.
+- **Two-Step Optical Workflow (Step 2: Capture Roast Date on Bag):**
+  - Added dedicated *Step 2* card when a barcode is scanned without an expiration/roast stamp.
+  - Barista can tap `Take Photo of Date Stamp` (`Tag foto af datostempel`) to take a photo of the printed production/BBD stamp on the back of the bag.
+  - Optical OCR parser automatically extracts:
+    - **Production Date:** Prioritizes explicit `Production date:` / `Produktionsdatum` / `Datum výroby` / `Fecha de fabricación` stamps (e.g. `13/05/2026`) as confirmed roast date with 100% confidence.
+    - **Best Before Date (BBD):** Extracts BBD and calculates estimated roast date (~12 months prior) only when no production date is printed.
+  - Fallback option to pick date manually or adjust with calendar.
+- **Accurate Commercial & Specialty Roast Level Detection:**
+  - Fixed false `medium` roast default on dark roasts (such as Starbucks Espresso Roast).
+  - OCR scans bag packaging for roast spectrum indicators (`DARK`, `Dark Roast`, `BLONDE`, `Intensity 10-12`, `Tueste Intenso`).
+  - Added explicit roast level confirmation guide in UI so baristas can confirm against bag labeling.
+  - Corrected Open Food Facts user typo ("Whole Bear" $\rightarrow$ "Whole Bean").
+
 ## [1.2.11] - 2026-09-27
 ### Uncluttered Viewfinder, External Camera Toolbar & Arm-to-Brew Scale Workflow
 - **"Coffee Bar" Tab Navigation:**

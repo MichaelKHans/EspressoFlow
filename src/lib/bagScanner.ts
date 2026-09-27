@@ -3,12 +3,14 @@ import type { RoastLevel } from '../types/espresso';
 export interface ScannedBeanInfo {
   name: string;
   roaster?: string;
-  roastDate: string;
+  roastDate: string; // ISO YYYY-MM-DD or empty string '' if not yet scanned
+  hasExplicitRoastDate?: boolean;
   roastLevel: RoastLevel;
   notes?: string;
   barcode?: string;
   detectedFormat?: string;
   isEstimatedFromBBD?: boolean;
+  bestBeforeDate?: string;
 }
 
 export interface ParsedRoastDateResult {
@@ -17,6 +19,17 @@ export interface ParsedRoastDateResult {
   rawMatch: string;
   formatDescription: string;
   isEstimatedFromBBD?: boolean;
+}
+
+export interface BagDateAndRoastExtraction {
+  roastDate: string | null; // ISO YYYY-MM-DD
+  bestBeforeDate: string | null; // ISO YYYY-MM-DD
+  isEstimatedFromBBD: boolean;
+  detectedRoastLevel: RoastLevel | null;
+  confidence: number;
+  formatDescription: string | null;
+  rawMatchedSnippet?: string;
+  rawText: string;
 }
 
 export const COMMON_ROASTERS = [
@@ -187,21 +200,64 @@ const MONTH_MAP: Record<string, number> = {
 };
 
 /**
- * Intelligent multi-format date extraction parser for coffee labels and date stamps
+ * Extracts roast level profile from packaging text or keywords
  */
-export function parseRoastDate(text: string): ParsedRoastDateResult | null {
-  if (!text || text.trim().length === 0) return null;
+export function extractRoastLevelFromText(text: string): RoastLevel | null {
+  if (!text) return null;
+  const t = text.toLowerCase();
 
-  // Check if text indicates "Best Before" / "Bedst Før" (BBD)
-  const isBBD = /(best before|bedst f[øo]r|mhd|mindestens haltbar|validade|a consommer avant|scadenza|bbd)/i.test(text);
+  // Dark Roast patterns (Specialty, Italian & Commercial)
+  if (
+    /\b(dark|dark\s*roast|m[øo]rk|m[øo]rkristet|intenso|espresso\s*roast|french\s*roast|italian\s*roast|intensity\s*(?:10|11|12)|intensitet\s*(?:10|11|12)|tueste\s*intenso|ciemno\s*palona|tmav[eě]\s*pražen[aá])\b/i.test(t)
+  ) {
+    return 'dark';
+  }
 
-  // Helper to format Date object into YYYY-MM-DD
+  // Medium-Dark patterns
+  if (
+    /\b(medium[- ]dark|mellem[- ]m[øo]rk|crema|intensity\s*[7-9]|intensitet\s*[7-9])\b/i.test(t)
+  ) {
+    return 'medium-dark';
+  }
+
+  // Light / Blonde patterns
+  if (
+    /\b(blonde|blonde\s*roast|light|light\s*roast|lysristet|lys|filter|nordic|intensity\s*[1-6]|intensitet\s*[1-6])\b/i.test(t)
+  ) {
+    return 'light';
+  }
+
+  // Medium patterns
+  if (
+    /\b(medium|medium\s*roast|mellemristet|mellem|středně\s*pražen[aá]|średnio\s*palona)\b/i.test(t)
+  ) {
+    return 'medium';
+  }
+
+  return null;
+}
+
+/**
+ * Robust multi-lingual date & roast level extraction engine from coffee bag text/stamps
+ */
+export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastExtraction {
+  if (!text || text.trim().length === 0) {
+    return {
+      roastDate: null,
+      bestBeforeDate: null,
+      isEstimatedFromBBD: false,
+      detectedRoastLevel: null,
+      confidence: 0,
+      formatDescription: null,
+      rawText: text || '',
+    };
+  }
+
   const formatISO = (year: number, month: number, day: number): string => {
     const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
     return `${year}-${pad(month)}-${pad(day)}`;
   };
 
-  // Helper to validate reasonable date (not in future beyond 2 years, not older than 5 years)
   const isValidDate = (year: number, month: number, day: number): boolean => {
     if (month < 1 || month > 12) return false;
     if (day < 1 || day > 31) return false;
@@ -210,120 +266,126 @@ export function parseRoastDate(text: string): ParsedRoastDateResult | null {
     return true;
   };
 
-  // 1. Text Month Pattern: e.g. "14 SEP 2026", "14. SEP 2026", "SEP 14, 2026", "14 September 2026"
-  const textMonthRegex = /\b(\d{1,2})[\s./-]+([a-zæøåéäöü]{3,10})[\s./,-]+(\d{2,4})\b/i;
-  const matchTextMonth = text.match(textMonthRegex);
-  if (matchTextMonth) {
-    const day = parseInt(matchTextMonth[1], 10);
-    const monthKey = matchTextMonth[2].toLowerCase().replace(/[.,]/g, '');
-    let year = parseInt(matchTextMonth[3], 10);
-    if (year < 100) year += 2000;
-
-    const monthNum = MONTH_MAP[monthKey];
-    if (monthNum && isValidDate(year, monthNum, day)) {
-      if (isBBD) {
-        // Approximate roast date: 12 months prior to Best Before Date
-        const estimatedYear = year - 1;
-        return {
-          date: formatISO(estimatedYear, monthNum, day),
-          confidence: 0.75,
-          rawMatch: matchTextMonth[0],
-          formatDescription: `Estimated from Best Before ("${matchTextMonth[0]}" - 12 months)`,
-          isEstimatedFromBBD: true,
-        };
+  const parseDateCandidate = (raw: string): { iso: string; year: number; month: number; day: number } | null => {
+    // 1. European: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY
+    const euro = raw.match(/\b(0?[1-9]|[12]\d|3[01])[-./](0?[1-9]|1[0-2])[-./](202\d|\d{2})\b/);
+    if (euro) {
+      const day = parseInt(euro[1], 10);
+      const month = parseInt(euro[2], 10);
+      let year = parseInt(euro[3], 10);
+      if (year < 100) year += 2000;
+      if (isValidDate(year, month, day)) {
+        return { iso: formatISO(year, month, day), year, month, day };
       }
-      return {
-        date: formatISO(year, monthNum, day),
-        confidence: 0.95,
-        rawMatch: matchTextMonth[0],
-        formatDescription: `Text format ("${matchTextMonth[0]}")`,
-      };
+    }
+
+    // 2. ISO: YYYY-MM-DD or YYYY.MM.DD
+    const iso = raw.match(/\b(202\d)[-./](0?[1-9]|1[0-2])[-./](0?[1-9]|[12]\d|3[01])\b/);
+    if (iso) {
+      const year = parseInt(iso[1], 10);
+      const month = parseInt(iso[2], 10);
+      const day = parseInt(iso[3], 10);
+      if (isValidDate(year, month, day)) {
+        return { iso: formatISO(year, month, day), year, month, day };
+      }
+    }
+
+    // 3. Text Month: e.g. "14 SEP 2026", "14. maj 2026"
+    const textMonth = raw.match(/\b(0?[1-9]|[12]\d|3[01])[\s./-]+([a-zæøåéäöü]{3,10})[\s./,-]+(202\d|\d{2})\b/i);
+    if (textMonth) {
+      const day = parseInt(textMonth[1], 10);
+      const mKey = textMonth[2].toLowerCase().replace(/[.,]/g, '');
+      let year = parseInt(textMonth[3], 10);
+      if (year < 100) year += 2000;
+      const month = MONTH_MAP[mKey];
+      if (month && isValidDate(year, month, day)) {
+        return { iso: formatISO(year, month, day), year, month, day };
+      }
+    }
+
+    return null;
+  };
+
+  // 1. Check for labeled Production / Roast Date (HIGHEST PRIORITY)
+  const prodRegex = /(?:production\s*date|production|prod\.?\s*date|datum\s*v[yý]roby|data\s*produkcji|fecha\s*de\s*fabricaci[oó]n|produktionsdatum|produktionsdato|fremstillingsdato|roasted\s*on|roast\s*date|ristedato|ristet|herstelldatum|data\s*di\s*produzione|date\s*de\s*production)[\s:\-\/.]*([0-9]{1,2}[-.\/][0-9]{1,2}[-.\/][0-9]{2,4}|[0-9]{4}[-.\/][0-9]{1,2}[-.\/][0-9]{1,2}|[0-9]{1,2}\s+[a-zæøåéäöü]{3,10}\s+[0-9]{2,4})/i;
+  const prodMatch = text.match(prodRegex);
+  let confirmedRoastDate: string | null = null;
+  let prodSnippet: string | undefined = undefined;
+
+  if (prodMatch && prodMatch[1]) {
+    const candidate = parseDateCandidate(prodMatch[1]);
+    if (candidate) {
+      confirmedRoastDate = candidate.iso;
+      prodSnippet = prodMatch[0];
     }
   }
 
-  // Inverse Text Month Pattern: e.g. "SEP 14, 2026" or "September 14, 2026"
-  const textMonthInverseRegex = /\b([a-zæøåéäöü]{3,10})[\s./,-]+(\d{1,2})[\s.,/-]+(\d{2,4})\b/i;
-  const matchTextMonthInv = text.match(textMonthInverseRegex);
-  if (matchTextMonthInv) {
-    const monthKey = matchTextMonthInv[1].toLowerCase().replace(/[.,]/g, '');
-    const day = parseInt(matchTextMonthInv[2], 10);
-    let year = parseInt(matchTextMonthInv[3], 10);
-    if (year < 100) year += 2000;
+  // 2. Check for labeled Best Before Date (BBD)
+  const bbdRegex = /(?:best\s*before|best\s*by|bedst\s*f[øo]r|b[aä]st\s*f[oö]re|parasta\s*ennen|mindestens\s*haltbar|mhd|najlepiej\s*spo[zż]y[cć]\s*przed|minim[aá]ln[ií]\s*trvanlivost\s*do|consumir\s*preferentemente\s*antes\s*del|a\s*consommer\s*(?:de\s*pr[eé]f[eé]rence\s*)?avant|da\s*consumarsi\s*preferibilmente\s*entro|valability|validade)[\s:\-\/.]*([0-9]{1,2}[-.\/][0-9]{1,2}[-.\/][0-9]{2,4}|[0-9]{4}[-.\/][0-9]{1,2}[-.\/][0-9]{1,2}|[0-9]{1,2}\s+[a-zæøåéäöü]{3,10}\s+[0-9]{2,4})/i;
+  const bbdMatch = text.match(bbdRegex);
+  let confirmedBBD: string | null = null;
+  let estimatedFromBBD = false;
 
-    const monthNum = MONTH_MAP[monthKey];
-    if (monthNum && isValidDate(year, monthNum, day)) {
-      if (isBBD) {
-        return {
-          date: formatISO(year - 1, monthNum, day),
-          confidence: 0.75,
-          rawMatch: matchTextMonthInv[0],
-          formatDescription: `Estimated from Best Before ("${matchTextMonthInv[0]}" - 12 months)`,
-          isEstimatedFromBBD: true,
-        };
+  if (bbdMatch && bbdMatch[1]) {
+    const candidate = parseDateCandidate(bbdMatch[1]);
+    if (candidate) {
+      confirmedBBD = candidate.iso;
+      // If no explicit production date exists, approximate roast date: 12 months prior
+      if (!confirmedRoastDate) {
+        const estYear = candidate.year - 1;
+        confirmedRoastDate = formatISO(estYear, candidate.month, candidate.day);
+        estimatedFromBBD = true;
       }
-      return {
-        date: formatISO(year, monthNum, day),
-        confidence: 0.95,
-        rawMatch: matchTextMonthInv[0],
-        formatDescription: `Text format ("${matchTextMonthInv[0]}")`,
-      };
     }
   }
 
-  // 2. ISO Pattern: YYYY-MM-DD or YYYY.MM.DD or YYYY/MM/DD
-  const isoRegex = /\b(202\d)[-./](0[1-9]|1[0-2])[-./](0[1-9]|[12]\d|3[01])\b/;
-  const matchIso = text.match(isoRegex);
-  if (matchIso) {
-    const year = parseInt(matchIso[1], 10);
-    const month = parseInt(matchIso[2], 10);
-    const day = parseInt(matchIso[3], 10);
-    if (isValidDate(year, month, day)) {
-      if (isBBD) {
-        return {
-          date: formatISO(year - 1, month, day),
-          confidence: 0.75,
-          rawMatch: matchIso[0],
-          formatDescription: `Estimated from Best Before (${matchIso[0]} - 12 mo)`,
-          isEstimatedFromBBD: true,
-        };
-      }
-      return {
-        date: formatISO(year, month, day),
-        confidence: 0.98,
-        rawMatch: matchIso[0],
-        formatDescription: `ISO format (${matchIso[0]})`,
-      };
+  // 3. Fallback: Standalone date if no labeled date was detected
+  if (!confirmedRoastDate) {
+    const standaloneCandidate = parseDateCandidate(text);
+    if (standaloneCandidate) {
+      confirmedRoastDate = standaloneCandidate.iso;
     }
   }
 
-  // 3. European Pattern: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY (or 2-digit year DD/MM/YY)
-  const euroRegex = /\b(0[1-9]|[12]\d|3[01])[-./](0[1-9]|1[0-2])[-./](202\d|\d{2})\b/;
-  const matchEuro = text.match(euroRegex);
-  if (matchEuro) {
-    const day = parseInt(matchEuro[1], 10);
-    const month = parseInt(matchEuro[2], 10);
-    let year = parseInt(matchEuro[3], 10);
-    if (year < 100) year += 2000;
-    if (isValidDate(year, month, day)) {
-      if (isBBD) {
-        return {
-          date: formatISO(year - 1, month, day),
-          confidence: 0.75,
-          rawMatch: matchEuro[0],
-          formatDescription: `Estimated from Best Before (${matchEuro[0]} - 12 mo)`,
-          isEstimatedFromBBD: true,
-        };
-      }
-      return {
-        date: formatISO(year, month, day),
-        confidence: 0.92,
-        rawMatch: matchEuro[0],
-        formatDescription: `Standard EU format (${matchEuro[0]})`,
-      };
+  const detectedRoastLevel = extractRoastLevelFromText(text);
+
+  let formatDesc: string | null = null;
+  if (confirmedRoastDate) {
+    if (estimatedFromBBD && confirmedBBD) {
+      formatDesc = `Estimated from Best Before (${confirmedBBD} - 12 mo)`;
+    } else if (prodSnippet) {
+      formatDesc = `Production Date (${confirmedRoastDate})`;
+    } else {
+      formatDesc = `Roast Date Stamp (${confirmedRoastDate})`;
     }
   }
 
-  return null;
+  return {
+    roastDate: confirmedRoastDate,
+    bestBeforeDate: confirmedBBD,
+    isEstimatedFromBBD: estimatedFromBBD,
+    detectedRoastLevel,
+    confidence: confirmedRoastDate ? (estimatedFromBBD ? 0.8 : 0.98) : 0,
+    formatDescription: formatDesc,
+    rawMatchedSnippet: prodSnippet || bbdMatch?.[0],
+    rawText: text,
+  };
+}
+
+/**
+ * Intelligent multi-format date extraction parser for coffee labels and date stamps (Backwards compatible)
+ */
+export function parseRoastDate(text: string): ParsedRoastDateResult | null {
+  const result = extractDatesAndRoastFromBagText(text);
+  if (!result.roastDate) return null;
+
+  return {
+    date: result.roastDate,
+    confidence: result.confidence,
+    rawMatch: result.rawMatchedSnippet || result.roastDate,
+    formatDescription: result.formatDescription || 'Detected Date',
+    isEstimatedFromBBD: result.isEstimatedFromBBD,
+  };
 }
 
 /**
@@ -335,6 +397,7 @@ export function isBarcodeDetectorSupported(): boolean {
 
 /**
  * Queries Open Food Facts API with a local fallback database
+ * NEVER invents or fakes a roast date -- retail barcodes only identify product SKU!
  */
 export async function lookupBarcode(barcode: string): Promise<ScannedBeanInfo | null> {
   const cleanCode = barcode.trim().replace(/[^0-9]/g, '');
@@ -343,15 +406,11 @@ export async function lookupBarcode(barcode: string): Promise<ScannedBeanInfo | 
   // 1. Check local offline database first for instant zero-latency match
   if (KNOWN_BARCODE_DATABASE[cleanCode]) {
     const known = KNOWN_BARCODE_DATABASE[cleanCode];
-    const daysAgo = 8; // Fresh default
-    const roastDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0];
-
     return {
       name: known.name,
       roaster: known.roaster,
-      roastDate,
+      roastDate: '', // DO NOT FAKE ROAST DATE! Barcode lacks batch date
+      hasExplicitRoastDate: false,
       roastLevel: known.roastLevel,
       notes: `${known.notes} (Matched from offline barcode DB: ${cleanCode})`,
       barcode: cleanCode,
@@ -376,38 +435,56 @@ export async function lookupBarcode(barcode: string): Promise<ScannedBeanInfo | 
       const data = await res.json();
       if (data.status === 1 && data.product) {
         const p = data.product;
-        const productName = p.product_name || p.product_name_en || p.generic_name || 'Whole Bean Espresso';
+        let productName = p.product_name || p.product_name_en || p.generic_name || 'Whole Bean Espresso';
+        // Correct common Open Food Facts user typo ("Whole Bear" -> "Whole Bean")
+        productName = productName.replace(/whole\s+bear/i, 'Whole Bean');
+
         const brand = p.brands || p.brand_owner || undefined;
 
         // Determine roast level heuristics from product tags & name
-        const textForRoast = `${productName} ${p.categories || ''} ${p.labels || ''}`.toLowerCase();
+        const textForRoast = `${productName} ${brand || ''} ${p.categories || ''} ${p.labels || ''} ${p.generic_name || ''}`.toLowerCase();
         let roastLevel: RoastLevel = 'medium';
-        if (textForRoast.includes('dark') || textForRoast.includes('intenso') || textForRoast.includes('forte') || textForRoast.includes('italian')) {
+        if (
+          textForRoast.includes('dark') ||
+          textForRoast.includes('espresso roast') ||
+          textForRoast.includes('intenso') ||
+          textForRoast.includes('forte') ||
+          textForRoast.includes('italian') ||
+          textForRoast.includes('french roast') ||
+          textForRoast.includes('intensity 1') ||
+          textForRoast.includes('intensitet 1')
+        ) {
           roastLevel = 'dark';
-        } else if (textForRoast.includes('medium-dark') || textForRoast.includes('crema')) {
+        } else if (textForRoast.includes('medium-dark') || textForRoast.includes('crema') || textForRoast.includes('mellem-mørk')) {
           roastLevel = 'medium-dark';
-        } else if (textForRoast.includes('light') || textForRoast.includes('blonde') || textForRoast.includes('filter') || textForRoast.includes('citrus')) {
+        } else if (textForRoast.includes('light') || textForRoast.includes('blonde') || textForRoast.includes('filter') || textForRoast.includes('lysristet')) {
           roastLevel = 'light';
         }
 
-        // Try extracting roast or expiration date if present in packaging info
-        let roastDate = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0];
+        // Try extracting expiration date if present in API packaging metadata
+        let roastDate = '';
+        let hasExplicitDate = false;
+        let isBBD = false;
 
         if (p.expiration_date) {
           const parsed = parseRoastDate(p.expiration_date);
-          if (parsed) roastDate = parsed.date;
+          if (parsed) {
+            roastDate = parsed.date;
+            hasExplicitDate = true;
+            isBBD = !!parsed.isEstimatedFromBBD;
+          }
         }
 
         return {
           name: productName,
           roaster: brand,
-          roastDate,
+          roastDate, // Empty by default when barcode doesn't have batch stamp
+          hasExplicitRoastDate: hasExplicitDate,
           roastLevel,
           notes: `Auto-fetched from Open Food Facts (Barcode: ${cleanCode}).`,
           barcode: cleanCode,
           detectedFormat: 'Open Food Facts EAN/UPC',
+          isEstimatedFromBBD: isBBD,
         };
       }
     }
@@ -415,18 +492,14 @@ export async function lookupBarcode(barcode: string): Promise<ScannedBeanInfo | 
     console.warn('Open Food Facts API lookup timed out or network error', err);
   }
 
-  // 3. Fallback for unrecognized barcode: return clean profile ready for user editing
-  const daysAgo = 7;
-  const fallbackRoastDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
-
+  // 3. Fallback for unrecognized barcode: return clean profile ready for user editing (never fake date)
   return {
     name: `Coffee (${cleanCode.slice(-4)})`,
     roaster: 'Specialty Roaster',
-    roastDate: fallbackRoastDate,
+    roastDate: '',
+    hasExplicitRoastDate: false,
     roastLevel: 'medium',
-    notes: `Scanned Barcode: ${cleanCode}. Please adjust origin and roaster details.`,
+    notes: `Scanned Barcode: ${cleanCode}. Please scan roast date stamp or enter details.`,
     barcode: cleanCode,
     detectedFormat: 'Scanned Barcode',
   };
@@ -457,110 +530,77 @@ export async function detectBarcodeFromImageSource(
 }
 
 /**
- * Parses coffee bag label photo using canvas image processing, date extraction, and keyword heuristics
+ * Parses coffee bag label photo using image OCR, date extraction, and packaging heuristics
  */
 export async function parseCoffeeBagPhoto(imageFile: File, userExtractedText?: string): Promise<ScannedBeanInfo> {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = async () => {
-        // Create canvas to process image
-        const canvas = document.createElement('canvas');
-        const maxDim = 1000;
-        let w = img.width;
-        let h = img.height;
-        if (w > maxDim || h > maxDim) {
-          if (w > h) {
-            h = Math.round((h * maxDim) / w);
-            w = maxDim;
-          } else {
-            w = Math.round((w * maxDim) / h);
-            w = maxDim;
-          }
-        }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, w, h);
-        }
+  // 1. Try detecting barcode first
+  try {
+    const imgBitmap = await createImageBitmap(imageFile);
+    const detectedBarcode = await detectBarcodeFromImageSource(imgBitmap);
+    if (detectedBarcode) {
+      const barcodeResult = await lookupBarcode(detectedBarcode);
+      if (barcodeResult) {
+        return barcodeResult;
+      }
+    }
+  } catch (e) {
+    console.debug('Bitmap barcode detection error', e);
+  }
 
-        // Try detecting barcode directly on image canvas
-        const detectedBarcode = await detectBarcodeFromImageSource(canvas);
-        if (detectedBarcode) {
-          const barcodeResult = await lookupBarcode(detectedBarcode);
-          if (barcodeResult) {
-            resolve(barcodeResult);
-            return;
-          }
-        }
+  // 2. Perform OCR on the bag image using Tesseract.js / native TextDetector
+  let ocrExtraction: BagDateAndRoastExtraction = {
+    roastDate: null,
+    bestBeforeDate: null,
+    isEstimatedFromBBD: false,
+    detectedRoastLevel: null,
+    confidence: 0,
+    formatDescription: null,
+    rawText: userExtractedText || '',
+  };
 
-        const fileNameLower = (imageFile.name || '').toLowerCase();
-        const combinedText = `${fileNameLower} ${userExtractedText || ''}`;
+  try {
+    const { scanCoffeeBagForDateAndRoast } = await import('./bagOcr');
+    ocrExtraction = await scanCoffeeBagForDateAndRoast(imageFile);
+  } catch (ocrErr) {
+    console.warn('OCR processing error on bag photo', ocrErr);
+  }
 
-        // 1. Check for roast date in text or filename
-        const parsedDate = parseRoastDate(combinedText);
-        let finalRoastDate: string;
-        let detectedFormatDesc: string | undefined = undefined;
-        let isBBD = false;
+  const combinedText = `${(imageFile.name || '').toLowerCase()} ${ocrExtraction.rawText || ''} ${userExtractedText || ''}`;
 
-        if (parsedDate) {
-          finalRoastDate = parsedDate.date;
-          detectedFormatDesc = parsedDate.formatDescription;
-          isBBD = !!parsedDate.isEstimatedFromBBD;
-        } else {
-          // Default fresh roast date (7-12 days ago)
-          const daysAgo = Math.floor(Math.random() * 6) + 7;
-          finalRoastDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split('T')[0];
-        }
+  // 3. Match roaster
+  let matchedRoaster: string | undefined = undefined;
+  for (const roaster of COMMON_ROASTERS) {
+    if (combinedText.includes(roaster.toLowerCase())) {
+      matchedRoaster = roaster;
+      break;
+    }
+  }
 
-        // 2. Check for roasters
-        let matchedRoaster: string | undefined = undefined;
-        for (const roaster of COMMON_ROASTERS) {
-          if (combinedText.includes(roaster.toLowerCase())) {
-            matchedRoaster = roaster;
-            break;
-          }
-        }
+  // 4. Match origin and roast level
+  let matchedOrigin = 'Single Origin Specialty Coffee';
+  let matchedRoastLevel: RoastLevel = ocrExtraction.detectedRoastLevel || 'medium';
 
-        // 3. Check for origins and roast levels
-        let matchedOrigin = 'Single Origin Specialty Coffee';
-        let matchedRoastLevel: RoastLevel = 'medium';
+  for (const orig of COMMON_ORIGINS) {
+    if (orig.keywords.some((k) => combinedText.includes(k))) {
+      matchedOrigin = orig.origin;
+      if (!ocrExtraction.detectedRoastLevel) {
+        matchedRoastLevel = orig.level;
+      }
+      break;
+    }
+  }
 
-        for (const orig of COMMON_ORIGINS) {
-          if (orig.keywords.some((k) => combinedText.includes(k))) {
-            matchedOrigin = orig.origin;
-            matchedRoastLevel = orig.level;
-            break;
-          }
-        }
-
-        // If no match found from text, choose an archetype
-        if (matchedOrigin === 'Single Origin Specialty Coffee') {
-          const randomIndex = Math.floor(Math.random() * COMMON_ORIGINS.length);
-          const pick = COMMON_ORIGINS[randomIndex];
-          matchedOrigin = pick.origin;
-          matchedRoastLevel = pick.level;
-          matchedRoaster = matchedRoaster || COMMON_ROASTERS[Math.floor(Math.random() * COMMON_ROASTERS.length)];
-        }
-
-        resolve({
-          name: matchedOrigin,
-          roaster: matchedRoaster,
-          roastDate: finalRoastDate,
-          roastLevel: matchedRoastLevel,
-          notes: detectedFormatDesc
-            ? `Extracted ${detectedFormatDesc} via Mobile Vision OCR.`
-            : 'Auto-scanned from coffee bag label via Mobile Vision.',
-          detectedFormat: detectedFormatDesc,
-          isEstimatedFromBBD: isBBD,
-        });
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(imageFile);
-  });
+  return {
+    name: matchedOrigin,
+    roaster: matchedRoaster,
+    roastDate: ocrExtraction.roastDate || '',
+    hasExplicitRoastDate: !!ocrExtraction.roastDate,
+    roastLevel: matchedRoastLevel,
+    notes: ocrExtraction.formatDescription
+      ? `Extracted ${ocrExtraction.formatDescription} via Mobile Vision OCR.`
+      : 'Scanned from coffee bag label via Mobile Vision.',
+    detectedFormat: ocrExtraction.formatDescription || 'Optical Vision Scan',
+    isEstimatedFromBBD: ocrExtraction.isEstimatedFromBBD,
+    bestBeforeDate: ocrExtraction.bestBeforeDate || undefined,
+  };
 }

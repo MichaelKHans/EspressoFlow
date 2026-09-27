@@ -15,6 +15,7 @@ import {
   Search,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, RoastLevel, RatioStyle, GrinderProfile } from '../types/espresso';
+import { useTranslation } from '../i18n';
 import {
   lookupBarcode,
   parseCoffeeBagPhoto,
@@ -41,6 +42,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   currentGrinderName,
   grinders = [],
 }) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<ScanMode>('barcode');
   const [selectedGrinderName, setSelectedGrinderName] = useState<string>(currentGrinderName);
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
@@ -49,6 +51,11 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   const [manualCode, setManualCode] = useState<string>('');
   const [scannedResult, setScannedResult] = useState<ScannedBeanInfo | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
+  // Dedicated Date Stamp OCR scanning state
+  const [isDateOcrScanning, setIsDateOcrScanning] = useState<boolean>(false);
+  const [dateScanNote, setDateScanNote] = useState<string | null>(null);
+  const dateFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Editable fields when a scan is found
   const [editName, setEditName] = useState<string>('');
@@ -219,6 +226,46 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       setFeedbackMessage('Could not parse image. Please try another angle or enter details.');
     } finally {
       setIsScanning(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  // Handle Dedicated Date Stamp Photo Capture & Optical OCR
+  const handleDatePhotoCaptured = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsDateOcrScanning(true);
+    setFeedbackMessage('Scanning date stamp on bag with OCR...');
+    try {
+      const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
+      const ocrResult = await scanCoffeeBagForDateAndRoast(file);
+
+      if (ocrResult.roastDate) {
+        setEditRoastDate(ocrResult.roastDate);
+        if (ocrResult.formatDescription) {
+          setDateScanNote(ocrResult.formatDescription);
+        }
+        if (ocrResult.detectedRoastLevel) {
+          setEditRoastLevel(ocrResult.detectedRoastLevel);
+        }
+        setFeedbackMessage(
+          ocrResult.isEstimatedFromBBD
+            ? `Estimated roast date from Best Before: ${ocrResult.roastDate}`
+            : `Production roast date confirmed: ${ocrResult.roastDate}`
+        );
+      } else {
+        if (ocrResult.detectedRoastLevel) {
+          setEditRoastLevel(ocrResult.detectedRoastLevel);
+          setFeedbackMessage(`Roast level detected: ${ocrResult.detectedRoastLevel.toUpperCase()}. Please select the date manually below.`);
+        } else {
+          setFeedbackMessage(t('bean.date_not_found'));
+        }
+      }
+    } catch (err) {
+      console.warn('Date photo OCR error', err);
+      setFeedbackMessage(t('bean.date_not_found'));
+    } finally {
+      setIsDateOcrScanning(false);
       if (e.target) e.target.value = '';
     }
   };
@@ -551,11 +598,78 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                   </div>
                 </div>
 
-                {/* Roast Date & Freshness / Degassing Alert */}
+                {/* Step 2: Capture Roast Date from Bag if not yet scanned */}
+                {!editRoastDate ? (
+                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-2.5 animate-fadeIn">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-xs font-bold text-[#2C2018]">
+                          {t('bean.step2_scan_date')}
+                        </h4>
+                        <p className="text-[11px] text-[#7A6E65] leading-relaxed mt-0.5">
+                          {t('bean.barcode_no_date_desc')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <input
+                        ref={dateFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleDatePhotoCaptured}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => dateFileInputRef.current?.click()}
+                        disabled={isDateOcrScanning}
+                        className="flex-1 py-2 px-3 rounded-lg bg-[#C26D52] hover:bg-[#A95840] disabled:opacity-50 text-white text-xs font-bold font-mono flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"
+                      >
+                        {isDateOcrScanning ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>{t('bean.scanning_date')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>{t('bean.snap_date_btn')}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-900 animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div>
+                        <span className="font-bold">{t('bean.date_found', { date: editRoastDate })}</span>
+                        {dateScanNote && (
+                          <span className="block text-[10px] text-emerald-700 font-mono mt-0.5">{dateScanNote}</span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => dateFileInputRef.current?.click()}
+                      className="px-2.5 py-1 rounded bg-white/80 border border-emerald-500/30 text-[10px] text-emerald-800 font-mono hover:bg-white transition"
+                    >
+                      {t('bean.rescan_date')}
+                    </button>
+                  </div>
+                )}
+
+                {/* Roast Date & Roast Level Profile */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
                     <label className="text-[10px] font-bold text-[#7A6E65] uppercase flex items-center justify-between mb-1">
-                      <span>Roast Date</span>
+                      <span>{t('bean.roast_date')}</span>
                       {scannedResult.isEstimatedFromBBD && (
                         <span className="text-[9px] text-[#C26D52] font-semibold">Estimated from BBD</span>
                       )}
@@ -563,52 +677,65 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                     <input
                       type="date"
                       value={editRoastDate}
-                      onChange={(e) => setEditRoastDate(e.target.value)}
+                      onChange={(e) => {
+                        setEditRoastDate(e.target.value);
+                        setDateScanNote(null);
+                      }}
                       className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-xs font-mono font-semibold text-[#2C2018] focus:outline-none focus:border-[#C26D52]"
                     />
                   </div>
 
                   <div>
                     <label className="text-[10px] font-bold text-[#7A6E65] uppercase block mb-1">
-                      Roast Level Profile
+                      {t('bean.roast_level')}
+                      <span className="ml-1 text-[9px] text-[#A6998E] font-normal lowercase">({t('bean.confirm_roast_level')})</span>
                     </label>
                     <select
                       value={editRoastLevel}
                       onChange={(e) => setEditRoastLevel(e.target.value as RoastLevel)}
                       className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-xs font-semibold text-[#2C2018] focus:outline-none focus:border-[#C26D52]"
                     >
-                      <option value="light">Light Roast (Nordic / High Acidity)</option>
+                      <option value="light">Light Roast (Nordic / High Acidity / Blonde)</option>
                       <option value="medium">Medium Roast (Balanced Caramel & Fruit)</option>
                       <option value="medium-dark">Medium-Dark (Classic Chocolate & Hazelnut)</option>
-                      <option value="dark">Dark Roast (Italian Bold Crema)</option>
+                      <option value="dark">Dark Roast (Italian Bold / Espresso Crema)</option>
                     </select>
                   </div>
                 </div>
 
                 {/* Freshness & CO2 Degassing Banner */}
-                <div
-                  className={`p-2.5 rounded-lg border flex items-center gap-2.5 text-xs ${
-                    daysOff < 4
-                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-800'
-                      : daysOff <= 28
-                      ? 'bg-[#72806B]/10 border-[#72806B]/30 text-[#72806B]'
-                      : 'bg-[#2C2018]/5 border-[#2C2018]/15 text-[#7A6E65]'
-                  }`}
-                >
-                  <Clock className="w-4 h-4 flex-shrink-0" />
-                  <div className="flex-1 text-[11px] leading-tight">
-                    <span className="font-bold">
-                      {daysOff === 0 ? 'Roasted Today' : `${daysOff} days off roast`}:
-                    </span>{' '}
-                    {daysOff < 4 ? (
-                      <span>Active $CO_2$ degassing. Rest 2–3 more days for calmer espresso flow.</span>
-                    ) : daysOff <= 28 ? (
-                      <span className="font-medium">Prime espresso extraction window. Optimum CO₂ release.</span>
-                    ) : (
-                      <span>Aged roast. May require a finer grind setting to maintain resistance.</span>
-                    )}
+                {editRoastDate ? (
+                  <div
+                    className={`p-2.5 rounded-lg border flex items-center gap-2.5 text-xs ${
+                      daysOff < 4
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-800'
+                        : daysOff <= 28
+                        ? 'bg-[#72806B]/10 border-[#72806B]/30 text-[#72806B]'
+                        : 'bg-[#2C2018]/5 border-[#2C2018]/15 text-[#7A6E65]'
+                    }`}
+                  >
+                    <Clock className="w-4 h-4 flex-shrink-0" />
+                    <div className="flex-1 text-[11px] leading-tight">
+                      <span className="font-bold">
+                        {daysOff === 0 ? 'Roasted Today' : `${daysOff} days off roast`}:
+                      </span>{' '}
+                      {daysOff < 4 ? (
+                        <span>Active CO₂ degassing. Rest 2–3 more days for calmer espresso flow.</span>
+                      ) : daysOff <= 28 ? (
+                        <span className="font-medium">Prime espresso extraction window. Optimum CO₂ release.</span>
+                      ) : (
+                        <span>Mature / Aged roast ({daysOff}d). May require a finer grind setting to maintain puck resistance.</span>
+                      )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-2.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] flex items-center gap-2 text-xs text-[#7A6E65]">
+                    <Info className="w-4 h-4 text-[#C26D52] shrink-0" />
+                    <span className="text-[11px]">
+                      Take a photo of the date stamp on the bag above to calculate exact days off roast and CO₂ degassing.
+                    </span>
+                  </div>
+                )}
 
                 {/* Pre-calibrated Ratio & Grinder Setting */}
                 <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-2">
