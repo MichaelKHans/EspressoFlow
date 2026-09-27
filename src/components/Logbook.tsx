@@ -3,6 +3,7 @@ import type { ShotRecord } from '../types/espresso';
 import { BookOpen, Calendar, AlertCircle, CheckCircle, Trash2, Filter, Check, X } from 'lucide-react';
 import { DRINK_RECIPES } from '../data/drinkRecipes';
 import { ArchitecturalCup } from './ArchitecturalCup';
+import { useTranslation } from '../i18n';
 
 interface LogbookProps {
   shots: ShotRecord[];
@@ -10,6 +11,7 @@ interface LogbookProps {
 }
 
 export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
+  const { t } = useTranslation();
   const [selectedDrinkFilter, setSelectedDrinkFilter] = useState<string>('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -18,10 +20,10 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
       <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-8 text-center font-mono">
         <BookOpen className="w-8 h-8 text-[#7A6E65]/40 mx-auto mb-2" />
         <h4 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-          Logbook Empty
+          {t('logbook.empty_title')}
         </h4>
         <p className="text-xs text-[#7A6E65] mt-1">
-          Brew your first espresso shot to record extraction dynamics and dial-in history.
+          {t('logbook.empty_desc')}
         </p>
       </div>
     );
@@ -61,17 +63,17 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-[#C26D52]" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-            Barista Extraction Logbook ({shots.length})
+            {t('logbook.title', { count: shots.length })}
           </h3>
         </div>
-        <span className="text-[11px] font-mono text-[#7A6E65]">Analog Field Journal</span>
+        <span className="text-[11px] font-mono text-[#7A6E65]">{t('logbook.subtitle')}</span>
       </div>
 
       {/* Drink Filter Tabs Ribbon with Mini Cup Silhouettes */}
       <div className="bg-[#FFFDF9] p-2.5 rounded-2xl border border-[#E8DFD5] space-y-2">
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#7A6E65] uppercase tracking-wider font-bold">
           <Filter className="w-3 h-3 text-[#C26D52]" />
-          <span>Filter by Drink:</span>
+          <span>{t('logbook.filter_by')}</span>
         </div>
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           <button
@@ -83,7 +85,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                 : 'bg-[#FAF7F2] text-[#7A6E65] hover:bg-[#E8DFD5] border border-[#E8DFD5]'
             }`}
           >
-            All Drinks ({shots.length})
+            {t('logbook.all_drinks', { count: shots.length })}
           </button>
           {recordedDrinks.map((drink) => {
             const count = shots.filter((s) => (s.drinkName || 'Double Espresso') === drink).length;
@@ -117,7 +119,9 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
       {/* Shots List with Visual Architectural Cup Anatomy */}
       {filteredShots.length === 0 ? (
         <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-6 text-center font-mono">
-          <p className="text-xs text-[#7A6E65]">No shots logged for "{selectedDrinkFilter}".</p>
+          <p className="text-xs text-[#7A6E65]">
+            {t('logbook.no_shots_filtered', { filter: selectedDrinkFilter })}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -140,6 +144,10 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                   d.name.toLowerCase() === drinkLabel.toLowerCase() ||
                   drinkLabel.toLowerCase().includes(d.name.toLowerCase())
               ) || DRINK_RECIPES[1];
+
+            const roastKey = shot.roastLevel
+              ? (`roast.${shot.roastLevel.replace('-', '_')}` as const)
+              : null;
 
             return (
               <div
@@ -168,9 +176,9 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                       <span className="bg-[#FAF7F2] border border-[#C26D52]/30 text-[#C26D52] px-2 py-0.5 rounded text-[10px] font-bold">
                         {drinkLabel}
                       </span>
-                      {shot.roastLevel && (
+                      {shot.roastLevel && roastKey && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded border uppercase font-mono tracking-wider font-semibold border-[#E8DFD5] bg-[#FAF7F2] text-[#7A6E65]">
-                          {shot.roastLevel}
+                          {t(roastKey as any)}
                         </span>
                       )}
                     </div>
@@ -187,12 +195,14 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                         <div className="flex items-center gap-1 ml-2">
                           {isConfirming ? (
                             <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-lg p-1">
-                              <span className="text-[10px] text-red-700 font-bold px-1">Delete?</span>
+                              <span className="text-[10px] text-red-700 font-bold px-1">
+                                {t('logbook.delete_confirm_prompt')}
+                              </span>
                               <button
                                 type="button"
                                 onClick={(e) => handleDelete(shot.id, e)}
                                 className="p-1 rounded hover:bg-red-200 text-red-700 transition"
-                                title="Confirm delete"
+                                title={t('logbook.confirm_delete')}
                               >
                                 <Check className="w-3 h-3" />
                               </button>
@@ -200,7 +210,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                                 type="button"
                                 onClick={handleCancelDelete}
                                 className="p-1 rounded hover:bg-gray-200 text-[#7A6E65] transition"
-                                title="Cancel"
+                                title={t('logbook.cancel')}
                               >
                                 <X className="w-3 h-3" />
                               </button>
@@ -210,7 +220,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                               type="button"
                               onClick={(e) => handleDelete(shot.id, e)}
                               className="p-1.5 rounded-lg text-[#7A6E65] hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition"
-                              title="Delete this shot record"
+                              title={t('logbook.delete_tooltip')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -223,7 +233,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                   {/* Extraction Metrics Row */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-1">
                     <div>
-                      <div className="text-[10px] text-[#7A6E65] uppercase">Ratio</div>
+                      <div className="text-[10px] text-[#7A6E65] uppercase">{t('logbook.ratio')}</div>
                       <div className="font-semibold text-[#2C2018]">
                         {shot.doseGrams}g → {shot.actualYieldGrams}g
                       </div>
@@ -232,18 +242,18 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-[#7A6E65] uppercase">Time & Flow</div>
+                      <div className="text-[10px] text-[#7A6E65] uppercase">{t('logbook.time_and_flow')}</div>
                       <div className="font-semibold text-[#2C2018]">
                         {shot.totalTimeSeconds}s @ {shot.averageFlowGps}g/s
                       </div>
                       {shot.preInfusionSeconds !== undefined && (
                         <div className="text-[10px] text-[#7A6E65] mt-0.5">
-                          Pre: {shot.preInfusionSeconds}s • Flow: {shot.flowTimeSeconds}s
+                          {t('logbook.pre_abbr')}: {shot.preInfusionSeconds}s • {t('logbook.flow_abbr')}: {shot.flowTimeSeconds}s
                         </div>
                       )}
                     </div>
                     <div>
-                      <div className="text-[10px] text-[#7A6E65] uppercase">Equipment</div>
+                      <div className="text-[10px] text-[#7A6E65] uppercase">{t('logbook.equipment')}</div>
                       <div className="font-semibold text-[#2C2018]">
                         {shot.grinderName.split(' ')[0]} @ {shot.grindSetting}
                       </div>
@@ -254,16 +264,25 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
                       )}
                     </div>
                     <div>
-                      <div className="text-[10px] text-[#7A6E65] uppercase">Taste / Flow</div>
+                      <div className="text-[10px] text-[#7A6E65] uppercase">{t('logbook.taste_flow')}</div>
                       <div className="flex items-center gap-1 font-semibold capitalize text-[#2C2018]">
                         {shot.channelingDetected ? (
                           <span className="text-[#B85B48] flex items-center gap-1 text-[11px]">
-                            <AlertCircle className="w-3 h-3" /> Channeling
+                            <AlertCircle className="w-3 h-3" /> {t('logbook.channeling')}
                             {shot.channeling?.flowSpikeGps ? ` (${shot.channeling.flowSpikeGps} g/s)` : ''}
                           </span>
                         ) : (
                           <span className="text-[#72806B] flex items-center gap-1 text-[11px]">
-                            <CheckCircle className="w-3 h-3" /> {shot.tasteRating || 'Balanced'}
+                            <CheckCircle className="w-3 h-3" />{' '}
+                            {shot.tasteRating
+                              ? shot.tasteRating === 'sour'
+                                ? t('taste.sour_label')
+                                : shot.tasteRating === 'bitter'
+                                ? t('taste.bitter_label')
+                                : shot.tasteRating === 'watery'
+                                ? t('taste.watery_label')
+                                : t('taste.balanced_label')
+                              : t('logbook.balanced')}
                           </span>
                         )}
                       </div>

@@ -4,6 +4,14 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.1.2] - 2026-09-27
+### Architecture & Strategy
+- **Global-First Launch Arkitektur & Slank UI Streamlining:**
+  - **Sprogvælger Skjult til Efter Lancering (`ENABLE_MULTI_LANGUAGE = false`):** I overensstemmelse med strategisk produktfokus slås den aktive sprogvælger midlertidigt fra i UI'en (både i topheaderen og i indstillingskortet), så appen fremstår 100% ren, minimalistisk og stilren med international specialty coffee terminologi (SCA standard).
+  - **Arkitektur & Oversættelser Bevares 100% Intakt:** Alle 11 gennemførte sprogordbøger (`en`, `da`, `de`, `it`, `fr`, `es`, `ja`, `ko`, `zh-CN`, `zh-TW`, `ar`) ligger fuldt bevarede i `src/i18n/locales/`. Vi kan forberede og perfektionere oversættelserne løbende i kulissen, og aktivere dem med et enkelt flag i v1.1 efter udgivelse på iOS App Store og Google Play.
+  - **100% Fuldført i18n-Binding på Kritiske Moduler:** Alle hårde strenge i `Logbook`, `FlowChart`, `TasteFeedback` og `ScaleMonitor` er forbundet til `useTranslation()`, med typesikker fallback og fuld understøttelse af fremtidige sprogudvidelser.
+  - **Ultra-Clean Header:** Topbaren indeholder nu udelukkende kaffelogo, app-titel og den elegante PRO/Trial status-chip – nul visuel støj eller klemmende menuelementer på smalle mobilskærme.
+
 ## [1.1.1] - 2026-09-26
 ### Improved & Fixed
 - **Mobil UX & Top-Header Streamlining (Stilren & Minimalistisk Kaffe-Æstetik):**

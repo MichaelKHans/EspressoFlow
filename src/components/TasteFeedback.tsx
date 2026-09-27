@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { TasteRating, ShotRecord } from '../types/espresso';
 import { generateDialInAdvice, type DialInAdvice } from '../lib/espressoMath';
 import { Sparkles, Sliders, Check, BookmarkPlus, Clock, AlertCircle, Target, Flame, Lightbulb } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 interface TasteFeedbackProps {
   lastShot: ShotRecord;
@@ -12,6 +13,7 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
   lastShot,
   onSaveWithFeedback,
 }) => {
+  const { t } = useTranslation();
   const [selectedTaste, setSelectedTaste] = useState<TasteRating>('balanced');
   const [notes, setNotes] = useState<string>('');
   const [isSaved, setIsSaved] = useState<boolean>(false);
@@ -34,10 +36,10 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
   };
 
   const tasteOptions: { key: TasteRating; label: string; desc: string }[] = [
-    { key: 'sour', label: 'Sour / Sharp', desc: 'Under-extracted, grassy, lacking sweetness' },
-    { key: 'balanced', label: 'Sweet & Balanced', desc: 'Syrupy body, bright acidity, lingering finish' },
-    { key: 'bitter', label: 'Bitter / Astringent', desc: 'Over-extracted, drying mouthfeel, harsh' },
-    { key: 'watery', label: 'Watery / Thin', desc: 'Weak concentration, low crema volume' },
+    { key: 'sour', label: t('taste.sour_label'), desc: t('taste.sour_desc') },
+    { key: 'balanced', label: t('taste.balanced_label'), desc: t('taste.balanced_desc') },
+    { key: 'bitter', label: t('taste.bitter_label'), desc: t('taste.bitter_desc') },
+    { key: 'watery', label: t('taste.watery_label'), desc: t('taste.watery_desc') },
   ];
 
   return (
@@ -46,7 +48,7 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[#C26D52]" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-            Barista Dial-In & Taste Feedback
+            {t('taste.title')}
           </h3>
         </div>
         <div className="text-[11px] font-mono text-[#7A6E65] flex items-center gap-1.5">
@@ -58,8 +60,10 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
       </div>
 
       <p className="text-xs text-[#7A6E65] mb-3">
-        Shot completed: <span className="font-mono text-[#2C2018] font-bold">{lastShot.actualYieldGrams.toFixed(1)}g</span> out in{' '}
-        <span className="font-mono text-[#2C2018] font-bold">{lastShot.totalTimeSeconds.toFixed(1)}s</span>. How did it taste?
+        {t('taste.completed_desc', {
+          yield: lastShot.actualYieldGrams.toFixed(1),
+          time: lastShot.totalTimeSeconds.toFixed(1),
+        })}
       </p>
 
       {/* Taste Selection Grid */}
@@ -142,7 +146,7 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Personal tasting notes (e.g. bright acidity, apricot aroma, velvety body)..."
+          placeholder={t('taste.notes_placeholder')}
           className="w-full px-3 py-2 text-xs rounded-lg border border-[#E8DFD5] bg-white focus:outline-none focus:ring-1 focus:ring-[#C26D52] font-mono"
         />
 
@@ -158,12 +162,12 @@ export const TasteFeedback: React.FC<TasteFeedbackProps> = ({
           {isSaved ? (
             <>
               <Check className="w-3.5 h-3.5" />
-              Saved to Logbook
+              {t('taste.saved_btn')}
             </>
           ) : (
             <>
               <BookmarkPlus className="w-3.5 h-3.5" />
-              Save to Coffee Logbook
+              {t('taste.save_btn')}
             </>
           )}
         </button>

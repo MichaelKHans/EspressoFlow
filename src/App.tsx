@@ -44,7 +44,7 @@ import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoM
 import { parseCoffeeBagPhoto } from './lib/bagScanner';
 
 export function App() {
-  const { t, language, setLanguage, supportedLanguages } = useTranslation();
+  const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
   const [activeTab, setActiveTab] = useState<'drinks' | 'monitor' | 'logbook' | 'equipment'>('drinks');
   const [activeDrinkId, setActiveDrinkId] = useState<string>('cappuccino');
   const [isDialInWizardOpen, setIsDialInWizardOpen] = useState<boolean>(false);
@@ -456,19 +456,21 @@ export function App() {
 
           {/* Right Action Chips: Language & Access Badge */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Language Switcher */}
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
-              className="text-[11px] font-mono px-2 py-1 rounded-xl border border-[#E8DFD5] bg-[#FFFDF9] text-[#2C2018] font-bold cursor-pointer hover:border-[#C26D52] transition shadow-2xs focus:outline-none"
-              title="Select App Language"
-            >
-              {supportedLanguages.map((lang) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.flag} {lang.code.toUpperCase()}
-                </option>
-              ))}
-            </select>
+            {/* Language Switcher (Only active when multi-language feature is enabled) */}
+            {isMultiLanguageEnabled && (
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
+                className="text-[11px] font-mono px-2 py-1 rounded-xl border border-[#E8DFD5] bg-[#FFFDF9] text-[#2C2018] font-bold cursor-pointer hover:border-[#C26D52] transition shadow-2xs focus:outline-none"
+                title="Select App Language"
+              >
+                {supportedLanguages.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.code.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            )}
 
             {/* Trial / Pro Access Chip */}
             <button
@@ -1307,35 +1309,37 @@ export function App() {
                 </div>
               </div>
 
-              {/* Language Selection Card */}
-              <div className="bg-[#FFFDF9] rounded-xl sm:rounded-2xl border border-[#E8DFD5] p-4 sm:p-5 space-y-3 shadow-xs">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-[#C26D52]" />
-                  <h3 className="font-bold text-xs sm:text-sm text-[#2C2018] uppercase tracking-wide">
-                    {t('settings.language')}
-                  </h3>
+              {/* Language Selection Card (Hidden until post-launch multi-language update) */}
+              {isMultiLanguageEnabled && (
+                <div className="bg-[#FFFDF9] rounded-xl sm:rounded-2xl border border-[#E8DFD5] p-4 sm:p-5 space-y-3 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-[#C26D52]" />
+                    <h3 className="font-bold text-xs sm:text-sm text-[#2C2018] uppercase tracking-wide">
+                      {t('settings.language')}
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-[#7A6E65] leading-relaxed">
+                    Select your preferred language. Barista specialty coffee terms remain international.
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {supportedLanguages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => setLanguage(lang.code)}
+                        className={`p-2.5 rounded-xl border text-center transition flex items-center justify-center gap-2 font-mono text-xs ${
+                          language === lang.code
+                            ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52] font-bold text-[#2C2018]'
+                            : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:bg-[#FAF7F2]/50'
+                        }`}
+                      >
+                        <span className="text-base">{lang.flag}</span>
+                        <span>{lang.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-[11px] text-[#7A6E65] leading-relaxed">
-                  Select your preferred language. Barista specialty coffee terms remain international.
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {supportedLanguages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      onClick={() => setLanguage(lang.code)}
-                      className={`p-2.5 rounded-xl border text-center transition flex items-center justify-center gap-2 font-mono text-xs ${
-                        language === lang.code
-                          ? 'border-[#C26D52] bg-[#FAF7F2] ring-1 ring-[#C26D52] font-bold text-[#2C2018]'
-                          : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:bg-[#FAF7F2]/50'
-                      }`}
-                    >
-                      <span className="text-base">{lang.flag}</span>
-                      <span>{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              )}
             </div>
           </div>
         )}

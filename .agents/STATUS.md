@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Global-First Launch Arkitektur & Slank UI Streamlining (v1.1.2)
+- **Sprogvælger Skjult til Efter Lancering (`ENABLE_MULTI_LANGUAGE = false`):** Sprogskifteren er pænt skjult i både topbaren og i indstillingerne for v1.0 udgivelse. Appen kører med ren, international SCA kaffe-terminologi (Ratio, Yield, Dose, Channeling, Pre-infusion, Dial-in) uden visuelt rod.
+- **Arkitektur & Oversættelser 100% Bevaret:** Alle 11 gennemarbejdede sprogfiler (`en`, `da`, `de`, `it`, `fr`, `es`, `ja`, `ko`, `zh-CN`, `zh-TW`, `ar`) er fuldt bevarede i koden. Oversættelser kan finpudses løbende og aktiveres med en enkelt kontakt efter App Store/Google Play lancering.
+- **Komplet i18n-Forbindelse på Hele Appen:** Logbog, Vægt-Monitor, Smagsfeedback og Ekstraktionskurve er 100% forbundet til `useTranslation()` med typesikre nøgler.
+- **Ultra-Minimalistisk Topbar:** Kun kaffelogo, app-titel og den slanke PRO/Trial status-chip vises i toppen.
+
 ### 2026-09-26 -- Mobil UX & Top-Header Streamlining (Stilren & Minimalistisk Kaffe-Æstetik) (v1.1.1)
 - **Single-Line Zero-Clutter Header:** Fjernet den pladskrævende 37-tegns undertitel og den grå versionsbadge fra mobilvisningen, så toppen altid fremstår som en ultraskarpt skåret 44px minimalistisk luksusbar med brand-ikon og logo.
 - **Ingen Tekstbrud på Status-Chips:** Adgangschips ("PRØVEPERIODE: 7D", "PERIODO DI PROVA", "TESTPHASE" osv.) knækkede tidligere over på to kluntede linjer på mobiler. Nu vises et elegant `🛡️ 7d` (eller `🛡️ PRO`) chip på mobile viewports, der aldrig bryder eller klemmer.

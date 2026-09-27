@@ -47,13 +47,20 @@ const dictionaries: Record<SupportedLanguage, Partial<Record<TranslationKeys, st
   es,
 };
 
+export const ENABLE_MULTI_LANGUAGE = false;
+
 const STORAGE_KEY = 'espressoflow_lang';
 const EVENT_NAME = 'espressoflow_lang_change';
 
 /**
- * Detects initial user language based on localStorage or browser navigator
+ * Detects initial user language based on localStorage or browser navigator.
+ * When ENABLE_MULTI_LANGUAGE is false, standard English is always used.
  */
 export function getInitialLanguage(): SupportedLanguage {
+  if (!ENABLE_MULTI_LANGUAGE) {
+    return 'en';
+  }
+
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as SupportedLanguage | null;
     const validCodes: SupportedLanguage[] = ['en', 'de', 'da', 'ko', 'ja', 'zh-CN', 'zh-TW', 'ar', 'it', 'fr', 'es'];
@@ -141,5 +148,6 @@ export function useTranslation() {
     language,
     setLanguage,
     supportedLanguages: SUPPORTED_LANGUAGES,
+    isMultiLanguageEnabled: ENABLE_MULTI_LANGUAGE,
   };
 }

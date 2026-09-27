@@ -2,6 +2,7 @@ import React from 'react';
 import type { ShotDataPoint, ChannelingEvent } from '../types/espresso';
 import { AlertCircle, TrendingUp, Gauge, Sparkles } from 'lucide-react';
 import { THE_GOLDEN_ZONE } from '../lib/espressoMath';
+import { useTranslation } from '../i18n';
 
 interface FlowChartProps {
   points: ShotDataPoint[];
@@ -18,15 +19,17 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   preInfusionSeconds,
   doseGrams = 18.0,
 }) => {
+  const { t } = useTranslation();
+
   if (points.length === 0) {
     return (
       <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-6 text-center">
         <Gauge className="w-8 h-8 text-[#7A6E65]/50 mx-auto mb-2" />
         <h4 className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-          Extraction Curve & Flow Dynamics
+          {t('chart.empty_title')}
         </h4>
         <p className="text-xs text-[#7A6E65] mt-1 max-w-sm mx-auto">
-          Start a shot to observe real-time flow rate (g/s) and detect channeling spikes mathematically.
+          {t('chart.empty_desc')}
         </p>
       </div>
     );
@@ -77,7 +80,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-[#C26D52]" />
           <span className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-            Extraction Dynamics Curve
+            {t('chart.title')}
           </span>
         </div>
 
@@ -85,13 +88,16 @@ export const FlowChart: React.FC<FlowChartProps> = ({
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#B85B48]/10 text-[#B85B48] text-xs font-mono font-semibold border border-[#B85B48]/30">
             <AlertCircle className="w-3.5 h-3.5" />
             <span>
-              Channeling @ {channelingEvent.timestampSeconds}s ({channelingEvent.flowSpikeGps} g/s)
+              {t('chart.channeling_spike', {
+                time: channelingEvent.timestampSeconds ?? 0,
+                spike: channelingEvent.flowSpikeGps ?? 0,
+              })}
             </span>
           </div>
         ) : (
           <div className="flex items-center gap-1 text-[11px] font-mono text-[#72806B] bg-[#72806B]/10 px-2 py-0.5 rounded border border-[#72806B]/20">
             <Sparkles className="w-3 h-3" />
-            <span>Optimal Flow Profile</span>
+            <span>{t('chart.optimal_flow')}</span>
           </div>
         )}
       </div>
@@ -117,7 +123,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             fontWeight="bold"
             opacity="0.8"
           >
-            GOLDEN ZONE (1.2–1.6 g/s)
+            {t('chart.golden_zone')}
           </text>
 
           {/* Horizontal grid lines */}
@@ -179,7 +185,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
                 fontSize="9"
                 fontWeight="bold"
               >
-                First Drip ({preInfusionSeconds.toFixed(1)}s)
+                {t('chart.first_drip', { time: preInfusionSeconds.toFixed(1) })}
               </text>
             </g>
           )}
@@ -249,19 +255,19 @@ export const FlowChart: React.FC<FlowChartProps> = ({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-1 bg-[#2C2018] rounded-full inline-block" />
-            <span>Yield: {lastPoint?.weightGrams.toFixed(1) || '0.0'}g</span>
+            <span>{t('chart.yield')}: {lastPoint?.weightGrams.toFixed(1) || '0.0'}g</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-1 bg-[#C26D52] rounded-full inline-block" />
-            <span>Flow: {lastPoint?.flowRateGps.toFixed(1) || '0.0'} g/s</span>
+            <span>{t('chart.flow')}: {lastPoint?.flowRateGps.toFixed(1) || '0.0'} g/s</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 bg-[#72806B]/30 rounded-xs inline-block" />
-            <span className="text-[#72806B]">Ratio: 1:{currentRatio}</span>
+            <span className="text-[#72806B]">{t('chart.ratio')}: 1:{currentRatio}</span>
           </div>
         </div>
         <div className="text-[11px]">
-          Target: {targetYield}g (Dose {doseGrams}g)
+          {t('chart.target_dose_yield', { yield: targetYield, dose: doseGrams })}
         </div>
       </div>
     </div>
