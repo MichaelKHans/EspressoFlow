@@ -29,6 +29,8 @@ export interface CoffeeBeanProfile {
   grinderName: string;
   notes?: string;
   barcode?: string;
+  rating?: number; // 1 to 5 stars
+  isFavorite?: boolean;
 }
 
 export interface ShotRecord {

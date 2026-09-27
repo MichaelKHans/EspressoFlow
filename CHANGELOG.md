@@ -4,6 +4,16 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.4] - 2026-09-27
+### Mobile UX & Favorite Beans Rolodex
+- **Top-Right Bønnesletning & Favorit Bønne-Kardotek:**
+  - **Slet-knap Flyttet til Øverste Højre Hjørne:** Fjernet den forvirrende skraldespand i bunden af bønnekortet. Nu sidder der et diskret og intuitivt slette-ikon i øverste højre hjørne ved siden af `ACTIVE`-indikatoren på hver bønne i `Beans & Gear`.
+  - **Nyt Kompakt Favorit Bønne-Kardotek:** Tilføjet et ultra-slankt kardotek under bønnelageret med:
+    - 1-klik interaktive guldstjerner (1 til 5 stjerner `★`).
+    - Kompakt visning af risteprofil-badge, navn, risteri og kværn.
+    - Hurtig-aktivering med *"Vælg"* knap.
+  - **Datamodel Forberedt til Supabase & Global Database:** Tilføjet `rating` (1-5) og `isFavorite` til `CoffeeBeanProfile`, som danner fundamentet for fremtidig crowdsourced kaffebase og offentlig webportal.
+
 ## [1.2.3] - 2026-09-27
 ### Visual Polish & Roast Level Badges
 - **Farvekodede Bønneristnings-Badges på Coffee Bar:**

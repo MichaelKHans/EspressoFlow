@@ -1,7 +1,7 @@
 {
   "name": "espresso-flow",
   "private": true,
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Real-Time Scale OCR Computer Vision & Extraction Flow for Coffee Enthusiasts",
   "type": "module",
   "scripts": {

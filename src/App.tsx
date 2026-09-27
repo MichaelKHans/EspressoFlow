@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, FlaskConical, Barcode, Globe } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, FlaskConical, Barcode, Globe, Star } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
@@ -890,11 +890,26 @@ export function App() {
                           >
                             {bean.roastLevel}
                           </span>
-                          {isActive && (
-                            <span className="flex items-center gap-1 text-[10px] text-[#72806B] font-bold">
-                              <Check className="w-3 h-3" /> ACTIVE
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            {isActive && (
+                              <span className="flex items-center gap-1 text-[10px] text-[#72806B] font-bold">
+                                <Check className="w-3 h-3" /> ACTIVE
+                              </span>
+                            )}
+                            {beans.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteBean(bean.id);
+                                }}
+                                className="w-6 h-6 rounded-md flex items-center justify-center text-[#7A6E65]/50 hover:text-red-600 hover:bg-red-50 transition"
+                                title="Fjern bønne fra vault"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         <div className="font-bold text-[#2C2018] text-xs leading-snug">{bean.name}</div>
@@ -914,19 +929,6 @@ export function App() {
                         <span className="text-[#7A6E65]">
                           Ratio: {bean.doseGrams}g → {bean.targetYieldGrams}g
                         </span>
-                        {beans.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteBean(bean.id);
-                            }}
-                            className="text-[#7A6E65]/50 hover:text-red-600 transition"
-                            title="Remove bean"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        )}
                       </div>
 
                       {/* Inline Quick Dial-In Tuner (Expands directly on active card) */}
@@ -1088,6 +1090,113 @@ export function App() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Compact Favorite Beans Kardotek / Rolodex */}
+              <div className="mt-4 pt-4 border-t border-[#E8DFD5] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#2C2018] uppercase tracking-wider font-mono">
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span>Favorit Bønne-Kardotek ({beans.filter((b) => (b.rating || 0) > 0 || b.isFavorite).length || beans.length})</span>
+                  </div>
+                  <span className="text-[10px] text-[#7A6E65] font-mono">
+                    Giv stjerner for at gemme favoritter
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  {beans.map((bean) => {
+                    const rating = bean.rating || 0;
+                    const isActive = bean.id === activeBeanId;
+
+                    return (
+                      <div
+                        key={`fav-${bean.id}`}
+                        className={`px-3 py-2 rounded-xl border text-xs font-mono transition flex items-center justify-between gap-2.5 ${
+                          isActive
+                            ? 'bg-[#FAF7F2] border-[#C26D52]/40 ring-1 ring-[#C26D52]/20'
+                            : 'bg-white border-[#E8DFD5] hover:border-[#C26D52]/30'
+                        }`}
+                      >
+                        {/* Left: Interactive Star Rating (1-5 stars) */}
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newRating = rating === star ? 0 : star;
+                                const updated = beans.map((b) =>
+                                  b.id === bean.id
+                                    ? { ...b, rating: newRating, isFavorite: newRating >= 4 }
+                                    : b
+                                );
+                                setBeans(updated);
+                                saveBeans(updated);
+                              }}
+                              className="p-0.5 hover:scale-125 transition"
+                              title={`${star} stjerner`}
+                            >
+                              <Star
+                                className={`w-3.5 h-3.5 transition ${
+                                  star <= rating
+                                    ? 'text-amber-500 fill-amber-500 drop-shadow-xs'
+                                    : 'text-[#E8DFD5] hover:text-amber-300'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Middle: Roast badge & Bean Name */}
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span
+                            className={`text-[8px] uppercase font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${
+                              bean.roastLevel === 'light'
+                                ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                : bean.roastLevel === 'medium'
+                                ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                                : bean.roastLevel === 'medium-dark'
+                                ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
+                                : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
+                            }`}
+                          >
+                            {bean.roastLevel}
+                          </span>
+                          <span className="font-bold text-[#2C2018] truncate text-[11px]">
+                            {bean.name}
+                          </span>
+                          {bean.roaster && (
+                            <span className="text-[10px] text-[#7A6E65] truncate hidden sm:inline">
+                              • {bean.roaster}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Right: Grind & Selection */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px] text-[#7A6E65] hidden sm:inline">
+                            Grind: {bean.grindSetting}
+                          </span>
+                          {isActive ? (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30">
+                              Aktiv
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSelectBean(bean.id)}
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] transition"
+                            >
+                              Vælg
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 

@@ -11,6 +11,11 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Top-Right Bønnesletning & Favorit Bønne-Kardotek (v1.2.4)
+- **Slette-knap i Top-Højre Hjørne:** Flyttet skraldespandsknappen på bønnekortene op i øverste højre hjørne ved siden af `ACTIVE`-statussen for en ren og intuitiv UX.
+- **Favorit Bønne-Kardotek:** Implementeret et kompakt, smalt kardotek under bønnelageret med 1-klik interaktive guldstjerner (1-5 stjerner `★`), ristefarve-badges og hurtig-aktivering.
+- **Forberedelse til Supabase & Global Kaffebase:** `rating` og `isFavorite` felter tilføjet til bønnernes datamodel, klar til crowdsourcing og offentlig webportal.
+
 ### 2026-09-27 -- Farvekodede Bønneristnings-Badges på Coffee Bar (v1.2.3)
 - **Ristnings-Farver på Coffee Bar:** Bønnevælger-knapperne i det mørke Mokka-kort og Dial-In Studio har nu fået nøjagtig samme visuelle pille-badges for ristegrad (`LIGHT` rav, `MEDIUM` terracotta, `DARK` espresso) som i Beans & Gear.
 - **Hurtig Visuel Identifikation:** Gør det legende let at skelne mellem lyse og mørke bønner direkte på kaffedisken uden at skulle nærlæse teksten.
