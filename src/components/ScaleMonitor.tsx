@@ -684,10 +684,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                       e.stopPropagation();
                       handleRecenter();
                     }}
-                    className="px-2 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 hover:bg-amber-500/30 text-[10px] font-mono font-bold flex items-center gap-1 backdrop-blur-md transition shadow-xs"
+                    className="px-2.5 py-1 rounded-xl bg-[#2C2018] border-2 border-amber-400 text-amber-300 hover:text-white hover:bg-black text-[11px] font-mono font-extrabold flex items-center gap-1.5 shadow-lg transition active:scale-95 cursor-pointer"
                     title="Reset target box to center"
                   >
-                    <Crosshair className="w-3 h-3" />
+                    <Crosshair className="w-3.5 h-3.5 text-amber-400" />
                     <span>Recenter</span>
                   </button>
                 )}
@@ -723,6 +723,14 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                     <span>{isTorchOn ? 'Torch ON' : 'Torch'}</span>
                   </button>
                 )}
+              </div>
+            </div>
+
+            {/* Interactive Tap-to-Focus Guidance Badge */}
+            <div className="absolute top-11 sm:top-12 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/85 backdrop-blur-md border border-white/25 text-[#FAF7F2] font-mono text-[10px] sm:text-[11px] shadow-lg whitespace-nowrap">
+                <span className="text-amber-400 font-bold">👆</span>
+                <span className="font-semibold tracking-wide">Tap scale digits to focus & target</span>
               </div>
             </div>
           </>
@@ -770,7 +778,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 ) : (
                   <>
                     <Scan className="w-3 h-3 text-[#C26D52]" />
-                    <span className="text-[#E8DFD5]/80">[ AIM AT DIGITS • TAP TO ALIGN ]</span>
+                    <span className="text-amber-300 font-bold">[ 👆 TAP DIGITS TO FOCUS & ALIGN ]</span>
                   </>
                 )}
               </div>
@@ -940,8 +948,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             <RefreshCw className="w-3.5 h-3.5 text-[#7A6E65]" />
             {t('scale.tare', { weight: '0.0' })}
           </button>
-          <div className="text-xs text-[#7A6E65] hidden sm:block font-mono">
-            {t('scale.auto_timer_hint')}
+          <div className="text-[11px] sm:text-xs text-[#7A6E65] font-mono flex items-center gap-1.5 flex-wrap">
+            <span className="text-[#C26D52] font-bold">👆</span>
+            <span>Tap screen to target & focus scale • Auto-starts timer at 0.1g</span>
           </div>
         </div>
 

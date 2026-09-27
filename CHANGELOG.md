@@ -4,6 +4,16 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.10] - 2026-09-27
+### High-Contrast Recenter Button & Tap-to-Focus Viewfinder Guidance
+- **High-Contrast Recenter Button (`⌖ Recenter`):**
+  - Redesigned with solid dark espresso background (`#2C2018`), bold 2px bright amber border (`border-amber-400`), crisp amber text (`font-extrabold`), and drop shadow.
+  - 100% legible against bright backgrounds, daylight, and white walls.
+- **Prominent Tap-to-Focus Viewfinder Guidance:**
+  - Added floating guidance badge in the live camera viewfinder: `👆 Tap scale digits to focus & target`.
+  - Updated reticle crosshair prompt text: `[ 👆 TAP DIGITS TO FOCUS & ALIGN ]`.
+  - Added persistent guidance to the bottom control bar on both mobile and desktop screens (`👆 Tap screen to target & focus scale • Auto-starts timer at 0.1g`).
+
 ## [1.2.9] - 2026-09-27
 ### Hidden Passcode Gate & Custom Admin Passcode Settings
 - **Removed Passcode Hint from Login Screen:**

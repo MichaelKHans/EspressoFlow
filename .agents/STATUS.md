@@ -11,6 +11,14 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Høj-Kontrast Recenter Knap & Tydelig Finger-Fokus Guide (v1.2.10)
+- **Letlæselig Høj-Kontrast Recenter Knap:** Ændret `⌖ Recenter` knappen fra gennemsigtig gul til en solid, mørk mokka/espresso baggrund (`#2C2018`) med 2px skarp gul kant (`border-amber-400`), fed gul tekst og skygge. Knappen er nu 100% tydelig mod både hvide vægge, dagslys og blankt stål.
+- **Tydelig Finger-Fokus Instruktion i Kamerasøgeren:**
+  - Tilføjet et svævende vejledningsbadge i toppen af live kamerasøgeren: `👆 Tap scale digits to focus & target`.
+  - Opdateret måleretiklens sigtekorn-tekst: `[ 👆 TAP DIGITS TO FOCUS & ALIGN ]`.
+  - Opdateret bjælken under kameraet på både mobil og desktop: `👆 Tap screen to target & focus scale • Auto-starts timer at 0.1g`.
+  - Brugeren er nu aldrig i tvivl om, at man kan prikke med fingeren på vægten for at stille skarpt.
+
 ### 2026-09-27 -- Skjult Admin-Kode & Brugerdefineret Kodeord-Indstilling (v1.2.9)
 - **Fjernet Kode-Tekst fra Login-Skærmen:** Den afslørende tekst med standard master-passcode i bunden af `/admin` login-portalen er fjernet 100%, så ingen uvedkommende kan se koden.
 - **Mulighed for at Ændre Admin-Kode:** Tilføjet en dedikeret *"Security & Passcode"* fane i Admin Hub med nøgle-ikon (`KeyRound`).
