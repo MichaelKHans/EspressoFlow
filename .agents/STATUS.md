@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Afskaffelse af "PRO" & Ren Livstidsadgang Model (v1.1.3)
+- **Fuld Sanering af "PRO" Betegnelsen:** Eftersom alle brugere skal betale efter 7 dages prøveperiode, er enhver falsk "Freemium vs. Pro" opdeling fjernet. Appen hedder simpelthen "Espresso Flow", og betalingen er et engangskøb på $4.99 / 49,- DKK for Livstidsadgang.
+- **Badge-fri Topbar Efter Betaling:** Når appen er låst op, forsvinder adgangschipen helt fra headeren. Brugeren ser en 100% ren, rolig og uforstyrret topbar.
+- **Aktiv Prøveperiode-Tæller:** Under de 7 dages prøveperiode vises en diskret `🛡️ 7d` indikator i headeren.
+- **Automatisk Udløbslås:** Ved opstart efter 7 dage vises "Unlock Lifetime Access" automatisk, så appen ikke kan bruges uden engangskøb.
+- **Licenskort i Indstillinger:** Under Gear/Indstillinger kan baristaen altid se status, låse op før tid eller gendanne køb på nye enheder.
+
 ### 2026-09-27 -- Global-First Launch Arkitektur & Slank UI Streamlining (v1.1.2)
 - **Sprogvælger Skjult til Efter Lancering (`ENABLE_MULTI_LANGUAGE = false`):** Sprogskifteren er pænt skjult i både topbaren og i indstillingerne for v1.0 udgivelse. Appen kører med ren, international SCA kaffe-terminologi (Ratio, Yield, Dose, Channeling, Pre-infusion, Dial-in) uden visuelt rod.
 - **Arkitektur & Oversættelser 100% Bevaret:** Alle 11 gennemarbejdede sprogfiler (`en`, `da`, `de`, `it`, `fr`, `es`, `ja`, `ko`, `zh-CN`, `zh-TW`, `ar`) er fuldt bevarede i koden. Oversættelser kan finpudses løbende og aktiveres med en enkelt kontakt efter App Store/Google Play lancering.

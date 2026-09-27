@@ -96,22 +96,22 @@ export const en = {
   'wizard.next': 'Next',
   'wizard.start_brewing': 'Start Brewing →',
 
-  // PRO Paywall Modal
+  // Lifetime Access Modal
   'paywall.badge': 'LIFETIME ACCESS • NO SUBSCRIPTION',
-  'paywall.title': 'Espresso Flow PRO',
+  'paywall.title': 'Espresso Flow',
   'paywall.subtitle': 'Transform any kitchen scale into a precision extraction lab.',
   'paywall.price': '$4.99 / 49,- DKK',
   'paywall.pay_once': 'Pay Once, Dial In Forever',
   'paywall.trial_status': 'You currently have {days} days left in your free trial.',
-  'paywall.expired_status': 'Unlock complete precision extraction capabilities.',
+  'paywall.expired_status': 'Your 7-day trial has ended. Unlock lifetime access to continue.',
   'paywall.feature_ocr': 'Unlimited Real-Time Scale OCR & Computer Vision',
   'paywall.feature_flow': 'Mathematical Channeling Detection & Flow Spikes',
   'paywall.feature_logbook': 'Analog Barista Logbook & Extraction History',
   'paywall.feature_dialin': 'Smart Grinder Dial-In Steps & Taste Feedback',
   'paywall.feature_co2': 'CO2 Degassing Alerts & Coffee Bean Scanning',
-  'paywall.unlock_btn': 'Unlock Lifetime Pro ($4.99)',
+  'paywall.unlock_btn': 'Unlock Lifetime Access ($4.99)',
   'paywall.restore_btn': 'Restore Purchases',
-  'paywall.restore_success': 'Purchases restored successfully! Entitlement: Lifetime PRO active.',
+  'paywall.restore_success': 'Purchases restored successfully! Full lifetime access unlocked.',
   'paywall.secure_notice': 'Secure In-App',
 
   // Footer & Legal Links
@@ -149,7 +149,7 @@ export const en = {
   'legal.faq_q1': 'Q: Does my scale need Bluetooth?',
   'legal.faq_a1': 'A: No! Espresso Flow works with any standard kitchen or coffee scale by reading the display with your phone\'s camera.',
   'legal.faq_q2': 'Q: How do I restore my purchase on a new phone?',
-  'legal.faq_a2': 'A: Simply tap "Restore Purchases" in the PRO menu while signed in with your Apple ID or Google account.',
+  'legal.faq_a2': 'A: Simply tap "Restore Purchases" in the settings menu while signed in with your Apple ID or Google account.',
 
   // Equipment & Settings
   'settings.title': 'Equipment & Settings',

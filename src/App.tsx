@@ -49,12 +49,7 @@ export function App() {
   const [activeDrinkId, setActiveDrinkId] = useState<string>('cappuccino');
   const [isDialInWizardOpen, setIsDialInWizardOpen] = useState<boolean>(false);
   const [shots, setShots] = useState<ShotRecord[]>([]);
-  const [accessState, setAccessState] = useState<UserAccessState>({
-    isProLifetime: false,
-    installTimestampMs: Date.now(),
-    isWithinTrial: true,
-    daysRemainingInTrial: 7,
-  });
+  const [accessState, setAccessState] = useState<UserAccessState>(() => loadUserAccess());
 
   // Onboarding State
   const [isOnboardingDone, setIsOnboardingDone] = useState<boolean>(() => loadOnboardingComplete());
@@ -429,6 +424,13 @@ export function App() {
     setIsPaywallOpen(false);
   };
 
+  // Auto-prompt unlock modal if the 7-day trial has expired and app is not unlocked
+  useEffect(() => {
+    if (!accessState.isProLifetime && !accessState.isWithinTrial) {
+      setIsPaywallOpen(true);
+    }
+  }, [accessState.isProLifetime, accessState.isWithinTrial]);
+
   // Calculate days off roast
   const roastDateObj = new Date(roastDate);
   const daysOffRoast = Math.max(0, Math.floor((Date.now() - roastDateObj.getTime()) / (1000 * 60 * 60 * 24)));
@@ -472,28 +474,22 @@ export function App() {
               </select>
             )}
 
-            {/* Trial / Pro Access Chip */}
-            <button
-              onClick={() => setIsPaywallOpen(true)}
-              className={`text-[11px] sm:text-xs font-mono px-2 sm:px-2.5 py-1 rounded-xl border transition flex items-center gap-1 sm:gap-1.5 shrink-0 ${
-                accessState.isProLifetime
-                  ? 'border-[#72806B] bg-[#72806B]/15 text-[#72806B] font-bold'
-                  : 'border-[#C26D52]/40 bg-[#C26D52]/10 text-[#C26D52] font-semibold hover:bg-[#C26D52]/20'
-              }`}
-              title="Pro Membership & License"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-              {/* Ultra-clean mobile badge that never wraps */}
-              <span className="sm:hidden font-bold">
-                {accessState.isProLifetime ? 'PRO' : `${accessState.daysRemainingInTrial}d`}
-              </span>
-              {/* Full descriptive label on larger screens */}
-              <span className="hidden sm:inline">
-                {accessState.isProLifetime
-                  ? t('app.pro_lifetime')
-                  : t('app.trial_days', { days: accessState.daysRemainingInTrial })}
-              </span>
-            </button>
+            {/* Trial Access Chip - Only visible during 7-day trial; completely hidden once unlocked! */}
+            {!accessState.isProLifetime && (
+              <button
+                onClick={() => setIsPaywallOpen(true)}
+                className="text-[11px] sm:text-xs font-mono px-2 sm:px-2.5 py-1 rounded-xl border border-[#C26D52]/40 bg-[#C26D52]/10 text-[#C26D52] font-semibold hover:bg-[#C26D52]/20 transition flex items-center gap-1 sm:gap-1.5 shrink-0"
+                title="7-Day Free Trial - Tap to unlock lifetime access"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <span className="sm:hidden font-bold">
+                  {accessState.daysRemainingInTrial}d
+                </span>
+                <span className="hidden sm:inline">
+                  {t('app.trial_days', { days: accessState.daysRemainingInTrial })}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1306,6 +1302,54 @@ export function App() {
                     <span>5-8s (Standard specialty)</span>
                     <span>15s (Long soak)</span>
                   </div>
+                </div>
+              </div>
+
+              {/* License & Full Access Card */}
+              <div className="bg-[#FFFDF9] rounded-xl sm:rounded-2xl border border-[#E8DFD5] p-4 sm:p-5 space-y-3 shadow-xs font-mono">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className={`w-4 h-4 ${accessState.isProLifetime ? 'text-[#72806B]' : 'text-[#C26D52]'}`} />
+                    <h3 className="font-bold text-xs sm:text-sm text-[#2C2018] uppercase tracking-wide">
+                      {accessState.isProLifetime ? 'Lifetime Access Active' : '7-Day Free Trial'}
+                    </h3>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    accessState.isProLifetime
+                      ? 'bg-[#72806B]/15 text-[#72806B] border-[#72806B]/30'
+                      : 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                  }`}>
+                    {accessState.isProLifetime ? 'UNLOCKED' : `${accessState.daysRemainingInTrial} DAYS LEFT`}
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
+                  {accessState.isProLifetime
+                    ? 'Your one-time purchase is active. Unlimited precision scale OCR, flow dynamics & logbook access forever.'
+                    : 'You are currently enjoying your 7-day free trial. After the trial, a single one-time payment of $4.99 / 49,- DKK unlocks the app permanently.'}
+                </p>
+
+                <div className="flex items-center gap-2 pt-1 flex-wrap">
+                  {!accessState.isProLifetime && (
+                    <button
+                      type="button"
+                      onClick={() => setIsPaywallOpen(true)}
+                      className="px-3 py-2 rounded-xl bg-[#C26D52] text-white text-xs font-semibold hover:bg-[#b05d43] transition shadow-xs flex items-center gap-1.5"
+                    >
+                      <Coffee className="w-3.5 h-3.5" />
+                      <span>Unlock Lifetime Access ($4.99)</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      alert(t('paywall.restore_success'));
+                      handleUnlockPro();
+                    }}
+                    className="px-3 py-2 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] text-xs font-semibold transition"
+                  >
+                    {t('paywall.restore_btn')}
+                  </button>
                 </div>
               </div>
 

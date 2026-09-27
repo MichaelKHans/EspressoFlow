@@ -98,22 +98,22 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'wizard.next': 'Næste',
   'wizard.start_brewing': 'Start Brygning →',
 
-  // PRO Paywall Modal
-  'paywall.badge': 'LIFETIME ADGANG • INGEN ABONNEMENT',
-  'paywall.title': 'Espresso Flow PRO',
-  'paywall.subtitle': 'Forvandl enhver køkkenvægt til et ultra-præcist ekstraktionslaboratorium.',
+  // Lifetime Access Modal
+  'paywall.badge': 'LIVSTIDSADGANG • INGEN ABONNEMENT',
+  'paywall.title': 'Espresso Flow',
+  'paywall.subtitle': 'Forvandl enhver kaffevægt til et ultra-præcist ekstraktionslaboratorium.',
   'paywall.price': '$4.99 / 49,- DKK',
-  'paywall.pay_once': 'Betal én gang, dial-in for altid',
+  'paywall.pay_once': 'Betal én gang, bryg for altid',
   'paywall.trial_status': 'Du har i øjeblikket {days} dage tilbage af din gratis prøveperiode.',
-  'paywall.expired_status': 'Lås op for ubegrænset præcisionsekstraktion.',
+  'paywall.expired_status': 'Din 7-dages prøveperiode er udløbet. Lås op for at fortsætte.',
   'paywall.feature_ocr': 'Ubegrænset Realtids Vægt-OCR & Computer Vision',
   'paywall.feature_flow': 'Matematisk Kanaliseringsdetektion & Flow Spikes',
   'paywall.feature_logbook': 'Analog Barista Logbog & Bryggehistorik',
   'paywall.feature_dialin': 'Intelligente Kværnjusteringstrin & Smagsfeedback',
   'paywall.feature_co2': 'CO2 Afgasningsalarmer & Bønnepose-Scanning',
-  'paywall.unlock_btn': 'Lås Op For Lifetime Pro (49,- DKK)',
+  'paywall.unlock_btn': 'Lås op for altid (49,- DKK)',
   'paywall.restore_btn': 'Gendan Tidligere Køb',
-  'paywall.restore_success': 'Køb gendannet! Rettighed: Lifetime PRO er aktiv.',
+  'paywall.restore_success': 'Køb gendannet! Fuld livstidsadgang er aktiv.',
   'paywall.secure_notice': 'Sikker Betaling',
 
   // Footer & Legal Links

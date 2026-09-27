@@ -4,6 +4,15 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.1.3] - 2026-09-27
+### Business Model & UX Clarity
+- **Fuld Afskaffelse af Forvirrende "PRO" Nomenklatur:**
+  - **Én Samlet App Model (7-Dages Prøveperiode $\rightarrow$ $4.99 / 49,- DKK Engangslivstidskøb):** Da alle brugere skal betale for appen efter de 7 dages prøveperiode for at fortsætte med at brygge, findes der ikke en kunstig opdeling mellem "gratis brugere" og "Pro brugere". Derfor er enhver reference til "PRO" saneret overalt i appen.
+  - **Topbar Helt Fri for Badges Efter Køb:** Når en bruger har låst appen op, forsvinder adgangschipen i headeren 100%. Brugeren mødes af en helt ren, rolig og uforstyrret topbar med brand-ikon og logo.
+  - **Diskret Prøveperiode-Status:** Under de 7 dages prøveperiode vises en diskret `🛡️ 7d` chip, så baristaen altid ved, hvor mange dage der er tilbage.
+  - **Automatisk Låsning Efter Prøveperiode:** Hvis prøveperioden udløber uden køb, åbnes "Unlock Lifetime Access" modalen automatisk ved opstart, så appen ikke kan bruges gratis på ubestemt tid.
+  - **Nyt Licenskort i Indstillinger:** Under Gear/Indstillinger kan baristaen altid se status på prøveperioden, låse op for altid ($4.99 / 49,- DKK) eller gendanne tidligere køb ("Restore Purchases") ved skift af telefon.
+
 ## [1.1.2] - 2026-09-27
 ### Architecture & Strategy
 - **Global-First Launch Arkitektur & Slank UI Streamlining:**
