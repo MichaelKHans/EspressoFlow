@@ -4,6 +4,23 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.6] - 2026-09-27
+### Dedicated Admin Portal & Passcode Security Gate (/admin)
+- **Lukket Admin-Sektion på Separat URL (`espressoflow.vercel.app/admin`):**
+  - **Sikker Kode-Beskyttelse:** Admin-siden er låst bag en master-kode (`9246` eller `espresso2026`) med taktilt numerisk tastatur, vis/skjul kodeord, fejl-feedback og session-hukommelse.
+  - **Omsætning & 7-Dages Trial Metrikker:**
+    - Live overblik over antal aktive brugere i 7-dages prøveperiode.
+    - Antal betalende livstidsbrugere ($4.99 / 49,- DKK engangskøb via RevenueCat).
+    - Akkumuleret omsætning og konverteringsrate.
+  - **Kaffebønne Stjerner & Ratings Kardotek:**
+    - Viser overblik over alle bønner med stjerner givet af brugerne (1 til 5 stjerner `★`).
+    - Gennemsnitlig rating, populære risterier og bønnespecifikke kværnkalibreringer.
+    - Forberedt til central Supabase integration, der i næste fase fodrer en offentlig bønne-database på nettet som reklameside for appen.
+  - **Smidig Navigation & Lås-Funktion:**
+    - *"Kaffebaren"* knap fører direkte tilbage til appens forside.
+    - *"Lås"* knap lukker øjeblikkeligt admin-sessionen ned for uvedkommende.
+    - Diskret link i appens footer (`Admin 🔒`) for hurtig adgang.
+
 ## [1.2.5] - 2026-09-27
 ### Grinder Setup Management & Dial-In Favorite Grinder Picker
 - **Mit Kværn-Setup i Beans & Gear (Personal Grinder Fleet):**

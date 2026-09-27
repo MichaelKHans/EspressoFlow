@@ -11,6 +11,7 @@ import { DrinkSelector } from './components/DrinkSelector';
 import { DialInWizardModal } from './components/DialInWizardModal';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { BeanScannerModal } from './components/BeanScannerModal';
+import { AdminPortal } from './components/AdminPortal';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
 import type {
@@ -116,7 +117,14 @@ export function App() {
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'privacy' | 'terms' | 'support' | null>(null);
 
-  // Load persistence and handle legal deep links on mount
+  // Admin Route state (e.g. espressoflow.vercel.app/admin or #admin)
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => {
+    const p = window.location.pathname.toLowerCase();
+    const h = window.location.hash.toLowerCase();
+    return p.includes('admin') || h.includes('admin');
+  });
+
+  // Load persistence, handle legal deep links, and listen for route changes
   useEffect(() => {
     setShots(loadShots());
     setAccessState(loadUserAccess());
@@ -130,6 +138,19 @@ export function App() {
     } else if (path.includes('support') || path.includes('faq')) {
       setLegalModalTab('support');
     }
+
+    const handleLocationChange = () => {
+      const p = window.location.pathname.toLowerCase();
+      const h = window.location.hash.toLowerCase();
+      setIsAdminRoute(p.includes('admin') || h.includes('admin'));
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
   const handleSelectBean = (beanId: string) => {
@@ -481,6 +502,20 @@ export function App() {
   const roastDateObj = new Date(roastDate);
   const daysOffRoast = Math.max(0, Math.floor((Date.now() - roastDateObj.getTime()) / (1000 * 60 * 60 * 24)));
   const isTooFresh = daysOffRoast < 4;
+
+  // Render Admin Portal if navigating to /admin, /admin/ or #admin
+  if (isAdminRoute) {
+    return (
+      <AdminPortal
+        onBack={() => {
+          window.history.pushState(null, '', '/');
+          setIsAdminRoute(false);
+        }}
+        beans={beans}
+        accessState={accessState}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] flex flex-col font-sans">
@@ -1764,6 +1799,17 @@ export function App() {
               className="hover:text-[#2C2018] underline transition"
             >
               {t('footer.support')}
+            </button>
+            <span>•</span>
+            <button
+              onClick={() => {
+                window.history.pushState(null, '', '/admin');
+                setIsAdminRoute(true);
+              }}
+              className="hover:text-[#2C2018] transition flex items-center gap-1 opacity-70 hover:opacity-100"
+              title="Lukket Admin Portal (Kræver adgangskode)"
+            >
+              <span>Admin 🔒</span>
             </button>
           </div>
         </div>

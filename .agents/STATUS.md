@@ -11,6 +11,12 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Dedikeret Admin Portal & Sikkerhedslås på /admin (v1.2.6)
+- **Lukket Admin-Sektion (`/admin`):** Implementeret en separat admin-rute tilgængelig via `espressoflow.vercel.app/admin` og diskret link i appens footer.
+- **PIN/Kode Sikkerhedsgate:** Låst bag master-adgangskode (`9246` eller `espresso2026`) med numerisk tastatur, vis/skjul toggle, fejlhåndtering og session-hukommelse.
+- **Omsætning & 7-Dages Trial Telemetry:** Live KPI-overblik over trial-brugere, betalende livstidsbrugere ($4.99 / 49,- DKK), omsætning og konverteringsrate.
+- **Kaffebønne Stjerner & Ratings Kardotek:** Komplet overblik over alle bønner med stjernevurderinger (1-5), gennemsnit og forberedelse til central Supabase integration samt offentlig reklameside.
+
 ### 2026-09-27 -- Kværn-Setup i Gear & Favoritkværn i Dial-In Studio (v1.2.5)
 - **Mit Kværn-Setup i Beans & Gear:** Dedikeret udstyrskort til kaffekværne, hvor baristaen kan vælge hvilke kværne der står på baren, skifte aktiv kværn med 1 klik, tilføje kendte kværne fra biblioteket eller oprette brugerdefinerede modeller.
 - **Vælg Favoritkværn i Dial-In Studio:** I Trin 1 i Dial-In Studio kan baristaen nu vælge mellem sine setup-kværne via taktile chips, se kværnens specifikke måleenhed og indstilling, og låse kværnen som bønnes faste favoritkværn.
