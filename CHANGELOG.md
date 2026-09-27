@@ -4,6 +4,16 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.0] - 2026-09-27
+### Added & Improved
+- **Intelligent Kaffebønne-Pairing & Centreret Drikkestyring:**
+  - **Automatisk Centreret Scroll ved Valg af Drik:** Når en barista klikker på en drik (i hurtigbåndet eller i oversigten), scroller skærmen nu glidende og centrerer automatisk over drikkens detaljekort, så man straks ser ekstraktionsprofilen og "Pull Shot on Scale Cam".
+  - **Bønnevælger Flyttet Direkte til Kaffen:** Den overflødige bønneknap i toppen af Barista Deck er fjernet. Man vælger nu bønnen direkte nede ved den kaffedrik, man er i gang med at tilberede.
+  - **Nyt Mørkt Flot Mokka Bønnekort:** Dyb, luksuriøs ristet mokka-æstetik (`#241A14` / `#2C2018`) med guld/pergament accenter, der præsenterer bønnevalg, ristegrad, ristedato og kværnindstilling samlet ét sted.
+  - **Optimalt Valg (The Ideal Extraction Profile):** Viser den optimale bønnetype for netop den valgte drik (fx fyldig Mellem-mørk med chokolade/nødder til mælkedrikke vs. sød Mellemristet med røde bær til ren espresso vs. vasket lys til lungo).
+  - **Smart Barista-Anbefaling til Næste Køb (Single-Bean Support):** Hvis baristaen kun har én bønne i samlingen, analyseres ristegraden, og der gives en konkret, venlig anbefaling til, hvilken type bønne (ristegrad, proces og smagsnoter – helt uden mærker) man med fordel kan købe næste gang for at løfte netop denne drik.
+  - **Finkornet Standby-Vejledning til Telefonplacering:** Standby-visningen på Scale Cam guider nu præcist baristaen: *"Du kan stille og roligt placere telefonen på kaffestationen, på en kop eller mod maskinens drypbakke, så linsen peger mod vægtens display."*
+
 ## [1.1.3] - 2026-09-27
 ### Business Model & UX Clarity
 - **Fuld Afskaffelse af Forvirrende "PRO" Nomenklatur:**

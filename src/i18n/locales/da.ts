@@ -40,7 +40,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
 
   // Scale Monitor / Cam
   'scale.standby_title': 'Scale Cam Standby',
-  'scale.standby_desc': 'Du kan roligt placere telefonen på kaffestationen, på en kop eller mod maskinens drypbakke, så linsen peger mod vægtens display.',
+  'scale.standby_desc': 'Du kan stille og roligt placere telefonen på kaffestationen, på en kop eller mod maskinens drypbakke, så linsen peger mod vægtens display.',
   'scale.start_cam_btn': 'Start Kamera',
   'scale.stop_cam_btn': 'Stop Cam',
   'scale.demo_btn': 'Demo-tilstand',

@@ -104,3 +104,87 @@ export const ROAST_LABELS: Record<RoastLevel, string> = {
   'medium-dark': 'Medium-Dark Roast',
   dark: 'Dark Roast',
 };
+
+export interface DrinkOptimalBeanGuidance {
+  idealRoastSummary: string;
+  idealFlavorNotes: string;
+  whyIdeal: string;
+  recommendationForNextBag: string;
+  isCurrentBeanOptimal: boolean;
+}
+
+/**
+ * Returns barista guidance on the optimal bean profile for a given drink,
+ * including a smart generic buying recommendation for users with only 1 bean.
+ */
+export function getOptimalBeanGuidanceForDrink(
+  drink: DrinkRecipe,
+  currentBean?: CoffeeBeanProfile
+): DrinkOptimalBeanGuidance {
+  const currentRoast = currentBean?.roastLevel;
+  const isMilk = drink.category === 'milk';
+  const isDessert = drink.category === 'dessert';
+  const isLungoOrAmericano = drink.id === 'lungo' || drink.id === 'americano';
+  const isRistretto = drink.id === 'ristretto';
+
+  if (isMilk || isDessert) {
+    const isOptimal = currentRoast === 'medium-dark' || currentRoast === 'medium';
+    return {
+      idealRoastSummary: 'Medium-Dark or Rich Medium Roast',
+      idealFlavorNotes: 'Dark chocolate, toasted hazelnut, toffee & brown sugar (low citric acidity)',
+      whyIdeal:
+        'A full-bodied medium-dark roast delivers bold caramelized sugars that cut cleanly through the natural sweetness of steamed micro-foam without getting diluted or tasting sour.',
+      recommendationForNextBag:
+        currentRoast === 'light'
+          ? `You are currently brewing with a Light roast. For ${drink.name}, consider picking up a Washed or Pulped Natural Medium-Dark roast next time for a deeper, richer chocolate body that punches through milk.`
+          : `For ${drink.name}, look for a Latin American or Pacific Medium-Dark roast with tasting notes of chocolate, caramel, and nuts next time (no specific brand needed—just look for this roast and origin profile).`,
+      isCurrentBeanOptimal: isOptimal,
+    };
+  }
+
+  if (isLungoOrAmericano) {
+    const isOptimal = currentRoast === 'light' || currentRoast === 'medium';
+    return {
+      idealRoastSummary: 'Washed Light to Medium Roast',
+      idealFlavorNotes: 'Floral jasmine, crisp stone fruit, bergamot & tea-like clarity',
+      whyIdeal:
+        'Longer extraction and higher water volume easily leach harsh bitter tannins from dark roasts. A washed light-medium roast preserves refreshing sweetness and delicate origin florals.',
+      recommendationForNextBag:
+        currentRoast === 'dark' || currentRoast === 'medium-dark'
+          ? `You are currently brewing with a darker roast. For ${drink.name}, try experimenting with a Washed Light or Medium roast next time to avoid astringency and enjoy sweet tea-like clarity.`
+          : `For ${drink.name}, seek out an African or Central American Washed Light-to-Medium roast with floral or citrus notes for clean, vibrant extraction clarity.`,
+      isCurrentBeanOptimal: isOptimal,
+    };
+  }
+
+  if (isRistretto) {
+    const isOptimal = currentRoast === 'medium-dark' || currentRoast === 'dark';
+    return {
+      idealRoastSummary: 'Medium-Dark to Dark Roast',
+      idealFlavorNotes: 'Dense dark cocoa, molasses, roasted almond & thick tiger crema',
+      whyIdeal:
+        'A short 1:1 to 1:1.5 pull benefits from rapid cellular solubility. A darker roast yields maximum viscosity and rich tiger crema with virtually zero citric sharpness.',
+      recommendationForNextBag:
+        currentRoast === 'light'
+          ? `A Light roast can be intensely sour in a short Ristretto. For ${drink.name}, we strongly recommend exploring a Medium-Dark roast next time for intense, syrupy chocolate body.`
+          : `For ${drink.name}, look for a low-altitude or natural-processed Medium-Dark bean with heavy chocolate and baker's cocoa notes for optimal crema density.`,
+      isCurrentBeanOptimal: isOptimal,
+    };
+  }
+
+  // Pure Double / Single Espresso
+  const isOptimal = currentRoast === 'medium' || currentRoast === 'medium-dark';
+  return {
+    idealRoastSummary: 'Sweet Medium Roast (or Balanced Medium-Dark)',
+    idealFlavorNotes: 'Red berries, honey sweetness, milk chocolate & balanced citrus acidity',
+    whyIdeal:
+      'Balanced solubility yields the Golden Zone: crisp malic/citric acidity harmonizing with syrupy sweetness and lasting finish.',
+    recommendationForNextBag:
+      currentRoast === 'dark'
+        ? `For pure espresso like ${drink.name}, try stepping into a Medium roast next time to taste nuanced fruit sweetness alongside classic chocolate without roast smokiness.`
+        : currentRoast === 'light'
+        ? `Light roast espressos require high temperature and long ratios. For a more traditional, syrupy ${drink.name}, try a balanced Medium roast next time.`
+        : `For pure espresso, explore a Natural or Honey-processed Medium roast next time to experience explosive berry sweetness and syrupy body.`,
+    isCurrentBeanOptimal: isOptimal,
+  };
+}

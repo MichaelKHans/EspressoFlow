@@ -38,7 +38,7 @@ export const en = {
 
   // Scale Monitor / Cam
   'scale.standby_title': 'Scale Cam Standby',
-  'scale.standby_desc': 'Position your phone so the camera points toward your digital scale display.',
+  'scale.standby_desc': 'You can comfortably rest your phone on the coffee station, against a cup, or along the drip tray so the camera points toward your scale display.',
   'scale.start_cam_btn': 'Start Camera',
   'scale.stop_cam_btn': 'Stop Cam',
   'scale.demo_btn': 'Demo Mode',

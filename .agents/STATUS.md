@@ -11,6 +11,14 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Intelligent Kaffebønne-Pairing & Centreret Drikkestyring (v1.2.0)
+- **Auto-Scroll ved Valg af Drik:** Ved klik på en kaffedrik i hurtigbåndet eller oversigten scroller appen nu glidende og centrerer automatisk over drikkekortet og Scale Cam knappen.
+- **Bønnevælger Flyttet til Drikken:** Den forstyrrende bønneknap i toppen af Barista Deck er fjernet. Man vælger nu sin bønne direkte ved den konkrete kaffedrik.
+- **Nyt Mørkt Flot Mokka Bønnekort:** Dyb, luksuriøs ristet mokka-æstetik (`#241A14` / `#2C2018`), der samler bønnevalg, ristegrad, ristedato og kværn ét sted.
+- **Optimal Profil for Hver Kaffe:** Udleder automatisk den ideelle ristegrad, smagsprofil og ekstraktionskemi for den valgte drik.
+- **Smart Barista-Anbefaling til Næste Køb (Single-Bean):** Hvis man kun har 1 bønne, gives der en konkret anbefaling til bønnetype og ristegrad (uden mærker) til næste indkøb for at løfte netop denne drik.
+- **Standby Vejledning:** Opdateret med baristaens specifikke instruktion om rolig placering på kaffestationen, på en kop eller mod drypbakken.
+
 ### 2026-09-27 -- Afskaffelse af "PRO" & Ren Livstidsadgang Model (v1.1.3)
 - **Fuld Sanering af "PRO" Betegnelsen:** Eftersom alle brugere skal betale efter 7 dages prøveperiode, er enhver falsk "Freemium vs. Pro" opdeling fjernet. Appen hedder simpelthen "Espresso Flow", og betalingen er et engangskøb på $4.99 / 49,- DKK for Livstidsadgang.
 - **Badge-fri Topbar Efter Betaling:** Når appen er låst op, forsvinder adgangschipen helt fra headeren. Brugeren ser en 100% ren, rolig og uforstyrret topbar.

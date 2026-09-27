@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, ShotRecord } from '../types/espresso';
 import { DRINK_RECIPES } from '../data/drinkRecipes';
 import {
@@ -17,6 +17,7 @@ import {
   Minus,
   AlertCircle,
   Barcode,
+  Sparkles,
 } from 'lucide-react';
 import {
   loadActiveBarDrinkIds,
@@ -27,7 +28,7 @@ import {
 } from '../lib/storage';
 import { GRINDER_CALIBRATIONS } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
-import { matchBeansForDrink, ROAST_LABELS } from '../lib/beanMatcher';
+import { matchBeansForDrink, getOptimalBeanGuidanceForDrink } from '../lib/beanMatcher';
 
 interface DrinkSelectorProps {
   currentBean: CoffeeBeanProfile;
@@ -64,6 +65,15 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'milk' | 'black' | 'dessert'>('all');
   const [drinkGrinds, setDrinkGrinds] = useState<Record<string, string>>(() => loadDrinkGrindSettings());
   const [isSavedFeedback, setIsSavedFeedback] = useState<boolean>(false);
+
+  const selectedDrinkCardRef = useRef<HTMLDivElement>(null);
+
+  const handleSelectDrinkWithScroll = (drink: DrinkRecipe) => {
+    onSelectDrink(drink);
+    setTimeout(() => {
+      selectedDrinkCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+  };
 
   const selectedDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0];
 
@@ -238,38 +248,9 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               {greeting}, Barista.
             </h2>
             <p className="text-[11px] sm:text-xs text-[#E8DFD5]/70 mt-0.5">
-              Choose your drink below. Your recipe and scale will be locked in 1 tap.
+              Select your drink profile below. Grind and extraction targets lock automatically.
             </p>
           </div>
-
-          {/* Active Bean & Grinder Quick Chip */}
-          <button
-            type="button"
-            onClick={onOpenBeanVault}
-            className="w-full sm:w-auto bg-white/10 hover:bg-white/15 border border-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-3 text-left transition flex items-center justify-between sm:justify-start gap-3 group"
-            title="Tap to switch coffee bean or grinder in Beans & Gear"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-[#C26D52] flex items-center justify-center text-white shrink-0 shadow-xs">
-                <Coffee className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <div>
-                <div className="text-[9px] sm:text-[10px] text-[#E8DFD5]/70 uppercase tracking-wider font-mono">
-                  Active Vault Bean
-                </div>
-                <div className="text-xs font-bold text-white font-mono leading-tight group-hover:text-[#FAF7F2] truncate max-w-[180px] sm:max-w-none">
-                  {currentBean.name}
-                </div>
-                <div className="text-[9px] sm:text-[10px] text-[#E8DFD5]/80 mt-0.5 flex items-center gap-1.5">
-                  <span className="capitalize">{currentBean.roastLevel} Roast</span> •
-                  <span>
-                    {currentGrinder.name.split(' ')[0]} {currentGrinder.name.split(' ')[1] || ''}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-[#E8DFD5]/60 group-hover:translate-x-0.5 transition shrink-0" />
-          </button>
         </div>
 
         {/* 2. Active Bar Deck Ribbon & Customizer */}
@@ -297,7 +278,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               return (
                 <button
                   key={drink.id}
-                  onClick={() => onSelectDrink(drink)}
+                  onClick={() => handleSelectDrinkWithScroll(drink)}
                   className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium transition flex items-center gap-1.5 sm:gap-2 ${
                     isSelected
                       ? 'bg-[#C26D52] text-white shadow-xs font-bold ring-2 ring-white/30 scale-[1.02]'
@@ -325,7 +306,10 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
       </div>
 
       {/* 3. Selected Drink Master Card (Mobile-First Architectural Layout) */}
-      <div className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#E8DFD5] p-4 sm:p-6 shadow-xs space-y-4 sm:space-y-6">
+      <div
+        ref={selectedDrinkCardRef}
+        className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#E8DFD5] p-4 sm:p-6 shadow-xs space-y-4 sm:space-y-6"
+      >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-6 pb-4 sm:pb-6 border-b border-[#E8DFD5]">
           {/* Drink Name & Header */}
           <div className="space-y-1 max-w-xl">
@@ -634,91 +618,190 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         </div>
       </div>
 
-      {/* 4b. Bean Vault Match -- Smart recommendation from vault */}
-      {allBeans && allBeans.length > 1 && (() => {
-        const matches = matchBeansForDrink(allBeans, selectedDrink);
+      {/* 4b. Dedicated Coffee Bean Pairing Card (Flot Dyb Mokka Farve & Optimal Extraction Matching) */}
+      {(() => {
+        const guidance = getOptimalBeanGuidanceForDrink(selectedDrink, currentBean);
+        const matches = allBeans && allBeans.length > 0 ? matchBeansForDrink(allBeans, selectedDrink) : [];
         const currentMatch = matches.find((m) => m.bean.id === currentBean.id);
-        const bestMatch = matches[0];
-        const currentScore = currentMatch?.matchScore ?? 0;
-        const hasBetterOption = bestMatch && bestMatch.bean.id !== currentBean.id && bestMatch.matchScore > currentScore + 5;
+        const currentScore = currentMatch?.matchScore ?? (guidance.isCurrentBeanOptimal ? 90 : 65);
+        const hasMultipleBeans = allBeans && allBeans.length > 1;
 
         return (
-          <div className="border border-[#E8DFD5] bg-[#FFFDF9] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
-                <span className="text-xs font-bold text-[#2C2018] font-mono">
-                  Bean Vault Match
-                </span>
+          <div className="bg-gradient-to-br from-[#241A14] via-[#2C2018] to-[#1E1510] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3E2D22] p-4 sm:p-6 shadow-md space-y-4 font-mono">
+            {/* Header: Title + Scan/Add Action */}
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-[#C26D52] flex items-center justify-center text-white shrink-0 shadow-xs">
+                  <Coffee className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs sm:text-sm font-bold tracking-wider text-[#FFFDF9] uppercase truncate">
+                    Bean Pairing: {selectedDrink.name.split('/')[0].trim()}
+                  </h4>
+                  <p className="text-[10px] text-[#E8DFD5]/70 truncate">
+                    Select bean & review optimal extraction chemistry
+                  </p>
+                </div>
               </div>
-              {onScanBean && (
+
+              <div className="flex items-center gap-2 shrink-0">
+                {onScanBean && (
+                  <button
+                    type="button"
+                    onClick={onScanBean}
+                    className="px-2.5 py-1 rounded-lg border border-[#72806B] bg-[#72806B]/20 hover:bg-[#72806B]/30 text-[#A4B39D] text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition shadow-xs"
+                    title="Scan coffee bag barcodes, packaging labels, or roast date stamps"
+                  >
+                    <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
+                    <span className="hidden sm:inline">Scan Bag</span>
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={onScanBean}
-                  className="text-[10px] text-[#C26D52] hover:text-[#A95840] font-mono font-semibold flex items-center gap-1 transition"
-                  title="Scan new bean bag or barcode"
+                  onClick={onOpenBeanVault}
+                  className="px-2.5 py-1 rounded-lg border border-white/15 bg-white/10 hover:bg-white/20 text-[#FAF7F2] text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition"
+                  title="Open bean vault and equipment manager"
                 >
-                  <Barcode className="w-3 h-3" />
-                  <span>Scan New Bag</span>
+                  <Plus className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>Vault</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Active Bean Selection Section */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[10px] text-[#E8DFD5]/80 uppercase tracking-wider font-bold">
+                <span>Selected Coffee Bean:</span>
+                <span className={currentScore >= 80 ? 'text-[#A4B39D]' : 'text-[#C26D52]'}>
+                  {currentScore}% Pairing Match
+                </span>
+              </div>
+
+              {hasMultipleBeans ? (
+                /* Multi-bean quick selector right here at the drink! */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {allBeans.map((bean) => {
+                    const isSelected = bean.id === currentBean.id;
+                    const beanMatch = matches.find((m) => m.bean.id === bean.id);
+                    const score = beanMatch?.matchScore ?? 75;
+
+                    return (
+                      <button
+                        key={bean.id}
+                        type="button"
+                        onClick={() => onSwitchBean && onSwitchBean(bean.id)}
+                        className={`p-3 rounded-xl border text-left transition flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? 'border-[#C26D52] bg-[#FAF7F2]/10 ring-1 ring-[#C26D52]'
+                            : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-[#FFFDF9] truncate">
+                              {bean.name}
+                            </span>
+                            {isSelected && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#72806B] text-white font-bold shrink-0">
+                                ACTIVE
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-[#E8DFD5]/70 flex items-center gap-2">
+                            <span className="capitalize">{bean.roastLevel} Roast</span>
+                            <span>•</span>
+                            <span>Grind: {bean.grindSetting}</span>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 text-right">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                              score >= 80
+                                ? 'bg-[#72806B]/20 text-[#A4B39D] border-[#72806B]/40'
+                                : score >= 60
+                                ? 'bg-white/10 text-[#E8DFD5] border-white/20'
+                                : 'bg-amber-900/30 text-amber-200 border-amber-600/30'
+                            }`}
+                          >
+                            {score}%
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Single Bean Highlight Badge */
+                <div className="p-3 rounded-xl border border-white/15 bg-white/5 flex items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white">
+                        {currentBean.name}
+                      </span>
+                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#C26D52] text-white font-bold uppercase">
+                        Current Bag
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-[#E8DFD5]/70 flex items-center gap-2">
+                      <span className="capitalize">{currentBean.roastLevel} Roast</span>
+                      <span>•</span>
+                      <span>Grind Setting: {savedDrinkSetting}</span>
+                      {currentBean.roaster && (
+                        <>
+                          <span>•</span>
+                          <span className="truncate max-w-[120px]">{currentBean.roaster}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    currentScore >= 80
+                      ? 'bg-[#72806B]/20 text-[#A4B39D] border-[#72806B]/40'
+                      : 'bg-amber-900/30 text-amber-200 border-amber-600/30'
+                  }`}>
+                    {currentScore}% Match
+                  </span>
+                </div>
               )}
             </div>
 
-            {/* Current bean match */}
-            <div className={`p-2.5 rounded-xl border text-[11px] font-mono flex items-start gap-2 ${
-              currentScore >= 80
-                ? 'bg-[#72806B]/10 border-[#72806B]/30'
-                : currentScore >= 60
-                ? 'bg-[#FAF7F2] border-[#E8DFD5]'
-                : 'bg-amber-50 border-amber-200'
-            }`}>
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-[#2C2018] text-[10px] sm:text-[11px]">
-                    {currentBean.name}
-                  </span>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                    currentScore >= 80
-                      ? 'bg-[#72806B]/20 text-[#72806B]'
-                      : currentScore >= 60
-                      ? 'bg-[#E8DFD5] text-[#7A6E65]'
-                      : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {currentScore}% match
-                  </span>
+            {/* Optimal Roast Blueprint for this specific beverage */}
+            <div className="p-3.5 rounded-xl bg-black/35 border border-white/10 space-y-2 text-xs">
+              <div className="flex items-center justify-between text-[#C26D52] font-bold text-[10px] uppercase tracking-wider flex-wrap gap-1">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>Optimal Profile for {selectedDrink.name.split('/')[0].trim()}</span>
                 </div>
-                <p className="text-[10px] text-[#7A6E65] leading-relaxed">
-                  {currentMatch?.reason || `${ROAST_LABELS[currentBean.roastLevel]} bean.`}
-                </p>
+                <span className="text-white/90 font-mono bg-white/10 px-2 py-0.5 rounded">
+                  {guidance.idealRoastSummary}
+                </span>
+              </div>
+
+              <p className="text-[11px] text-[#E8DFD5]/80 font-sans leading-relaxed">
+                {guidance.whyIdeal}
+              </p>
+
+              <div className="text-[10px] text-[#E8DFD5]/70 pt-1.5 border-t border-white/10 flex items-center gap-1.5 flex-wrap">
+                <span className="text-white/90 font-bold font-mono">Ideal Tasting Notes:</span>
+                <span>{guidance.idealFlavorNotes}</span>
               </div>
             </div>
 
-            {/* Better option suggestion */}
-            {hasBetterOption && bestMatch && (
-              <div className="mt-2 p-2.5 rounded-xl border border-[#C26D52]/30 bg-[#C26D52]/5 text-[11px] font-mono">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex-1">
-                    <span className="text-[10px] text-[#C26D52] font-bold">Better match in vault:</span>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="font-bold text-[#2C2018] text-[10px] sm:text-[11px]">
-                        {bestMatch.bean.name}
-                      </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#72806B]/20 text-[#72806B]">
-                        {bestMatch.matchScore}%
-                      </span>
-                    </div>
-                    <p className="text-[9px] text-[#7A6E65] mt-0.5">{bestMatch.reason}</p>
-                  </div>
-                  {onSwitchBean && (
-                    <button
-                      type="button"
-                      onClick={() => onSwitchBean(bestMatch.bean.id)}
-                      className="px-2.5 py-1.5 rounded-xl bg-[#C26D52] hover:bg-[#A0523C] text-white text-[10px] font-mono font-bold transition shrink-0"
-                    >
-                      Switch
-                    </button>
-                  )}
+            {/* Smart Buying Recommendation for Users with Only 1 Bean */}
+            {(!allBeans || allBeans.length <= 1) && (
+              <div className="p-3.5 rounded-xl bg-[#C26D52]/15 border border-[#C26D52]/35 text-xs text-[#FAF7F2] space-y-1.5 animate-fadeIn">
+                <div className="flex items-center gap-1.5 text-[#C26D52] font-bold text-[10px] uppercase tracking-wider">
+                  <Lightbulb className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>Barista Recommendation for Next Bag</span>
                 </div>
+                <p className="text-[11px] font-sans text-[#FAF7F2]/90 leading-relaxed">
+                  {guidance.recommendationForNextBag}
+                </p>
+                <p className="text-[9px] text-[#E8DFD5]/60 italic font-sans">
+                  *Tip: No specific brands needed—simply look for this roast and origin profile at your local roaster.
+                </p>
               </div>
             )}
           </div>
