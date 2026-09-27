@@ -587,8 +587,7 @@ export function App() {
             >
               <Coffee className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'drinks' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="truncate">
-                <span className="sm:hidden">{t('nav.bar')}</span>
-                <span className="hidden sm:inline">{t('nav.coffee_bar')}</span>
+                {t('nav.coffee_bar')}
               </span>
             </button>
 

@@ -11,6 +11,17 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Rent Kamerasyn, Ekstern Kameraværktøjslinje & "Jeg er klar" Armér-Workflow (v1.2.11)
+- **"Coffee Bar" Tab Navigation:** Første navigationstab hedder nu `Coffee Bar` på alle skærmstørrelser (både mobil og desktop) i stedet for blot `Bar`.
+- **Rent Kamerasyn Uden Forstyrrelser:** Alle zoom-knapper, recenter, standard/compact boks og den nedre telemetribjælke er flyttet helt ud af kameravisningen. Kameravinduet viser nu udelukkende live feed og målerammen uden at dække for vægten.
+- **Løst Blinkende Auto (LED):** Fjernet automatisk polaritetsvending, som fik billedet til at blinke ukontrolleret. Standardiseret til stabil LED-tilstand med manuel knap til LCD.
+- **Ekstern Kameraværktøjslinje:** Placeret lige under kameravinduet (`bg-[#1A1412]`): Zoom (`1.0x`, `1.8x`, `2.5x`), `Compact` / `Standard` fokusramme, `Center` nulstilling, `LED` / `LCD` skift, lommelygte og OCR-inspektør.
+- **"Jeg er klar • Armér vægt" 3-Faset Barista Workflow:**
+  - **Fase 1 (Placering):** Kameraet viser live feed bag teksten og lader baristaen lægge telefonen op ad en kop/drypbakken og rette fokus uden at timeren går i gang utilsigtet.
+  - **Knap "Jeg er klar • Armér vægt":** Baristaen trykker først når telefonen står perfekt.
+  - **Fase 2 (Armeret):** Vægten er armeret og venter på de første dråber kaffe (≥ 0.2g), hvorefter ekstraktionstimeren starter automatisk. Baristaen kan også trykke "Start Shot Nu" manuelt, eller "Justér placering" for at ophæve armering.
+  - **Fase 3 (Brygning):** Tydelig visning af flow rate, tid og splittimer med nulstil og stop & gem knapper.
+
 ### 2026-09-27 -- Høj-Kontrast Recenter Knap & Tydelig Finger-Fokus Guide (v1.2.10)
 - **Letlæselig Høj-Kontrast Recenter Knap:** Ændret `⌖ Recenter` knappen fra gennemsigtig gul til en solid, mørk mokka/espresso baggrund (`#2C2018`) med 2px skarp gul kant (`border-amber-400`), fed gul tekst og skygge. Knappen er nu 100% tydelig mod både hvide vægge, dagslys og blankt stål.
 - **Tydelig Finger-Fokus Instruktion i Kamerasøgeren:**

@@ -4,7 +4,6 @@ import {
   RefreshCw,
   Play,
   Square,
-  Eye,
   AlertTriangle,
   CheckCircle2,
   Scan,
@@ -48,9 +47,13 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [currentFlow, setCurrentFlow] = useState<number>(0.0);
   const [elapsedTime, setElapsedTime] = useState<number>(0.0);
   const [isZeroDetected, setIsZeroDetected] = useState<boolean>(false);
-  const [displayMode, setDisplayMode] = useState<'auto' | 'led' | 'lcd'>('auto');
-  const [cameraState, setCameraState] = useState<'standby' | 'live' | 'demo'>('standby');
+  const [displayMode, setDisplayMode] = useState<'led' | 'lcd'>('led');
+  const [cameraState, setCameraState] = useState<'standby' | 'live' | 'demo'>('live');
   const [cameraError, setCameraError] = useState<string | null>(null);
+
+  // Scale Arming & Pre-Brewing State
+  const [isArmed, setIsArmed] = useState<boolean>(false);
+  const isArmedRef = useRef<boolean>(false);
 
   // Camera Optical Zoom & Interactive ROI Alignment state
   const [zoomLevel, setZoomLevel] = useState<number>(1.8);
@@ -313,11 +316,13 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           const w = Math.round(sanitized.weight * 10) / 10;
           setCurrentWeight(w);
 
-          // Step 0 Tare check: 0.0g detected
+          // Zero / Tare detection
           if (w === 0.0) {
             setIsZeroDetected(true);
-          } else if (isZeroDetected && w >= 0.1 && !isBrewing) {
-            // Auto-start extraction shot when weight jumps from 0.0g to 0.1g!
+          } else if (isArmedRef.current && !isBrewing && w >= 0.2) {
+            // Auto-start extraction shot ONLY when user has armed the scale and liquid flows (>= 0.2g)!
+            isArmedRef.current = false;
+            setIsArmed(false);
             onBrewStart();
           }
         }
@@ -408,10 +413,23 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   }, [isBrewing, targetYield, cameraState]);
 
   const handleStartBrewing = () => {
+    isArmedRef.current = false;
+    setIsArmed(false);
     if (cameraState === 'standby') {
       setCameraState('live');
     }
     onBrewStart();
+  };
+
+  const handleArmScale = () => {
+    handleCalibrateTare();
+    isArmedRef.current = true;
+    setIsArmed(true);
+  };
+
+  const handleDisarm = () => {
+    isArmedRef.current = false;
+    setIsArmed(false);
   };
 
   const handleStartCamera = () => {
@@ -420,6 +438,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleStopCamera = () => {
+    isArmedRef.current = false;
+    setIsArmed(false);
     setCameraState('standby');
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -433,6 +453,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleCancelBrewing = () => {
+    isArmedRef.current = false;
+    setIsArmed(false);
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     startTimeRef.current = 0;
     firstDropTimeRef.current = null;
@@ -451,6 +473,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleStopBrewing = () => {
+    isArmedRef.current = false;
+    setIsArmed(false);
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     const finalWeight = currentWeight;
     const finalTime = elapsedTime;
@@ -471,7 +495,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] shadow-xs overflow-hidden">
       {/* Viewfinder Header - Responsive on mobile */}
       <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-[#E8DFD5] bg-[#FAF7F2] flex items-center justify-between gap-2">
-        {/* Left: Mode Status with Pulsating Indicator */}
+        {/* Left: Mode Status with Pulsating Indicator & State Badge */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <div
             className={`w-2.5 h-2.5 rounded-full ${
@@ -493,6 +517,18 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             ) : (
               'Standby'
             )}
+          </span>
+
+          <span
+            className={`text-[9px] px-2 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider ${
+              isBrewing
+                ? 'bg-amber-400 text-black animate-pulse'
+                : isArmed
+                ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 animate-pulse'
+                : 'bg-[#C26D52]/15 text-[#C26D52] border border-[#C26D52]/30'
+            }`}
+          >
+            {isBrewing ? 'Brewing' : isArmed ? 'Armed' : 'Aligning'}
           </span>
         </div>
 
@@ -540,26 +576,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               >
                 <Scan className="w-3 h-3" />
                 <span>{t('scale.align')}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setDisplayMode((prev) => {
-                    if (prev === 'auto') return 'led';
-                    if (prev === 'led') return 'lcd';
-                    return 'auto';
-                  });
-                }}
-                className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 font-mono"
-                title="Cycle display mode: Auto (auto-polarity), LED (light on dark), LCD (dark on light)"
-              >
-                <Eye className="w-3 h-3" />
-                <span>
-                  {displayMode === 'auto'
-                    ? `Auto (${lastOcrResult?.autoPolarityUsed ? lastOcrResult.autoPolarityUsed.toUpperCase() : 'LED'})`
-                    : displayMode.toUpperCase()}
-                </span>
               </button>
             </>
           ) : (
@@ -643,96 +659,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               playsInline
               muted
               className={`absolute inset-0 w-full h-full object-cover ${
-                displayMode === 'lcd' || (displayMode === 'auto' && lastOcrResult?.autoPolarityUsed === 'lcd')
-                  ? 'invert'
-                  : ''
+                displayMode === 'lcd' ? 'invert' : ''
               }`}
             />
-
-            {/* Floating Live Camera Toolbar: Zoom, ROI Size, Recenter, Torch */}
-            <div className="absolute top-2 inset-x-2 z-20 flex items-center justify-between pointer-events-none">
-              {/* Left: Optical / Digital Zoom Switcher */}
-              <div className="flex items-center gap-1 pointer-events-auto bg-black/60 backdrop-blur-md px-1.5 py-1 rounded-xl border border-white/15">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-[#FAF7F2]/60 hidden sm:inline mr-1">
-                  Zoom:
-                </span>
-                {[1.0, 1.8, 2.5].map((z) => (
-                  <button
-                    key={z}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSetZoom(z);
-                    }}
-                    className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold transition ${
-                      zoomLevel === z
-                        ? 'bg-[#C26D52] text-white shadow-xs'
-                        : 'text-[#FAF7F2]/75 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {z}x
-                  </button>
-                ))}
-              </div>
-
-              {/* Right: ROI Box Size & Torch & Recenter */}
-              <div className="flex items-center gap-1.5 pointer-events-auto">
-                {(roiCenter.x !== 0.5 || roiCenter.y !== 0.5) && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRecenter();
-                    }}
-                    className="px-2.5 py-1 rounded-xl bg-[#2C2018] border-2 border-amber-400 text-amber-300 hover:text-white hover:bg-black text-[11px] font-mono font-extrabold flex items-center gap-1.5 shadow-lg transition active:scale-95 cursor-pointer"
-                    title="Reset target box to center"
-                  >
-                    <Crosshair className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Recenter</span>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSetRoiSize(roiSize === 'compact' ? 'standard' : 'compact');
-                  }}
-                  className="px-2 py-1 rounded-xl bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-mono text-[#FAF7F2]/90 hover:text-white flex items-center gap-1 transition"
-                  title="Toggle targeting box size between Compact (Digits only) and Standard"
-                >
-                  <Scan className="w-3 h-3 text-[#C26D52]" />
-                  <span>{roiSize === 'compact' ? 'Compact Box' : 'Standard Box'}</span>
-                </button>
-
-                {hasTorch && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleTorch();
-                    }}
-                    className={`px-2 py-1 rounded-xl backdrop-blur-md border text-[10px] font-mono flex items-center gap-1 transition ${
-                      isTorchOn
-                        ? 'bg-amber-400 text-black border-amber-300 font-bold shadow-xs'
-                        : 'bg-black/60 border-white/15 text-[#FAF7F2]/80 hover:text-white'
-                    }`}
-                    title="Toggle flashlight / torch for dark scale displays"
-                  >
-                    <Zap className="w-3 h-3" />
-                    <span>{isTorchOn ? 'Torch ON' : 'Torch'}</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Interactive Tap-to-Focus Guidance Badge */}
-            <div className="absolute top-11 sm:top-12 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/85 backdrop-blur-md border border-white/25 text-[#FAF7F2] font-mono text-[10px] sm:text-[11px] shadow-lg whitespace-nowrap">
-                <span className="text-amber-400 font-bold">👆</span>
-                <span className="font-semibold tracking-wide">Tap scale digits to focus & target</span>
-              </div>
-            </div>
           </>
         ) : (
           <div className="absolute inset-0 bg-radial from-[#2C2018] to-[#120E0B] flex flex-col items-center justify-center p-6 select-none">
@@ -741,7 +670,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
         )}
 
-        {/* OCR Region-of-Interest Targeting Crosshair (Step 0 Calibration) */}
+        {/* OCR Region-of-Interest Targeting Crosshair (Clean, uncluttered viewfinder) */}
         {(() => {
           const isDigitLocked = (cameraState === 'live' && lastOcrResult !== null && lastOcrResult.weight !== null && lastOcrResult.confidence >= 0.70) || (cameraState === 'demo' && isBrewing);
           return (
@@ -756,19 +685,33 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                   ? 'w-[52%] max-w-[250px] aspect-21/9'
                   : 'w-[68%] max-w-[320px] aspect-2/1'
               } ${
-                isDigitLocked
-                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/10 shadow-[0_0_25px_rgba(16,185,129,0.35)]'
+                isBrewing
+                  ? 'border-2 border-solid border-amber-400 bg-amber-400/10 shadow-[0_0_25px_rgba(251,191,36,0.3)]'
+                  : isArmed
+                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/15 shadow-[0_0_25px_rgba(16,185,129,0.4)]'
+                  : isDigitLocked
+                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/10 shadow-[0_0_20px_rgba(16,185,129,0.25)]'
                   : 'border-2 border-dashed border-[#C26D52]/80 bg-black/25'
               }`}
             >
               {/* Target corner indicators */}
-              <div className={`absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
-              <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
-              <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
-              <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
 
               <div className="text-[9px] sm:text-[10px] tracking-widest uppercase font-mono mb-0.5 flex items-center gap-1.5">
-                {isDigitLocked ? (
+                {isBrewing ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="text-amber-300 font-bold">[ ☕ BREWING ]</span>
+                  </>
+                ) : isArmed ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] animate-pulse" />
+                    <span className="text-[#10B981] font-bold">[ 🟢 ARMED • WAITING FOR FLOW ]</span>
+                  </>
+                ) : isDigitLocked ? (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
                     <span className="text-[#10B981] font-bold">
@@ -778,7 +721,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 ) : (
                   <>
                     <Scan className="w-3 h-3 text-[#C26D52]" />
-                    <span className="text-amber-300 font-bold">[ 👆 TAP DIGITS TO FOCUS & ALIGN ]</span>
+                    <span className="text-amber-300 font-bold">[ 👆 TAP DIGITS TO TARGET ]</span>
                   </>
                 )}
               </div>
@@ -789,19 +732,19 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 <span className="text-lg sm:text-2xl font-normal text-[#FAF7F2]/70 ml-1">g</span>
               </div>
 
-              {/* Real-Time Telemetry & Split-Timer */}
-              <div className="mt-1 flex flex-col items-center gap-1 font-mono">
-                <div className="flex items-center gap-2 sm:gap-3 text-xs">
-                  <span className="text-[#C26D52] font-semibold bg-[#2C2018]/80 px-2 py-0.5 rounded border border-[#C26D52]/40">
-                    {currentFlow.toFixed(1)} g/s
-                  </span>
-                  <span className="text-[#FAF7F2]/90 font-bold">
-                    {elapsedTime.toFixed(1)}s
-                  </span>
-                </div>
+              {/* Real-Time Telemetry & Split-Timer (Only during active extraction) */}
+              {isBrewing && (
+                <div className="mt-1 flex flex-col items-center gap-1 font-mono">
+                  <div className="flex items-center gap-2 sm:gap-3 text-xs">
+                    <span className="text-[#C26D52] font-semibold bg-[#2C2018]/80 px-2 py-0.5 rounded border border-[#C26D52]/40">
+                      {currentFlow.toFixed(1)} g/s
+                    </span>
+                    <span className="text-[#FAF7F2]/90 font-bold">
+                      {elapsedTime.toFixed(1)}s
+                    </span>
+                  </div>
 
-                {/* Split-Timer Active Phase Display */}
-                {isBrewing && (
+                  {/* Split-Timer Active Phase Display */}
                   <div className="flex items-center gap-2 text-[10px] text-[#FAF7F2]/80 bg-black/50 px-2.5 py-0.5 rounded border border-white/10 mt-0.5">
                     {firstDropTime === null ? (
                       <span className="text-amber-300 animate-pulse flex items-center gap-1">
@@ -814,8 +757,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                       </span>
                     )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -833,34 +776,108 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             </div>
           </div>
         )}
+      </div>
 
-        {/* Viewfinder Bottom Telemetry Bar (Zero-clipping responsive bar) */}
-        <div className="absolute bottom-2 inset-x-2 z-10 flex items-center justify-between gap-2 px-2.5 py-1 rounded-lg bg-[#1A1412]/90 border border-white/10 text-[10px] sm:text-[11px] font-mono text-[#FAF7F2]">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <CheckCircle2 className={`w-3 h-3 shrink-0 ${isZeroDetected ? 'text-[#72806B]' : 'text-amber-400'}`} />
-            <span className={isZeroDetected ? 'text-[#72806B] font-bold' : 'text-amber-400 font-semibold'}>
-              {isZeroDetected ? t('scale.tare_locked', { weight: '0.0' }) : t('scale.needs_tare')}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {isBrewing && (
-              <button
-                type="button"
-                onClick={handleCancelBrewing}
-                className="px-2 py-0.5 rounded bg-red-950/70 border border-red-500/50 text-red-200 hover:text-white hover:bg-red-900 text-[10px] font-mono flex items-center gap-1 transition shadow-xs"
-                title={t('scale.reset_title')}
-              >
-                <RotateCcw className="w-2.5 h-2.5" />
-                <span>{t('scale.reset')}</span>
-              </button>
-            )}
-            <div className="text-[#FAF7F2]/80 font-medium whitespace-nowrap">
-              <span className="hidden xs:inline">{t('scale.target_label')} </span>
-              <strong className="text-[#C26D52]">{targetDose}g</strong>
-              <span className="mx-0.5 text-white/50">→</span>
-              <strong className="text-[#72806B]">{targetYield}g</strong>
-            </div>
-          </div>
+      {/* External Camera Controls Toolbar (All controls outside camera viewfinder) */}
+      <div className="px-3 py-2 bg-[#1A1412] border-t border-[#E8DFD5]/20 flex items-center justify-between gap-2 overflow-x-auto select-none">
+        {/* Left: Optical Zoom Controls */}
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[10px] uppercase font-mono text-[#E8DFD5]/60 mr-1 hidden xs:inline">Zoom:</span>
+          {[1.0, 1.8, 2.5].map((z) => (
+            <button
+              key={z}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSetZoom(z);
+              }}
+              className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold transition ${
+                Math.abs(zoomLevel - z) < 0.1
+                  ? 'bg-[#C26D52] text-white shadow-xs'
+                  : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
+              }`}
+            >
+              {z.toFixed(1)}x
+            </button>
+          ))}
+        </div>
+
+        {/* Center: Recenter & Box Size */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {(roiCenter.x !== 0.5 || roiCenter.y !== 0.5) && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRecenter();
+              }}
+              className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition flex items-center gap-1"
+              title="Reset focus box to center"
+            >
+              <Crosshair className="w-3 h-3" />
+              <span>Center</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSetRoiSize(roiSize === 'compact' ? 'standard' : 'compact');
+            }}
+            className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20 transition"
+          >
+            {roiSize === 'compact' ? 'Compact' : 'Standard'}
+          </button>
+        </div>
+
+        {/* Right: Display Polarity (LED/LCD), Torch & Diagnostic Inspector */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDisplayMode(displayMode === 'led' ? 'lcd' : 'led');
+            }}
+            className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20 transition flex items-center gap-1"
+            title="Toggle scale display type (LED bright digits or LCD dark digits)"
+          >
+            <span>{displayMode.toUpperCase()}</span>
+          </button>
+
+          {hasTorch && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleTorch();
+              }}
+              className={`p-1.5 rounded-md text-xs transition ${
+                isTorchOn
+                  ? 'bg-amber-400 text-black shadow-xs'
+                  : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
+              }`}
+              title="Toggle flashlight"
+            >
+              <Zap className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowInspector(!showInspector);
+            }}
+            className={`p-1.5 rounded-md text-xs transition ${
+              showInspector
+                ? 'bg-[#C26D52] text-white shadow-xs'
+                : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
+            }`}
+            title="Toggle OCR diagnostic inspector"
+          >
+            <Scan className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -908,9 +925,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <div>
                 <span className="text-[#E8DFD5]/60">{t('scale.display_mode')}: </span>
                 <span className="text-[#FAF7F2]">
-                  {displayMode === 'auto'
-                    ? `Auto (${lastOcrResult?.autoPolarityUsed?.toUpperCase() || 'LED'})`
-                    : displayMode.toUpperCase()}
+                  {displayMode.toUpperCase()}
                   {lastOcrResult?.detectedPolarity && (
                     <span className="text-[#E8DFD5]/50 ml-1">
                       [sensor: {lastOcrResult.detectedPolarity.toUpperCase()}]
@@ -937,38 +952,96 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
       )}
 
-      {/* Control Bar */}
-      <div className="p-4 bg-[#FFFDF9] flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCalibrateTare}
-            disabled={isBrewing}
-            className="px-3 py-2 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5]/40 text-[#2C2018] text-xs font-medium flex items-center gap-1.5 transition disabled:opacity-50 font-mono"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-[#7A6E65]" />
-            {t('scale.tare', { weight: '0.0' })}
-          </button>
-          <div className="text-[11px] sm:text-xs text-[#7A6E65] font-mono flex items-center gap-1.5 flex-wrap">
-            <span className="text-[#C26D52] font-bold">👆</span>
-            <span>Tap screen to target & focus scale • Auto-starts timer at 0.1g</span>
+      {/* Barista Control Deck */}
+      <div className="p-3.5 sm:p-4 bg-[#FFFDF9] border-t border-[#E8DFD5] flex flex-col gap-3">
+        {/* Status / Guidance Banner */}
+        {!isBrewing && !isArmed ? (
+          <div className="px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between gap-2 text-xs font-mono">
+            <div className="flex items-center gap-2 text-[#7A6E65]">
+              <span className="text-[#C26D52] text-base leading-none">👆</span>
+              <span className="text-[11px] sm:text-xs leading-tight">
+                {t('scale.align_instruction')}
+              </span>
+            </div>
+            <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
+              <span className="text-[#C26D52]">{targetDose}g</span> → <span className="text-[#72806B]">{targetYield}g</span>
+            </div>
           </div>
-        </div>
+        ) : isArmed ? (
+          <div className="px-3 py-2 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-between gap-2 text-xs font-mono">
+            <div className="flex items-center gap-2 text-[#10B981] font-bold">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-ping shrink-0" />
+              <span className="text-[11px] sm:text-xs leading-tight">
+                {t('scale.armed_waiting')}
+              </span>
+            </div>
+            <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
+              <span className="text-[#C26D52]">{targetDose}g</span> → <span className="text-[#72806B]">{targetYield}g</span>
+            </div>
+          </div>
+        ) : (
+          <div className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2 text-xs font-mono">
+            <div className="flex items-center gap-2 text-amber-900 font-bold">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+              <span className="text-[11px] sm:text-xs leading-tight">
+                {t('scale.brewing_status')}
+              </span>
+            </div>
+            <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
+              <span className="text-[#C26D52]">{targetDose}g</span> → <span className="text-[#72806B]">{targetYield}g</span>
+            </div>
+          </div>
+        )}
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          {!isBrewing ? (
-            <button
-              onClick={handleStartBrewing}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition active:scale-95 font-mono"
-            >
-              <Play className="w-3.5 h-3.5 fill-white" />
-              <span>{t('scale.start_shot')}</span>
-            </button>
+        {/* Action Buttons Row */}
+        <div className="flex items-center gap-2">
+          {!isBrewing && !isArmed ? (
+            <>
+              <button
+                type="button"
+                onClick={handleCalibrateTare}
+                className="px-3.5 py-2.5 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5]/40 text-[#2C2018] text-xs font-bold font-mono flex items-center gap-1.5 transition shadow-xs active:scale-95 shrink-0"
+                title="Tare the scale to 0.0g"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-[#7A6E65]" />
+                <span>{t('scale.tare', { weight: '0.0' })}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleArmScale}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                <span>{t('scale.arm_scale')}</span>
+              </button>
+            </>
+          ) : isArmed ? (
+            <>
+              <button
+                type="button"
+                onClick={handleDisarm}
+                className="px-3.5 py-2.5 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5]/40 text-[#7A6E65] hover:text-[#2C2018] text-xs font-bold font-mono flex items-center gap-1.5 transition shadow-xs active:scale-95 shrink-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>{t('scale.adjust_alignment')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleStartBrewing}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-sm transition active:scale-95 animate-pulse"
+              >
+                <Play className="w-3.5 h-3.5 fill-white" />
+                <span>{t('scale.start_shot_now')}</span>
+              </button>
+            </>
           ) : (
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <>
               <button
                 type="button"
                 onClick={handleCancelBrewing}
-                className="px-3.5 py-2.5 rounded-lg border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 font-mono shrink-0 shadow-xs"
+                className="px-3.5 py-2.5 rounded-xl border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] text-xs font-bold font-mono flex items-center gap-1.5 transition active:scale-95 shrink-0 shadow-xs"
                 title={t('scale.reset_title')}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -978,12 +1051,12 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <button
                 type="button"
                 onClick={handleStopBrewing}
-                className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-lg bg-[#B85B48] hover:bg-[#a34d3b] text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition active:scale-95 animate-pulse font-mono truncate"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-[#B85B48] hover:bg-[#a34d3b] text-white text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-xs transition active:scale-95 animate-pulse font-mono truncate"
               >
                 <Square className="w-3.5 h-3.5 fill-white shrink-0" />
                 <span className="truncate">{t('scale.stop_and_save', { duration: elapsedTime.toFixed(1) })}</span>
               </button>
-            </div>
+            </>
           )}
         </div>
       </div>

@@ -4,6 +4,22 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.11] - 2026-09-27
+### Uncluttered Viewfinder, External Camera Toolbar & Arm-to-Brew Scale Workflow
+- **"Coffee Bar" Tab Navigation:**
+  - Updated the first navigation tab label from "Bar" to "Coffee Bar" across all mobile and desktop viewports (`Coffee Bar`, `Scale`, `Logs`, `Gear`).
+- **Clean, Unobstructed Camera Viewfinder:**
+  - Removed all floating buttons, zoom controls, recenter chips, and the bottom telemetry bar from inside the live camera viewfinder.
+  - Eliminated the flashing `Auto (LED)` polarity button issue (prevented frame-by-frame CSS invert flicker).
+  - The live camera viewfinder is now 100% clean and clear, showing only the camera feed, targeting reticle, and tap feedback.
+- **Dedicated External Camera Toolbar:**
+  - Placed directly beneath the camera feed (`bg-[#1A1412]`): Zoom pills (`1.0x`, `1.8x`, `2.5x`), Box mode (`Compact` / `Standard`), `Center` reset, Display mode (`LED` / `LCD`), Torch toggle (`Zap`), and Diagnostic Inspector.
+- **3-Phase Barista Control Deck & Scale Arming Workflow:**
+  - **Phase 1: Alignment Mode:** Phone can be placed and adjusted freely against a cup or drip tray without starting the timer prematurely. Live video feed remains visible with targeting guidance.
+  - **"I'm Ready • Arm Scale" Button:** User positions their phone, verifies digits, and taps "I'm Ready • Arm Scale".
+  - **Phase 2: Armed Mode:** Scale arms and waits safely. The extraction timer auto-starts only when coffee actually flows (weight increases by ≥ 0.2g), or user taps "Start Shot Now". Includes "Adjust Alignment" to disarm if phone needs repositioning.
+  - **Phase 3: Active Extraction:** Displays real-time flow rate, split timer, tare status, with quick "Reset" and "Stop & Save Shot" controls.
+
 ## [1.2.10] - 2026-09-27
 ### High-Contrast Recenter Button & Tap-to-Focus Viewfinder Guidance
 - **High-Contrast Recenter Button (`⌖ Recenter`):**
