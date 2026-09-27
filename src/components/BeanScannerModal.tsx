@@ -15,6 +15,7 @@ import {
   Search,
   Star,
   Award,
+  Globe,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, RoastLevel, RatioStyle, GrinderProfile } from '../types/espresso';
 import { useTranslation } from '../i18n';
@@ -35,6 +36,7 @@ interface BeanScannerModalProps {
   onSaveBean: (bean: CoffeeBeanProfile, makeActive?: boolean) => void;
   currentGrinderName: string;
   grinders?: GrinderProfile[];
+  onOpenCentralVault?: () => void;
 }
 
 type ScanMode = 'barcode' | 'label_date';
@@ -45,6 +47,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   onSaveBean,
   currentGrinderName,
   grinders = [],
+  onOpenCentralVault,
 }) => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<ScanMode>('barcode');
@@ -531,6 +534,24 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                     ))}
                 </div>
               </div>
+
+              {/* Central Bean Vault Shortcut */}
+              {onOpenCentralVault && (
+                <div className="pt-2 border-t border-[#E8DFD5] flex items-center justify-between text-xs">
+                  <span className="text-[#7A6E65] text-[11px]">Don't have the bag barcode?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenCentralVault();
+                    }}
+                    className="text-[#C26D52] hover:text-[#9F513A] font-semibold flex items-center gap-1 text-[11px] transition"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Browse Central Bean Vault</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

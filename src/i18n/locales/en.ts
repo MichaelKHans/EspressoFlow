@@ -280,6 +280,26 @@ export const en = {
   'bean.auto_suggests': 'Auto-suggests: {style}',
   'bean.beverage_style_ratio': 'Beverage Style & Extraction Ratio',
   'bean.target_dry_dose': 'Target Dry Dose (Grams)',
+
+  // Trial Countdown Banner
+  'trial.banner_title': '7-Day Free Trial: {days} Days Left',
+  'trial.banner_title_one': '7-Day Free Trial: 1 Day Left',
+  'trial.banner_expired': 'Free Trial Ended • Scale OCR & Live Sync Paused',
+  'trial.banner_sub': 'One-time $4.99 / 49,- DKK • No subscription • Keep scale OCR & logbook forever',
+  'trial.banner_sub_expired': 'Unlock permanent lifetime access for $4.99 to resume unlimited scale OCR brewing',
+  'trial.unlock_now': 'Unlock Lifetime Access ($4.99)',
+
+  // Central Bean Vault Directory
+  'vault.browse_central': 'Browse Central Vault',
+  'vault.modal_title': 'Central Coffee Bean Vault',
+  'vault.modal_subtitle': 'Verified specialty beans, blind-tasting scores & calibrated recipe targets',
+  'vault.search_placeholder': 'Search roasters, beans, origins or notes...',
+  'vault.add_to_vault': '+ Add to My Vault',
+  'vault.in_vault': '✓ In Your Vault',
+  'vault.filter_all_roasts': 'All Roasts',
+  'vault.filter_all_drinks': 'All Drinks',
+  'vault.expert_rated_only': 'Expert Rated (90+ PTS)',
+  'vault.toast_added': 'Added to your Coffee Bean Vault!',
 } as const;
 
 export type TranslationKeys = keyof typeof en;

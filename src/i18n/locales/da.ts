@@ -277,9 +277,29 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'bean.yield_out': 'Udbytte (Ud)',
   'bean.assigned_grinder_label': 'Tilknyttet Kværn',
   'bean.select_roast_level': 'Vælg Bønnens Ristegrad',
+  'bean.target_dry_dose': 'Mål Tør Dosis (Gram)',
   'bean.customized_bag': 'Tilpasset Den Aktuelle Pose',
   'bean.physics_title': 'Ekstraktionsfysik for {roast}:',
   'bean.auto_suggests': 'Foreslår: {style}',
   'bean.beverage_style_ratio': 'Drikkestil & Ekstraktionsforhold',
-  'bean.target_dry_dose': 'Mål Tør Dosis (Gram)',
+
+  // Trial Countdown Banner
+  'trial.banner_title': '7 Dages Gratis Prøveperiode: {days} Dage Tilbage',
+  'trial.banner_title_one': '7 Dages Gratis Prøveperiode: 1 Dag Tilbage',
+  'trial.banner_expired': 'Prøveperiode Udløbet • Vægt-OCR & Live Sync Pauset',
+  'trial.banner_sub': 'Engangsbeløb 49,- DKK ($4.99) • Intet månedligt abonnement • Bevar din vægt-OCR & logbog for altid',
+  'trial.banner_sub_expired': 'Lås op for permanent adgang for 49,- DKK ($4.99) for at genoptage ubegrænset kaffebrygning',
+  'trial.unlock_now': 'Lås Op For Altid (49,- DKK)',
+
+  // Central Bean Vault Directory
+  'vault.browse_central': 'Udforsk Bønnekatalog',
+  'vault.modal_title': 'Centralt Kaffebønne-Katalog',
+  'vault.modal_subtitle': 'Verificerede specialty bønner, blindtest-point og kalibrerede opskrifter',
+  'vault.search_placeholder': 'Søg på risteri, bønnenavn, land eller smagsnoter...',
+  'vault.add_to_vault': '+ Tilføj Til Min Bar',
+  'vault.in_vault': '✓ I Din Kaffebar',
+  'vault.filter_all_roasts': 'Alle Ristegrader',
+  'vault.filter_all_drinks': 'Alle Drikketyper',
+  'vault.expert_rated_only': 'Kun Ekspert-Bedømte (90+ Point)',
+  'vault.toast_added': 'Tilføjet til din Kaffebars Samling!',
 };

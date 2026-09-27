@@ -4,6 +4,26 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.16] - 2026-09-27
+### Trial Countdown Bar ($4.99 Unlock) & Central Coffee Bean Vault Directory
+- **7-Dages Trial Countdown Banner (`TrialCountdownBanner.tsx`):**
+  - Elegant, fast integreret prøveperiode-bjælke under hovednavigationen for alle ikke-oplåste brugere.
+  - Viser en 7-segmenteret visuel fremgangsindikator (hver pille repræsenterer en dag af prøveperioden).
+  - Tydelig tæller for resterende dage (`7-Day Free Trial: X Days Left`) med krystalklar tryghedsbesked: *"One-time $4.99 / 49,- DKK • No subscription • Keep scale OCR & logbook forever"*.
+  - Direkte CTA-knap: `Unlock Lifetime Access ($4.99)` med genvej til `PaywallModal`.
+  - Når prøveperioden udløber, skifter baren til et tydeligt advarselsbanner med opfordring til at låse op. Forsvinder permanent, så snart brugeren har låst op.
+- **Central Coffee Bean Vault Modal (`CentralBeanVaultModal.tsx`):**
+  - Tilføjet ny knap i Coffee Bean Vault (Fane 3): `[ 🌐 Browse Central Vault ]`.
+  - Tilføjet direkte genvej i `BeanScannerModal`: *"Don't have the bag barcode? Browse Central Bean Vault"*.
+  - Giver adgang til at udforske og søge i alle verificerede specialty bønner fra skyen (`Supabase`) og det lokale EAN-13 bag-katalog (13+ verificerede bønner) uden at skulle scanne en fysisk pose.
+  - Omfattende søgning og filtre:
+    - Søg på risteri, bønnenavn, oprindelsesland og smagsnoter.
+    - Filtrer på ristegrad (`Light`, `Medium`, `Dark`), drikketype (`Flat White`, `Pure Espresso`, `Cortado`, `Cappuccino`) og købsland (`DK`, `IT`, `NO` osv.).
+    - Filter til kun at vise ekspert-bedømte bønner (`90+ PTS`).
+  - **1-Tap "Add to My Vault":** Tilføjer bønnen direkte til brugerens egen bar, beregner automatisk ideelt ekstraktionsforhold (1:2.5 for lys, 1:1.5 for mørk, 1:2 for medium) og binder den til den aktive kværn.
+- **Flersproget i18n:** Fuld understøttelse i `src/i18n/locales/en.ts` og `src/i18n/locales/da.ts`.
+- **Kompilering & Test:** Verificeret 100% fejlfri build med `npm run build` (0 fejl, 632ms).
+
 ## [1.2.15] - 2026-09-27
 ### Grinder Sync & Controlled Dropdown Resolution Fix in Bean Vault
 - **Løsning på Grinder Mismatch i Coffee Bean Vault:**

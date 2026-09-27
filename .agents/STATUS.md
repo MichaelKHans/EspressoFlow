@@ -11,6 +11,20 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-27 -- Trial Countdown Bar ($4.99 Unlock) & Central Bean Vault Directory (v1.2.16)
+- **7-Dages Trial Nedtæller-Bar (`TrialCountdownBanner.tsx`):**
+  - Varm, minimalistisk Espresso Warmth bjælke placeret lige under navigationstabsne.
+  - Viser en 7-segmenteret fremgangsindikator (hver pille = 1 dag) for at give brugeren et klart overblik over den gratis prøveperiode.
+  - Gør forretningsmodellen 100% krystalklar for brugeren: *"One-time $4.99 / 49,- DKK • No monthly subscription • Keep scale OCR & logbook forever"*.
+  - Direkte CTA-knap: `Unlock Lifetime Access ($4.99)`.
+  - Ved udløbet prøveperiode: Skifter til alert-tilstand og opfordrer til at låse op. Forsvinder permanent når appen er låst op.
+- **Central Coffee Bean Vault Directory (`CentralBeanVaultModal.tsx`):**
+  - Ny knap i Coffee Bean Vault (Fane 3): `[ 🌐 Browse Central Vault ]`.
+  - Direkte genvej i `BeanScannerModal`: Gør det muligt at udforske 13+ verificerede bønner uden at have posens fysiske stregkode foran sig.
+  - Multi-filter søgning: Risteri, bønnenavn, oprindelsesland, smagsnoter, ristegrad, drikketype og ekspert-score (90+ PTS).
+  - 1-Tap `+ Add to My Vault` med automatisk beregning af ideelt ekstraktionsforhold og binding til brugerens kværn.
+- **i18n & Zero-Failure Build:** Fuld oversættelse i `en.ts` og `da.ts`. Testet lokalt med `npm run build` (0 fejl, 632ms).
+
 ### 2026-09-27 -- Grinder Mismatch & Controlled Dropdown Resolution Fix (v1.2.15)
 - **Løst Kværn-Mismatch i Coffee Bean Vault:**
   - Løst fejl hvor et aktivt bønnekort med Eureka-kværn viste `Grind Dial (Eureka): 1.4` øverst, men uventet viste `Baratza Encore ESP Pro (Stepped)` i dropdown-vælgeren nedenunder.

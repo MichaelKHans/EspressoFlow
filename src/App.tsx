@@ -12,6 +12,8 @@ import { DialInWizardModal } from './components/DialInWizardModal';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { BeanScannerModal } from './components/BeanScannerModal';
 import { AdminPortal } from './components/AdminPortal';
+import { TrialCountdownBanner } from './components/TrialCountdownBanner';
+import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
 import type {
@@ -119,6 +121,7 @@ export function App() {
 
   // Modals
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
+  const [isCentralVaultOpen, setIsCentralVaultOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'privacy' | 'terms' | 'support' | null>(null);
 
   // Admin Route state (e.g. espressoflow.vercel.app/admin or #admin)
@@ -403,6 +406,13 @@ export function App() {
     setScanMessage(`Scanned & added "${scannedBean.name}" to Vault!`);
   };
 
+  const handleAddBeanFromCentralVault = (newBean: CoffeeBeanProfile) => {
+    const updated = [newBean, ...beans];
+    setBeans(updated);
+    saveBeans(updated);
+    handleSelectBean(newBean.id);
+  };
+
   const handleDeleteBean = (beanId: string) => {
     if (beans.length <= 1) return;
     const updated = beans.filter((b) => b.id !== beanId);
@@ -655,6 +665,12 @@ export function App() {
         </div>
       </header>
 
+      {/* 7-Day Free Trial Countdown Progress Banner */}
+      <TrialCountdownBanner
+        accessState={accessState}
+        onOpenPaywall={() => setIsPaywallOpen(true)}
+      />
+
       {/* Main Container */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Tab 0: Digital Barista Deck & Drink Selector */}
@@ -799,7 +815,7 @@ export function App() {
                     Switch between active beans with 1 tap. Grind settings & extraction ratios are remembered per bag.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -808,6 +824,15 @@ export function App() {
                     onChange={handleScanBagFile}
                     className="hidden"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setIsCentralVaultOpen(true)}
+                    className="px-3 py-1.5 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
+                    title="Browse Verified Specialty Coffee Beans, Blind-Tasting Scores & Calibrated Targets"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>{t('vault.browse_central')}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setIsBeanScannerOpen(true)}
@@ -823,10 +848,10 @@ export function App() {
                       setIsAddingBean(!isAddingBean);
                       setScanMessage(null);
                     }}
-                    className="px-3 py-1.5 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition"
+                    className="px-3 py-1.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>{isAddingBean ? 'Close' : 'Add New Bag'}</span>
+                    <span>{isAddingBean ? 'Close' : 'Add Custom Bag'}</span>
                   </button>
                 </div>
               </div>
@@ -1870,6 +1895,16 @@ export function App() {
         onSaveBean={handleSaveBeanFromScanner}
         currentGrinderName={currentGrinder.name}
         grinders={grinders}
+        onOpenCentralVault={() => setIsCentralVaultOpen(true)}
+      />
+
+      {/* Central Cloud Bean Vault Directory Modal */}
+      <CentralBeanVaultModal
+        isOpen={isCentralVaultOpen}
+        onClose={() => setIsCentralVaultOpen(false)}
+        onAddBeanToVault={handleAddBeanFromCentralVault}
+        currentVaultBeans={beans}
+        currentGrinderName={currentGrinder.name}
       />
     </div>
   );
