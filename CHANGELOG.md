@@ -4,6 +4,30 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.18] - 2026-09-29
+### Scale OCR Precision Fix, Toolbar Wrapping, Inline Inspector Overlay, Touch Focus & Tilt Meter
+- **OCR 3-vs-8 Disambiguation (Critical Fix):**
+  - Root cause: Vertical segment probes (e, f) used a 20% fill threshold that was too low — ambient light and reflections falsely triggered segments, causing digit `3` to be misread as `8` (and `5` as `6`).
+  - Fix: Raised vertical segment threshold from 0.20 to 0.27 (27%). Added strict re-verification at 0.36 (36%) for confusable pairs: `3↔8` (segments e+f), `5↔6` (segment e), and `0↔8` (segment g). Minimum active pixel count for vertical probes raised from 3 to 4.
+  - Added `overrideThreshold` parameter to `sampleSegment()` for targeted disambiguation probing.
+- **Toolbar Wrapping (Mobile Overflow Fix):**
+  - Replaced `overflow-x-auto` with `flex-wrap` on the camera controls toolbar. Removed `shrink-0` from all 3 sub-groups (Zoom, ROI, Display). Reduced padding from `px-3 py-2` to `px-2 py-1.5`.
+  - Controls now gracefully wrap to 2 rows on narrow (360px) mobile screens instead of requiring horizontal scrolling.
+- **Inline Vision Inspector Overlay:**
+  - Inspector panel is now rendered as a semi-transparent overlay (`bg-[#1A1412]/85 backdrop-blur`) inside the camera viewfinder, so the user can see the scale alignment AND digit recognition simultaneously without scrolling.
+  - The external inspector drawer is hidden during live camera mode; it only appears in standby/demo mode as fallback.
+- **Touch-to-Focus Precision:**
+  - Added `onTouchEnd` with `preventDefault()` for precise touch coordinates (avoids the ~300ms click delay and coordinate offset on mobile).
+  - Uses `changedTouches[0]` (available on touchend) for exact lift-off position instead of `touches[0]`.
+  - Hardware focus now uses `single-shot` focus mode (prioritized over `continuous`) for sharper tap targeting.
+  - Added `pointsOfInterest` constraint targeting for supported Android devices.
+- **Tilt Angle Indicator (New Feature):**
+  - Live `DeviceOrientationEvent` (accelerometer) tilt meter displayed as a badge in the viewfinder top-right corner.
+  - Color-coded: 🟢 Green (20–50° — optimal viewing angle), 🟡 Amber (10–20° or 50–60°), 🔴 Red (<10° or >60°).
+  - iOS 13+ permission request handled automatically. Badge is `pointer-events-none` and disappears outside live mode.
+
+---
+
 ## [1.2.17] - 2026-09-27
 ### Mobile Overflow Fixes, Nav Space Optimization & Rich Color Zoning for Beans, Gear & Logbook
 - **Top Navigation Bar Space Optimization & Clean Mobile Layout:**

@@ -62,6 +62,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [tapFeedback, setTapFeedback] = useState<{ x: number; y: number } | null>(null);
   const [hasTorch, setHasTorch] = useState<boolean>(false);
   const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
+  const [tiltAngle, setTiltAngle] = useState<number | null>(null);
 
   const zoomLevelRef = useRef<number>(1.8);
   const roiSizeRef = useRef<'compact' | 'standard'>('compact');
@@ -137,7 +138,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     if (cameraState !== 'live') return;
     const container = e.currentTarget.getBoundingClientRect();
     let clientX: number, clientY: number;
-    if ('touches' in e && (e as React.TouchEvent).touches.length > 0) {
+    // Prefer changedTouches (available in touchend) for precise lift-off coordinates
+    if ('changedTouches' in e && (e as React.TouchEvent).changedTouches.length > 0) {
+      clientX = (e as React.TouchEvent).changedTouches[0].clientX;
+      clientY = (e as React.TouchEvent).changedTouches[0].clientY;
+    } else if ('touches' in e && (e as React.TouchEvent).touches.length > 0) {
       clientX = (e as React.TouchEvent).touches[0].clientX;
       clientY = (e as React.TouchEvent).touches[0].clientY;
     } else if ('clientX' in e) {
@@ -156,14 +161,30 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setTapFeedback({ x: clientX - container.left, y: clientY - container.top });
     setTimeout(() => setTapFeedback(null), 1400);
 
-    // Hardware continuous focus trigger on tap if supported
+    // Hardware focus with point-of-interest targeting for precise tap-to-focus
     if (streamRef.current) {
       const track = streamRef.current.getVideoTracks()[0];
       if (track && track.applyConstraints) {
         try {
           const caps: any = track.getCapabilities ? track.getCapabilities() : {};
-          if ('focusMode' in caps && Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
-            track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as any] }).catch(() => {});
+          const advanced: any = {};
+
+          // Point-of-interest targeting (supported on newer Android devices)
+          if ('pointsOfInterest' in caps) {
+            advanced.pointsOfInterest = [{ x: relX, y: relY }];
+          }
+
+          // Single-shot focus for precise tap targeting, falling back to continuous
+          if ('focusMode' in caps && Array.isArray(caps.focusMode)) {
+            if (caps.focusMode.includes('single-shot')) {
+              advanced.focusMode = 'single-shot';
+            } else if (caps.focusMode.includes('continuous')) {
+              advanced.focusMode = 'continuous';
+            }
+          }
+
+          if (Object.keys(advanced).length > 0) {
+            track.applyConstraints({ advanced: [advanced] as any }).catch(() => {});
           }
         } catch (err) {
           console.debug('hardware focus apply failed', err);
@@ -235,6 +256,38 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+    };
+  }, [cameraState]);
+
+  // Device Orientation Tilt Meter (accelerometer-based angle indicator for alignment help)
+  useEffect(() => {
+    if (cameraState !== 'live') {
+      setTiltAngle(null);
+      return;
+    }
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      // beta = front-to-back tilt (0° = flat on table, 90° = upright)
+      if (e.beta !== null) {
+        setTiltAngle(Math.round(e.beta));
+      }
+    };
+
+    // iOS 13+ requires explicit permission request
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((state: string) => {
+          if (state === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(() => {});
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, [cameraState]);
 
@@ -610,6 +663,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       {/* Main Viewfinder Screen */}
       <div
         onClick={handleTapViewfinder}
+        onTouchEnd={(e) => { e.preventDefault(); handleTapViewfinder(e); }}
         className="relative aspect-16/10 bg-[#1A1412] flex items-center justify-center overflow-hidden cursor-crosshair select-none"
       >
         {cameraState === 'standby' ? (
@@ -776,12 +830,63 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             </div>
           </div>
         )}
+
+        {/* Tilt Angle Indicator (DeviceOrientation accelerometer) */}
+        {tiltAngle !== null && cameraState === 'live' && (
+          <div className={`absolute top-2 right-2 z-20 px-2 py-1 rounded-lg font-mono text-[11px] font-bold backdrop-blur-sm border shadow-sm pointer-events-none ${
+            tiltAngle >= 20 && tiltAngle <= 50
+              ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40'
+              : tiltAngle >= 10 && tiltAngle <= 60
+              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+              : 'bg-red-500/20 text-red-300 border-red-500/40'
+          }`}>
+            📐 {tiltAngle}°
+            {tiltAngle >= 20 && tiltAngle <= 50 && <span className="ml-1 text-[9px]">✓</span>}
+          </div>
+        )}
+
+        {/* Inline Vision Inspector Overlay (visible simultaneously with camera feed) */}
+        {showInspector && cameraState === 'live' && (
+          <div className="absolute bottom-0 left-0 right-0 z-20 bg-[#1A1412]/85 backdrop-blur-sm px-2.5 py-2 font-mono text-xs text-[#FAF7F2] border-t border-[#E8DFD5]/20 pointer-events-none">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Scan className="w-3 h-3 text-[#C26D52]" />
+              <span className="font-bold uppercase tracking-wider text-[10px]">{t('scale.inspector_title')}</span>
+              <span className="text-[9px] text-[#E8DFD5]/50 ml-auto">
+                Threshold: {lastOcrResult?.thresholdUsed || 128}
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <canvas
+                ref={inspectorCanvasRef}
+                width={160}
+                height={52}
+                className="w-[110px] h-auto border border-[#E8DFD5]/30 rounded bg-black shrink-0"
+              />
+              <div className="space-y-0.5 text-[10px] min-w-0">
+                <div>
+                  <span className="text-[#E8DFD5]/60">{t('scale.detected_digits')}: </span>
+                  <span className="text-[#C26D52] font-bold text-xs">{lastOcrResult?.rawText || '0.0'}</span>
+                </div>
+                <div>
+                  <span className="text-[#E8DFD5]/60">{t('scale.confidence')}: </span>
+                  <span className="text-[#72806B] font-semibold">
+                    {lastOcrResult ? `${Math.round(lastOcrResult.confidence * 100)}%` : '100%'}
+                  </span>
+                </div>
+                <div className="text-[#E8DFD5]/50">
+                  {displayMode.toUpperCase()}
+                  {lastOcrResult?.detectedPolarity && ` [${lastOcrResult.detectedPolarity.toUpperCase()}]`}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* External Camera Controls Toolbar (All controls outside camera viewfinder) */}
-      <div className="px-3 py-2 bg-[#1A1412] border-t border-[#E8DFD5]/20 flex items-center justify-between gap-2 overflow-x-auto select-none">
+      <div className="px-2 py-1.5 bg-[#1A1412] border-t border-[#E8DFD5]/20 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 select-none">
         {/* Left: Optical Zoom Controls */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1">
           <span className="text-[10px] uppercase font-mono text-[#E8DFD5]/60 mr-1 hidden xs:inline">Zoom:</span>
           {[1.0, 1.8, 2.5].map((z) => (
             <button
@@ -803,7 +908,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
 
         {/* Center: Recenter & Box Size */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5">
           {(roiCenter.x !== 0.5 || roiCenter.y !== 0.5) && (
             <button
               type="button"
@@ -832,7 +937,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
 
         {/* Right: Display Polarity (LED/LCD), Torch & Diagnostic Inspector */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={(e) => {
@@ -882,7 +987,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       </div>
 
       {/* Vision Inspector Drawer (Action-Oriented Scale Alignment) */}
-      {showInspector && (
+      {showInspector && cameraState !== 'live' && (
         <div className="p-4 bg-[#1A1412] text-[#FAF7F2] border-t border-[#E8DFD5]/20 font-mono text-xs">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">

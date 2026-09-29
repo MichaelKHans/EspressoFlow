@@ -225,7 +225,8 @@ function sampleSegment(
   box: { x: number; y: number; width: number; height: number },
   relX: number,
   relY: number,
-  orientation: 'h' | 'v' | 'c' = 'c'
+  orientation: 'h' | 'v' | 'c' = 'c',
+  overrideThreshold?: number
 ): boolean {
   // Italic slant compensation for typical 7-segment digital coffee displays (~6-8 degrees)
   const slantOffset = (0.5 - relY) * 0.08;
@@ -253,8 +254,11 @@ function sampleSegment(
     }
   }
 
-  // Active if at least 20% of sampled pixels in the segment zone are illuminated or active count is significant
-  return totalCount > 0 && (activeCount / totalCount >= 0.20 || activeCount >= 3);
+  // Orientation-aware thresholds: vertical segments (b,c,e,f) require higher fill ratio
+  // because ambient light and reflections more easily produce false positives on narrow vertical strokes
+  const threshold = overrideThreshold ?? (orientation === 'v' ? 0.27 : 0.20);
+  const minActive = orientation === 'v' ? 4 : 3;
+  return totalCount > 0 && (activeCount / totalCount >= threshold || activeCount >= minActive);
 }
 
 /**
@@ -330,6 +334,45 @@ function probeDigitSegments(
         bestMatch = digit;
       }
     }
+  }
+
+  // ── Confusable-pair disambiguation with stricter re-verification ──
+  // 3 vs 8: Both share segments a,b,c,d,g. Difference is e (bottom-left) and f (top-left).
+  // If matched as '8', re-verify e and f with a strict 0.36 threshold.
+  // If both fail, this is actually a '3' — ambient light was triggering false positives.
+  if (bestMatch === '8' && bestScore >= 0.70) {
+    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.72, 'v', 0.36);
+    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.28, 'v', 0.36);
+    if (!eStrict && !fStrict) {
+      return {
+        segments: seg,
+        matchChar: '3',
+        confidence: Math.max(0.82, bestScore * 0.95),
+      };
+    }
+  }
+
+  // 5 vs 6: Both share a,c,d,f,g. Difference is e (bottom-left).
+  // If matched as '6', re-verify segment e with strict threshold.
+  if (bestMatch === '6' && bestScore >= 0.70) {
+    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.72, 'v', 0.36);
+    if (!eStrict) {
+      return {
+        segments: seg,
+        matchChar: '5',
+        confidence: Math.max(0.80, bestScore * 0.93),
+      };
+    }
+  }
+
+  // 0 vs 8: Both have all outer segments. Only difference is g (center).
+  // Already handled by centerHole check above, but add safety net.
+  if (bestMatch === '8' && bestScore >= 0.70 && !seg.g) {
+    return {
+      segments: seg,
+      matchChar: '0',
+      confidence: Math.max(0.85, bestScore * 0.95),
+    };
   }
 
   return {
