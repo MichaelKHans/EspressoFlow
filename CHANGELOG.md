@@ -4,6 +4,34 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.20] - 2026-09-29
+### OCR 0, 2, 6 Disambiguation, Auto-Detected Digit Framing, Barista Telemetry Deck & Live Flow Curve
+- **OCR 0 vs 2 vs 6 vs 8 Disambiguation (Critical Precision Fix):**
+  - *Root Cause for 0.0 being read as 0.2:* `seg.g` (horizontal center bar) sampled with a wide radius (`0.16 * width`), which on narrow coffee scale digits (14-18px) touched the inner side segments `e/f` and `b/c`, producing false active pixels. Line 322 previously disqualified `0` completely on `(seg.g || centerHole)`. When `0` was eliminated, digit `2` (which lacked topology disqualification) scored 5/7 and was chosen, turning `0.0` into `0.2`.
+  - *Fix:* Added `'g'` orientation in `sampleSegment()` with a compact radius (`0.10 * width`, `0.06 * height`) and strict 0.32 fill threshold, completely preventing side bar bleed on `0`.
+  - Added strict topology constraints:
+    - Digit `2`: `if (digit === '2' && (seg.c && seg.f)) continue;` (A `2` cannot have bottom-right `c` and top-left `f`).
+    - Digit `6`: `if (digit === '6' && seg.b) continue;` (A `6` cannot have top-right `b`).
+    - Digit `0`: `if (digit === '0' && (centerHole && seg.g)) continue;` (Only disqualified if both center cavity is filled and center bar detected).
+  - Added multi-way disambiguation handlers for `0 vs 8`, `2 vs 0`, `6 vs 8`, and `6 vs 0` using targeted strict probes.
+- **Uncluttered Viewfinder with Real-Time Digit Bounding Box:**
+  - Removed the giant text overlay from the center of the camera targeting box that previously obscured the physical scale.
+  - Dynamically renders an emerald-green bounding box (`border-2 border-emerald-400 bg-emerald-400/15`) with a crisp text badge (`0.0g`) right around the auto-detected digits directly on the physical scale display. The scale display remains 100% visible and unobstructed.
+  - Retained clean corner brackets and a slim status pill (`[ 🟢 TARE LOCKED ]` / `[ ☕ BREWING ]`) on the top edge.
+- **Dedicated Barista Telemetry Deck:**
+  - Added a high-visibility 4-segment instrument grid directly below the camera deck:
+    - **Yield / Weight:** `{currentWeight.toFixed(1)}g` in large monospace
+    - **Flow Rate:** `{currentFlow.toFixed(1)} g/s`
+    - **Time:** `{elapsedTime.toFixed(1)}s`
+    - **Ratio:** `1:{(targetDose > 0 ? (currentWeight / targetDose).toFixed(1) : '2.0')}`
+  - During extraction, an active pre-infusion vs flow split indicator displays live saturation progress.
+- **Real-Time Live Extraction Curve (`FlowChart` Live Stream):**
+  - Added `onLivePointsUpdate` callback streaming extraction data points from `ScaleMonitor` at 10 Hz directly into `FlowChart`.
+  - Added `isLive` mode to `FlowChart`: Displays a pulsing `LIVE FLOW CURVE` badge and a live pulsating cursor tip at the head of the ascending weight line.
+  - Baristas can now simultaneously aim at the counter, see their scale numbers, and watch the extraction curve develop live in real time.
+
+---
+
 ## [1.2.19] - 2026-09-29
 ### OCR 3-vs-9 Fix, Stale Closure Curve Fix & Single Unified Viewfinder Weight Display
 - **OCR 3-vs-9 & False-Positive Elimination (Critical Fix):**

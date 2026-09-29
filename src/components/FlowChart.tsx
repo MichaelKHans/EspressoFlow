@@ -10,6 +10,7 @@ interface FlowChartProps {
   channelingEvent?: ChannelingEvent;
   preInfusionSeconds?: number;
   doseGrams?: number;
+  isLive?: boolean;
 }
 
 export const FlowChart: React.FC<FlowChartProps> = ({
@@ -18,6 +19,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   channelingEvent,
   preInfusionSeconds,
   doseGrams = 18.0,
+  isLive = false,
 }) => {
   const { t } = useTranslation();
 
@@ -84,7 +86,12 @@ export const FlowChart: React.FC<FlowChartProps> = ({
           </span>
         </div>
 
-        {channelingEvent?.detected ? (
+        {isLive ? (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/15 text-[#C26D52] text-xs font-mono font-bold border border-[#C26D52]/30 animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-[#C26D52]" />
+            <span>LIVE FLOW CURVE</span>
+          </div>
+        ) : channelingEvent?.detected ? (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#B85B48]/10 text-[#B85B48] text-xs font-mono font-semibold border border-[#B85B48]/30">
             <AlertCircle className="w-3.5 h-3.5" />
             <span>
@@ -238,14 +245,28 @@ export const FlowChart: React.FC<FlowChartProps> = ({
 
           {/* Current cursor tip */}
           {lastPoint && (
-            <circle
-              cx={getX(lastPoint.timeSeconds)}
-              cy={getYWeight(lastPoint.weightGrams)}
-              r="4"
-              fill="#C26D52"
-              stroke="#FFFDF9"
-              strokeWidth="2"
-            />
+            <g>
+              {isLive && (
+                <circle
+                  cx={getX(lastPoint.timeSeconds)}
+                  cy={getYWeight(lastPoint.weightGrams)}
+                  r="8"
+                  fill="none"
+                  stroke="#C26D52"
+                  strokeWidth="1.5"
+                  opacity="0.6"
+                  className="animate-ping"
+                />
+              )}
+              <circle
+                cx={getX(lastPoint.timeSeconds)}
+                cy={getYWeight(lastPoint.weightGrams)}
+                r="4.5"
+                fill="#C26D52"
+                stroke="#FFFDF9"
+                strokeWidth="2"
+              />
+            </g>
           )}
         </svg>
       </div>

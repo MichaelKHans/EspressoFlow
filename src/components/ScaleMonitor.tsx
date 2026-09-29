@@ -28,6 +28,7 @@ interface ScaleMonitorProps {
     points: ShotDataPoint[]
   ) => void;
   onBrewCancel?: () => void;
+  onLivePointsUpdate?: (points: ShotDataPoint[]) => void;
   targetDose: number;
   targetYield: number;
   machinePreInfusionSetting?: number;
@@ -38,6 +39,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   onBrewStart,
   onBrewFinish,
   onBrewCancel,
+  onLivePointsUpdate,
   targetDose,
   targetYield,
   machinePreInfusionSetting = 5.0,
@@ -457,6 +459,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       const flow = calculateSmoothedFlowRate(pointsRef.current);
       newPoint.flowRateGps = flow;
       setCurrentFlow(flow);
+      if (onLivePointsUpdate) {
+        onLivePointsUpdate([...pointsRef.current]);
+      }
 
       // Auto-finish if target reached in demo mode
       if (cameraState === 'demo' && weight >= targetYield && seconds > 25) {
@@ -467,7 +472,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [isBrewing, targetYield, cameraState]);
+  }, [isBrewing, targetYield, cameraState, onLivePointsUpdate]);
 
   const handleStartBrewing = () => {
     isArmedRef.current = false;
@@ -736,18 +741,18 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 top: `${roiCenter.y * 100}%`,
                 transform: 'translate(-50%, -50%)',
               }}
-              className={`absolute z-10 rounded-xl flex flex-col items-center justify-center p-3 sm:p-4 backdrop-blur-[1px] transition-all duration-200 pointer-events-none ${
+              className={`absolute z-10 rounded-xl transition-all duration-200 pointer-events-none ${
                 roiSize === 'compact'
                   ? 'w-[52%] max-w-[250px] aspect-21/9'
                   : 'w-[68%] max-w-[320px] aspect-2/1'
               } ${
                 isBrewing
-                  ? 'border-2 border-solid border-amber-400 bg-amber-400/10 shadow-[0_0_25px_rgba(251,191,36,0.3)]'
+                  ? 'border-2 border-solid border-amber-400/90 bg-amber-400/5 shadow-[0_0_20px_rgba(251,191,36,0.25)]'
                   : isArmed
-                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/15 shadow-[0_0_25px_rgba(16,185,129,0.4)]'
+                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/10 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
                   : isDigitLocked
-                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/10 shadow-[0_0_20px_rgba(16,185,129,0.25)]'
-                  : 'border-2 border-dashed border-[#C26D52]/80 bg-black/25'
+                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/5 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                  : 'border-2 border-dashed border-[#C26D52]/80 bg-black/10'
               }`}
             >
               {/* Target corner indicators */}
@@ -756,63 +761,47 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
               <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
 
-              <div className="text-[9px] sm:text-[10px] tracking-widest uppercase font-mono mb-0.5 flex items-center gap-1.5">
+              {/* Status Header Badge (Compact pill on top edge) */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] tracking-widest uppercase font-mono px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs flex items-center gap-1.5 shadow-sm border border-white/10 whitespace-nowrap">
                 {isBrewing ? (
                   <>
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-amber-300 font-bold">[ ☕ BREWING ]</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="text-amber-300 font-bold">☕ BREWING</span>
                   </>
                 ) : isArmed ? (
                   <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] animate-pulse" />
-                    <span className="text-[#10B981] font-bold">[ 🟢 ARMED • WAITING FOR FLOW ]</span>
+                    <CheckCircle2 className="w-3 h-3 text-[#10B981] animate-pulse" />
+                    <span className="text-[#10B981] font-bold">ARMED • AUTO-START</span>
                   </>
                 ) : isDigitLocked ? (
                   <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />
+                    <CheckCircle2 className="w-3 h-3 text-[#10B981]" />
                     <span className="text-[#10B981] font-bold">
-                      [ {isZeroDetected ? 'TARE LOCKED (0.0g)' : `LOCKED: ${currentWeight.toFixed(1)}g`} ]
+                      {isZeroDetected ? 'TARE LOCKED' : 'DIGITS LOCKED'}
                     </span>
                   </>
                 ) : (
                   <>
-                    <Scan className="w-3 h-3 text-[#C26D52]" />
-                    <span className="text-amber-300 font-bold">[ 👆 TAP DIGITS TO TARGET ]</span>
+                    <Scan className="w-2.5 h-2.5 text-[#C26D52]" />
+                    <span className="text-amber-300 font-bold">TAP DIGITS TO TARGET</span>
                   </>
                 )}
               </div>
 
-              {/* Monospace Jitter-Free Digits */}
-              <div className="font-mono text-3xl sm:text-5xl font-bold tracking-wider text-[#FAF7F2] drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-                {currentWeight.toFixed(1)}
-                <span className="text-lg sm:text-2xl font-normal text-[#FAF7F2]/70 ml-1">g</span>
-              </div>
-
-              {/* Real-Time Telemetry & Split-Timer (Only during active extraction) */}
-              {isBrewing && (
-                <div className="mt-1 flex flex-col items-center gap-1 font-mono">
-                  <div className="flex items-center gap-2 sm:gap-3 text-xs">
-                    <span className="text-[#C26D52] font-semibold bg-[#2C2018]/80 px-2 py-0.5 rounded border border-[#C26D52]/40">
-                      {currentFlow.toFixed(1)} g/s
-                    </span>
-                    <span className="text-[#FAF7F2]/90 font-bold">
-                      {elapsedTime.toFixed(1)}s
-                    </span>
-                  </div>
-
-                  {/* Split-Timer Active Phase Display */}
-                  <div className="flex items-center gap-2 text-[10px] text-[#FAF7F2]/80 bg-black/50 px-2.5 py-0.5 rounded border border-white/10 mt-0.5">
-                    {firstDropTime === null ? (
-                      <span className="text-amber-300 animate-pulse flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        Pre-infusion: {preInfusionDuration.toFixed(1)}s (Waiting for 1st drop)
-                      </span>
-                    ) : (
-                      <span>
-                        Pre: <strong className="text-amber-300">{preInfusionDuration.toFixed(1)}s</strong> | Flow: <strong className="text-[#72806B]">{activeFlowDuration.toFixed(1)}s</strong>
-                      </span>
-                    )}
-                  </div>
+              {/* Precise Auto-Detected Digit Bounding Box (The exact green frame on the scale) */}
+              {lastOcrResult?.boundingBox && cameraState === 'live' && (
+                <div
+                  style={{
+                    left: `${Math.max(0, Math.min(95, (lastOcrResult.boundingBox.x / 320) * 100))}%`,
+                    top: `${Math.max(0, Math.min(95, (lastOcrResult.boundingBox.y / 160) * 100))}%`,
+                    width: `${Math.max(5, Math.min(100, (lastOcrResult.boundingBox.width / 320) * 100))}%`,
+                    height: `${Math.max(5, Math.min(100, (lastOcrResult.boundingBox.height / 160) * 100))}%`,
+                  }}
+                  className="absolute border-2 border-emerald-400 bg-emerald-400/15 rounded shadow-[0_0_12px_rgba(16,185,129,0.5)] pointer-events-none transition-all duration-75 flex items-start justify-end"
+                >
+                  <span className="text-[8px] sm:text-[9px] font-mono font-bold bg-emerald-500 text-black px-1 rounded -translate-y-full shadow-xs whitespace-nowrap">
+                    {lastOcrResult.rawText}
+                  </span>
                 </div>
               )}
             </div>
@@ -1025,7 +1014,72 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       )}
 
       {/* Barista Control Deck */}
-      <div className="p-3.5 sm:p-4 bg-[#FFFDF9] border-t border-[#E8DFD5] flex flex-col gap-3">
+      <div className="p-3 sm:p-4 bg-[#FFFDF9] border-t border-[#E8DFD5] flex flex-col gap-3 font-mono">
+        {/* Real-Time Monospace Telemetry Grid (Uncluttered, High-Visibility) */}
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center select-none">
+          {/* 1. Live Weight / Yield */}
+          <div className="bg-[#FAF7F2] p-2 sm:p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
+            <span className="text-[9px] uppercase tracking-wider text-[#7A6E65] font-mono block">
+              {isBrewing ? t('active_bean.yield') : 'Weight'}
+            </span>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-[#2C2018] tracking-tight">
+              {currentWeight.toFixed(1)}
+              <span className="text-xs font-normal text-[#7A6E65] ml-0.5">g</span>
+            </div>
+          </div>
+
+          {/* 2. Flow Rate */}
+          <div className="bg-[#FAF7F2] p-2 sm:p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
+            <span className="text-[9px] uppercase tracking-wider text-[#7A6E65] font-mono block">
+              Flow
+            </span>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-[#C26D52] tracking-tight">
+              {currentFlow.toFixed(1)}
+              <span className="text-xs font-normal text-[#7A6E65] ml-0.5">g/s</span>
+            </div>
+          </div>
+
+          {/* 3. Timer */}
+          <div className="bg-[#FAF7F2] p-2 sm:p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
+            <span className="text-[9px] uppercase tracking-wider text-[#7A6E65] font-mono block">
+              Time
+            </span>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-[#2C2018] tracking-tight">
+              {elapsedTime.toFixed(1)}
+              <span className="text-xs font-normal text-[#7A6E65] ml-0.5">s</span>
+            </div>
+          </div>
+
+          {/* 4. Ratio */}
+          <div className="bg-[#FAF7F2] p-2 sm:p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
+            <span className="text-[9px] uppercase tracking-wider text-[#7A6E65] font-mono block">
+              {t('active_bean.ratio')}
+            </span>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-[#72806B] tracking-tight">
+              1:{(targetDose > 0 ? (currentWeight / targetDose).toFixed(1) : '2.0')}
+            </div>
+          </div>
+        </div>
+
+        {/* Real-time Pre-infusion vs Active Flow split pill during active extraction */}
+        {isBrewing && (
+          <div className="flex items-center justify-between text-[11px] bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-xl text-amber-900 font-mono shadow-2xs">
+            {firstDropTime === null ? (
+              <span className="animate-pulse flex items-center gap-1.5 font-bold">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                Pre-infusion: {preInfusionDuration.toFixed(1)}s (Waiting for 1st drip)
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <span>Pre: <strong className="text-amber-700">{preInfusionDuration.toFixed(1)}s</strong></span>
+                <span>•</span>
+                <span>Flow: <strong className="text-emerald-700">{activeFlowDuration.toFixed(1)}s</strong></span>
+              </span>
+            )}
+            <span className="text-[10px] text-amber-700 font-bold shrink-0">Target: {targetYield}g</span>
+          </div>
+        )}
+
         {/* Status / Guidance Banner */}
         {!isBrewing && !isArmed ? (
           <div className="px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between gap-2 text-xs font-mono">

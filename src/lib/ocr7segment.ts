@@ -225,7 +225,7 @@ function sampleSegment(
   box: { x: number; y: number; width: number; height: number },
   relX: number,
   relY: number,
-  orientation: 'h' | 'v' | 'c' = 'c',
+  orientation: 'h' | 'v' | 'c' | 'g' = 'c',
   overrideThreshold?: number
 ): boolean {
   // Italic slant compensation for typical 7-segment digital coffee displays (~6-8 degrees)
@@ -235,8 +235,12 @@ function sampleSegment(
   const centerX = Math.floor(box.x + box.width * effectiveRelX);
   const centerY = Math.floor(box.y + box.height * relY);
 
-  const radiusX = orientation === 'h' ? Math.max(2, Math.floor(box.width * 0.16)) : Math.max(1, Math.floor(box.width * 0.08));
-  const radiusY = orientation === 'v' ? Math.max(2, Math.floor(box.height * 0.10)) : Math.max(1, Math.floor(box.height * 0.08));
+  const radiusX = orientation === 'h' ? Math.max(2, Math.floor(box.width * 0.16))
+    : orientation === 'g' ? Math.max(1, Math.floor(box.width * 0.10))
+    : Math.max(1, Math.floor(box.width * 0.08));
+  const radiusY = orientation === 'v' ? Math.max(2, Math.floor(box.height * 0.10))
+    : orientation === 'g' ? Math.max(1, Math.floor(box.height * 0.06))
+    : Math.max(1, Math.floor(box.height * 0.08));
 
   let activeCount = 0;
   let totalCount = 0;
@@ -254,12 +258,13 @@ function sampleSegment(
     }
   }
 
-  // Orientation-aware thresholds: vertical segments (b,c,e,f) require higher fill ratio
-  // because ambient light and reflections more easily produce false positives on narrow vertical strokes.
-  // CRITICAL: Must satisfy BOTH minimum count AND minimum fill ratio so stray noise pixels (e.g. 4 pixels)
-  // never bypass the threshold!
-  const threshold = overrideThreshold ?? (orientation === 'v' ? 0.27 : 0.20);
-  const minActive = Math.min(orientation === 'v' ? 4 : 3, totalCount);
+  // Orientation-aware thresholds:
+  // - vertical segments (b,c,e,f) require 0.27
+  // - center horizontal bar 'g' requires 0.32 to ensure it is a real center bar, not bleed from '0'
+  // - outer horizontal bars (a,d) require 0.20
+  // CRITICAL: Must satisfy BOTH minimum count AND minimum fill ratio so stray noise pixels never bypass threshold!
+  const threshold = overrideThreshold ?? (orientation === 'v' ? 0.27 : orientation === 'g' ? 0.32 : 0.20);
+  const minActive = Math.min(orientation === 'v' || orientation === 'g' ? 4 : 3, totalCount);
   return totalCount > 0 && activeCount >= minActive && (activeCount / totalCount >= threshold);
 }
 
@@ -280,7 +285,7 @@ function probeDigitSegments(
     d: sampleSegment(binary, canvasW, box, 0.50, 0.93, 'h'), // Bottom horizontal
     e: sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v'), // Bottom-Left vertical
     f: sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v'), // Top-Left vertical
-    g: sampleSegment(binary, canvasW, box, 0.50, 0.50, 'h'), // Center horizontal
+    g: sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g'), // Center horizontal (tight kernel)
   };
 
   // Special fast-path for digit '1':
@@ -319,7 +324,9 @@ function probeDigitSegments(
       // Disqualifications based on 7-segment topology & inner hollow cavities:
       if (digit === '1' && (seg.g || seg.a || seg.d)) continue;
       if (digit === '-' && (seg.b || seg.c || seg.e || seg.f || seg.a || seg.d)) continue;
-      if (digit === '0' && (seg.g || centerHole)) continue; // '0' center must be hollow
+      if (digit === '0' && (centerHole && seg.g)) continue; // '0' center must be hollow
+      if (digit === '2' && (seg.c && seg.f)) continue; // '2' has NO segment c (bottom-right) or f (top-left)
+      if (digit === '6' && seg.b) continue; // '6' has NO segment b (top-right)
       if (digit === '7' && (seg.d || seg.g)) continue;
       if (digit === '4' && (seg.a || seg.d || upperHole)) continue; // '4' upper cavity must be hollow
       if (digit === '3' && (seg.e || seg.f)) continue;
@@ -340,6 +347,62 @@ function probeDigitSegments(
   }
 
   // ── Confusable-pair disambiguation with stricter re-verification ──
+
+  // 0 vs 8: Both share outer segments a,b,c,d,e,f.
+  // The only difference is the horizontal center bar g.
+  // On an espresso scale, 0 is far more common than 8 (e.g. 0.0g tare).
+  // Re-verify segment g with strict threshold: if center bar is not solid, it is a '0'.
+  if ((bestMatch === '8' || bestMatch === '0') && bestScore >= 0.70) {
+    if (seg.a && seg.b && seg.c && seg.d && seg.e && seg.f) {
+      const gStrict = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.38);
+      return {
+        segments: seg,
+        matchChar: gStrict ? '8' : '0',
+        confidence: Math.max(0.92, bestScore),
+      };
+    }
+  }
+
+  // 2 vs 0: Digit '2' has segments a,b,d,e,g (no c, no f).
+  // Digit '0' has outer loop a,b,c,d,e,f (no g).
+  // If matched as '2', but vertical segments c (bottom-right) and f (top-left) are active:
+  if (bestMatch === '2' && bestScore >= 0.70) {
+    const cStrict = sampleSegment(binary, canvasW, box, 0.88, 0.70, 'v', 0.28);
+    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.28);
+    if (cStrict && fStrict) {
+      return {
+        segments: seg,
+        matchChar: '0',
+        confidence: Math.max(0.90, bestScore),
+      };
+    }
+  }
+
+  // 6 vs 8: Digit '6' has segments a,c,d,e,f,g (NO segment b top-right).
+  // If matched as '8', re-verify segment b:
+  if (bestMatch === '8' && bestScore >= 0.70) {
+    const bStrict = sampleSegment(binary, canvasW, box, 0.88, 0.30, 'v', 0.36);
+    if (!bStrict) {
+      return {
+        segments: seg,
+        matchChar: '6',
+        confidence: Math.max(0.85, bestScore * 0.95),
+      };
+    }
+  }
+
+  // 6 vs 0: Both share c,d,e,f. '6' has center g and no b. '0' has b and no g.
+  if (bestMatch === '6' && bestScore >= 0.70) {
+    const bStrict = sampleSegment(binary, canvasW, box, 0.88, 0.30, 'v', 0.32);
+    if (bStrict && seg.a && seg.d) {
+      return {
+        segments: seg,
+        matchChar: '0',
+        confidence: Math.max(0.88, bestScore),
+      };
+    }
+  }
+
   // 3 vs 8 vs 9:
   // Digit 3: segments a,b,c,d,g. (e = 0, f = 0)
   // Digit 8: segments a,b,c,d,e,f,g. (e = 1, f = 1)
@@ -364,8 +427,6 @@ function probeDigitSegments(
   }
 
   // 3 vs 9: Both share a,b,c,d,g. Difference is f (top-left).
-  // If matched as '9', re-verify segment f with strict threshold.
-  // Same ambient-light false-positive mechanism as 3→8.
   if (bestMatch === '9' && bestScore >= 0.70) {
     const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.36);
     if (!fStrict) {
@@ -378,7 +439,6 @@ function probeDigitSegments(
   }
 
   // 5 vs 6: Both share a,c,d,f,g. Difference is e (bottom-left).
-  // If matched as '6', re-verify segment e with strict threshold.
   if (bestMatch === '6' && bestScore >= 0.70) {
     const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v', 0.36);
     if (!eStrict) {
@@ -390,8 +450,7 @@ function probeDigitSegments(
     }
   }
 
-  // 0 vs 8: Both have all outer segments. Only difference is g (center).
-  // Already handled by centerHole check above, but add safety net.
+  // 0 vs 8 safety net:
   if (bestMatch === '8' && bestScore >= 0.70 && !seg.g) {
     return {
       segments: seg,

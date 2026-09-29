@@ -11,6 +11,22 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-29 -- OCR 0, 2, 6 Disambiguation, Auto Digit Framing, Telemetry Deck & Live Curve (v1.2.20)
+- **OCR 0, 2, 6 & 8 Disambiguering:**
+  - `seg.g` (vandret centerstreg) probes nu med dedikeret `'g'` orientering (`radiusX = 0.10 * width`, `radiusY = 0.06 * height`, tærskel 0.32), så sampling-vinduet aldrig mere snitter de lodrette sidestreger på et `0`.
+  - Topologiske udelukkelsesregler tilføjet: `2` må aldrig have `c` og `f`; `6` må aldrig have `b`; `0` diskvalificeres kun hvis både hullet er fyldt OG centerstreg er solid.
+  - Automatiske disambigueringsregler for `0 vs 8`, `2 vs 0`, `6 vs 8` og `6 vs 0`. Hermed læses `0.0` aldrig mere som `0.2` eller `0.8`.
+- **Uforstyrret Kamerasøger med Præcis Grøn Ciffer-Boks:**
+  - Kæmpeteksten (`9.0 g`, flow osv.) er fjernet inde fra kamerasøgeren, så brugeren kan se vægtens fysiske display helt uhindret.
+  - Dynamisk grøn bounding box (`border-2 border-emerald-400 bg-emerald-400/15`) tegnes direkte rundt om de auto-detekterede tal på vægten med ciffer-mærkat.
+- **Dedikeret Barista Telemetri-Dæk:**
+  - 4-kolonners instrumentgitter under kameraet med høj kontrast og stor monospace-skrift: Vægt/Yield, Flowrate, Tid og Ratio.
+  - Live pre-infusion/flow split-indikator under aktiv ekstraktion.
+- **Live Ekstraktionskurve under Brygning (`FlowChart` Live Stream):**
+  - `ScaleMonitor` streamer nu målepunkter ved 10 Hz via `onLivePointsUpdate` direkte til `FlowChart`.
+  - `FlowChart` har fået `isLive`-tilstand med pulserende `LIVE FLOW CURVE`-badge og en animeret, pulserende markør i spidsen af kurven.
+- **Verificering:** `npm run build` kompileret 100% fejlfrit (0 fejl, 382ms).
+
 ### 2026-09-29 -- OCR 3-vs-9 Fix, Stale Closure Curve Fix & Single Unified Viewfinder (v1.2.19)
 - **OCR 3-vs-9 & False-Positive Elimination:**
   - `sampleSegment()` kræver nu strengt både minimum active pixel count OG tærskel-procent: `activeCount >= minActive && (activeCount / totalCount >= threshold)`. Tidligere tillod `|| activeCount >= 4`, at 4 vildfarne støj-pixels i et 30-pixels vindue triggede segment `f` (øverst-til-venstre), hvilket forvandlede et `3`-tal til `9` (eller `8`).

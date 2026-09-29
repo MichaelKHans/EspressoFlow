@@ -435,6 +435,10 @@ export function App() {
     setLastFinishedShot(null);
   };
 
+  const handleLivePointsUpdate = (points: ShotDataPoint[]) => {
+    setCurrentPoints(points);
+  };
+
   const handleBrewFinish = (
     finalWeight: number,
     timeSeconds: number,
@@ -760,6 +764,7 @@ export function App() {
               onBrewStart={handleBrewStart}
               onBrewFinish={handleBrewFinish}
               onBrewCancel={handleBrewCancel}
+              onLivePointsUpdate={handleLivePointsUpdate}
               targetDose={doseGrams}
               targetYield={targetYieldGrams}
               machinePreInfusionSetting={machinePreInfusion}
@@ -771,6 +776,7 @@ export function App() {
               doseGrams={doseGrams}
               channelingEvent={analyzeChanneling(currentPoints)}
               preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
+              isLive={isBrewing}
             />
 
             {lastFinishedShot && (
