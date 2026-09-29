@@ -11,6 +11,25 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-09-29 -- OCR 3-vs-9 Fix, Stale Closure Curve Fix & Single Unified Viewfinder (v1.2.19)
+- **OCR 3-vs-9 & False-Positive Elimination:**
+  - `sampleSegment()` kræver nu strengt både minimum active pixel count OG tærskel-procent: `activeCount >= minActive && (activeCount / totalCount >= threshold)`. Tidligere tillod `|| activeCount >= 4`, at 4 vildfarne støj-pixels i et 30-pixels vindue triggede segment `f` (øverst-til-venstre), hvilket forvandlede et `3`-tal til `9` (eller `8`).
+  - Strammet vertikal probe-radius `radiusY` fra 0.14 til 0.10 af bounding box højde, og centreret vertikale probes på 0.30 og 0.70 for at eliminere afsmitning fra de horisontale streger `a`, `g` og `d`.
+  - Disambiguerings-kæde udbygget til at håndtere `3 vs 8 vs 9`: hvis et tal scores som `8` eller `9`, reverificeres `e` og `f` med 0.36 tærskel for at returnere det korrekte `3`-tal.
+- **Flad Ekstraktionskurve Løst (Stale Closure):**
+  - Timer-intervallet i `ScaleMonitor.tsx` brugte `currentWeight` fra React state, som var frosset (0.0g) ved bryggestart i closure'n.
+  - Oprettet `currentWeightRef`, som opdateres synkront med OCR ved hvert frame. Timeren og `handleStopBrewing` læser nu `currentWeightRef.current`, så kurven i `FlowChart` tegnes præcist og dynamisk.
+- **Én Samlet Vægtviser i Viewfinder (Slut med forvirring):**
+  - Fjernet det overlappende inline inspector panel fra søgeren. Søgeren viser nu udelukkende ét autoritativt, stort, jitter-frit vægt-tal (`currentWeight.toFixed(1)} g`).
+  - Top-bjælkens `Align`-knap re-centrerer nu målfeltet (`handleRecenter`), frem for at åbne et forvirrende diagnostisk panel.
+  - Diagnostisk skuffe er flyttet uden for kameravinduet og vises kun, når brugeren eksplicit åbner Scan-knappen i værktøjslinjen (og aldrig under aktiv brygning).
+- **Verificering:** `npm run build` kompileret 100% fejlfrit (0 fejl, 374ms).
+
+### 2026-09-29 -- Scale OCR Precision Fix, Toolbar Wrap, Touch Focus & Tilt Meter (v1.2.18)
+- OCR vertikal segmenttærskel hævet til 0.27, streng reverifikation af 3↔8, 5↔6 og 0↔8.
+- Kamerakontrol-værktøjslinje omlagt til `flex-wrap` på mobile skærme.
+- Pålidelig `onTouchEnd` tap-to-focus og accelerometer-baseret vinkelmåler (📐).
+
 ### 2026-09-27 -- Mobile Collisions Fixes, Nav Space Optimization & Rich Color Zoning (v1.2.17)
 - **Top Navigation Bar Space Optimization & Clean Mobile Layout:**
   - Fjernet skud-tæller badge (`{shots.length}`) efter Logs i fanebjælken som anmodet for at give maksimal plads til "Coffee Bar".

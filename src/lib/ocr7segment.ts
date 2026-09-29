@@ -236,7 +236,7 @@ function sampleSegment(
   const centerY = Math.floor(box.y + box.height * relY);
 
   const radiusX = orientation === 'h' ? Math.max(2, Math.floor(box.width * 0.16)) : Math.max(1, Math.floor(box.width * 0.08));
-  const radiusY = orientation === 'v' ? Math.max(2, Math.floor(box.height * 0.14)) : Math.max(1, Math.floor(box.height * 0.08));
+  const radiusY = orientation === 'v' ? Math.max(2, Math.floor(box.height * 0.10)) : Math.max(1, Math.floor(box.height * 0.08));
 
   let activeCount = 0;
   let totalCount = 0;
@@ -255,10 +255,12 @@ function sampleSegment(
   }
 
   // Orientation-aware thresholds: vertical segments (b,c,e,f) require higher fill ratio
-  // because ambient light and reflections more easily produce false positives on narrow vertical strokes
+  // because ambient light and reflections more easily produce false positives on narrow vertical strokes.
+  // CRITICAL: Must satisfy BOTH minimum count AND minimum fill ratio so stray noise pixels (e.g. 4 pixels)
+  // never bypass the threshold!
   const threshold = overrideThreshold ?? (orientation === 'v' ? 0.27 : 0.20);
-  const minActive = orientation === 'v' ? 4 : 3;
-  return totalCount > 0 && (activeCount / totalCount >= threshold || activeCount >= minActive);
+  const minActive = Math.min(orientation === 'v' ? 4 : 3, totalCount);
+  return totalCount > 0 && activeCount >= minActive && (activeCount / totalCount >= threshold);
 }
 
 /**
@@ -269,14 +271,15 @@ function probeDigitSegments(
   canvasW: number,
   box: { x: number; y: number; width: number; height: number }
 ): { segments: SegmentProbeResult; matchChar: string; confidence: number } {
-  // Relative probe positions
+  // Relative probe positions cleanly centered within segments:
+  // Top/bottom vertical centers at 0.30 and 0.70 to avoid bleed from horizontal bars (a at 0.07, g at 0.50, d at 0.93)
   const seg: SegmentProbeResult = {
     a: sampleSegment(binary, canvasW, box, 0.50, 0.07, 'h'), // Top horizontal
-    b: sampleSegment(binary, canvasW, box, 0.88, 0.28, 'v'), // Top-Right vertical
-    c: sampleSegment(binary, canvasW, box, 0.88, 0.72, 'v'), // Bottom-Right vertical
+    b: sampleSegment(binary, canvasW, box, 0.88, 0.30, 'v'), // Top-Right vertical
+    c: sampleSegment(binary, canvasW, box, 0.88, 0.70, 'v'), // Bottom-Right vertical
     d: sampleSegment(binary, canvasW, box, 0.50, 0.93, 'h'), // Bottom horizontal
-    e: sampleSegment(binary, canvasW, box, 0.12, 0.72, 'v'), // Bottom-Left vertical
-    f: sampleSegment(binary, canvasW, box, 0.12, 0.28, 'v'), // Top-Left vertical
+    e: sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v'), // Bottom-Left vertical
+    f: sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v'), // Top-Left vertical
     g: sampleSegment(binary, canvasW, box, 0.50, 0.50, 'h'), // Center horizontal
   };
 
@@ -294,8 +297,8 @@ function probeDigitSegments(
 
   // Probe inner hollow cavities to reject solid glares, reflections, and filled spots
   // In true 7-segment digital characters, loops have empty dark cavities between strokes
-  const upperHole = sampleSegment(binary, canvasW, box, 0.50, 0.28, 'c');
-  const lowerHole = sampleSegment(binary, canvasW, box, 0.50, 0.72, 'c');
+  const upperHole = sampleSegment(binary, canvasW, box, 0.50, 0.30, 'c');
+  const lowerHole = sampleSegment(binary, canvasW, box, 0.50, 0.70, 'c');
   const centerHole = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'c');
 
   const sampleArray = [
@@ -337,17 +340,39 @@ function probeDigitSegments(
   }
 
   // ── Confusable-pair disambiguation with stricter re-verification ──
-  // 3 vs 8: Both share segments a,b,c,d,g. Difference is e (bottom-left) and f (top-left).
-  // If matched as '8', re-verify e and f with a strict 0.36 threshold.
-  // If both fail, this is actually a '3' — ambient light was triggering false positives.
+  // 3 vs 8 vs 9:
+  // Digit 3: segments a,b,c,d,g. (e = 0, f = 0)
+  // Digit 8: segments a,b,c,d,e,f,g. (e = 1, f = 1)
+  // Digit 9: segments a,b,c,d,f,g. (e = 0, f = 1)
   if (bestMatch === '8' && bestScore >= 0.70) {
-    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.72, 'v', 0.36);
-    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.28, 'v', 0.36);
+    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v', 0.36);
+    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.36);
     if (!eStrict && !fStrict) {
       return {
         segments: seg,
         matchChar: '3',
-        confidence: Math.max(0.82, bestScore * 0.95),
+        confidence: Math.max(0.85, bestScore * 0.95),
+      };
+    }
+    if (!eStrict && fStrict) {
+      return {
+        segments: seg,
+        matchChar: '9',
+        confidence: Math.max(0.82, bestScore * 0.92),
+      };
+    }
+  }
+
+  // 3 vs 9: Both share a,b,c,d,g. Difference is f (top-left).
+  // If matched as '9', re-verify segment f with strict threshold.
+  // Same ambient-light false-positive mechanism as 3→8.
+  if (bestMatch === '9' && bestScore >= 0.70) {
+    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.36);
+    if (!fStrict) {
+      return {
+        segments: seg,
+        matchChar: '3',
+        confidence: Math.max(0.85, bestScore * 0.95),
       };
     }
   }
@@ -355,12 +380,12 @@ function probeDigitSegments(
   // 5 vs 6: Both share a,c,d,f,g. Difference is e (bottom-left).
   // If matched as '6', re-verify segment e with strict threshold.
   if (bestMatch === '6' && bestScore >= 0.70) {
-    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.72, 'v', 0.36);
+    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v', 0.36);
     if (!eStrict) {
       return {
         segments: seg,
         matchChar: '5',
-        confidence: Math.max(0.80, bestScore * 0.93),
+        confidence: Math.max(0.82, bestScore * 0.93),
       };
     }
   }

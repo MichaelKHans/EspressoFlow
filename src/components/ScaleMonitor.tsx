@@ -86,6 +86,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const timerIntervalRef = useRef<number | null>(null);
   const ocrIntervalRef = useRef<number | null>(null);
   const filterRef = useRef<ScaleReadingFilter>(new ScaleReadingFilter());
+  const currentWeightRef = useRef<number>(0.0);
   const startTimeRef = useRef<number>(0);
   const firstDropTimeRef = useRef<number | null>(null);
   const fpsCountRef = useRef<number>(0);
@@ -368,6 +369,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         if (!sanitized.isOutlier) {
           const w = Math.round(sanitized.weight * 10) / 10;
           setCurrentWeight(w);
+          currentWeightRef.current = w;
 
           // Zero / Tare detection
           if (w === 0.0) {
@@ -398,6 +400,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     firstDropTimeRef.current = null;
     pointsRef.current = [];
     setCurrentWeight(0.0);
+    currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);
     setElapsedTime(0.0);
     setFirstDropTime(null);
@@ -411,7 +414,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       const roundedSeconds = Math.round(seconds * 10) / 10;
       setElapsedTime(roundedSeconds);
 
-      let weight = currentWeight;
+      let weight = currentWeightRef.current;
 
       // In simulation mode, generate a realistic pre-infusion & extraction curve
       if (cameraState === 'demo') {
@@ -426,6 +429,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         }
         weight = Math.round(simulatedWeight * 10) / 10;
         setCurrentWeight(weight);
+        currentWeightRef.current = weight;
       }
 
       // Check for First Drip (Split-Timer Pre-Infusion Lock)
@@ -513,6 +517,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     firstDropTimeRef.current = null;
     pointsRef.current = [];
     setCurrentWeight(0.0);
+    currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);
     setElapsedTime(0.0);
     setFirstDropTime(null);
@@ -529,7 +534,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     isArmedRef.current = false;
     setIsArmed(false);
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    const finalWeight = currentWeight;
+    const finalWeight = currentWeightRef.current;
     const finalTime = elapsedTime;
     const finalPre = firstDropTimeRef.current !== null ? firstDropTimeRef.current : (machinePreInfusionSetting || 5.0);
     const finalFlow = Math.max(0, Math.round((finalTime - finalPre) * 10) / 10);
@@ -539,6 +544,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   const handleCalibrateTare = () => {
     setCurrentWeight(0.0);
+    currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);
     setIsZeroDetected(true);
     filterRef.current.reset(0);
@@ -619,15 +625,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
               <button
                 type="button"
-                onClick={() => setShowInspector(!showInspector)}
-                className={`text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border font-mono transition flex items-center gap-1 ${
-                  showInspector
-                    ? 'border-[#C26D52] bg-[#C26D52] text-white shadow-xs font-bold'
-                    : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018]'
-                }`}
-                title="Align scale with viewfinder crosshair and verify digit recognition"
+                onClick={handleRecenter}
+                className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] font-mono transition flex items-center gap-1 shadow-xs active:scale-95"
+                title="Re-center alignment target box on display"
               >
-                <Scan className="w-3 h-3" />
+                <Crosshair className="w-3 h-3 text-[#C26D52]" />
                 <span>{t('scale.align')}</span>
               </button>
             </>
@@ -845,42 +847,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
         )}
 
-        {/* Inline Vision Inspector Overlay (visible simultaneously with camera feed) */}
-        {showInspector && cameraState === 'live' && (
-          <div className="absolute bottom-0 left-0 right-0 z-20 bg-[#1A1412]/85 backdrop-blur-sm px-2.5 py-2 font-mono text-xs text-[#FAF7F2] border-t border-[#E8DFD5]/20 pointer-events-none">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Scan className="w-3 h-3 text-[#C26D52]" />
-              <span className="font-bold uppercase tracking-wider text-[10px]">{t('scale.inspector_title')}</span>
-              <span className="text-[9px] text-[#E8DFD5]/50 ml-auto">
-                Threshold: {lastOcrResult?.thresholdUsed || 128}
-              </span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <canvas
-                ref={inspectorCanvasRef}
-                width={160}
-                height={52}
-                className="w-[110px] h-auto border border-[#E8DFD5]/30 rounded bg-black shrink-0"
-              />
-              <div className="space-y-0.5 text-[10px] min-w-0">
-                <div>
-                  <span className="text-[#E8DFD5]/60">{t('scale.detected_digits')}: </span>
-                  <span className="text-[#C26D52] font-bold text-xs">{lastOcrResult?.rawText || '0.0'}</span>
-                </div>
-                <div>
-                  <span className="text-[#E8DFD5]/60">{t('scale.confidence')}: </span>
-                  <span className="text-[#72806B] font-semibold">
-                    {lastOcrResult ? `${Math.round(lastOcrResult.confidence * 100)}%` : '100%'}
-                  </span>
-                </div>
-                <div className="text-[#E8DFD5]/50">
-                  {displayMode.toUpperCase()}
-                  {lastOcrResult?.detectedPolarity && ` [${lastOcrResult.detectedPolarity.toUpperCase()}]`}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* External Camera Controls Toolbar (All controls outside camera viewfinder) */}
@@ -986,8 +953,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
       </div>
 
-      {/* Vision Inspector Drawer (Action-Oriented Scale Alignment) */}
-      {showInspector && cameraState !== 'live' && (
+      {/* Vision Inspector Drawer (Action-Oriented Scale Alignment Diagnostics) */}
+      {showInspector && !isBrewing && (
         <div className="p-4 bg-[#1A1412] text-[#FAF7F2] border-t border-[#E8DFD5]/20 font-mono text-xs">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">

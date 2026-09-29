@@ -4,6 +4,23 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.19] - 2026-09-29
+### OCR 3-vs-9 Fix, Stale Closure Curve Fix & Single Unified Viewfinder Weight Display
+- **OCR 3-vs-9 & False-Positive Elimination (Critical Fix):**
+  - *Root Cause:* In `sampleSegment()`, the return condition `(activeCount / totalCount >= threshold || activeCount >= minActive)` used an OR logic (`||`), allowing as few as 4 stray noise/glare pixels in a 30-pixel patch to trigger segment `f` (top-left) as lit, completely bypassing both the 27% baseline and the 36% strict disambiguation threshold. On a digit `3`, any ambient glare in the top-left caused it to match `9` (and `8`).
+  - *Fix:* Changed condition to strictly require BOTH minimum count AND minimum fill ratio: `activeCount >= minActive && (activeCount / totalCount >= threshold)`.
+  - Tightened vertical probe radius `radiusY` from `0.14` to `0.10` of bounding box height, and re-centered vertical probe sample points to `0.30` and `0.70` (preventing bleed from horizontal bars `a`, `g`, and `d`).
+  - Enhanced disambiguation logic for `3 vs 8 vs 9`: if matched as `8` or `9`, strict re-sampling verifies segments `e` and `f` without false-positive leakage.
+- **Extraction Dynamics Curve & Live Weight Fix (Stale Closure):**
+  - *Root Cause:* The 10 Hz timer `setInterval` in `ScaleMonitor.tsx` closed over `currentWeight` (which was 0.0 or 0.2g when brewing started) without re-evaluating on state changes. Every data point pushed to `pointsRef.current` during extraction recorded the stale 0.2g weight, resulting in a completely flat extraction curve after the shot completed.
+  - *Fix:* Introduced `currentWeightRef` synchronized with OCR updates on every frame. The timer loop and `handleStopBrewing` now read `currentWeightRef.current`, ensuring live weight progression is faithfully recorded and graphed in `FlowChart`.
+- **Single Unified Weight Display (Slut med dobbelt-visning & forvirring):**
+  - Removed the inline inspector overlay from inside the camera viewfinder. The viewfinder now shows exclusively ONE clear, large, jitter-free weight readout (`currentWeight.toFixed(1)} g`).
+  - Header `Align` button now directly re-centers the target focus box (`handleRecenter`) instead of toggling an ambiguous diagnostic overlay.
+  - Diagnostic drawer is moved outside the camera stream and only appears below the camera deck when explicitly opened via the diagnostic Scan tool in the toolbar.
+
+---
+
 ## [1.2.18] - 2026-09-29
 ### Scale OCR Precision Fix, Toolbar Wrapping, Inline Inspector Overlay, Touch Focus & Tilt Meter
 - **OCR 3-vs-8 Disambiguation (Critical Fix):**
