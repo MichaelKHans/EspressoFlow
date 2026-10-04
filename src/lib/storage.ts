@@ -1,4 +1,4 @@
-import type { ShotRecord, UserAccessState, CoffeeBeanProfile, GrinderProfile, TempUnit, EspressoMachineProfile } from '../types/espresso';
+import type { ShotRecord, ShotDataPoint, UserAccessState, CoffeeBeanProfile, GrinderProfile, TempUnit, EspressoMachineProfile } from '../types/espresso';
 
 const STORAGE_KEYS = {
   SHOTS: 'espressoflow_shots_v1',
@@ -97,7 +97,22 @@ export function saveShot(shot: ShotRecord): void {
     } else {
       updated = [shot, ...current];
     }
-    localStorage.setItem(STORAGE_KEYS.SHOTS, JSON.stringify(updated));
+    try {
+      localStorage.setItem(STORAGE_KEYS.SHOTS, JSON.stringify(updated));
+    } catch {
+      console.warn('LocalStorage quota warning. Pruning high-frequency telemetry for older shots to preserve history.');
+      // Downsample dataPoints from shots older than index 25 (keep summary, stats, notes and essential curve points)
+      const pruned = updated.map((s, idx) => {
+        if (idx > 25 && s.dataPoints && s.dataPoints.length > 20) {
+          return {
+            ...s,
+            dataPoints: s.dataPoints.filter((_: ShotDataPoint, pIdx: number) => pIdx % 5 === 0),
+          };
+        }
+        return s;
+      });
+      localStorage.setItem(STORAGE_KEYS.SHOTS, JSON.stringify(pruned));
+    }
   } catch (err) {
     console.error('Failed to save shot record', err);
   }

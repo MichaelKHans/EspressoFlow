@@ -1,7 +1,7 @@
 # 🗺️ ESPRESSO FLOW – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.2.31  
+> **Gældende version:** v1.3.1  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Espresso Flow. Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -338,10 +338,14 @@ Espresso Flow er pakket som en cross-platform mobilapplikation via Capacitor v8 
 ### 9.1 Hardware- og Platformarkitektur
 | Komponent | Implementering | Formål & Beskyttelse |
 | :--- | :--- | :--- |
+| **Målplatform** | `TARGETED_DEVICE_FAMILY = 1` | iPhone-only initial udrulning. Låst til Portrait i `Info.plist` for at undgå uønsket rotation under brygning. |
 | **Kamera & Optisk Zoom** | WebRTC `getUserMedia` + Optisk ROI | 1.8x/2.5x digital/optisk forstørrelse forhindrer iPhone makro-linse-spring (< 15 cm) og tillader 25–35 cm bar-afstand. |
-| **Skærm-vågelås (WakeLock)** | `src/lib/wakeLock.ts` (HTML5 Screen Wake Lock) | Forhindrer skærmen i at dæmpe eller låse midt under et 30s espresso-shot. Frigives øjeblikkeligt ved standby. |
+| **Dobbelt-Lags Vågelås (WakeLock)** | Swift `isIdleTimerDisabled` + Java `FLAG_KEEP_SCREEN_ON` + Web API | Forhindrer skærmen i at dæmpe eller låse midt under et 30s espresso-shot på ALLE iOS-versioner (iOS 13–18+) samt Android og Web. |
+| **Safe Area Insets** | `pt-safe`, `pb-safe`, `env(safe-area-inset-*)` | Sikrer at headers ikke skæres af Dynamic Island/notch, og at toasts svæver frit over iOS home-baren. |
+| **100% Lokale Skrifttyper** | `public/fonts/` (Courier Prime & Inter woff2) | Garanterer nul ciffer-jitter og lynhurtig opstart helt uden CDN-afhængighed ved koldstart offline. |
 | **Taktil Haptik** | `@capacitor/haptics` | Giver øjeblikkelig fysisk feedback: Let klik ved Nul/Tare-lås, tungt klik ved Shot Start, advarselsvibration ved Kanalisering (>4.2 g/s), succesvibration ved Målyield. |
 | **Adaptiv OCR Billedhastighed** | `ScaleMonitor.tsx` | 80 ms (~12.5 FPS) i standby/tare-søgning (forhindrer termisk throttling og batteridræn) $\rightarrow$ 33 ms (~30 FPS) under aktiv brygning for flydende væsketracking. |
+| **Database RLS Sikkerhed** | `supabase/schema.sql` | Alle offentlige DELETE-rettigheder er fjernet. Uautoriseret opgradering af bønners verificeringsstatus er blokeret. |
 | **Swift 6 & SPM Plugin Isolation** | `scripts/patch-capacitor-plugins.cjs` | Automatisk korrektion af `call.reject` $\rightarrow$ `call.errorHandler?(nil)` i Capacitor v8 Swift Package Manager moduler. |
 
 ### 9.2 iOS TestFlight Byggepipeline (`.github/workflows/ios-build.yml`)

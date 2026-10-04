@@ -11,6 +11,20 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Hardware, Sikkerheds- og Mobilhærdning (iPhone-Only, Dobbelt WakeLock, Safe Areas, Lokale Fonts, RLS) (v1.3.1)
+- **iPhone-Only Målretning (`TARGETED_DEVICE_FAMILY = 1`):** iPad deaktiveret i Xcode-projektet for hurtigere, friktionsløs godkendelse uden krav om iPad-screenshots eller unødig tablet-review.
+- **Portræt-Lås (`Info.plist`):** Låst til Portrait på iPhone, så mobilen aldrig roterer under kaffebrygning på drypbakken eller bordet.
+- **Dobbelt-lags Nativ Screen WakeLock:**
+  - Swift plugin i `AppDelegate.swift` med `UIApplication.shared.isIdleTimerDisabled = true` (virker på samtlige iOS-versioner fra iOS 13+).
+  - Java plugin i `MainActivity.java` med `FLAG_KEEP_SCREEN_ON` for Android.
+  - WebKit/Chromium standard fallback i `wakeLock.ts`.
+- **Safe Area Insets (Notch & Dynamic Island):** `pt-safe` på headers i `App.tsx` og `AdminPortal.tsx`, `pb-safe` på footer, og dynamisk beregning over home-indikatoren på bottom toasts.
+- **Lokale Typografier (100% Offline):** Downloadet `Courier Prime` (400, 700) og `Inter` (400, 600, 700) til `public/fonts/` med `@font-face` i `index.css`. Ingen CDN-afhængighed ved koldstart offline.
+- **iOS DeviceOrientation Permission via Bruger-Gesture:** Flyttet fra `useEffect` til eksplicitte klik-events (`handleStartCamera`, `handleTapViewfinder`, `handleStartBrewing`), så tilt-måleren virker på iPhone.
+- **Supabase RLS Sikkerhedshærdning:** Fjernet alle offentlige DELETE politikker. Kun backend `service_role` kan slette. `is_verified` kan ikke eskaleres af anonyme brugere.
+- **Branded Native App Icons & Splash:** 1024x1024 master app-ikon og 2732x2732 splash screens genereret og synkroniseret til iOS og Android.
+- **LocalStorage Kvote-Beskyttelse:** Automatisk downsampling af telemetripunkter for ældre shots (>25 shots) ved pladsmangel i `storage.ts`.
+
 ### 2026-10-04 -- Nativ Mobil App (iOS & Android) med TestFlight CI/CD & OCR-Hardwareoptimering (v1.3.0)
 - **Capacitor v8 Nativ Mobilbro & Scaffolding:**
   - Etableret komplet native scaffolding med `@capacitor/core@8.5.2`, `@capacitor/ios@8.5.2`, `@capacitor/android@8.5.2`, `@capacitor/app@8.1.2`, `@capacitor/haptics@8.0.2` og `@capacitor/status-bar@8.0.4`.

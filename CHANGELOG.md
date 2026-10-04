@@ -2,6 +2,32 @@
 
 Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.3.1] - 2026-10-04
+### Etape 9: Hardware & Sikkerheds-Hærdning (iPhone-Only, Native WakeLock, Safe Areas, Lokale Skrifttyper, RLS Lockdown)
+- **iPhone-Only Målretning & Portræt-Lås:**
+  - Konfigureret `TARGETED_DEVICE_FAMILY = 1` i Xcode-projektet for udelukkende at målrette iPhone (eliminerer krav om iPad-screenshots og uoptimeret tablet-godkendelse).
+  - Låst orientering til `UIInterfaceOrientationPortrait` i `Info.plist`, så baristaens telefon aldrig roterer utilsigtet under brygningen.
+- **Dobbelt-lags Nativ Screen WakeLock Bridge:**
+  - Implementeret native Capacitor plugin `NativeScreenLock` i Swift (`AppDelegate.swift`) med `UIApplication.shared.isIdleTimerDisabled = true`, der virker på samtlige iOS-versioner (iOS 13+).
+  - Implementeret native `NativeScreenLock` i Java (`MainActivity.java`) med `FLAG_KEEP_SCREEN_ON` for Android.
+  - Forbundet via `src/lib/wakeLock.ts` med automatisk fallback til standard HTML5 Screen Wake Lock på web.
+- **Safe Area Insets (Notch, Dynamic Island & Home Bar):**
+  - Implementeret CSS utilities (`pt-safe`, `pb-safe`) og root CSS variabler i `src/index.css`.
+  - Opdateret sticky headers i `App.tsx` og `AdminPortal.tsx` med `pt-safe`, så menulinjer ikke glider ind bag Dynamic Island eller statusbaren.
+  - Opdateret bottom toasts og footers med dynamisk beregning over iOS home indicator (`max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem))`).
+- **100% Lokale Skrifttyper (Nul CDN-Afhængighed):**
+  - Downloadet og integreret `Courier Prime` (400, 700) og `Inter` (400, 600, 700) i `public/fonts/`.
+  - Registreret `@font-face` i `src/index.css`, så skrivemaskine-tal aldrig hopper og UI indlæses lynhurtigt – selv ved første koldstart offline.
+- **iOS DeviceOrientation Tilladelse via Bruger-Gesture:**
+  - Flyttet `DeviceOrientationEvent.requestPermission()` fra passiv `useEffect` til eksplicitte touch/klik events (`handleStartCamera`, `handleStartBrewing`, `handleTapViewfinder`, `handleRecenter`), hvilket eliminerer iOS sikkerhedsafvisning af tilt-måleren.
+- **Supabase RLS Sikkerhedshærdning (`schema.sql`):**
+  - Fjernet alle offentlige `DELETE` politikker fra databasen. Ingen anonyme brugere kan slette bønner eller stemmer.
+  - Beskyttet `is_verified` kolonnen mod uautoriseret eskalering fra anonyme klienter.
+- **Branded Native App Icons & Splash Screens:**
+  - Genereret 1024x1024 master app-ikon og 2732x2732 splash screens med Espresso Warmth æstetikken (mørkristet `#2C2018`, terracotta `#C26D52` og gylden crema-dråbe) for både iOS og Android.
+- **LocalStorage Hukommelses- og Kvote-Beskyttelse (`storage.ts`):**
+  - Automatisk nedsampling af 10Hz telemetripunkter for ældre historiske shots (>25 shots) ved pladsmangel, så brugerens logbog aldrig korrumperes eller mister overblikket.
+
 ## [1.3.0] - 2026-10-04
 ### Etape 8: Nativ Mobil App (iOS & Android) – TestFlight Pipeline, Skærm WakeLock, Taktil Haptik & Adaptiv OCR
 - **Capacitor v8 Nativ Mobil Container (`ios/` & `android/`):**

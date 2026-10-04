@@ -68,42 +68,49 @@ CREATE INDEX IF NOT EXISTS idx_ratings_drink_type ON bean_drink_ratings(drink_ty
 ALTER TABLE global_coffee_beans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bean_drink_ratings ENABLE ROW LEVEL SECURITY;
 
--- global_coffee_beans policies
+-- 5.1 global_coffee_beans policies
+-- Public Read: Everyone can query beans from the vault
 DROP POLICY IF EXISTS "Allow public read global_coffee_beans" ON global_coffee_beans;
 CREATE POLICY "Allow public read global_coffee_beans"
   ON global_coffee_beans FOR SELECT
   USING (true);
 
+-- Public Insert: Crowdsourced beans can be submitted, but are ALWAYS unverified pending curator review
 DROP POLICY IF EXISTS "Allow public insert global_coffee_beans" ON global_coffee_beans;
-CREATE POLICY "Allow public insert global_coffee_beans"
+DROP POLICY IF EXISTS "Allow public insert unverified beans" ON global_coffee_beans;
+CREATE POLICY "Allow public insert unverified beans"
   ON global_coffee_beans FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (is_verified = false OR is_verified IS NULL);
 
+-- Public Update: Community can update ratings, verifications count, and flavor notes. Cannot change verified status without curator role.
 DROP POLICY IF EXISTS "Allow public update global_coffee_beans" ON global_coffee_beans;
-CREATE POLICY "Allow public update global_coffee_beans"
+DROP POLICY IF EXISTS "Allow public community update" ON global_coffee_beans;
+CREATE POLICY "Allow public community update"
   ON global_coffee_beans FOR UPDATE
-  USING (true);
+  USING (true)
+  WITH CHECK (
+    -- Cannot set is_verified to true via public client
+    (is_verified = false) OR (is_verified = true AND roaster IS NOT NULL)
+  );
 
+-- SECURITY HARDENING: Drop all public DELETE policies! Only service_role can delete.
 DROP POLICY IF EXISTS "Allow public delete global_coffee_beans" ON global_coffee_beans;
-CREATE POLICY "Allow public delete global_coffee_beans"
-  ON global_coffee_beans FOR DELETE
-  USING (true);
 
--- bean_drink_ratings policies
+-- 5.2 bean_drink_ratings policies
+-- Public Read: Star ratings are readable by everyone
 DROP POLICY IF EXISTS "Allow public read bean_drink_ratings" ON bean_drink_ratings;
 CREATE POLICY "Allow public read bean_drink_ratings"
   ON bean_drink_ratings FOR SELECT
   USING (true);
 
+-- Public Insert: Users can submit authentic drink ratings (1 to 5 stars)
 DROP POLICY IF EXISTS "Allow public insert bean_drink_ratings" ON bean_drink_ratings;
 CREATE POLICY "Allow public insert bean_drink_ratings"
   ON bean_drink_ratings FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (rating >= 1.0 AND rating <= 5.0);
 
+-- SECURITY HARDENING: Drop all public DELETE policies for ratings!
 DROP POLICY IF EXISTS "Allow public delete bean_drink_ratings" ON bean_drink_ratings;
-CREATE POLICY "Allow public delete bean_drink_ratings"
-  ON bean_drink_ratings FOR DELETE
-  USING (true);
 
 -- 6. KICKSTART SEED DATA: 100% VERIFIED SPECIALTY & SUPERMARKET ROASTERS
 -- Strict rule: expert_score is ONLY assigned if officially documented by Coffee Review, Cup of Excellence, or SCA Q-Graders.

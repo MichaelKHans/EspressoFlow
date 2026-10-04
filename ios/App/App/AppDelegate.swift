@@ -1,5 +1,28 @@
 import UIKit
 import Capacitor
+@objc(NativeScreenLockPlugin)
+public class NativeScreenLockPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "NativeScreenLockPlugin"
+    public let jsName = "NativeScreenLock"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "keepAwake", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "allowSleep", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func keepAwake(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = true
+            call.resolve(["isKeptAwake": true])
+        }
+    }
+
+    @objc func allowSleep(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = false
+            call.resolve(["isKeptAwake": false])
+        }
+    }
+}
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

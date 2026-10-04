@@ -132,12 +132,33 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setRoiSize(mode);
   };
 
+  const requestOrientationPermission = () => {
+    try {
+      if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
+        (DeviceOrientationEvent as any).requestPermission()
+          .then((state: string) => {
+            if (state === 'granted') {
+              const handleOrientation = (e: DeviceOrientationEvent) => {
+                if (e.beta !== null) setTiltAngle(Math.round(e.beta));
+              };
+              window.addEventListener('deviceorientation', handleOrientation);
+            }
+          })
+          .catch(() => {});
+      }
+    } catch {
+      // Ignored
+    }
+  };
+
   const handleRecenter = () => {
+    requestOrientationPermission();
     roiCenterRef.current = { x: 0.5, y: 0.5 };
     setRoiCenter({ x: 0.5, y: 0.5 });
   };
 
   const handleTapViewfinder = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    requestOrientationPermission();
     if (cameraState !== 'live') return;
     const container = e.currentTarget.getBoundingClientRect();
     let clientX: number, clientY: number;
@@ -276,16 +297,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       }
     };
 
-    // iOS 13+ requires explicit permission request
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      (DeviceOrientationEvent as any).requestPermission()
-        .then((state: string) => {
-          if (state === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation);
-          }
-        })
-        .catch(() => {});
-    } else {
+    // On non-iOS devices, attach orientation listener directly
+    if (typeof (DeviceOrientationEvent as any)?.requestPermission !== 'function') {
       window.addEventListener('deviceorientation', handleOrientation);
     }
 
@@ -502,6 +515,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   }, [isBrewing, targetYield, cameraState, onLivePointsUpdate]);
 
   const handleStartBrewing = () => {
+    requestOrientationPermission();
     Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
     if (cameraState === 'standby') {
       setCameraState('live');
@@ -510,6 +524,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleStartCamera = () => {
+    requestOrientationPermission();
     setCameraError(null);
     setCameraState('live');
   };

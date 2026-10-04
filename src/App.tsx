@@ -485,7 +485,7 @@ export function App() {
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] flex flex-col font-sans">
       {/* Top Header */}
-      <header className="border-b border-[#E8DFD5] bg-[#FAF7F2] sticky top-0 z-40">
+      <header className="border-b border-[#E8DFD5] bg-[#FAF7F2] sticky top-0 z-40 pt-safe">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
           {/* Brand Logo & Title */}
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
@@ -1297,7 +1297,7 @@ export function App() {
       </main>
 
       {/* Footer & Store Compliance Links */}
-      <footer className="border-t border-[#E8DFD5] bg-[#FAF7F2] py-4 text-center text-xs font-mono text-[#7A6E65]">
+      <footer className="border-t border-[#E8DFD5] bg-[#FAF7F2] py-4 pb-safe text-center text-xs font-mono text-[#7A6E65]">
         <div className="max-w-4xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             {t('footer.rights', { year: new Date().getFullYear() })}
@@ -1435,7 +1435,10 @@ export function App() {
 
       {/* Mobile Back Double-Press Exit Toast */}
       {showExitToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018]/95 text-[#FAF7F2] border border-[#C26D52]/40 text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2 pointer-events-none">
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018]/95 text-[#FAF7F2] border border-[#C26D52]/40 text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2 pointer-events-none"
+          style={{ bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))' }}
+        >
           <span className="w-2 h-2 rounded-full bg-[#C26D52] animate-ping" />
           <span>{exitToastMessage}</span>
         </div>

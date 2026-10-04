@@ -777,7 +777,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] font-sans selection:bg-[#C26D52] selection:text-white">
       {/* Admin Header Bar */}
-      <header className="sticky top-0 z-40 bg-[#2C2018] text-[#FAF7F2] border-b border-[#3D2D22] px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-40 bg-[#2C2018] text-[#FAF7F2] border-b border-[#3D2D22] px-4 py-3 sm:px-6 pt-safe">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
