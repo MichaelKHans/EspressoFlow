@@ -11,6 +11,21 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Fuldstændig Udrensning af Fiktive Tal & Mock Data i Hele Appen (v1.2.31)
+- **Fuldstændig Udryddelse af Fiktive Tal i Admin Hub (Tab 1 & 3):**
+  - Fjernet de hårde prototype-tal i `AdminPortal.tsx`:
+    - 7-Day Active Trials: Fjernet fiktive `142` (+18 new users this week). Erstatter med ægte lokal sessionsstatus (`1` på aktiv test-enhed, `0` hvis Pro er aktiveret).
+    - Lifetime Unlocks: Fjernet fiktive `38`. Viser `0 solgt (Pre-launch)` (eller `1 aktiv licens` på test-enhed).
+    - Gross Revenue: Fjernet fiktive `1862 DKK` (~$189.62 USD). Viser ægte `0 DKK ($0.00 USD) (Afventer launch)`.
+    - Conversion Rate: Fjernet fiktive `21.1%` (Specialty coffee app benchmark). Viser ægte `0.0% (Beregnes ved App Store launch)`.
+  - Månedlig Revision i Curator Hub: Fjernet den hårde fiktive startdato `'2026-09-27'`, som fejlagtigt viste "OK (25 d.)". Viser nu korrekt `Ej udført endnu`, indtil kuratoren rent faktisk udfører og logger sin første månedlige revision.
+- **Udrensning af Fiktive Data i Storage (`storage.ts`):**
+  - Fjernet `getSampleShots()`, som automatisk indsatte 2 fiktive espresso-shots (Ethiopia Yirgacheffe & Colombia Pink Bourbon) i logbogen for nye brugere. `loadShots()` returnerer nu en ren, tom liste `[]` for nye brugere, så logbogen udelukkende viser brugerens egne reelle bryg.
+  - Dynamiske Ristedatoer: Fjernet fastlåste statiske ristedatoer (`2026-09-14`, `2026-09-10`, `2026-09-02`) i `getDefaultBeans()`. Erstatter med dynamiske relative ristedatoer (5, 8 og 12 dage siden) og garanterer `rating: 0`.
+- **Sky- og Offline-Data Integritet (`supabase.ts`):**
+  - Nulstillet alle syntetiske `verifications_count` (tidligere 65, 50, 42, 35 osv.) til `1` (enkeltstående initial verifikation).
+  - Fjernet `avg_rating: 4.6, ratings_count: 3` fra offline-prøven `samplePending` i kurator-køen, så den ligeledes starter ved `0.00 / 0 stemmer`.
+
 ### 2026-10-04 -- Ægte Brugerstemmer, Forbedret Stjerneplacering, Sortering & Untappd-stil Butiksvisning (v1.2.30)
 - **Eliminering af Fiktive Rating-Stemmer (Nul Opdigtede Data):**
   - Alle bønner med syntetiske stjerner/stemmer (f.eks. "★ 4.8 (24 stemmer)") i live Supabase databasen, `schema.sql` og offline cachen er nulstillet (`avg_rating: 0.00`, `ratings_count: 0`).

@@ -242,7 +242,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Curator Hub & Periodic Audit State
   const [lastAuditDate, setLastAuditDate] = useState<string>(() => {
-    return localStorage.getItem('espresso_last_curator_audit') || '2026-09-27';
+    return localStorage.getItem('espresso_last_curator_audit') || '';
   });
   const [checklistCompleted, setChecklistCompleted] = useState<Record<string, boolean>>(() => {
     try {
@@ -267,14 +267,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   const getDaysSinceAudit = (dateStr: string): number => {
+    if (!dateStr) return 0;
     const past = new Date(dateStr);
     if (isNaN(past.getTime())) return 0;
     const diff = Date.now() - past.getTime();
     return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
   };
 
-  const daysSinceAudit = getDaysSinceAudit(lastAuditDate);
-  const auditDueInDays = Math.max(0, 30 - daysSinceAudit);
+  const daysSinceAudit = lastAuditDate ? getDaysSinceAudit(lastAuditDate) : null;
+  const auditDueInDays = daysSinceAudit !== null ? Math.max(0, 30 - daysSinceAudit) : null;
 
   // Master Passcode State (persists in localStorage)
   const [masterPin, setMasterPin] = useState<string>(() => {
@@ -548,7 +549,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   }, [isAuthenticated, testConnection, loadCuratorBeans]);
 
-  // Simulated Global Community Telemetry (augmented with local real data)
+  // Local Community Telemetry (100% authentic data, zero simulations)
   const totalStarredBeans = beans.filter((b) => (b.rating || 0) > 0 || b.isFavorite).length;
   const avgLocalRating =
     beans.filter((b) => (b.rating || 0) > 0).length > 0
@@ -560,17 +561,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         ).toFixed(1)
       : '–';
 
-  // Metrics (Simulated real-world trial & paid metrics based on app install)
-  const simulatedTrialUsers = 142;
-  const simulatedPaidUsers = 38;
+  // Real Local & Store Status (Strictly 100% authentic data, zero simulations)
+  const realTrialUsers = accessState.isProLifetime ? 0 : 1;
+  const realPaidUsers = accessState.isProLifetime ? 1 : 0;
   const priceDkk = 49;
   const priceUsd = 4.99;
-  const totalRevenueDkk = simulatedPaidUsers * priceDkk;
-  const totalRevenueUsd = (simulatedPaidUsers * priceUsd).toFixed(2);
-  const conversionRate = (
-    (simulatedPaidUsers / (simulatedTrialUsers + simulatedPaidUsers)) *
-    100
-  ).toFixed(1);
+  const totalRevenueDkk = realPaidUsers * priceDkk;
+  const totalRevenueUsd = (realPaidUsers * priceUsd).toFixed(2);
+  const conversionRate = realPaidUsers > 0 ? '100.0' : '0.0';
 
   // Handle PIN unlock
   const handleUnlock = (e?: React.FormEvent) => {
@@ -902,10 +900,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <Users className="w-4 h-4 text-[#C26D52]" />
                 </div>
                 <div className="text-2xl font-bold text-[#2C2018]">
-                  {simulatedTrialUsers}
+                  {realTrialUsers}
                 </div>
-                <div className="text-[10px] text-[#72806B] font-semibold">
-                  +18 new users this week
+                <div className="text-[10px] text-[#7A6E65] font-semibold">
+                  {accessState.isProLifetime ? 'Konverteret på enhed' : `${accessState.daysRemainingInTrial}d tilbage på enhed`}
                 </div>
               </div>
 
@@ -916,10 +914,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <ShieldCheck className="w-4 h-4 text-[#72806B]" />
                 </div>
                 <div className="text-2xl font-bold text-[#2C2018]">
-                  {simulatedPaidUsers}
+                  {realPaidUsers}
                 </div>
                 <div className="text-[10px] text-[#72806B] font-semibold">
-                  $4.99 / 49,- DKK per unlock
+                  {realPaidUsers > 0 ? '1 aktiv licens' : '0 solgt (Pre-launch)'}
                 </div>
               </div>
 
@@ -933,7 +931,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   {totalRevenueDkk} DKK
                 </div>
                 <div className="text-[10px] text-[#7A6E65]">
-                  ~${totalRevenueUsd} USD via RevenueCat
+                  {realPaidUsers > 0 ? `~$${totalRevenueUsd} USD via RevenueCat` : '$0.00 USD (Afventer launch)'}
                 </div>
               </div>
 
@@ -946,8 +944,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="text-2xl font-bold text-[#2C2018]">
                   {conversionRate}%
                 </div>
-                <div className="text-[10px] text-[#72806B] font-semibold">
-                  Specialty coffee app benchmark
+                <div className="text-[10px] text-[#7A6E65] font-semibold">
+                  {realPaidUsers > 0 ? 'Lokal Pro status' : 'Beregnes ved App Store launch'}
                 </div>
               </div>
             </div>
@@ -1232,8 +1230,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <span className="text-[9.5px] uppercase font-bold text-[#7A6E65] block">
                       Månedlig Revision:
                     </span>
-                    <span className="text-xs font-bold text-[#72806B]">
-                      {daysSinceAudit <= 30 ? `OK (${auditDueInDays} d.)` : 'Due nu'}
+                    <span className={`text-xs font-bold ${lastAuditDate && daysSinceAudit !== null ? (daysSinceAudit <= 30 ? 'text-[#72806B]' : 'text-amber-600') : 'text-[#7A6E65]'}`}>
+                      {lastAuditDate && daysSinceAudit !== null ? (daysSinceAudit <= 30 ? `OK (${auditDueInDays} d.)` : 'Forfalden') : 'Ej udført endnu'}
                     </span>
                   </div>
                 </div>

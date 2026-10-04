@@ -68,7 +68,7 @@ export function saveProStatus(isPro: boolean): void {
 export function loadShots(): ShotRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SHOTS);
-    if (!raw) return getSampleShots();
+    if (!raw) return [];
     const parsed = JSON.parse(raw) as ShotRecord[];
     // Ensure backwards compatibility with older stored records
     return parsed.map((s) => ({
@@ -82,7 +82,7 @@ export function loadShots(): ShotRecord[] {
       channelingDetected: s.channelingDetected ?? false,
     }));
   } catch {
-    return getSampleShots();
+    return [];
   }
 }
 
@@ -113,63 +113,6 @@ export function deleteShot(shotId: string): ShotRecord[] {
     console.error('Failed to delete shot record', err);
     return [];
   }
-}
-
-function getSampleShots(): ShotRecord[] {
-  return [
-    {
-      id: 'shot-sample-1',
-      timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-      coffeeName: 'Ethiopia Yirgacheffe (Washed)',
-      roaster: 'Nomad Coffee',
-      roastDate: '2026-09-14',
-      doseGrams: 18.0,
-      targetYieldGrams: 36.0,
-      actualYieldGrams: 36.4,
-      totalTimeSeconds: 29.2,
-      preInfusionSeconds: 5.5,
-      flowTimeSeconds: 23.7,
-      averageFlowGps: 1.25,
-      peakFlowGps: 1.6,
-      channeling: { detected: false, severity: 'none' },
-      channelingDetected: false,
-      grinderName: 'Eureka Mignon Specialita 16CR',
-      grindSetting: '1.4',
-      machineName: 'Sage Dual Boiler',
-      tasteRating: 'balanced',
-      notes: 'Silky mouthfeel, bright bergamot and jasmine notes.',
-      dataPoints: [],
-    },
-    {
-      id: 'shot-sample-2',
-      timestamp: new Date(Date.now() - 86400000).toISOString(),
-      coffeeName: 'Colombia Huila Pink Bourbon',
-      roaster: 'La Cabra',
-      roastDate: '2026-09-10',
-      doseGrams: 18.5,
-      targetYieldGrams: 38.0,
-      actualYieldGrams: 39.1,
-      totalTimeSeconds: 22.8,
-      preInfusionSeconds: 4.0,
-      flowTimeSeconds: 18.8,
-      averageFlowGps: 1.71,
-      peakFlowGps: 3.4,
-      channeling: {
-        detected: true,
-        severity: 'severe',
-        timestampSeconds: 14.5,
-        flowSpikeGps: 3.4,
-        message: 'Severe channeling spike (3.4 g/s at 14.5s). Water broke through puck.',
-      },
-      channelingDetected: true,
-      grinderName: 'DF64 Gen 2 (Single Dose)',
-      grindSetting: '14.0',
-      machineName: 'E61 Manual Flow Control',
-      tasteRating: 'sour',
-      notes: 'Mid-shot channeling spike. Needs finer grind and more thorough WDT puck prep.',
-      dataPoints: [],
-    },
-  ];
 }
 
 export function resolveGrinder(name: string | undefined, grinders: GrinderProfile[]): GrinderProfile | undefined {
@@ -220,12 +163,17 @@ export function saveBeans(beans: CoffeeBeanProfile[]): void {
 }
 
 export function getDefaultBeans(): CoffeeBeanProfile[] {
+  const getRoastDateAgo = (days: number) => {
+    const d = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    return d.toISOString().split('T')[0];
+  };
+
   return [
     {
       id: 'bean-ethiopia',
       name: 'Ethiopia Yirgacheffe (Washed)',
       roaster: 'Nomad Coffee',
-      roastDate: '2026-09-14',
+      roastDate: getRoastDateAgo(5),
       roastLevel: 'light',
       doseGrams: 18.0,
       ratioStyle: 'lungo',
@@ -234,12 +182,13 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       grinderName: 'Eureka Mignon Specialita 16CR',
       brewTempC: 94,
       notes: 'Floral jasmine, bergamot, peach sweetness.',
+      rating: 0,
     },
     {
       id: 'bean-colombia',
       name: 'Colombia Huila Pink Bourbon',
       roaster: 'La Cabra',
-      roastDate: '2026-09-10',
+      roastDate: getRoastDateAgo(8),
       roastLevel: 'medium',
       doseGrams: 18.0,
       ratioStyle: 'standard',
@@ -248,12 +197,13 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       grinderName: 'DF64 Gen 2 (Single Dose)',
       brewTempC: 93,
       notes: 'Juicy red apple, cane sugar, creamy chocolate body.',
+      rating: 0,
     },
     {
       id: 'bean-napoli',
       name: 'Napoli Dark Velvet Espresso',
       roaster: 'Caffè Vergnano',
-      roastDate: '2026-09-02',
+      roastDate: getRoastDateAgo(12),
       roastLevel: 'dark',
       doseGrams: 18.0,
       ratioStyle: 'ristretto',
@@ -262,6 +212,7 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       grinderName: 'Eureka Mignon Specialita 16CR',
       brewTempC: 89,
       notes: 'Dark cacao, toasted hazelnuts, thick crema syrup.',
+      rating: 0,
     },
   ];
 }

@@ -1,7 +1,7 @@
 # 🗺️ ESPRESSO FLOW – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.2.30  
+> **Gældende version:** v1.2.31  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Espresso Flow. Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---

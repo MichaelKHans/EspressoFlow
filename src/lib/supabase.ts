@@ -472,7 +472,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Mørk Chokolade', 'Ristede Nødder', 'Karamel'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 14,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -487,7 +487,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Mørk Chokolade', 'Krydderier', 'Fløjlsblød Crema'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 65,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -502,7 +502,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Blackcurrant', 'Rhubarb', 'Sugarcane'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 18,
+      verifications_count: 1,
       is_verified: true,
       expert_score: 94.0,
       expert_source: 'Coffee Review',
@@ -519,7 +519,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Jasmine', 'White Peach', 'Bergamot'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 22,
+      verifications_count: 1,
       is_verified: true,
       expert_score: 95.0,
       expert_source: 'Coffee Review',
@@ -536,7 +536,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Milk Chocolate', 'Roasted Nuts', 'Toffee'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 35,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -551,7 +551,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Dark Cacao', 'Brown Sugar', 'Dense Crema'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 14,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -566,7 +566,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Sweet Hazelnut', 'Caramel'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 20,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -581,7 +581,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Spiced Wood', 'Bitter Chocolate', 'Dense Body'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 12,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -596,7 +596,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Caramel', 'Orange Blossom', 'Jasmine'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 50,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -611,7 +611,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Dark Cocoa', 'Dried Figs', 'Toasted Bread'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 29,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -626,7 +626,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Floral Aromas', 'Malt', 'Honey'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 42,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -641,7 +641,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Dark Chocolate', 'Spiced Cedar', 'Velvety Body'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 25,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -656,7 +656,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Hazelnut', 'Brown Sugar', 'Almonds'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 61,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -671,7 +671,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Molasses', 'Caramelized Sugar', 'Smoky Cocoa'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 30,
+      verifications_count: 1,
       is_verified: true,
     },
     {
@@ -686,7 +686,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       flavor_notes: ['Bright Citrus', 'Sweet Candied Lemon'],
       avg_rating: 0,
       ratings_count: 0,
-      verifications_count: 27,
+      verifications_count: 1,
       is_verified: true,
     },
   ];
@@ -724,9 +724,9 @@ export async function fetchAllCuratorBeans(): Promise<GlobalCoffeeBean[]> {
     purchase_country: 'DK',
     suitable_for: ['all_rounder', 'pure_espresso'],
     flavor_notes: ['Mørk Chokolade', 'Ristede Nødder'],
-    avg_rating: 4.6,
-    ratings_count: 3,
-    verifications_count: 2,
+    avg_rating: 0,
+    ratings_count: 0,
+    verifications_count: 1,
     is_verified: false, // Pending curator review!
     created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
   };
