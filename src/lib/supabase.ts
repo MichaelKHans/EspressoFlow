@@ -622,3 +622,161 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
     },
   ];
 }
+
+/**
+ * Fetch all beans for the Admin Curator Desk (both unverified pending & verified)
+ */
+export async function fetchAllCuratorBeans(): Promise<GlobalCoffeeBean[]> {
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const { data, error } = await client
+        .from('global_coffee_beans')
+        .select('*')
+        .order('is_verified', { ascending: true }) // unverified first
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        return data as GlobalCoffeeBean[];
+      }
+    } catch (err) {
+      console.warn('[Admin Curator] Fetch failed, falling back to local dataset:', err);
+    }
+  }
+
+  // Include verified beans plus a pending crowdsourced sample for offline testing
+  const allVerified = await fetchAllGlobalBeans();
+  const samplePending: GlobalCoffeeBean = {
+    barcode: '5701000123456',
+    name: 'Økologisk Mellemristet Hele Bønner',
+    roaster: 'Peter Larsen Kaffe',
+    roast_level: 'medium',
+    origin_country: 'Peru & Honduras',
+    purchase_country: 'DK',
+    suitable_for: ['all_rounder', 'pure_espresso'],
+    flavor_notes: ['Mørk Chokolade', 'Ristede Nødder'],
+    avg_rating: 4.6,
+    ratings_count: 3,
+    verifications_count: 2,
+    is_verified: false, // Pending curator review!
+    created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+  };
+
+  return [samplePending, ...allVerified];
+}
+
+/**
+ * Admin action: Verify or update an existing global coffee bean
+ */
+export async function adminVerifyGlobalBean(
+  barcode: string,
+  updates?: Partial<GlobalCoffeeBean>
+): Promise<{ success: boolean; data?: GlobalCoffeeBean; error?: string }> {
+  const cleanBarcode = barcode.trim();
+  const client = getSupabaseClient();
+
+  const payload: Partial<GlobalCoffeeBean> = {
+    ...updates,
+    is_verified: true,
+  };
+
+  // Update in local cache
+  const cached = localBeanCache.get(cleanBarcode);
+  if (cached) {
+    const merged = { ...cached, ...payload };
+    localBeanCache.set(cleanBarcode, merged);
+  }
+
+  if (!client) {
+    return { success: true };
+  }
+
+  try {
+    const { data, error } = await client
+      .from('global_coffee_beans')
+      .update(payload)
+      .eq('barcode', cleanBarcode)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data as GlobalCoffeeBean };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Admin action: Delete or reject an unverified/duplicate global coffee bean
+ */
+export async function adminDeleteGlobalBean(
+  barcode: string
+): Promise<{ success: boolean; error?: string }> {
+  const cleanBarcode = barcode.trim();
+  localBeanCache.delete(cleanBarcode);
+
+  const client = getSupabaseClient();
+  if (!client) return { success: true };
+
+  try {
+    const { error } = await client
+      .from('global_coffee_beans')
+      .delete()
+      .eq('barcode', cleanBarcode);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Admin action: Create a brand new verified bean in the central vault
+ */
+export async function adminCreateGlobalBean(
+  bean: GlobalCoffeeBean
+): Promise<{ success: boolean; data?: GlobalCoffeeBean; error?: string }> {
+  const cleanBarcode = bean.barcode.trim();
+  const beanToInsert: GlobalCoffeeBean = {
+    ...bean,
+    barcode: cleanBarcode,
+    is_verified: true,
+    verifications_count: Math.max(1, bean.verifications_count || 1),
+    avg_rating: bean.avg_rating || 5.0,
+    ratings_count: bean.ratings_count || 1,
+  };
+
+  localBeanCache.set(cleanBarcode, beanToInsert);
+
+  const client = getSupabaseClient();
+  if (!client) {
+    return { success: true, data: beanToInsert };
+  }
+
+  try {
+    const { data, error } = await client
+      .from('global_coffee_beans')
+      .upsert(beanToInsert, { onConflict: 'barcode' })
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data as GlobalCoffeeBean };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  }
+}
+

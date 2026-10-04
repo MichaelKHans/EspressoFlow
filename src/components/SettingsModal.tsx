@@ -217,8 +217,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Section 4: Version & Legal Compliance Links */}
         <div className="p-3 sm:p-3.5 rounded-xl bg-white border border-[#E8DFD5] flex items-center justify-between text-[11px] font-mono text-[#7A6E65] flex-wrap gap-2">
-          <div>
-            <span className="font-bold text-[#2C2018]">Espresso Flow</span> v1.2.25
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[#2C2018]">Espresso Flow</span> v1.2.29
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                window.location.hash = 'admin';
+              }}
+              className="px-2 py-0.5 rounded-md bg-[#FAF7F2] hover:bg-[#2C2018] hover:text-[#FAF7F2] text-[#7A6E65] border border-[#E8DFD5] transition flex items-center gap-1 text-[10px] cursor-pointer"
+              title="Open Admin Coffee Curator Studio"
+            >
+              <ShieldCheck className="w-3 h-3 text-[#C26D52]" />
+              <span>Curator Studio</span>
+            </button>
           </div>
           <div className="flex items-center gap-2.5">
             <button

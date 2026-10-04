@@ -11,6 +11,23 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Admin Coffee Curator Studio: Central Godkendelsespult, SCA Cupping Scores & Sky-Kvalitetssikring (v1.2.29)
+- **Admin Coffee Curator Studio & Godkendelsespult (`AdminPortal.tsx` Tab 3):**
+  - Live godkendelseskø for kaffer indsendt af brugere eller scannet via Vision OCR (`is_verified: false` vs `is_verified: true`).
+  - Lynhurtig 1-klik **[✓ Godkend]** knap til øjeblikkelig verificering i Supabase Cloud Vault og lokal cache.
+  - **[✏️ Rediger & Poler]** editor: Kuratoren kan berige kaffen med officielle SCA Cupping Scores (0–100 PTS), kildekreditering (f.eks. *SCA Q-Grader, Coffee Review, Cup of Excellence, WBC*), Vivino sensoriske smagsnoter (`POPULAR_FLAVOR_TAGS`), bryg-egnethed (Espresso, Cortado, Latte, Flat White) og officielle posefotos med offline komprimering.
+  - **[🗑️ Slet / Afvis]** knap til fjernelse af dubletter, spam eller fejlagtigt indtastede kaffer.
+  - **[➕ Opret Ny Verificeret Kaffe]** formular til direkte oprettelse af officielle reference-bønner i den centrale sky-hvælving.
+  - **Periodisk Kurator Tjekliste & Audit Kalender:** Struktureret revisions-flow med tjekpunkter for månedlige CoE auktionslots, Coffee Review 90+ cuppings, Open Food Facts synkronisering og WBC vinderprofiler inkl. "Sidste revision udført"-stempel.
+- **Backend API til Kurator-Styring (`src/lib/supabase.ts`):**
+  - Implementeret `fetchAllCuratorBeans()`, `adminVerifyGlobalBean()`, `adminDeleteGlobalBean()` og `adminCreateGlobalBean()`.
+  - Offline fallback med realistiske demodata (herunder uverificerede bønner som afventer godkendelse) for problemfri afprøvning i alle netværkstilstande.
+- **Diskret & Hurtig Adgang (`SettingsModal.tsx` & `BeandexView.tsx`):**
+  - Tilføjet diskret `[ 🛡️ Curator Studio ]` knap i indstillingsmodalens bund og `[ 🛡️ Curator ]` chip i Beandex-banneret, der aktiverer `#admin` routeren uden reload.
+  - Sikkerhedsbeskyttet med PIN/Passcode (fabriksstandard: `9246`).
+
+---
+
 ### 2026-10-04 -- Vivino-Style Beandex: Fuzzy Autocomplete, Sensoriske Smagsnoter, Posefotos & Central Vault Kvalitetsværn (v1.2.28)
 - **Vivino-Inspireret Bønnekatalog & Autocomplete Motor (`beanCatalogMatcher.ts`):**
   - Kurateret specialty coffee vidensbase med verificerede nordiske og internationale risterier (Hedekaffe, Coffee Collective, La Cabra, Lavazza, Illy, Peter Larsen, BKI, April, Prolog, Tim Wendelboe m.fl.).

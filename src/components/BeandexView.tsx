@@ -21,6 +21,7 @@ import {
   X,
   Tag,
   AlertCircle,
+  ShieldCheck,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, GrinderProfile, RoastLevel } from '../types/espresso';
 import { fetchAllGlobalBeans, type GlobalCoffeeBean } from '../lib/supabase';
@@ -390,6 +391,17 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             >
               <Globe className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{t('beandex.explore_global_btn')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.hash = 'admin';
+              }}
+              className="px-2.5 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15]/80 hover:bg-[#38271C] text-[#A6998E] hover:text-[#FAF7F2] font-mono text-[11px] flex items-center gap-1.5 transition cursor-pointer"
+              title="Admin Curator Studio (SCA Cupping & Verificering)"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#C26D52]" />
+              <span className="hidden md:inline">Curator</span>
             </button>
           </div>
         </div>

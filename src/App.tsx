@@ -470,6 +470,9 @@ export function App() {
     return (
       <AdminPortal
         onBack={() => {
+          if (window.location.hash) {
+            window.location.hash = '';
+          }
           window.history.pushState(null, '', '/');
           setIsAdminRoute(false);
         }}
