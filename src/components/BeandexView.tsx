@@ -12,10 +12,16 @@ import {
   Search,
   Calendar,
   ArrowRight,
+  Info,
+  PackageOpen,
+  Edit3,
+  Save,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, GrinderProfile, RoastLevel } from '../types/espresso';
 import { fetchAllGlobalBeans, type GlobalCoffeeBean } from '../lib/supabase';
 import { resolveGrinder } from '../lib/storage';
+import { calculateBeanFreshness } from '../lib/espressoMath';
+import { FreshnessInfoModal } from './FreshnessInfoModal';
 import { useTranslation } from '../i18n';
 
 export interface BeandexViewProps {
@@ -62,8 +68,17 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   const [newBagRoastDate, setNewBagRoastDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [newBagDateOpened, setNewBagDateOpened] = useState<string>('');
   const [newBagNotes, setNewBagNotes] = useState<string>('');
   const [newBagGrinderName, setNewBagGrinderName] = useState<string>(activeGrinderName);
+
+  // Freshness & Degas Info Modal state
+  const [isFreshnessInfoOpen, setIsFreshnessInfoOpen] = useState<boolean>(false);
+  const [selectedFreshnessRoast, setSelectedFreshnessRoast] = useState<RoastLevel>('medium');
+
+  // Inline notes editor state
+  const [editingNotesBeanId, setEditingNotesBeanId] = useState<string | null>(null);
+  const [tempNotes, setTempNotes] = useState<string>('');
 
   // Global cloud beans state
   const [globalBeans, setGlobalBeans] = useState<GlobalCoffeeBean[]>([]);
@@ -135,6 +150,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
       roaster: newBagRoaster.trim() || undefined,
       roastLevel: newBagRoastLevel,
       roastDate: newBagRoastDate,
+      dateOpened: newBagDateOpened ? newBagDateOpened : undefined,
       doseGrams: 18,
       targetYieldGrams: 36,
       ratioStyle: 'standard',
@@ -147,6 +163,9 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
 
     setNewBagName('');
     setNewBagRoaster('');
+    setNewBagRoastLevel('medium');
+    setNewBagRoastDate(new Date().toISOString().split('T')[0]);
+    setNewBagDateOpened('');
     setNewBagNotes('');
     setIsAddingCustomBag(false);
   };
@@ -314,6 +333,17 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
               />
             </div>
+            <div>
+              <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
+                {t('beandex.opened_date_label')} (Optional)
+              </label>
+              <input
+                type="date"
+                value={newBagDateOpened}
+                onChange={(e) => setNewBagDateOpened(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+              />
+            </div>
             <div className="sm:col-span-2">
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
                 Assigned Grinder
@@ -440,8 +470,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredBags.map((bean) => {
               const isActiveInFlow = bean.id === activeBeanId;
-              const roastDate = new Date(bean.roastDate);
-              const daysOff = Math.max(0, Math.floor((Date.now() - roastDate.getTime()) / (1000 * 60 * 60 * 24)));
+              const freshness = calculateBeanFreshness(bean.roastDate, bean.roastLevel, bean.dateOpened);
               const rating = bean.rating || 0;
               const beanGrinder = resolveGrinder(bean.grinderName, grinders);
 
@@ -530,11 +559,34 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       )}
                     </div>
 
-                    {/* Freshness & Grinder info */}
+                    {/* Freshness & Degas Status Badge */}
+                    <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                      <div
+                        className={`px-2 py-0.5 rounded-full border text-[9.5px] font-mono font-bold flex items-center gap-1.5 ${freshness.badgeClasses}`}
+                        title={freshness.baristaTip}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${freshness.dotColor}`} />
+                        <span>{freshness.summary}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFreshnessRoast(bean.roastLevel);
+                          setIsFreshnessInfoOpen(true);
+                        }}
+                        className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] text-[#7A6E65] hover:text-[#C26D52] flex items-center justify-center transition cursor-pointer"
+                        title={t('beandex.info_degas_button')}
+                      >
+                        <Info className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    {/* Freshness Days Off Roast & Grinder info */}
                     <div className="flex items-center justify-between text-[10px] text-[#7A6E65] pt-0.5">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3 text-[#A6998E]" />
-                        <span>{t('beandex.days_off_roast', { days: daysOff })}</span>
+                        <span>{t('beandex.days_off_roast', { days: freshness.daysOffRoast })}</span>
                       </span>
 
                       <span className="font-mono bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.5 rounded text-[10px] inline-flex items-center gap-1">
@@ -545,12 +597,106 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       </span>
                     </div>
 
-                    {/* Tasting notes */}
-                    {bean.notes && (
-                      <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/60 text-[10px] text-[#7A6E65] font-sans italic line-clamp-2">
-                        "{bean.notes}"
-                      </div>
-                    )}
+                    {/* Bag Opened Status Row */}
+                    <div className="flex items-center justify-between text-[10px] pt-0.5">
+                      {bean.dateOpened ? (
+                        <div className="flex items-center gap-1 text-[10px] text-stone-700 bg-stone-100/80 border border-stone-200 px-2 py-0.5 rounded-lg w-full justify-between">
+                          <span className="flex items-center gap-1">
+                            <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" />
+                            <span>{t('beandex.opened_status', { days: freshness.daysOpened ?? 0 })}</span>
+                            <span className="text-[#A6998E]">({bean.dateOpened})</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newDate = prompt(t('beandex.opened_date_label'), bean.dateOpened);
+                              if (newDate !== null) {
+                                onUpdateBean(bean.id, { dateOpened: newDate.trim() || undefined });
+                              }
+                            }}
+                            className="text-[9px] font-bold text-[#C26D52] hover:underline cursor-pointer"
+                          >
+                            {t('beandex.edit_opened_date')}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateBean(bean.id, {
+                              dateOpened: new Date().toISOString().split('T')[0],
+                            })
+                          }
+                          className="text-[10px] font-bold text-[#7A6E65] hover:text-[#C26D52] flex items-center gap-1 py-0.5 px-1.5 rounded-md hover:bg-[#FAF7F2] transition cursor-pointer"
+                          title="Click when you break the bag seal"
+                        >
+                          <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" />
+                          <span>{t('beandex.mark_opened_today')}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Barista Tasting Notes (Inline Editable) */}
+                    <div className="pt-1">
+                      {editingNotesBeanId === bean.id ? (
+                        <div className="space-y-1.5 bg-[#FAF7F2] p-2.5 rounded-xl border border-[#C26D52]/50 animate-fadeIn">
+                          <div className="flex items-center justify-between text-[10px] font-mono text-[#7A6E65]">
+                            <span className="font-bold text-[#2C2018] uppercase flex items-center gap-1">
+                              <Edit3 className="w-3 h-3 text-[#C26D52]" /> {t('beandex.personal_notes_title')}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setEditingNotesBeanId(null)}
+                              className="text-[#7A6E65] hover:text-[#2C2018] text-[9.5px]"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                          <textarea
+                            value={tempNotes}
+                            onChange={(e) => setTempNotes(e.target.value)}
+                            placeholder={t('beandex.notes_placeholder')}
+                            rows={2}
+                            className="w-full p-2 text-[11px] font-sans rounded-lg border border-[#E8DFD5] bg-white focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                          />
+                          <div className="flex justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onUpdateBean(bean.id, { notes: tempNotes.trim() });
+                                setEditingNotesBeanId(null);
+                              }}
+                              className="px-3 py-1 rounded-lg bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-[10px] font-bold font-mono transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <Save className="w-3 h-3" />
+                              <span>{t('beandex.save_notes')}</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => {
+                            setEditingNotesBeanId(bean.id);
+                            setTempNotes(bean.notes || '');
+                          }}
+                          className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70 hover:border-[#C26D52]/50 transition cursor-pointer group flex items-start justify-between gap-1.5"
+                          title="Tap to add or edit notes"
+                        >
+                          <div className="min-w-0 flex-1">
+                            {bean.notes ? (
+                              <p className="text-[10.5px] text-[#7A6E65] font-sans italic line-clamp-2 leading-snug">
+                                "{bean.notes}"
+                              </p>
+                            ) : (
+                              <p className="text-[10px] text-[#A6998E] font-sans flex items-center gap-1">
+                                <span>{t('beandex.no_notes')}</span>
+                              </p>
+                            )}
+                          </div>
+                          <Edit3 className="w-3 h-3 text-[#A6998E] group-hover:text-[#C26D52] shrink-0 transition mt-0.5" />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Card Footer: 1-5 Star Rating & Dial-In Studio Action */}
@@ -718,6 +864,13 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Freshness & Degas Info Modal */}
+      <FreshnessInfoModal
+        isOpen={isFreshnessInfoOpen}
+        onClose={() => setIsFreshnessInfoOpen(false)}
+        activeRoastLevel={selectedFreshnessRoast}
+      />
     </div>
   );
 };

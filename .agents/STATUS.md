@@ -11,6 +11,33 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Beandex Udvidelser: Afgasning & Friskhedsvindue (Degas), Åbningsdato & Personlige Barista-Noter (v1.2.26)
+- **Kaffens Friskhed & Afgasningsmotor (`calculateBeanFreshness`):**
+  - Matematisk model for specialty coffee ekstraktionsfysik baseret på ristningsgrad og tid:
+    - **Afgasningsfase (Degassing 💨):** Lysristet (0–7 dage), Mellemristet (0–5 dage), Mørkristet (0–3 dage). Advarer om brusende $\text{CO}_2$, der modvirker jævn mætning af pucken og forårsager sur kanalisering (channeling).
+    - **Guldvinduet (Optimal Peak Window ✨):** Fra afsluttet afgasning op til 21–35 dage. Maksimal aromastabilitet, karamelsødme og optimal cremaelasticitet.
+    - **Modnet Fase (Past Peak ⏳):** Delikate blomster- og frugtnoter flader gradvist ud; appen vejleder til 0.5–1.0 trin finere kværn og 1°C varmere vand for at kompensere.
+    - **Oxideret / Ældre (Stale):** Kaffeolierne er nedbrudt; anbefaler mælkedrikke eller korte ristretto-skud.
+- **Interaktiv Friskheds- & Afgasningsguide (`FreshnessInfoModal`):**
+  - Taktil `ℹ️` infoknap ved siden af friskhedsbadget på ethvert bønnekort i Beandex.
+  - Giver baristaen dybdegående visuel forklaring af $\text{CO}_2$ ekstraktionsfysik, envejsventiler, hvorfor espresso aldrig må brygges straks efter ristning, og korrekte opbevaringsprincipper (altid mørkt, tørt og aldrig i køleskab).
+- **Åbningsdato (`dateOpened`) & Iltningsadvarsel:**
+  - 1-tryks **`[ 📦 Marker Åbnet i Dag ]`** knap direkte på bønnekortet.
+  - Automatisk overvågning af brudt forsegling (viser f.eks. `Åbnet for 6d siden (2026-09-28)`).
+  - Tydelig iltningsadvarsel, hvis posen har været åbnet i mere end 3 uger (`> 21 dage`), da ilt nedbryder de aromatiske kaffeolier.
+  - Redigering af åbningsdato via 1-klik prompt.
+  - Tilføjet valgfrit `Date Opened` felt i "Add Custom Specialty Bean" formularen.
+- **Inline Barista Tasting Notes:**
+  - Hvert bønnekort i Beandex har nu et direkte redigerbart smags- og opskriftsnotefelt.
+  - Baristaen kan let dokumentere smagsindtryk og specifikke bønneerfaringer (fx *"Købt hos La Cabra – fantastisk til Cortado ved 18.5g og 94°C"*).
+  - Gemmes øjeblikkeligt i `localStorage` med taktil feedback.
+- **Gear-fane Synkronisering:**
+  - Den aktive bønne på kaffebaren i Gear-fanen viser nu også live friskhedsstatus og dage siden åbning.
+- **i18n Global-First:**
+  - Samtlige nye tekster og forklaringer implementeret i `en.ts` og `da.ts`.
+
+---
+
 ### 2026-10-04 -- Bryggetemperatur (°C / °F Switcher), Settings ⚙️ Modal, Gear PID Overblik & Dial-In Måltemperatur (v1.2.25)
 - **Settings ⚙️ Modal & Taktil Temperaturskala (°C / °F):**
   - Ny dedikeret `SettingsModal` tilgængelig via tandhjul-knap ⚙️ i øverste header.

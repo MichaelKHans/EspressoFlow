@@ -29,6 +29,7 @@ export interface CoffeeBeanProfile {
   grindSetting: string;
   grinderName: string;
   brewTempC?: number; // Target brew temperature in Celsius (e.g. 93)
+  dateOpened?: string; // ISO date string (YYYY-MM-DD) when the bag was unsealed
   notes?: string;
   barcode?: string;
   rating?: number; // 1 to 5 stars

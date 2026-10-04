@@ -366,3 +366,123 @@ export function getRecommendedBrewTemp(roastLevel?: RoastLevel): number {
   }
 }
 
+export type FreshnessPhase = 'degassing' | 'peak' | 'past_peak' | 'stale';
+
+export interface BeanFreshnessStatus {
+  daysOffRoast: number;
+  daysOpened?: number;
+  phase: FreshnessPhase;
+  labelKey: string;
+  badgeClasses: string;
+  dotColor: string;
+  degasDaysMin: number;
+  degasDaysMax: number;
+  peakDaysMax: number;
+  summary: string;
+  baristaTip: string;
+  isOpenedWarning: boolean;
+}
+
+/**
+ * Calculates specialty coffee freshness, CO₂ degassing phase, and peak extraction window.
+ * - Light roasts require 7-10 days of degassing due to dense cell structures.
+ * - Dark roasts degas faster (3-5 days) but oxidize quicker once unsealed.
+ */
+export function calculateBeanFreshness(
+  roastDateStr: string,
+  roastLevel: RoastLevel = 'medium',
+  dateOpenedStr?: string
+): BeanFreshnessStatus {
+  const roastTime = new Date(roastDateStr).getTime();
+  const now = Date.now();
+  const daysOffRoast = isNaN(roastTime)
+    ? 0
+    : Math.max(0, Math.floor((now - roastTime) / (1000 * 60 * 60 * 24)));
+
+  let daysOpened: number | undefined = undefined;
+  if (dateOpenedStr) {
+    const openedTime = new Date(dateOpenedStr).getTime();
+    if (!isNaN(openedTime)) {
+      daysOpened = Math.max(0, Math.floor((now - openedTime) / (1000 * 60 * 60 * 24)));
+    }
+  }
+
+  let degasDaysMin = 5;
+  let degasDaysMax = 8;
+  let peakDaysMax = 30;
+
+  if (roastLevel === 'light') {
+    degasDaysMin = 7;
+    degasDaysMax = 10;
+    peakDaysMax = 35;
+  } else if (roastLevel === 'medium') {
+    degasDaysMin = 5;
+    degasDaysMax = 7;
+    peakDaysMax = 28;
+  } else if (roastLevel === 'medium-dark') {
+    degasDaysMin = 4;
+    degasDaysMax = 6;
+    peakDaysMax = 25;
+  } else if (roastLevel === 'dark') {
+    degasDaysMin = 3;
+    degasDaysMax = 5;
+    peakDaysMax = 21;
+  }
+
+  const isOpenedWarning = daysOpened !== undefined && daysOpened > 21;
+
+  let phase: FreshnessPhase = 'peak';
+  let labelKey = 'freshness.peak';
+  let badgeClasses = 'bg-[#72806B]/15 text-[#54624F] border-[#72806B]/30';
+  let dotColor = 'bg-[#72806B]';
+  let summary = 'Optimal Flavor Peak';
+  let baristaTip = 'Peak flavor clarity and caramelized sugars. Optimal stability for espresso.';
+
+  if (daysOffRoast < degasDaysMin) {
+    phase = 'degassing';
+    labelKey = 'freshness.degassing';
+    badgeClasses = 'bg-amber-500/15 text-amber-900 border-amber-500/40';
+    dotColor = 'bg-amber-600 animate-pulse';
+    summary = 'Actively Degassing (CO₂)';
+    const remaining = Math.max(1, degasDaysMin - daysOffRoast);
+    baristaTip = `High internal carbon dioxide causes bubbly crema and channeling. Rest for ${remaining} more ${remaining === 1 ? 'day' : 'days'} for sweetest extraction.`;
+  } else if (daysOffRoast <= peakDaysMax) {
+    phase = 'peak';
+    labelKey = 'freshness.peak';
+    badgeClasses = 'bg-[#72806B]/15 text-[#54624F] border-[#72806B]/30';
+    dotColor = 'bg-[#72806B]';
+    summary = 'Optimal Flavor Peak';
+    baristaTip = 'The golden window! Aromatics are stable and crema elasticity is at its peak.';
+  } else if (daysOffRoast <= peakDaysMax + 25) {
+    phase = 'past_peak';
+    labelKey = 'freshness.past_peak';
+    badgeClasses = 'bg-stone-500/15 text-stone-700 border-stone-400/40';
+    dotColor = 'bg-stone-500';
+    summary = 'Past Peak (Mellowing)';
+    baristaTip = 'Volatile top notes have softened. Grind slightly finer and increase brew temp by 1°C to boost extraction.';
+  } else {
+    phase = 'stale';
+    labelKey = 'freshness.stale';
+    badgeClasses = 'bg-neutral-500/15 text-neutral-600 border-neutral-400/40';
+    dotColor = 'bg-neutral-400';
+    summary = 'Aged / Oxidized';
+    baristaTip = 'Coffee oils have oxidized. Crema will be thin and fast-flowing. Best paired with milk or pulled as a short Ristretto.';
+  }
+
+  return {
+    daysOffRoast,
+    daysOpened,
+    phase,
+    labelKey,
+    badgeClasses,
+    dotColor,
+    degasDaysMin,
+    degasDaysMax,
+    peakDaysMax,
+    summary,
+    baristaTip,
+    isOpenedWarning,
+  };
+}
+
+

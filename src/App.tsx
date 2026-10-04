@@ -51,7 +51,7 @@ import {
   saveTempUnit,
   getMachineTempProfile,
 } from './lib/storage';
-import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS, formatTemperature } from './lib/espressoMath';
+import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
 
 export function App() {
   const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
@@ -832,9 +832,29 @@ export function App() {
                     >
                       {currentBean.roastLevel}
                     </span>
-                    <span className="text-[10px] text-[#7A6E65]">
-                      {Math.max(0, Math.floor((Date.now() - new Date(currentBean.roastDate).getTime()) / (1000 * 60 * 60 * 24)))}d off roast
-                    </span>
+                    {/* Freshness & Degas summary */}
+                    {(() => {
+                      const freshness = calculateBeanFreshness(
+                        currentBean.roastDate,
+                        currentBean.roastLevel,
+                        currentBean.dateOpened
+                      );
+                      return (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-[#7A6E65]">
+                            {freshness.daysOffRoast}d off roast
+                          </span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full border ${freshness.badgeClasses}`}>
+                            {freshness.summary}
+                          </span>
+                          {currentBean.dateOpened && (
+                            <span className="text-[9px] text-[#7A6E65] bg-[#FAF7F2] px-1.5 py-0.2 rounded border border-[#E8DFD5]">
+                              Opened {freshness.daysOpened}d ago
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <h4 className="font-bold text-xs text-[#2C2018] leading-tight">
                     {currentBean.name}
