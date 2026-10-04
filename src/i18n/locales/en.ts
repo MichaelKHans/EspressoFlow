@@ -407,6 +407,36 @@ export const en = {
   // Scale Active Brew Badge
   'scale.active_target_badge': 'ACTIVE BREW',
   'scale.open_dialin': 'Dial-In Studio',
+
+  // Settings & Temperature Preferences
+  'settings.modal_title': 'App Settings',
+  'settings.modal_subtitle': 'Preferences, temperature units & account license',
+  'settings.temp_unit_label': 'Brew Temperature Unit',
+  'settings.temp_unit_desc': 'Affects brew recipes, PID target temperature, and milk steaming guidance.',
+  'settings.temp_celsius': '°C Celsius',
+  'settings.temp_fahrenheit': '°F Fahrenheit',
+  'settings.language_label': 'Language',
+  'settings.membership_label': 'Membership & License',
+  'settings.version_label': 'Version & Build',
+  'settings.restore_btn': 'Restore Purchases',
+  'settings.terms': 'Terms of Use',
+  'settings.privacy': 'Privacy Policy',
+  'settings.support': 'Support & Feedback',
+
+  // Dial-In Brew Temperature
+  'dialin.brew_temp_title': 'Target Brew Temperature',
+  'dialin.brew_temp_recommended': 'Recommended for {roast}: {temp}',
+  'dialin.brew_temp_hint': 'Higher temps dissolve complex fruit acids in light roasts, while lower temps curb bitterness in dark roasts.',
+
+  // Gear Tab Machine Temp Overview
+  'gear.machine_temp_section': 'PID & Boiler Temperature Setup',
+  'gear.machine_temp_mode': 'Temperature Control',
+  'gear.machine_temp_pid': 'PID Digital Control (Adjustable)',
+  'gear.machine_temp_stepped': '3-Step Stepped (Low / Mid / High)',
+  'gear.machine_temp_fixed': 'Fixed Thermostat (~93°C / 200°F)',
+  'gear.machine_temp_range': 'Operating Range: {min} – {max}',
+  'gear.machine_temp_baseline': 'Default Baseline: {temp}',
 } as const;
 
 export type TranslationKeys = keyof typeof en;
+

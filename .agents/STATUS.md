@@ -11,6 +11,35 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Bryggetemperatur (°C / °F Switcher), Settings ⚙️ Modal, Gear PID Overblik & Dial-In Måltemperatur (v1.2.25)
+- **Settings ⚙️ Modal & Taktil Temperaturskala (°C / °F):**
+  - Ny dedikeret `SettingsModal` tilgængelig via tandhjul-knap ⚙️ i øverste header.
+  - Segmenteret temperaturskifter mellem Celsius (`°C`) og Fahrenheit (`°F`), der gemmes vedvarende i `localStorage`.
+  - Præcise omregningsfunktioner i `espressoMath.ts` (`celsiusToFahrenheit`, `fahrenheitToCelsius`, `formatTemperature`).
+  - Integreret overblik over app-licens, 7-dages prøveperiode, Apple/Google Store gendan køb samt direkte adgang til Terms, Privacy Policy og Barista Support.
+  - Registreret i `useMobileBackHandler` for flydende hardware/gesture tilbage-navigation.
+- **Dial-In Studio: Mål-Bryggetemperatur med Ristegrad-Anbefaling:**
+  - Trin 3 i `DialInWizardModal` udvidet med taktil temperatur-stepper (`[-] 93°C [+]`), der respekterer valgt enhed (°C eller °F).
+  - Dynamiske anbefalings-badges baseret på specialty coffee ekstraktionsfysik:
+    - **Lysristet (Light):** 94°C (201°F) – høj termisk energi krævet for at ekstrahere tætte cellestrukturer og frugtsyrer.
+    - **Mellemristet (Medium):** 93°C (199°F) – den gyldne specialty standard for maksimal sødme og balance.
+    - **Mellem-mørk (Med-Dark):** 91°C (196°F) – let dæmpet temperatur for at undgå ristebitterhed.
+    - **Mørkristet (Dark):** 89°C (192°F) – lavere temperatur bevarer søde noter og skåner kaffeolierne mod bitter afbrændthed.
+  - Bryggetemperaturen låses på bønnen og synkroniseres direkte til ekstraktionsloggen.
+- **Gear-fane: Espressomaskine PID & Kedelkapaciteter:**
+  - Maskinopsætningen i Gear-fanen udvidet med et overblik over maskinens varmesystem (`getMachineTempProfile`):
+    - PID Digital Styring (Justerbar, fx Sage Dual Boiler / Barista Touch / Decent DE1, 88–96°C).
+    - 3-Trins Temperatur (Lav / Mellem / Høj, fx Bambino Plus / Dedica / Specialista).
+    - Fast Termostat (~93°C, fx Gaggia Classic / Silvia / E61 HX).
+  - Viser driftsområde og fabriksbaseline, konverteret til brugerens foretrukne enhed (°C / °F).
+- **Realtids-Telemetri i Scale Cam & ShotSummaryModal:**
+  - Active Brew Badge på Scale Cam viser nu den kalibrerede bryggetemperatur ved siden af dosering, yield og kværnindstilling.
+  - `ShotSummaryModal` viser bryggetemperaturen i udstyrschippen (`Sage Dual Boiler • 93°C`).
+- **i18n Global-First:**
+  - Samtlige nye labels, beskrivelser og vejledninger defineret i `en.ts` og `da.ts`.
+
+---
+
 ### 2026-10-04 -- Scale Cam: Manuel Barista Start & Vibrationsfilter ved Første Dråbe (v1.2.24)
 - **Metode A: Manuel Barista Start (Brugerens Valg):**
   - Fjernet den forvirrende to-trins "Armér vægt" $\rightarrow$ "Venter på dråber" proces, som udløste falsk timer-start, når maskinens pumpe rystede koppen.

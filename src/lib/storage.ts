@@ -1,4 +1,4 @@
-import type { ShotRecord, UserAccessState, CoffeeBeanProfile, GrinderProfile } from '../types/espresso';
+import type { ShotRecord, UserAccessState, CoffeeBeanProfile, GrinderProfile, TempUnit, EspressoMachineProfile } from '../types/espresso';
 
 const STORAGE_KEYS = {
   SHOTS: 'espressoflow_shots_v1',
@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   ACTIVE_BAR_DRINKS: 'espressoflow_active_bar_drinks_v1',
   DRINK_GRINDS: 'espressoflow_drink_grinds_v1',
   ONBOARDING_COMPLETE: 'espressoflow_onboarding_done_v1',
+  TEMP_UNIT: 'espressoflow_temp_unit_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -198,7 +199,12 @@ export function loadBeans(): CoffeeBeanProfile[] {
       let gName = b.grinderName;
       if (gName === 'Eureka Mignon Specialita') gName = 'Eureka Mignon Specialita 16CR';
       if (gName === 'DF64 Gen 2') gName = 'DF64 Gen 2 (Single Dose)';
-      return { ...b, grinderName: gName };
+      const fallbackTemp = b.roastLevel === 'light' ? 94 : b.roastLevel === 'dark' ? 89 : 93;
+      return {
+        ...b,
+        grinderName: gName,
+        brewTempC: b.brewTempC ?? fallbackTemp,
+      };
     });
   } catch {
     return getDefaultBeans();
@@ -226,6 +232,7 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       targetYieldGrams: 45.0,
       grindSetting: '1.4',
       grinderName: 'Eureka Mignon Specialita 16CR',
+      brewTempC: 94,
       notes: 'Floral jasmine, bergamot, peach sweetness.',
     },
     {
@@ -239,6 +246,7 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       targetYieldGrams: 36.0,
       grindSetting: '14.0',
       grinderName: 'DF64 Gen 2 (Single Dose)',
+      brewTempC: 93,
       notes: 'Juicy red apple, cane sugar, creamy chocolate body.',
     },
     {
@@ -252,6 +260,7 @@ export function getDefaultBeans(): CoffeeBeanProfile[] {
       targetYieldGrams: 27.0,
       grindSetting: '2.2',
       grinderName: 'Eureka Mignon Specialita 16CR',
+      brewTempC: 89,
       notes: 'Dark cacao, toasted hazelnuts, thick crema syrup.',
     },
   ];
@@ -553,3 +562,108 @@ export function saveMachineName(name: string): void {
     console.error('Failed to save machine name', err);
   }
 }
+
+export function loadTempUnit(): TempUnit {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.TEMP_UNIT);
+    return raw === 'F' ? 'F' : 'C';
+  } catch {
+    return 'C';
+  }
+}
+
+export function saveTempUnit(unit: TempUnit): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.TEMP_UNIT, unit);
+  } catch (err) {
+    console.error('Failed to save temperature unit', err);
+  }
+}
+
+export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile>> = {
+  "De'Longhi Dedica (EC680 / EC685 / EC885)": {
+    tempControl: 'stepped',
+    minTempC: 90,
+    maxTempC: 94,
+    defaultTempC: 92,
+    defaultPreInfusionSeconds: 2.0,
+  },
+  "De'Longhi La Specialista": {
+    tempControl: 'stepped',
+    minTempC: 90,
+    maxTempC: 96,
+    defaultTempC: 92,
+    defaultPreInfusionSeconds: 3.0,
+  },
+  'Sage / Breville Dual Boiler': {
+    tempControl: 'pid',
+    minTempC: 86,
+    maxTempC: 96,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 6.0,
+  },
+  'Sage / Breville Barista Touch/Express': {
+    tempControl: 'pid',
+    minTempC: 88,
+    maxTempC: 96,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 7.0,
+  },
+  'Sage Bambino / Bambino Plus': {
+    tempControl: 'stepped',
+    minTempC: 91,
+    maxTempC: 95,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 5.0,
+  },
+  'Gaggia Classic Pro / Evo': {
+    tempControl: 'fixed',
+    minTempC: 93,
+    maxTempC: 93,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 0.0,
+  },
+  'Rancilio Silvia / Silvia Pro X': {
+    tempControl: 'fixed',
+    minTempC: 93,
+    maxTempC: 93,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 0.0,
+  },
+  'E61 Manual Flow Control': {
+    tempControl: 'fixed',
+    minTempC: 92,
+    maxTempC: 94,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 8.0,
+  },
+  'La Marzocco Linea Micra / Mini': {
+    tempControl: 'pid',
+    minTempC: 88,
+    maxTempC: 96,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 4.0,
+  },
+  'Decent DE1 (Profiling)': {
+    tempControl: 'pid',
+    minTempC: 80,
+    maxTempC: 98,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 6.0,
+  },
+};
+
+export function getMachineTempProfile(machineName: string): Partial<EspressoMachineProfile> {
+  const match = Object.keys(MACHINE_TEMP_PRESETS).find(
+    (k) => machineName.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(machineName.toLowerCase())
+  );
+  if (match) return MACHINE_TEMP_PRESETS[match];
+  return {
+    tempControl: 'pid',
+    minTempC: 88,
+    maxTempC: 96,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 6.0,
+  };
+}
+

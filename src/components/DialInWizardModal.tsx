@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, RoastLevel } from '../types/espresso';
+import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, RoastLevel, TempUnit } from '../types/espresso';
 import { resolveGrinder } from '../lib/storage';
+import { formatTemperature, getRecommendedBrewTemp } from '../lib/espressoMath';
 import {
   X,
   Sliders,
@@ -15,6 +16,7 @@ import {
   Coffee,
   Barcode,
   Check,
+  Thermometer,
 } from 'lucide-react';
 import { getOptimalBeanGuidanceForDrink, matchBeansForDrink } from '../lib/beanMatcher';
 
@@ -42,6 +44,7 @@ interface DialInWizardModalProps {
   availableGrinders?: GrinderProfile[];
   allGrinders?: GrinderProfile[];
   allBeans?: CoffeeBeanProfile[];
+  tempUnit?: TempUnit;
   onSelectBean?: (beanId: string) => void;
   onProceedToScaleCam: () => void;
   onSaveDialIn?: (updated: {
@@ -50,6 +53,7 @@ interface DialInWizardModalProps {
     targetYieldGrams: number;
     grindSetting: string;
     grinderName: string;
+    brewTempC?: number;
     launchScaleCam?: boolean;
   }) => void;
   onOpenBeanVault?: () => void;
@@ -65,6 +69,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   availableGrinders = [],
   allGrinders = [],
   allBeans = [],
+  tempUnit = 'C',
   onSelectBean,
   onProceedToScaleCam,
   onSaveDialIn,
@@ -112,10 +117,12 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   const initialDose = activeBean.doseGrams || drink.defaultDoseGrams || 18.0;
   const initialYield = drink.targetYieldGrams || activeBean.targetYieldGrams || 36.0;
   const initialGrind = activeBean.grindSetting || activeGrinder.defaultSetting || '15';
+  const initialTemp = activeBean.brewTempC || getRecommendedBrewTemp(activeBean.roastLevel);
 
   const [doseGrams, setDoseGrams] = useState<number>(initialDose);
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(initialYield);
   const [grindSetting, setGrindSetting] = useState<string>(initialGrind);
+  const [brewTempC, setBrewTempC] = useState<number>(initialTemp);
   const [isSavedFeedback, setIsSavedFeedback] = useState<boolean>(false);
 
   // Sync state whenever modal opens or drink/bean changes
@@ -128,6 +135,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
       setDoseGrams(drink.defaultDoseGrams || currentBean.doseGrams || 18.0);
       setTargetYieldGrams(drink.targetYieldGrams || currentBean.targetYieldGrams || 36.0);
       setGrindSetting(currentBean.grindSetting || currentGrinder.defaultSetting || '15');
+      setBrewTempC(currentBean.brewTempC || getRecommendedBrewTemp(currentBean.roastLevel));
       setIsSavedFeedback(false);
     }
   }, [
@@ -138,6 +146,8 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     currentBean.grindSetting,
     currentBean.doseGrams,
     currentBean.targetYieldGrams,
+    currentBean.brewTempC,
+    currentBean.roastLevel,
     currentGrinder.name,
     currentGrinder.defaultSetting,
   ]);
@@ -173,6 +183,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     if (bean.targetYieldGrams) {
       setTargetYieldGrams(bean.targetYieldGrams);
     }
+    setBrewTempC(bean.brewTempC || getRecommendedBrewTemp(bean.roastLevel));
   };
 
   // Handle switching grinder in Dial-In Studio
@@ -214,11 +225,17 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     });
   };
 
+  // Temperature adjustment handler
+  const handleAdjustTemp = (delta: number) => {
+    setBrewTempC((prev) => Math.max(85, Math.min(98, prev + delta)));
+  };
+
   // Reset to original recipe baseline
   const handleResetToBaseline = () => {
     setDoseGrams(drink.defaultDoseGrams || 18.0);
     setTargetYieldGrams(drink.targetYieldGrams || 36.0);
     setGrindSetting(activeGrinder.defaultSetting || '15');
+    setBrewTempC(getRecommendedBrewTemp(activeBean.roastLevel));
   };
 
   // Save changes without launching scale monitor
@@ -231,6 +248,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         targetYieldGrams,
         grindSetting,
         grinderName: activeGrinder.name,
+        brewTempC,
         launchScaleCam: false,
       });
     }
@@ -250,6 +268,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         targetYieldGrams,
         grindSetting,
         grinderName: activeGrinder.name,
+        brewTempC,
         launchScaleCam: true,
       });
     } else {
@@ -633,6 +652,46 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Target Brew Temperature Stepper */}
+          <div className="bg-white p-2.5 rounded-xl border border-[#E8DFD5] flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[9px] text-[#7A6E65] uppercase font-bold flex items-center gap-1">
+                  <Thermometer className="w-3 h-3 text-[#C26D52]" /> Target Brew Temp
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-[#C26D52]/10 text-[#C26D52] font-semibold">
+                  Recommended: {formatTemperature(getRecommendedBrewTemp(activeBean.roastLevel), tempUnit)}
+                </span>
+              </div>
+              <p className="text-[10px] text-[#7A6E65] mt-0.5">
+                Higher temps unlock sweetness in {activeBean.roastLevel} roast; cooler water curbs bitterness.
+              </p>
+            </div>
+
+            {/* Stepper Buttons */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleAdjustTemp(-1)}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95 cursor-pointer"
+                title="-1°"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <div className="w-16 sm:w-18 text-center text-xs sm:text-sm font-bold font-mono text-[#C26D52] bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg py-1">
+                {formatTemperature(brewTempC, tempUnit)}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleAdjustTemp(1)}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95 cursor-pointer"
+                title="+1°"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* STEP 4: Synchronization & Confirmation Summary */}
@@ -652,7 +711,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             </button>
           </div>
           <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed">
-            Calibration will be locked for <strong>{activeBean.name}</strong> using <strong>{activeGrinder.name.split(' ')[0]}</strong> on setting <strong>{grindSetting}</strong> ({doseGrams.toFixed(1)}g in → {targetYieldGrams.toFixed(1)}g out).
+            Calibration will be locked for <strong>{activeBean.name}</strong> at <strong>{formatTemperature(brewTempC, tempUnit)}</strong> using <strong>{activeGrinder.name.split(' ')[0]}</strong> on setting <strong>{grindSetting}</strong> ({doseGrams.toFixed(1)}g in → {targetYieldGrams.toFixed(1)}g out).
           </p>
         </div>
 

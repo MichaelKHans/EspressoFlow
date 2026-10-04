@@ -1,6 +1,7 @@
 export type TasteRating = 'sour' | 'bitter' | 'balanced' | 'watery';
 export type RoastLevel = 'light' | 'medium' | 'medium-dark' | 'dark';
 export type RatioStyle = 'ristretto' | 'standard' | 'lungo' | 'allonge' | 'custom';
+export type TempUnit = 'C' | 'F';
 
 export interface ShotDataPoint {
   timeSeconds: number;
@@ -27,6 +28,7 @@ export interface CoffeeBeanProfile {
   targetYieldGrams: number;
   grindSetting: string;
   grinderName: string;
+  brewTempC?: number; // Target brew temperature in Celsius (e.g. 93)
   notes?: string;
   barcode?: string;
   rating?: number; // 1 to 5 stars
@@ -62,6 +64,7 @@ export interface ShotRecord {
   grinderName: string;
   grindSetting: string;
   machineName?: string;
+  brewTempC?: number;
   tasteRating?: TasteRating;
   notes?: string;
   dataPoints: ShotDataPoint[];
@@ -82,6 +85,10 @@ export interface EspressoMachineProfile {
   name: string;
   defaultPreInfusionSeconds: number;
   type: 'timed' | 'manual' | 'straight-9bar';
+  tempControl?: 'pid' | 'stepped' | 'fixed';
+  minTempC?: number; // e.g. 88
+  maxTempC?: number; // e.g. 96
+  defaultTempC?: number; // e.g. 93
 }
 
 export interface UserAccessState {

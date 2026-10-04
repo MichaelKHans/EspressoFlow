@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import type { ShotRecord, TasteRating } from '../types/espresso';
+import type { ShotRecord, TasteRating, TempUnit } from '../types/espresso';
 import { FlowChart } from './FlowChart';
-import { generateDialInAdvice, type DialInAdvice } from '../lib/espressoMath';
+import { generateDialInAdvice, type DialInAdvice, formatTemperature } from '../lib/espressoMath';
 import {
   CheckCircle,
   AlertCircle,
@@ -18,6 +18,7 @@ import { useTranslation } from '../i18n';
 interface ShotSummaryModalProps {
   isOpen: boolean;
   shot: ShotRecord | null;
+  tempUnit?: TempUnit;
   onClose: () => void;
   onViewInLogbook: () => void;
   onUpdateShot: (updated: ShotRecord) => void;
@@ -26,6 +27,7 @@ interface ShotSummaryModalProps {
 export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   isOpen,
   shot,
+  tempUnit = 'C',
   onClose,
   onViewInLogbook,
   onUpdateShot,
@@ -192,6 +194,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
               </div>
               <span className="text-[10px] text-[#7A6E65] mt-0.5 block truncate">
                 {shot.machineName ? shot.machineName.split(' ')[0] : 'Machine'}
+                {shot.brewTempC ? ` • ${formatTemperature(shot.brewTempC, tempUnit)}` : ''}
               </span>
             </div>
 

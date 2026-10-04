@@ -409,4 +409,34 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   // Scale Active Brew Badge
   'scale.active_target_badge': 'AKTIV BRYGPROFIL',
   'scale.open_dialin': 'Dial-In Studio',
+
+  // Settings & Temperature Preferences
+  'settings.modal_title': 'Indstillinger',
+  'settings.modal_subtitle': 'Præferencer, temperatur og medlemskabsstatus',
+  'settings.temp_unit_label': 'Temperaturskala',
+  'settings.temp_unit_desc': 'Bestemmer visning af bryggetemperatur, PID-styring og mælkedampning.',
+  'settings.temp_celsius': '°C Celsius',
+  'settings.temp_fahrenheit': '°F Fahrenheit',
+  'settings.language_label': 'Sprog',
+  'settings.membership_label': 'Medlemskab & Licens',
+  'settings.version_label': 'Version & Build',
+  'settings.restore_btn': 'Gendan Tidligere Køb',
+  'settings.terms': 'Betingelser for brug',
+  'settings.privacy': 'Privatlivspolitik',
+  'settings.support': 'Support & Hjælp',
+
+  // Dial-In Brew Temperature
+  'dialin.brew_temp_title': 'Mål Bryggetemperatur',
+  'dialin.brew_temp_recommended': 'Anbefalet til {roast}: {temp}',
+  'dialin.brew_temp_hint': 'Højere temperaturer opløser frugtsyrer i lyse bønner, mens køligere vand modvirker bitterhed i mørke bønner.',
+
+  // Gear Tab Machine Temp Overview
+  'gear.machine_temp_section': 'PID & Kedeltemperatur',
+  'gear.machine_temp_mode': 'Temperaturstyring',
+  'gear.machine_temp_pid': 'PID Digital Styring (Justerbar)',
+  'gear.machine_temp_stepped': '3-Trins Vælger (Lav / Mellem / Høj)',
+  'gear.machine_temp_fixed': 'Fast Termostat (~93°C / 200°F)',
+  'gear.machine_temp_range': 'Driftsområde: {min} – {max}',
+  'gear.machine_temp_baseline': 'Fabriksindstilling: {temp}',
 };
+

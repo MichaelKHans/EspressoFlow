@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Plus, Check, Trash2, Layers, Camera, Globe } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Plus, Check, Trash2, Layers, Camera, Globe, Settings, Thermometer } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
@@ -15,6 +15,7 @@ import { TrialCountdownBanner } from './components/TrialCountdownBanner';
 import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
 import { BeandexView } from './components/BeandexView';
 import { ShotSummaryModal } from './components/ShotSummaryModal';
+import { SettingsModal } from './components/SettingsModal';
 import { useMobileBackHandler } from './lib/useMobileBackHandler';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
@@ -27,6 +28,7 @@ import type {
   RoastLevel,
   RatioStyle,
   DrinkRecipe,
+  TempUnit,
 } from './types/espresso';
 import {
   loadShots,
@@ -45,8 +47,11 @@ import {
   loadMachineName,
   saveMachineName,
   resolveGrinder,
+  loadTempUnit,
+  saveTempUnit,
+  getMachineTempProfile,
 } from './lib/storage';
-import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoMath';
+import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS, formatTemperature } from './lib/espressoMath';
 
 export function App() {
   const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
@@ -116,7 +121,14 @@ export function App() {
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
   const [isCentralVaultOpen, setIsCentralVaultOpen] = useState<boolean>(false);
   const [isShotSummaryOpen, setIsShotSummaryOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [tempUnit, setTempUnit] = useState<TempUnit>(() => loadTempUnit());
   const [legalModalTab, setLegalModalTab] = useState<'privacy' | 'terms' | 'support' | null>(null);
+
+  const handleTempUnitChange = (unit: TempUnit) => {
+    setTempUnit(unit);
+    saveTempUnit(unit);
+  };
 
   // Admin Route state (e.g. espressoflow.vercel.app/admin or #admin)
   const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => {
@@ -132,6 +144,7 @@ export function App() {
     activeMode,
     setActiveMode,
     modals: [
+      { name: 'settings', isOpen: isSettingsOpen, close: () => setIsSettingsOpen(false) },
       { name: 'shotSummary', isOpen: isShotSummaryOpen, close: () => setIsShotSummaryOpen(false) },
       { name: 'dialin', isOpen: isDialInWizardOpen, close: () => setIsDialInWizardOpen(false) },
       { name: 'scanner', isOpen: isBeanScannerOpen, close: () => setIsBeanScannerOpen(false) },
@@ -222,6 +235,7 @@ export function App() {
     targetYieldGrams: number;
     grindSetting: string;
     grinderName?: string;
+    brewTempC?: number;
     launchScaleCam?: boolean;
   }) => {
     const targetBeanId = dialInData.beanId || activeBeanId;
@@ -259,6 +273,7 @@ export function App() {
             doseGrams: dialInData.doseGrams,
             targetYieldGrams: dialInData.targetYieldGrams,
             grindSetting: dialInData.grindSetting,
+            ...(dialInData.brewTempC ? { brewTempC: dialInData.brewTempC } : {}),
             ...(dialInData.grinderName ? { grinderName: dialInData.grinderName } : {}),
           }
         : b
@@ -411,6 +426,7 @@ export function App() {
       grinderName: grinderName,
       grindSetting: grindSetting,
       machineName: machineName,
+      brewTempC: currentBean.brewTempC || 93,
       dataPoints: points,
       tasteRating: 'balanced',
     };
@@ -556,6 +572,16 @@ export function App() {
                 </span>
               </button>
             )}
+
+            {/* Settings Gear Button */}
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(true)}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-[#E8DFD5] bg-[#FFFDF9] hover:bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] flex items-center justify-center transition shadow-2xs cursor-pointer shrink-0"
+              title={t('settings.modal_title')}
+            >
+              <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7A6E65]" />
+            </button>
           </div>
         </div>
 
@@ -716,6 +742,10 @@ export function App() {
                     <span>
                       Grind: <strong className="text-[#2C2018]">{grindSetting}</strong>{' '}
                       ({currentGrinder.name.split(' ')[0]})
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Temp: <strong className="text-[#C26D52]">{formatTemperature(currentBean.brewTempC || 93, tempUnit)}</strong>
                     </span>
                   </div>
                 </div>
@@ -1069,6 +1099,66 @@ export function App() {
                   </div>
                 </div>
               </div>
+
+              {/* Machine Temperature & PID Capabilities */}
+              {(() => {
+                const profile = getMachineTempProfile(machineName);
+                const minTemp = profile.minTempC ?? 88;
+                const maxTemp = profile.maxTempC ?? 96;
+                const defaultTemp = profile.defaultTempC ?? 93;
+                return (
+                  <div className="pt-3 border-t border-[#E8DFD5]/80 space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px] font-mono">
+                      <span className="text-[#7A6E65] uppercase font-bold flex items-center gap-1.5">
+                        <Thermometer className="w-3.5 h-3.5 text-[#C26D52]" /> {t('gear.machine_temp_section')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsSettingsOpen(true)}
+                        className="text-[10px] text-[#C26D52] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Unit: °{tempUnit} (Settings ⚙️)</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-mono">
+                      <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5]">
+                        <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">{t('gear.machine_temp_mode')}</span>
+                        <span className="font-bold text-[#2C2018] text-[11px] mt-0.5 block truncate">
+                          {profile.tempControl === 'pid'
+                            ? t('gear.machine_temp_pid')
+                            : profile.tempControl === 'stepped'
+                            ? t('gear.machine_temp_stepped')
+                            : t('gear.machine_temp_fixed')}
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5]">
+                        <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
+                          {t('gear.machine_temp_range', {
+                            min: formatTemperature(minTemp, tempUnit),
+                            max: formatTemperature(maxTemp, tempUnit),
+                          })}
+                        </span>
+                        <span className="font-bold text-[#2C2018] text-[11px] mt-0.5 block">
+                          {profile.tempControl === 'fixed' ? 'Fixed Boiler' : `${formatTemperature(minTemp, tempUnit)} – ${formatTemperature(maxTemp, tempUnit)}`}
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5]">
+                        <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
+                          {t('gear.machine_temp_baseline', {
+                            temp: formatTemperature(defaultTemp, tempUnit),
+                          })}
+                        </span>
+                        <span className="font-bold text-[#C26D52] text-[11px] mt-0.5 block">
+                          {formatTemperature(defaultTemp, tempUnit)} (Specialty standard)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* App Membership & Lifetime License (Separate Dedicated Card for Apple App Store Review Compliance) */}
@@ -1244,12 +1334,28 @@ export function App() {
       <ShotSummaryModal
         isOpen={isShotSummaryOpen}
         shot={lastFinishedShot}
+        tempUnit={tempUnit}
         onClose={() => setIsShotSummaryOpen(false)}
         onViewInLogbook={() => {
           setIsShotSummaryOpen(false);
           setActiveTab('logbook');
         }}
         onUpdateShot={handleUpdateShot}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        tempUnit={tempUnit}
+        onTempUnitChange={handleTempUnitChange}
+        accessState={accessState}
+        onOpenPaywall={() => setIsPaywallOpen(true)}
+        onOpenLegal={(tab) => setLegalModalTab(tab)}
+        onRestorePro={() => {
+          alert(t('paywall.restore_success'));
+          handleUnlockPro();
+        }}
       />
 
       {/* Dial-In Wizard Modal */}
@@ -1262,6 +1368,7 @@ export function App() {
         availableGrinders={grinders.filter((g) => g.inSetup)}
         allGrinders={grinders}
         allBeans={beans}
+        tempUnit={tempUnit}
         onSelectBean={handleSelectBean}
         onProceedToScaleCam={() => {
           setIsDialInWizardOpen(false);

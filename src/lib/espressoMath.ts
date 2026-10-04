@@ -1,4 +1,4 @@
-import type { ShotDataPoint, TasteRating, ChannelingEvent, RoastLevel, RatioStyle } from '../types/espresso';
+import type { ShotDataPoint, TasteRating, ChannelingEvent, RoastLevel, RatioStyle, TempUnit } from '../types/espresso';
 
 /**
  * Specialty Coffee Golden Zone Parameters
@@ -319,3 +319,50 @@ export function generateDialInAdvice(
     rationale: `Superb extraction! ${yieldGrams.toFixed(1)}g yield in ${totalTimeSeconds.toFixed(1)}s with optimal flow rate in the Golden Zone (1.2–1.6 g/s).`,
   };
 }
+
+/**
+ * Converts Celsius to Fahrenheit rounded to nearest integer
+ */
+export function celsiusToFahrenheit(c: number): number {
+  return Math.round((c * 9) / 5 + 32);
+}
+
+/**
+ * Converts Fahrenheit to Celsius rounded to nearest integer
+ */
+export function fahrenheitToCelsius(f: number): number {
+  return Math.round(((f - 32) * 5) / 9);
+}
+
+/**
+ * Formats brew temperature with unit suffix
+ */
+export function formatTemperature(tempC: number, unit: TempUnit = 'C'): string {
+  if (unit === 'F') {
+    return `${celsiusToFahrenheit(tempC)}°F`;
+  }
+  return `${tempC}°C`;
+}
+
+/**
+ * Specialty Coffee recommended brew temperature based on roast level
+ * - Light: 94°C (201°F) -> High thermal energy required to dissolve dense cell structure and fruity acids
+ * - Medium: 93°C (199°F) -> The specialty golden standard for balance and caramelized sweetness
+ * - Med-Dark: 91°C (196°F) -> Slightly cooler water to curb bitter ashiness
+ * - Dark: 89°C (192°F) -> Low temperature preserves sweet notes and avoids burning roasty oils
+ */
+export function getRecommendedBrewTemp(roastLevel?: RoastLevel): number {
+  switch (roastLevel) {
+    case 'light':
+      return 94;
+    case 'medium':
+      return 93;
+    case 'medium-dark':
+      return 91;
+    case 'dark':
+      return 89;
+    default:
+      return 93;
+  }
+}
+
