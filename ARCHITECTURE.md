@@ -15,6 +15,7 @@
 6. [Komponenthierarki & State Ownership](#6-komponenthierarki--state-ownership)
 7. [Konsekvensanalyse & Afhængighedsmatrix (Impact Map)](#7-konsekvensanalyse--afhængighedsmatrix-impact-map)
 8. [Udviklingsrutine & Fejlsikring (Workflow Checklist)](#8-udviklingsrutine--fejlsikring-workflow-checklist)
+9. [Nativ Mobil Container & TestFlight CI/CD (Capacitor v8 & Fastlane)](#9-nativ-mobil-container--testflight-cicd-capacitor-v8--fastlane)
 
 ---
 
@@ -327,3 +328,24 @@ Når du ("Anti") eller en anden udvikler skal implementere en ny funktion eller 
 - [ ] Opdater `ARCHITECTURE.md`, hvis nye komponenter, flows, ruter eller datastrukturer blev tilføjet.
 - [ ] Forøg versionsnummer i `package.json` og dokumenter ændringen i `CHANGELOG.md` og `.agents/STATUS.md`.
 - [ ] Commit og push til `origin main`.
+
+---
+
+## 9. NATIV MOBIL CONTAINER & TESTFLIGHT CI/CD (CAPACITOR V8 & FASTLANE)
+
+Espresso Flow er pakket som en cross-platform mobilapplikation via Capacitor v8 med direkte integration mod iOS TestFlight og Google Play.
+
+### 9.1 Hardware- og Platformarkitektur
+| Komponent | Implementering | Formål & Beskyttelse |
+| :--- | :--- | :--- |
+| **Kamera & Optisk Zoom** | WebRTC `getUserMedia` + Optisk ROI | 1.8x/2.5x digital/optisk forstørrelse forhindrer iPhone makro-linse-spring (< 15 cm) og tillader 25–35 cm bar-afstand. |
+| **Skærm-vågelås (WakeLock)** | `src/lib/wakeLock.ts` (HTML5 Screen Wake Lock) | Forhindrer skærmen i at dæmpe eller låse midt under et 30s espresso-shot. Frigives øjeblikkeligt ved standby. |
+| **Taktil Haptik** | `@capacitor/haptics` | Giver øjeblikkelig fysisk feedback: Let klik ved Nul/Tare-lås, tungt klik ved Shot Start, advarselsvibration ved Kanalisering (>4.2 g/s), succesvibration ved Målyield. |
+| **Adaptiv OCR Billedhastighed** | `ScaleMonitor.tsx` | 80 ms (~12.5 FPS) i standby/tare-søgning (forhindrer termisk throttling og batteridræn) $\rightarrow$ 33 ms (~30 FPS) under aktiv brygning for flydende væsketracking. |
+| **Swift 6 & SPM Plugin Isolation** | `scripts/patch-capacitor-plugins.cjs` | Automatisk korrektion af `call.reject` $\rightarrow$ `call.errorHandler?(nil)` i Capacitor v8 Swift Package Manager moduler. |
+
+### 9.2 iOS TestFlight Byggepipeline (`.github/workflows/ios-build.yml`)
+- **Byggemiljø:** `macos-15` (Apple Silicon M-series), Xcode `26.3`, Node `22.x LTS`, Ruby `3.3`.
+- **App Identifier:** `com.mh.espressoflow`.
+- **Apple Developer Team:** `39T28DB5D4` (Mh Tegnestue).
+- **Fastlane Lane (`:beta`):** Opretter midlertidig isoleret CI Keychain, importerer `certificate.p12`, downloader officiel provisioning profil via App Store Connect API (`AuthKey_<ID>.p8`), kompilerer `.ipa` med manuel signing og uploader direkte til TestFlight uden ventetid.

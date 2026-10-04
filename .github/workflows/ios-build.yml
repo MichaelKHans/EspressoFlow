@@ -1,0 +1,109 @@
+name: Build & Deploy iOS to TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_number:
+        description: 'Marketing version (f.eks. 1.0.0, 1.1.0)'
+        required: false
+        default: '1.0.0'
+      build_number:
+        description: 'Build nummer (f.eks. auto, 1, 2...)'
+        required: false
+        default: 'auto'
+
+jobs:
+  build-ios:
+    name: Build & Upload to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: 📥 Hent kildekode (Checkout)
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Vælg Xcode 26.3
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.3'
+
+      - name: 🟢 Opsæt Node.js (v22.x LTS til Capacitor v8)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: 📦 Installer NPM Dependencies
+        run: npm ci
+
+      - name: 🔧 Patch Capacitor Swift Plugins
+        run: node scripts/patch-capacitor-plugins.cjs
+
+      - name: 🏗️ Klargør Statiske Web-aktiver (Vite Build)
+        run: npm run build
+
+      - name: 🔄 Synkroniser Capacitor iOS
+        run: npx cap sync ios
+
+      - name: 💎 Opsæt Ruby & Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: ios/App
+
+      - name: 🔐 Klargør Apple AuthKey & .p12 Certifikat
+        env:
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+        run: |
+          python3 - << 'EOF'
+          import os, base64
+
+          home = os.environ.get("HOME", "")
+          key_id = os.environ.get("APP_STORE_CONNECT_KEY_ID", "")
+          raw_key = os.environ.get("APP_STORE_CONNECT_PRIVATE_KEY", "").strip()
+          raw_cert = os.environ.get("APPLE_CERTIFICATE_BASE64", "").strip()
+
+          key_dir = os.path.join(home, ".appstoreconnect", "private_keys")
+          os.makedirs(key_dir, exist_ok=True)
+
+          if raw_key:
+              try:
+                  key_data = base64.b64decode(raw_key) if not raw_key.startswith("-----") else raw_key.encode("utf-8")
+              except Exception:
+                  key_data = raw_key.encode("utf-8")
+              
+              target_key = os.path.join(key_dir, f"AuthKey_{key_id}.p8")
+              with open(target_key, "wb") as f:
+                  f.write(key_data)
+              print(f"✅ Gemte AuthKey til: {target_key} ({len(key_data)} bytes)")
+
+          if raw_cert:
+              cert_data = base64.b64decode(raw_cert)
+              paths = [
+                  "certificate.p12",
+                  os.path.join("ios", "App", "certificate.p12"),
+                  os.path.join(home, "certificate.p12")
+              ]
+              for p in paths:
+                  os.makedirs(os.path.dirname(p) if os.path.dirname(p) else ".", exist_ok=True)
+                  with open(p, "wb") as f:
+                      f.write(cert_data)
+                  print(f"✅ Gemte certifikat til: {p} ({len(cert_data)} bytes)")
+          EOF
+
+          ls -la ios/App/
+
+      - name: 🚀 Kør Fastlane Beta (Byg & Upload til TestFlight)
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: 'ci_temp_keychain_pass_123'
+          CUSTOM_BUILD_NUMBER: ${{ github.event.inputs.build_number }}
+          CUSTOM_VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+        run: |
+          cd ios/App
+          bundle exec fastlane beta

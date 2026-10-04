@@ -1,0 +1,104 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Byg og upload automatisk Espresso Flow til TestFlight med dedikeret CI .p12 keychain"
+  lane :beta do
+    key_id = ENV["APP_STORE_CONNECT_KEY_ID"] || ENV["APP_STORE_CONNECT_API_KEY_ID"]
+    issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"] || ENV["APP_STORE_CONNECT_API_ISSUER_ID"]
+    key_filepath = File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{key_id}.p8")
+
+    # 1. Autentificer mod App Store Connect API
+    api_key = app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_filepath: key_filepath,
+      in_house: false
+    )
+
+    p12_path = [
+      ENV["CERTIFICATE_P12_PATH"],
+      File.expand_path("certificate.p12"),
+      File.expand_path("../certificate.p12", __dir__),
+      File.expand_path("../../certificate.p12", __dir__),
+      File.expand_path("~/certificate.p12")
+    ].compact.find { |p| File.exist?(p) }
+
+    p12_password = ENV["APPLE_CERTIFICATE_PASSWORD"] || ENV["BUILD_CERTIFICATE_PASSWORD"] || ""
+    keychain_name = "fastlane_tmp_keychain"
+    keychain_password = ENV["KEYCHAIN_PASSWORD"] || "temporary_ci_password_123"
+
+    # 2. Opret en ren midlertidig CI keychain og importer .p12 certifikatet
+    create_keychain(
+      name: keychain_name,
+      password: keychain_password,
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false
+    )
+
+    import_certificate(
+      keychain_name: keychain_name,
+      keychain_password: keychain_password,
+      certificate_path: p12_path,
+      certificate_password: p12_password
+    )
+
+    # 3. Hent den officielle App Store Provisioning Profil via API-nøglen
+    profile_name = get_provisioning_profile(
+      api_key: api_key,
+      app_identifier: "com.mh.espressoflow",
+      force: true
+    )
+
+    # 4. Sæt manuel signing med den officielle profil
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "App.xcodeproj",
+      profile_name: profile_name,
+      code_sign_identity: "Apple Distribution",
+      targets: ["App"],
+      team_id: "39T28DB5D4"
+    )
+
+    # 5. Inkrementer byggenummeret baseret på GitHub Actions Run Number
+    build_num = ENV["CUSTOM_BUILD_NUMBER"].to_s.empty? || ENV["CUSTOM_BUILD_NUMBER"] == "auto" ? (ENV["GITHUB_RUN_NUMBER"] || "1") : ENV["CUSTOM_BUILD_NUMBER"]
+    increment_build_number(
+      build_number: build_num,
+      xcodeproj: "App.xcodeproj"
+    )
+
+    # 5b. Sæt marketing version
+    version_num = ENV["CUSTOM_VERSION_NUMBER"].to_s.empty? || ENV["CUSTOM_VERSION_NUMBER"] == "auto" ? "1.0.0" : ENV["CUSTOM_VERSION_NUMBER"]
+    increment_version_number(
+      version_number: version_num,
+      xcodeproj: "App.xcodeproj"
+    )
+
+    # 6. Byg og arkiver .ipa pakken direkte til App Store
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      export_options: {
+        signingStyle: "manual",
+        teamID: "39T28DB5D4",
+        provisioningProfiles: {
+          "com.mh.espressoflow" => profile_name
+        }
+      }
+    )
+
+    # 7. Upload direkte til TestFlight
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+
+    # 8. Ryd op og slet den midlertidige keychain
+    delete_keychain(
+      name: keychain_name
+    )
+  end
+end

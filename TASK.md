@@ -26,6 +26,13 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] Kværn-oversættelse for mikro-justeringer (f.eks. +/- 1 trin på Encore ESP = +/- 2.5s udtræk, Eureka delestreger)
 - [x] $CO_2$ afgasnings-alarm for friskristede bønner (< 4 dage fra ristning)
 
+## 📱 Aktuelle Opgaver (FASE 6: Nativ Mobil App & TestFlight)
+- [x] Initialiser Capacitor v8 for iOS og Android (`ios/` og `android/`)
+- [x] Etabler TestFlight byggepipeline (`.github/workflows/ios-build.yml` og `Fastfile` :beta)
+- [x] Forbedr OCR hardware-robusthed (Screen WakeLock, taktil haptik, zoom mod makro-spring, 12.5 FPS $\rightarrow$ 30 FPS adaptiv frekvens)
+- [ ] Opret `com.mh.espressoflow` App Identifier i Apple Developer Portal / App Store Connect
+- [ ] Konfigurer de 5 Apple Secrets i GitHub Repo Settings for `MichaelKHans/EspressoFlow`
+
 ---
 
 ## 💡 Idéer & Fremtidige Noter

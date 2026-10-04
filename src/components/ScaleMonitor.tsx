@@ -16,6 +16,8 @@ import type { ShotDataPoint } from '../types/espresso';
 import { calculateSmoothedFlowRate } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
 import { useTranslation } from '../i18n';
+import { wakeLock } from '../lib/wakeLock';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 interface ScaleMonitorProps {
   isBrewing: boolean;
@@ -89,6 +91,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const firstDropTimeRef = useRef<number | null>(null);
   const fpsCountRef = useRef<number>(0);
   const lastFpsCalcTimeRef = useRef<number>(Date.now());
+  const hasVibratedTargetRef = useRef<boolean>(false);
+  const hasVibratedChannelingRef = useRef<boolean>(false);
 
   // Interactive Zoom, Torch & Recenter Handlers
   const handleSetZoom = async (newZoom: number) => {
@@ -290,7 +294,19 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     };
   }, [cameraState]);
 
-  // Real-time Canvas OCR processing loop (running at ~15 FPS when camera is active)
+  // Keep screen awake while monitoring scale or active brewing
+  useEffect(() => {
+    if (cameraState === 'live' || isBrewing) {
+      wakeLock.acquire();
+    } else {
+      wakeLock.release();
+    }
+    return () => {
+      wakeLock.release();
+    };
+  }, [cameraState, isBrewing]);
+
+  // Real-time Canvas OCR processing loop (adaptive FPS: ~12.5 FPS standby, ~30 FPS active brewing)
   useEffect(() => {
     if (cameraState !== 'live') {
       if (ocrIntervalRef.current) clearInterval(ocrIntervalRef.current);
@@ -302,6 +318,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     offscreen.height = 160;
     canvasRef.current = offscreen;
     const ctx = offscreen.getContext('2d', { willReadFrequently: true });
+
+    const ocrIntervalMs = isBrewing ? 33 : 80;
+    const dt = isBrewing ? 0.033 : 0.080;
 
     ocrIntervalRef.current = window.setInterval(() => {
       if (!videoRef.current || videoRef.current.readyState < 2 || !ctx) return;
@@ -363,19 +382,22 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
       // Filter and update weight
       if (result.weight !== null) {
-        const sanitized = filterRef.current.sanitize(result.weight, 0.066);
+        const sanitized = filterRef.current.sanitize(result.weight, dt);
         if (!sanitized.isOutlier) {
           const w = Math.round(sanitized.weight * 10) / 10;
           setCurrentWeight(w);
           currentWeightRef.current = w;
 
-          // Zero / Tare detection
+          // Zero / Tare detection with tactile haptic pulse
           if (w === 0.0) {
+            if (!isZeroDetected) {
+              Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+            }
             setIsZeroDetected(true);
           }
         }
       }
-    }, 66);
+    }, ocrIntervalMs);
 
     return () => {
       if (ocrIntervalRef.current) clearInterval(ocrIntervalRef.current);
@@ -391,6 +413,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
     startTimeRef.current = Date.now();
     firstDropTimeRef.current = null;
+    hasVibratedTargetRef.current = false;
+    hasVibratedChannelingRef.current = false;
     pointsRef.current = [];
     setCurrentWeight(0.0);
     currentWeightRef.current = 0.0;
@@ -454,6 +478,18 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         onLivePointsUpdate([...pointsRef.current]);
       }
 
+      // Tactile haptic notification on reaching target yield
+      if (weight >= targetYield && !hasVibratedTargetRef.current) {
+        hasVibratedTargetRef.current = true;
+        Haptics.notification({ type: NotificationType.Success }).catch(() => {});
+      }
+
+      // Channeling detection haptic alert (sudden spike > 4.2 g/s after pre-infusion)
+      if (firstDropTimeRef.current !== null && flow > 4.2 && !hasVibratedChannelingRef.current) {
+        hasVibratedChannelingRef.current = true;
+        Haptics.notification({ type: NotificationType.Warning }).catch(() => {});
+      }
+
       // Auto-finish if target reached in demo mode
       if (cameraState === 'demo' && weight >= targetYield && seconds > 25) {
         handleStopBrewing();
@@ -466,6 +502,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   }, [isBrewing, targetYield, cameraState, onLivePointsUpdate]);
 
   const handleStartBrewing = () => {
+    Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
     if (cameraState === 'standby') {
       setCameraState('live');
     }
@@ -520,6 +557,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleCalibrateTare = () => {
+    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
     setCurrentWeight(0.0);
     currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);

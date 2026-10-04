@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Espresso Flow</string>
+    <string name="title_activity_main">Espresso Flow</string>
+    <string name="package_name">com.mh.espressoflow</string>
+    <string name="custom_url_scheme">com.mh.espressoflow</string>
+</resources>

@@ -2,6 +2,29 @@
 
 Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.3.0] - 2026-10-04
+### Etape 8: Nativ Mobil App (iOS & Android) – TestFlight Pipeline, Skærm WakeLock, Taktil Haptik & Adaptiv OCR
+- **Capacitor v8 Nativ Mobil Container (`ios/` & `android/`):**
+  - Fuldstændig native scaffolding med `@capacitor/core@8.5.2`, `@capacitor/ios@8.5.2`, `@capacitor/android@8.5.2`, `@capacitor/app@8.1.2`, `@capacitor/haptics@8.0.2` og `@capacitor/status-bar@8.0.4`.
+  - Bundle Identifier konfigureret til `com.mh.espressoflow`.
+  - Hardwaretilladelser oprettet: Kamera (`NSCameraUsageDescription`, `android.permission.CAMERA`), Fotobibliotek (`NSPhotoLibraryUsageDescription`) og Wake Lock (`android.permission.WAKE_LOCK`).
+  - Mørk kaffebruun statusbar (`#2C2018`) for sømløs visuel integration med appens varme æstetik.
+- **Hardware- og OCR-Robusthed mod Mobilers Svagheder:**
+  - **Skærm-vågelås (`src/lib/wakeLock.ts`):** Forhindrer skærmen i at gå i dvale eller slukke midt under et 30-sekunders espresso-shot via HTML5 Screen Wake Lock standard API (WebKit iOS 16.4+ & Android Chromium).
+  - **Taktil Haptisk Feedback (`@capacitor/haptics`):**
+    - Let haptisk klik ved detektering af Tare/Nul-vægt (`0.0g`).
+    - Tungt haptisk klik ved start af shot (`handleStartBrewing`).
+    - Markant advarsels-vibration hvis der opstår kanaliserings-spike ($> 4.2\text{ g/s}$).
+    - Succes-vibration når målyield nås.
+  - **Adaptiv OCR Billedhastighed:** 80 ms (~12.5 FPS) i standby/tare-søgning sparer batteri og forhindrer overophedning $\rightarrow$ 33 ms (~30 FPS) under aktiv brygning for ultrapræcis ekstraktionsdynamik.
+  - **Optisk Zoom mod Makro-Spring:** 1.8x/2.5x zoommulighed forhindrer iPhone 13 Pro–16 Pro i at springe til ultravidvinkel-linsen på tæt hold og tillader 25–35 cm bar-afstand.
+- **Fuldautomatisk iOS TestFlight CI/CD Pipeline (`.github/workflows/ios-build.yml`):**
+  - Byggemiljø på `macos-15` med Xcode 26.3, Node.js 22.x LTS, Ruby 3.3 og Fastlane.
+  - Dedikeret Fastlane `:beta` lane med automatisk Apple AuthKey p8 API-autentificering, midlertidig CI keychain, .p12 distribution-certifikat import og direkte upload til TestFlight.
+  - Kompatibel med Apple Developer Team `39T28DB5D4` (Mh Tegnestue).
+- **Swift 6 & SPM Plugin Isolation (`scripts/patch-capacitor-plugins.cjs`):**
+  - Automatisk patching af `call.reject` $\rightarrow$ `call.errorHandler?(nil)` for problemfri kompilering i Swift 6.
+
 ## [1.2.29] - 2026-10-04
 ### Etape 7: Admin Coffee Curator Studio – Central Godkendelsespult, SCA Cupping Scores & Sky-Kvalitetssikring
 - **Admin Coffee Curator Studio & Godkendelsespult (`AdminPortal.tsx` Tab 3):**

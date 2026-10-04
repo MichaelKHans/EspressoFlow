@@ -11,6 +11,21 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Nativ Mobil App (iOS & Android) med TestFlight CI/CD & OCR-Hardwareoptimering (v1.3.0)
+- **Capacitor v8 Nativ Mobilbro & Scaffolding:**
+  - Etableret komplet native scaffolding med `@capacitor/core@8.5.2`, `@capacitor/ios@8.5.2`, `@capacitor/android@8.5.2`, `@capacitor/app@8.1.2`, `@capacitor/haptics@8.0.2` og `@capacitor/status-bar@8.0.4`.
+  - App Identifier sat til `com.mh.espressoflow` (Apple Team `39T28DB5D4`).
+  - Permissions konfigureret i `Info.plist` (Kamera & Fotobibliotek) og `AndroidManifest.xml` (Kamera, Autofokus og WakeLock).
+- **OCR-Hardwareoptimering & Mobilers Svagheder Adresseret:**
+  - **Skærm-vågelås (`wakeLock.ts`):** WebKit/Chromium Screen Wake Lock holder skærmen tændt under hele brygningen og forhindrer dvale midt i et shot.
+  - **Taktil Haptik (`@capacitor/haptics`):** Fysisk vibrerende feedback ved Tare-lås, Start af shot, kanalisering (flow-spike $> 4.2\text{ g/s}$) og målyield nået.
+  - **Optisk Zoom mod Makro-Spring:** 1.8x/2.5x digital zoom gør det muligt at placere mobilen i 25–35 cm sikker afstand på bordet, så iPhones 3-kameralinser ikke "springer" til ultravidvinkel.
+  - **Adaptiv OCR Framerate:** 12.5 FPS standby / tare $\rightarrow$ 30 FPS under aktiv ekstraktion sparer batteri og eliminerer termisk overophedning.
+- **Fuldautomatisk iOS TestFlight CI/CD Pipeline:**
+  - Etableret `.github/workflows/ios-build.yml` og Fastlane (`ios/App/fastlane/Fastfile` :beta lane) efter samme gennemtestede mønster som i `ToemerAppen`.
+  - Swift 6 & SPM isolation via `scripts/patch-capacitor-plugins.cjs`.
+  - Automatisk auth mod App Store Connect API, midlertidig CI keychain, .p12 distribution-certifikat og upload.
+
 ### 2026-10-04 -- Fuldstændig Udrensning af Fiktive Tal & Mock Data i Hele Appen (v1.2.31)
 - **Fuldstændig Udryddelse af Fiktive Tal i Admin Hub (Tab 1 & 3):**
   - Fjernet de hårde prototype-tal i `AdminPortal.tsx`:

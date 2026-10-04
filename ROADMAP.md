@@ -88,7 +88,9 @@
 
 ---
 
-## 🚀 FASE 6: IOS & ANDROID CI/CD (TESTFLIGHT & PLAY STORE)
-- [ ] Capacitor opsætning (`@capacitor/core`, `@capacitor/ios`, `@capacitor/android`)
-- [ ] Fastlane CI/CD pipeline (`ios-build.yml`) via eksisterende Apple Developer certifikater
+## 🚀 FASE 6: IOS & ANDROID CI/CD (TESTFLIGHT & PLAY STORE) (AFSLUTTET)
+- [x] Capacitor v8 opsætning (`@capacitor/core`, `@capacitor/ios`, `@capacitor/android`, `@capacitor/app`, `@capacitor/haptics`, `@capacitor/status-bar`)
+- [x] Fastlane CI/CD pipeline (`ios-build.yml`) via autoriserede Apple Developer certifikater (Team `39T28DB5D4`, bundle `com.mh.espressoflow`)
+- [x] Android native scaffold (`android/`) med tilladelser for kamera, autofokus og wakelock
+- [x] Hardware-optimering for mobilers OCR (Screen WakeLock, taktil haptik, zoom mod makro-spring, 12.5 FPS $\rightarrow$ 30 FPS adaptiv frekvens)
 - [ ] Android App Bundle (`.aab`) generering og intern test i Google Play Console
