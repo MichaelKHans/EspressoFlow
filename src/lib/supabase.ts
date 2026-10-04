@@ -4,6 +4,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { sanitizeBeanInput } from './beanCatalogMatcher';
 
 export interface GlobalCoffeeBean {
   id?: string;
@@ -21,6 +22,7 @@ export interface GlobalCoffeeBean {
   is_verified: boolean;
   expert_score?: number; // 0-100 scale (e.g. 94.0)
   expert_source?: string; // e.g. 'Coffee Review' | 'SCA Cupping' | 'Cup of Excellence'
+  image_url?: string;
   created_at?: string;
 }
 
@@ -146,6 +148,7 @@ export async function fetchGlobalBean(
       is_verified: Boolean(data.is_verified),
       expert_score: data.expert_score ? Number(data.expert_score) : undefined,
       expert_source: data.expert_source || undefined,
+      image_url: data.image_url || undefined,
       created_at: data.created_at,
     };
 
@@ -159,6 +162,7 @@ export async function fetchGlobalBean(
 
 /**
  * Register or update a crowd-sourced bean in the cloud (Async background execution)
+ * Protects verified beans from accidental user corruption and sanitizes inputs.
  */
 export async function upsertGlobalBean(
   bean: Partial<GlobalCoffeeBean> & {
@@ -169,13 +173,39 @@ export async function upsertGlobalBean(
   }
 ): Promise<{ success: boolean; data?: GlobalCoffeeBean; error?: string }> {
   const cleanBarcode = bean.barcode.trim();
+  if (!cleanBarcode) return { success: false, error: 'Barcode is required' };
 
-  // Optimistic local cache update immediately
+  // 1. Check existing cached profile
   const existing = localBeanCache.get(cleanBarcode);
+
+  // 2. Validate input if not already verified
+  let targetRoaster = bean.roaster.trim();
+  let targetName = bean.name.trim();
+
+  // If already verified by Admin, preserve the verified metadata!
+  if (existing?.is_verified) {
+    targetRoaster = existing.roaster;
+    targetName = existing.name;
+  } else {
+    // Sanitize user submission to prevent garbage / typos in cloud
+    const sanitized = sanitizeBeanInput({
+      roaster: targetRoaster,
+      name: targetName,
+      roastLevel: bean.roast_level,
+    });
+    if (!sanitized.valid) {
+      console.debug('[Supabase Guard] Submission rejected by quality filter:', sanitized.error);
+      return { success: false, error: sanitized.error };
+    }
+    targetRoaster = sanitized.roaster;
+    targetName = sanitized.name;
+  }
+
+  // 3. Optimistic local cache update immediately
   const updatedBean: GlobalCoffeeBean = {
     barcode: cleanBarcode,
-    roaster: bean.roaster.trim(),
-    name: bean.name.trim(),
+    roaster: targetRoaster,
+    name: targetName,
     roast_level: bean.roast_level,
     origin_country: bean.origin_country || existing?.origin_country || '',
     purchase_country: bean.purchase_country || existing?.purchase_country || 'DK',
@@ -185,8 +215,9 @@ export async function upsertGlobalBean(
     ratings_count: existing?.ratings_count || 0,
     verifications_count: (existing?.verifications_count || 0) + 1,
     is_verified: existing?.is_verified || false,
-    expert_score: bean.expert_score || existing?.expert_score,
-    expert_source: bean.expert_source || existing?.expert_source,
+    expert_score: existing?.is_verified ? existing.expert_score : bean.expert_score || existing?.expert_score,
+    expert_source: existing?.is_verified ? existing.expert_source : bean.expert_source || existing?.expert_source,
+    image_url: bean.image_url || existing?.image_url,
   };
   localBeanCache.set(cleanBarcode, updatedBean);
 
@@ -211,6 +242,7 @@ export async function upsertGlobalBean(
           verifications_count: updatedBean.verifications_count,
           expert_score: updatedBean.expert_score,
           expert_source: updatedBean.expert_source,
+          image_url: updatedBean.image_url,
         },
         { onConflict: 'barcode' }
       )
@@ -368,6 +400,38 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
 
   // Built-in verified beans fallback for 100% offline reliability
   return [
+    {
+      barcode: '4056489503019',
+      name: 'Ristemesterens Foretrukne Mellemristet',
+      roaster: 'Hedekaffe',
+      roast_level: 'medium',
+      origin_country: 'Sydamerika & Indonesien (Ulfborg)',
+      purchase_country: 'DK',
+      suitable_for: ['pure_espresso', 'flat_white', 'cortado', 'cappuccino'],
+      flavor_notes: ['Mørk Chokolade', 'Ristede Nødder', 'Karamel'],
+      avg_rating: 4.85,
+      ratings_count: 19,
+      verifications_count: 14,
+      is_verified: true,
+      expert_score: 89.0,
+      expert_source: 'Barista Tech Review',
+    },
+    {
+      barcode: '8000070025066',
+      name: 'Espresso Barista Gran Crema',
+      roaster: 'Lavazza',
+      roast_level: 'dark',
+      origin_country: 'Sydamerika & Sydøstasien',
+      purchase_country: 'IT',
+      suitable_for: ['pure_espresso', 'cappuccino', 'flat_white'],
+      flavor_notes: ['Mørk Chokolade', 'Krydderier', 'Fløjlsblød Crema'],
+      avg_rating: 4.75,
+      ratings_count: 88,
+      verifications_count: 65,
+      is_verified: true,
+      expert_score: 88.0,
+      expert_source: 'Italian Espresso Barista Guild',
+    },
     {
       barcode: '5711953000012',
       name: 'Kieni Espresso (Nyeri, Kenya)',

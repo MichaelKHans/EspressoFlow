@@ -343,27 +343,39 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           {/* Active Bean Banner */}
           <div className="p-2.5 sm:p-3 rounded-xl bg-white border border-[#E8DFD5] space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span
-                    className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border shrink-0 ${getRoastBadgeStyles(
-                      activeBean.roastLevel
-                    )}`}
-                  >
-                    {activeBean.roastLevel}
-                  </span>
-                  <span className="text-xs sm:text-sm font-bold text-[#2C2018] font-serif truncate">
-                    {activeBean.name}
-                  </span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#72806B] text-white font-bold font-mono">
-                    ACTIVE
-                  </span>
-                </div>
-                {activeBean.roaster && (
-                  <p className="text-[10px] text-[#7A6E65] font-mono mt-0.5">
-                    Roaster: <strong className="text-[#2C2018]">{activeBean.roaster}</strong>
-                  </p>
+              <div className="flex items-start gap-2.5 min-w-0">
+                {activeBean.imageUrl && (
+                  <div className="w-10 h-10 rounded-lg overflow-hidden border border-[#DECFC0] shrink-0 bg-stone-100 shadow-2xs">
+                    <img
+                      src={activeBean.imageUrl}
+                      alt={activeBean.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                        activeBean.roastLevel
+                      )}`}
+                    >
+                      {activeBean.roastLevel}
+                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-[#2C2018] font-serif truncate">
+                      {activeBean.name}
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#72806B] text-white font-bold font-mono">
+                      ACTIVE
+                    </span>
+                  </div>
+                  {(activeBean.roaster || activeBean.originCountry) && (
+                    <p className="text-[10px] text-[#7A6E65] font-mono mt-0.5">
+                      Roaster: <strong className="text-[#2C2018]">{activeBean.roaster || 'Specialty Roaster'}</strong>
+                      {activeBean.originCountry && <span className="text-[#A6998E]"> • {activeBean.originCountry}</span>}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Action buttons to scan or open vault */}
@@ -403,6 +415,20 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed border-t border-[#E8DFD5]/60 pt-1.5">
               {currentMatch?.reason || guidance.whyIdeal} {guidance.idealFlavorNotes && `• Target notes: ${guidance.idealFlavorNotes}`}
             </p>
+
+            {/* Vivino-style Active Bean Flavor Notes */}
+            {activeBean.flavorNotes && activeBean.flavorNotes.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-1 border-t border-[#E8DFD5]/40">
+                {activeBean.flavorNotes.map((note, idx) => (
+                  <span
+                    key={idx}
+                    className="px-1.5 py-0.5 rounded-md bg-[#FAF7F2] border border-[#DECFC0] text-[9.5px] text-[#2C2018] font-sans"
+                  >
+                    {note}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Quick Bean Switcher (If multiple beans exist) */}
@@ -428,23 +454,30 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                           : 'border-[#E8DFD5] bg-white/70 hover:bg-white hover:border-[#C26D52]/40'
                       }`}
                     >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 truncate">
-                          <span
-                            className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${getRoastBadgeStyles(
-                              b.roastLevel
-                            )}`}
-                          >
-                            {b.roastLevel}
-                          </span>
-                          <span className="text-xs font-bold text-[#2C2018] truncate font-serif">
-                            {b.name}
-                          </span>
-                        </div>
-                        <div className="text-[9px] text-[#7A6E65] font-mono mt-0.5 flex items-center gap-1.5">
-                          <span>Grind: <strong className="text-[#2C2018]">{b.grindSetting}</strong></span>
-                          <span>•</span>
-                          <span className="truncate">{b.roaster || 'Specialty'}</span>
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {b.imageUrl && (
+                          <div className="w-7 h-7 rounded-md overflow-hidden border border-[#DECFC0] shrink-0 bg-stone-100">
+                            <img src={b.imageUrl} alt={b.name} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 truncate">
+                            <span
+                              className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                                b.roastLevel
+                              )}`}
+                            >
+                              {b.roastLevel}
+                            </span>
+                            <span className="text-xs font-bold text-[#2C2018] truncate font-serif">
+                              {b.name}
+                            </span>
+                          </div>
+                          <div className="text-[9px] text-[#7A6E65] font-mono mt-0.5 flex items-center gap-1.5">
+                            <span>Grind: <strong className="text-[#2C2018]">{b.grindSetting}</strong></span>
+                            <span>•</span>
+                            <span className="truncate">{b.roaster || 'Specialty'}</span>
+                          </div>
                         </div>
                       </div>
 

@@ -383,6 +383,14 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'beandex.expert_badge': 'SCA EKSPERT {score} PTS',
   'beandex.community_votes': '{rating} ★ ({votes} stemmer)',
   'beandex.delete_bag_confirm': 'Er du sikker på, at du vil slette "{name}" fra dit lager?',
+  'beandex.flavor_notes_title': 'Sensoriske Smagsnoter',
+  'beandex.add_flavor_btn': '+ Tilføj smagsnoter',
+  'beandex.photo_btn': 'Tilføj posefoto',
+  'beandex.change_photo': 'Skift foto',
+  'beandex.catalog_suggestions': 'Verificerede Specialty Blends',
+  'beandex.did_you_mean': 'Mente du: {name}?',
+  'beandex.apply_suggestion': 'Anvend',
+  'beandex.origin_label': 'Oprindelse / Land',
 
   // Shot Summary Modal (Immediate Post-Shot Feedback)
   'shotsummary.title': 'Ekstraktion Gennemført',

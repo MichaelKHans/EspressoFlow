@@ -19,6 +19,9 @@ export interface ScannedBeanInfo {
   isVerified?: boolean;
   expertScore?: number;
   expertSource?: string;
+  imageUrl?: string;
+  flavorNotes?: string[];
+  originCountry?: string;
 }
 
 export interface ParsedRoastDateResult {

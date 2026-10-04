@@ -2,6 +2,28 @@
 
 Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.2.28] - 2026-10-04
+### Etape 6: Vivino-Style Beandex – Bønne-Autocomplete, "Mente du...?" Fuzzy Matching, Sensoriske Smagsnoter, Posefotos & Central Vault Kvalitetsværn
+- **Vivino-Inspireret Bønnekatalog & Autocomplete Motor (`beanCatalogMatcher.ts`):**
+  - Kurateret specialty coffee vidensbase med verificerede nordiske og internationale risterier (Hedekaffe, Coffee Collective, La Cabra, Lavazza, Illy, Peter Larsen, BKI, April, Prolog, Tim Wendelboe m.fl.).
+  - Lynhurtig autoudfyldelse og søgeforslag for både risteri og kaffenavn.
+  - Levenshtein distance-baseret *"Mente du...?"* forslagsbanner ved slåfejl og OCR-unøjagtigheder (f.eks. `hedekafe` $\rightarrow$ `Hedekaffe`, `lavaza` $\rightarrow$ `Lavazza`).
+- **Kvalitetsværn mod Dubletter og Fejldata (`sanitizeBeanInput`):**
+  - Forhindrer generiske fallback-navne som f.eks. "Coffee (3019)" i at forurene brugerens personlige Beandex eller den centrale bønnehvælving.
+  - Sikrer pæn orddeling og standardiseret casing.
+  - **Supabase Central Vault Beskyttelse:** Opdateret `upsertGlobalBean` så brugerrettelser ikke kan overskrive admin-verificerede kaffer (`is_verified: true`), men i stedet øger `verifications_count` og samler rating-stemmer.
+- **Sensoriske Smagsnoter (Vivino Flavor Pills):**
+  - 13 tosprogede sensoriske smagskategorier med ikoner (Mørk Chokolade, Karamel, Ristede Nødder, Citrus & Bergamot, Røde Bær, Fersken & Abrikos, Jasmin & Blomster m.fl.).
+  - Smagspiller integreret direkte på bønnekortene i Beandex med lynhurtig interaktiv tag-editor (`+ Smagsnoter`).
+  - Smagspiller integreret i bønnescanneren og Dial-In Studio modalen.
+- **Posefotos med Offline Komprimering (`compressImageToDataUrl`):**
+  - Baristaen kan tilføje et virkeligt foto af sin kaffepose direkte fra kameraet eller galleriet.
+  - Klient-side offscreen canvas-komprimering genererer ultrakompakte thumbnails ($< 40 \text{ KB}$), som gemmes direkte i `localStorage` uden eksterne billedhosts eller cloud-afhængigheder.
+  - Flotte miniaturevisninger på bønnekort i Beandex og i Dial-In Studio bønnevælgeren.
+- **Dial-In Studio & Bønnehvælving Synergi:**
+  - `DialInWizardModal` viser nu bønnefoto, oprindelsesland og smagsnoter for den aktive bønne samt miniaturebilleder i hurtigskift-listen.
+  - Web affiliate shop-links er planmæssigt udskudt til senere iteration efter brugerønske.
+
 ---
 
 ## [1.2.27] - 2026-10-04

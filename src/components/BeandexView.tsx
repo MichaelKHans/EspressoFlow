@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Coffee,
   Star,
@@ -16,6 +16,11 @@ import {
   PackageOpen,
   Edit3,
   Save,
+  Camera,
+  Sparkles,
+  X,
+  Tag,
+  AlertCircle,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, GrinderProfile, RoastLevel } from '../types/espresso';
 import { fetchAllGlobalBeans, type GlobalCoffeeBean } from '../lib/supabase';
@@ -23,6 +28,16 @@ import { resolveGrinder } from '../lib/storage';
 import { calculateBeanFreshness } from '../lib/espressoMath';
 import { FreshnessInfoModal } from './FreshnessInfoModal';
 import { useTranslation } from '../i18n';
+import {
+  POPULAR_FLAVOR_TAGS,
+  suggestRoasters,
+  searchCatalogBeans,
+  findDidYouMeanBean,
+  sanitizeBeanInput,
+  compressImageToDataUrl,
+  type CatalogCoffeeItem,
+  type DidYouMeanMatch,
+} from '../lib/beanCatalogMatcher';
 
 export interface BeandexViewProps {
   beans: CoffeeBeanProfile[];
@@ -71,6 +86,16 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   const [newBagDateOpened, setNewBagDateOpened] = useState<string>('');
   const [newBagNotes, setNewBagNotes] = useState<string>('');
   const [newBagGrinderName, setNewBagGrinderName] = useState<string>(activeGrinderName);
+  const [newBagOriginCountry, setNewBagOriginCountry] = useState<string>('');
+  const [newBagImageUrl, setNewBagImageUrl] = useState<string | undefined>(undefined);
+  const [newBagFlavorNotes, setNewBagFlavorNotes] = useState<string[]>([]);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [didYouMeanMatch, setDidYouMeanMatch] = useState<DidYouMeanMatch | null>(null);
+
+  // Card-level photo & flavor notes editing
+  const [editingFlavorBeanId, setEditingFlavorBeanId] = useState<string | null>(null);
+  const cardFileInputRef = useRef<HTMLInputElement>(null);
+  const [activeCardPhotoBeanId, setActiveCardPhotoBeanId] = useState<string | null>(null);
 
   // Freshness & Degas Info Modal state
   const [isFreshnessInfoOpen, setIsFreshnessInfoOpen] = useState<boolean>(false);
@@ -141,13 +166,111 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     });
   }, [globalBeans, globalSearch]);
 
+  const roasterSuggestions = useMemo(() => {
+    if (!newBagRoaster.trim() || newBagRoaster.length < 2) return [];
+    return suggestRoasters(newBagRoaster, 4);
+  }, [newBagRoaster]);
+
+  const catalogSuggestions = useMemo(() => {
+    if (!newBagName.trim() || newBagName.trim().length < 2) return [];
+    return searchCatalogBeans(newBagName, 3);
+  }, [newBagName]);
+
+  const handleSelectCatalogItem = (item: CatalogCoffeeItem) => {
+    setNewBagRoaster(item.roaster);
+    setNewBagName(item.name);
+    setNewBagRoastLevel(item.roastLevel);
+    setNewBagOriginCountry(item.originCountry);
+    setNewBagFlavorNotes(item.flavorNotes);
+    if (item.notes && !newBagNotes) {
+      setNewBagNotes(item.notes);
+    }
+    setDidYouMeanMatch(null);
+    setValidationError(null);
+  };
+
+  const handleNameChange = (val: string) => {
+    setNewBagName(val);
+    setValidationError(null);
+    const match = findDidYouMeanBean(newBagRoaster, val);
+    setDidYouMeanMatch(match);
+  };
+
+  const handleRoasterChange = (val: string) => {
+    setNewBagRoaster(val);
+    const match = findDidYouMeanBean(val, newBagName);
+    setDidYouMeanMatch(match);
+  };
+
+  const handleApplyDidYouMean = () => {
+    if (!didYouMeanMatch) return;
+    handleSelectCatalogItem(didYouMeanMatch.matchedItem);
+  };
+
+  const toggleNewBagFlavorNote = (tagLabel: string) => {
+    setNewBagFlavorNotes((prev) =>
+      prev.includes(tagLabel) ? prev.filter((t) => t !== tagLabel) : [...prev, tagLabel]
+    );
+  };
+
+  const handleAddFormImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImageToDataUrl(file, 400, 0.75);
+      setNewBagImageUrl(compressed);
+    } catch (err) {
+      console.error('Failed to compress bag photo:', err);
+    }
+  };
+
+  const handleTriggerCardPhotoUpload = (beanId: string) => {
+    setActiveCardPhotoBeanId(beanId);
+    cardFileInputRef.current?.click();
+  };
+
+  const handleCardPhotoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeCardPhotoBeanId) return;
+    try {
+      const compressed = await compressImageToDataUrl(file, 400, 0.75);
+      onUpdateBean(activeCardPhotoBeanId, { imageUrl: compressed });
+    } catch (err) {
+      console.error('Failed to compress card photo:', err);
+    } finally {
+      setActiveCardPhotoBeanId(null);
+      if (cardFileInputRef.current) cardFileInputRef.current.value = '';
+    }
+  };
+
+  const handleToggleCardFlavorNote = (beanId: string, tagLabel: string) => {
+    const bean = beans.find((b) => b.id === beanId);
+    if (!bean) return;
+    const currentNotes = bean.flavorNotes || [];
+    const updated = currentNotes.includes(tagLabel)
+      ? currentNotes.filter((n) => n !== tagLabel)
+      : [...currentNotes, tagLabel];
+    onUpdateBean(beanId, { flavorNotes: updated });
+  };
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBagName.trim()) return;
+    setValidationError(null);
+
+    const sanitized = sanitizeBeanInput({
+      roaster: newBagRoaster,
+      name: newBagName,
+      roastLevel: newBagRoastLevel,
+    });
+
+    if (!sanitized.valid) {
+      setValidationError(sanitized.error || 'Please enter a valid bean name.');
+      return;
+    }
 
     onCreateBean({
-      name: newBagName.trim(),
-      roaster: newBagRoaster.trim() || undefined,
+      name: sanitized.name,
+      roaster: sanitized.roaster !== 'Specialty Roaster' ? sanitized.roaster : undefined,
       roastLevel: newBagRoastLevel,
       roastDate: newBagRoastDate,
       dateOpened: newBagDateOpened ? newBagDateOpened : undefined,
@@ -159,6 +282,9 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
       notes: newBagNotes.trim() || undefined,
       rating: 0,
       isFavorite: false,
+      imageUrl: newBagImageUrl,
+      flavorNotes: newBagFlavorNotes.length > 0 ? newBagFlavorNotes : undefined,
+      originCountry: newBagOriginCountry.trim() || undefined,
     });
 
     setNewBagName('');
@@ -167,6 +293,11 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     setNewBagRoastDate(new Date().toISOString().split('T')[0]);
     setNewBagDateOpened('');
     setNewBagNotes('');
+    setNewBagOriginCountry('');
+    setNewBagImageUrl(undefined);
+    setNewBagFlavorNotes([]);
+    setDidYouMeanMatch(null);
+    setValidationError(null);
     setIsAddingCustomBag(false);
   };
 
@@ -199,6 +330,9 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
       suitableFor: gb.suitable_for,
       expertScore: gb.expert_score,
       expertSource: gb.expert_source,
+      imageUrl: gb.image_url,
+      flavorNotes: gb.flavor_notes,
+      originCountry: gb.origin_country || gb.purchase_country,
     });
 
     setAddedFeedback(gb.name);
@@ -275,11 +409,40 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             <button
               type="button"
               onClick={() => setIsAddingCustomBag(false)}
-              className="text-[#7A6E65] hover:text-[#2C2018] text-xs"
+              className="text-[#7A6E65] hover:text-[#2C2018] text-xs cursor-pointer"
             >
               Cancel
             </button>
           </div>
+
+          {/* Validation Error Banner */}
+          {validationError && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{validationError}</span>
+            </div>
+          )}
+
+          {/* Did-You-Mean Fuzzy Match Alert */}
+          {didYouMeanMatch && (
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between gap-2 animate-fadeIn">
+              <div className="flex items-center gap-2 min-w-0">
+                <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="truncate">
+                  {t('beandex.did_you_mean', {
+                    name: `${didYouMeanMatch.matchedItem.roaster} - ${didYouMeanMatch.matchedItem.name}`,
+                  })}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleApplyDidYouMean}
+                className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 transition shadow-xs cursor-pointer"
+              >
+                {t('beandex.apply_suggestion')}
+              </button>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
             <div>
@@ -290,11 +453,29 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 type="text"
                 required
                 value={newBagName}
-                onChange={(e) => setNewBagName(e.target.value)}
-                placeholder="e.g. Ethiopia Yirgacheffe Chelchele (Washed)"
+                onChange={(e) => handleNameChange(e.target.value)}
+                placeholder="e.g. Ristemesterens Foretrukne, Kieni Espresso..."
                 className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
               />
+              {catalogSuggestions.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1 items-center">
+                  <span className="text-[9px] text-[#A6998E] uppercase font-mono">
+                    {t('beandex.catalog_suggestions')}:
+                  </span>
+                  {catalogSuggestions.map((item, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectCatalogItem(item)}
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#DECFC0] text-[#2C2018] hover:border-[#C26D52] hover:bg-[#FFFDF9] transition truncate max-w-[200px] cursor-pointer"
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
             <div>
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
                 Roaster (Optional)
@@ -302,11 +483,29 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               <input
                 type="text"
                 value={newBagRoaster}
-                onChange={(e) => setNewBagRoaster(e.target.value)}
-                placeholder="e.g. La Cabra, Coffee Collective, Tim Wendelboe"
+                onChange={(e) => handleRoasterChange(e.target.value)}
+                placeholder="e.g. Hedekaffe, Coffee Collective, La Cabra..."
                 className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
               />
+              {roasterSuggestions.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1 items-center">
+                  <span className="text-[9px] text-[#A6998E] uppercase font-mono">Suggested:</span>
+                  {roasterSuggestions.map((r, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        handleRoasterChange(r);
+                      }}
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#DECFC0] text-[#2C2018] hover:border-[#C26D52] transition cursor-pointer"
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
             <div>
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
                 Roast Profile
@@ -322,6 +521,20 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 <option value="dark">Dark Roast (Smoky / Dark Cacao / Low Acidity)</option>
               </select>
             </div>
+
+            <div>
+              <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
+                {t('beandex.origin_label')} (Optional)
+              </label>
+              <input
+                type="text"
+                value={newBagOriginCountry}
+                onChange={(e) => setNewBagOriginCountry(e.target.value)}
+                placeholder="e.g. Etiopien, Colombia, Sydamerika..."
+                className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+              />
+            </div>
+
             <div>
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
                 Roast Date
@@ -333,6 +546,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
               />
             </div>
+
             <div>
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
                 {t('beandex.opened_date_label')} (Optional)
@@ -344,6 +558,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
               />
             </div>
+
             <div className="sm:col-span-2">
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
                 Assigned Grinder
@@ -360,6 +575,77 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 ))}
               </select>
             </div>
+
+            {/* Bag Photo Capture Row */}
+            <div className="sm:col-span-2 p-3 rounded-xl border border-[#DECFC0] bg-[#FAF7F2]/60 space-y-2">
+              <label className="text-[10px] text-[#7A6E65] uppercase font-mono font-bold flex items-center gap-1.5">
+                <Camera className="w-3.5 h-3.5 text-[#C26D52]" />
+                <span>{t('beandex.photo_btn')} (Optional)</span>
+              </label>
+              <div className="flex items-center gap-3">
+                {newBagImageUrl ? (
+                  <div className="relative group w-16 h-16 rounded-xl overflow-hidden border border-[#C26D52] shadow-xs">
+                    <img
+                      src={newBagImageUrl}
+                      alt="Bag Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewBagImageUrl(undefined)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#2C2018]/80 text-white flex items-center justify-center hover:bg-red-600 transition cursor-pointer"
+                      title="Remove photo"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-[#DECFC0] bg-white hover:bg-[#FFFDF9] cursor-pointer text-[11px] text-[#7A6E65] transition">
+                    <Camera className="w-4 h-4 text-[#C26D52]" />
+                    <span>Upload bag photo (Auto-compressed)</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAddFormImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+                <p className="text-[10px] text-[#A6998E] font-sans leading-tight">
+                  Store real coffee bag label photo with offline compression.
+                </p>
+              </div>
+            </div>
+
+            {/* Sensory Flavor Notes Selector (Vivino Style) */}
+            <div className="sm:col-span-2 space-y-1.5">
+              <label className="text-[10px] text-[#7A6E65] uppercase font-mono font-bold flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-[#C26D52]" />
+                <span>{t('beandex.flavor_notes_title')}</span>
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {POPULAR_FLAVOR_TAGS.map((tag) => {
+                  const isSelected =
+                    newBagFlavorNotes.includes(tag.labelDa) || newBagFlavorNotes.includes(tag.labelEn);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleNewBagFlavorNote(tag.labelDa)}
+                      className={`px-2.5 py-1 rounded-xl text-[10.5px] font-sans flex items-center gap-1 transition cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#C26D52] text-white font-bold shadow-xs'
+                          : 'bg-white border border-[#E8DFD5] text-[#7A6E65] hover:bg-[#FAF7F2]'
+                      }`}
+                    >
+                      <span>{tag.icon}</span>
+                      <span>{tag.labelDa}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="sm:col-span-2">
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
                 Tasting Notes / Barista Impressions (Optional)
@@ -376,7 +662,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
 
           <button
             type="submit"
-            className="px-4 py-2.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] font-semibold text-xs flex items-center gap-1.5 hover:bg-[#3D2D22] transition shadow-xs"
+            className="px-4 py-2.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] font-semibold text-xs flex items-center gap-1.5 hover:bg-[#3D2D22] transition shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Save to Beandex Vault</span>
@@ -547,16 +833,61 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Name & Roaster */}
-                    <div>
-                      <h4 className="font-bold text-xs text-[#2C2018] leading-snug line-clamp-2">
-                        {bean.name}
-                      </h4>
-                      {bean.roaster && (
-                        <p className="text-[11px] text-[#7A6E65] font-sans mt-0.5">
-                          {bean.roaster}
-                        </p>
-                      )}
+                    {/* Name, Bag Photo & Roaster */}
+                    <div className="flex items-start gap-3">
+                      {/* Bag Photo Thumbnail or Upload Trigger */}
+                      <div className="relative group shrink-0">
+                        {bean.imageUrl ? (
+                          <div className="w-14 h-14 rounded-xl overflow-hidden border border-[#DECFC0] shadow-2xs relative bg-stone-100">
+                            <img
+                              src={bean.imageUrl}
+                              alt={bean.name}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleTriggerCardPhotoUpload(bean.id)}
+                                className="w-5 h-5 rounded-full bg-white/90 text-[#2C2018] flex items-center justify-center hover:bg-white transition cursor-pointer"
+                                title={t('beandex.change_photo')}
+                              >
+                                <Camera className="w-2.5 h-2.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onUpdateBean(bean.id, { imageUrl: undefined })}
+                                className="w-5 h-5 rounded-full bg-red-600/90 text-white flex items-center justify-center hover:bg-red-600 transition cursor-pointer"
+                                title="Remove photo"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleTriggerCardPhotoUpload(bean.id)}
+                            className="w-14 h-14 rounded-xl border border-dashed border-[#DECFC0] bg-[#FAF7F2] hover:bg-[#FFFDF9] hover:border-[#C26D52] flex flex-col items-center justify-center text-[#A6998E] hover:text-[#C26D52] transition cursor-pointer group"
+                            title={t('beandex.photo_btn')}
+                          >
+                            <Camera className="w-4 h-4 mb-0.5 group-hover:scale-110 transition" />
+                            <span className="text-[8.5px] font-mono leading-none">Foto</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-bold text-xs text-[#2C2018] leading-snug line-clamp-2">
+                          {bean.name}
+                        </h4>
+                        {(bean.roaster || bean.originCountry) && (
+                          <p className="text-[11px] text-[#7A6E65] font-sans mt-0.5 truncate">
+                            {bean.roaster}
+                            {bean.roaster && bean.originCountry && ' • '}
+                            {bean.originCountry && <span className="text-[#A6998E]">{bean.originCountry}</span>}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Freshness & Degas Status Badge */}
@@ -633,6 +964,74 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                           <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" />
                           <span>{t('beandex.mark_opened_today')}</span>
                         </button>
+                      )}
+                    </div>
+
+                    {/* Sensory Flavor Notes Pills (Vivino style) */}
+                    <div className="space-y-1 pt-1 border-t border-[#E8DFD5]/50">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9.5px] uppercase font-mono font-bold text-[#7A6E65] flex items-center gap-1">
+                          <Tag className="w-3 h-3 text-[#C26D52]" />
+                          <span>{t('beandex.flavor_notes_title')}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditingFlavorBeanId(editingFlavorBeanId === bean.id ? null : bean.id)
+                          }
+                          className="text-[9px] font-bold text-[#C26D52] hover:underline cursor-pointer"
+                        >
+                          {editingFlavorBeanId === bean.id ? 'Luk' : t('beandex.add_flavor_btn')}
+                        </button>
+                      </div>
+
+                      {/* Active Flavor Pills Display */}
+                      {bean.flavorNotes && bean.flavorNotes.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {bean.flavorNotes.map((note, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#DECFC0] text-[10px] text-[#2C2018] font-sans flex items-center gap-1 shadow-2xs"
+                            >
+                              <span>{note}</span>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[9.5px] text-[#A6998E] italic font-sans">
+                          Ingen smagsnoter registreret endnu
+                        </p>
+                      )}
+
+                      {/* Inline Interactive Flavor Notes Selector Drawer */}
+                      {editingFlavorBeanId === bean.id && (
+                        <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#C26D52]/40 space-y-1.5 animate-fadeIn mt-1">
+                          <span className="text-[9px] font-mono text-[#7A6E65] block">
+                            Tryk for at tilføje eller fjerne smagsnoter:
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {POPULAR_FLAVOR_TAGS.map((tag) => {
+                              const isSelected =
+                                bean.flavorNotes?.includes(tag.labelDa) ||
+                                bean.flavorNotes?.includes(tag.labelEn);
+                              return (
+                                <button
+                                  key={tag.id}
+                                  type="button"
+                                  onClick={() => handleToggleCardFlavorNote(bean.id, tag.labelDa)}
+                                  className={`px-2 py-0.5 rounded-lg text-[10px] font-sans flex items-center gap-0.5 transition cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-[#C26D52] text-white font-bold shadow-xs'
+                                      : 'bg-white border border-[#E8DFD5] text-[#7A6E65] hover:bg-[#FFFDF9]'
+                                  }`}
+                                >
+                                  <span>{tag.icon}</span>
+                                  <span>{tag.labelDa}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       )}
                     </div>
 
@@ -864,6 +1263,15 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Hidden file input for bag photo capture on individual bean cards */}
+      <input
+        ref={cardFileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleCardPhotoSelected}
+        className="hidden"
+      />
 
       {/* Freshness & Degas Info Modal */}
       <FreshnessInfoModal

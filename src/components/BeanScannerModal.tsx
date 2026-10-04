@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   Camera,
   Barcode,
@@ -16,9 +16,19 @@ import {
   Star,
   Award,
   Globe,
+  Tag,
+  Image as ImageIcon,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, RoastLevel, RatioStyle, GrinderProfile } from '../types/espresso';
 import { useTranslation } from '../i18n';
+import {
+  searchCatalogBeans,
+  suggestRoasters,
+  findDidYouMeanBean,
+  POPULAR_FLAVOR_TAGS,
+  compressImageToDataUrl,
+  type CatalogCoffeeItem,
+} from '../lib/beanCatalogMatcher';
 import {
   lookupBarcode,
   parseCoffeeBagPhoto,
@@ -77,6 +87,16 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   const [editRatio, setEditRatio] = useState<RatioStyle>('standard');
   const [editTargetYield, setEditTargetYield] = useState<number>(36.0);
   const [editGrindSetting, setEditGrindSetting] = useState<string>('12');
+  const [editFlavorNotes, setEditFlavorNotes] = useState<string[]>([]);
+  const [editImageUrl, setEditImageUrl] = useState<string | undefined>(undefined);
+  const [showRoasterSuggestions, setShowRoasterSuggestions] = useState<boolean>(false);
+  const [showNameSuggestions, setShowNameSuggestions] = useState<boolean>(false);
+  const bagImageInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Vivino-style Autocomplete & Did You Mean heuristics
+  const roasterSuggestions = useMemo(() => suggestRoasters(editRoaster, 5), [editRoaster]);
+  const nameSuggestions = useMemo(() => searchCatalogBeans(editName, 4), [editName]);
+  const didYouMean = useMemo(() => findDidYouMeanBean(editRoaster, editName), [editRoaster, editName]);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -105,6 +125,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setEditRoaster(info.roaster || '');
     setEditRoastDate(info.roastDate);
     setEditRoastLevel(info.roastLevel);
+    setEditFlavorNotes(info.flavorNotes || []);
+    setEditImageUrl(info.imageUrl);
 
     // Smart default grind & yield depending on roast level
     if (info.roastLevel === 'light') {
@@ -187,6 +209,10 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setDateScanError(null);
     setManualCode('');
     setIsDateOcrScanning(false);
+    setEditFlavorNotes([]);
+    setEditImageUrl(undefined);
+    setShowRoasterSuggestions(false);
+    setShowNameSuggestions(false);
     onClose();
   }, [stopCamera, onClose]);
 
@@ -199,6 +225,10 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       setDateScanError(null);
       setManualCode('');
       setIsDateOcrScanning(false);
+      setEditFlavorNotes([]);
+      setEditImageUrl(undefined);
+      setShowRoasterSuggestions(false);
+      setShowNameSuggestions(false);
       startCamera();
     } else {
       stopCamera();
@@ -249,6 +279,14 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setIsScanning(true);
     setFeedbackMessage('Analyzing bag photo, typography & roast date...');
     try {
+      // Compress and save bag photo thumbnail for Vivino-style card display
+      try {
+        const compactDataUrl = await compressImageToDataUrl(file);
+        setEditImageUrl(compactDataUrl);
+      } catch (e) {
+        console.debug('Bag photo thumbnail compression skipped', e);
+      }
+
       const info = await parseCoffeeBagPhoto(file);
       applyScanResult(info);
     } catch (err) {
@@ -332,6 +370,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       communityVotes: scannedResult?.communityVotes,
       expertScore: scannedResult?.expertScore,
       expertSource: scannedResult?.expertSource,
+      flavorNotes: editFlavorNotes.length > 0 ? editFlavorNotes : undefined,
+      imageUrl: editImageUrl,
     };
 
     // Fire-and-forget background cloud sync to Supabase (Zero UI latency)
@@ -344,6 +384,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
         purchase_country: scannedResult?.purchaseCountry || 'DK',
         expert_score: scannedResult?.expertScore,
         expert_source: scannedResult?.expertSource,
+        flavor_notes: editFlavorNotes,
+        image_url: editImageUrl,
       }).catch((e) => console.debug('Background cloud bean sync skipped:', e));
     }
 
@@ -358,6 +400,10 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setDateScanError(null);
     setManualCode('');
     setIsDateOcrScanning(false);
+    setEditFlavorNotes([]);
+    setEditImageUrl(undefined);
+    setShowRoasterSuggestions(false);
+    setShowNameSuggestions(false);
     startCamera();
   };
 
@@ -681,32 +727,199 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
               )}
 
               {/* Form Fields */}
-              <div className="p-4 rounded-xl bg-white border border-[#E8DFD5] space-y-3 shadow-sm">
+              <div className="p-4 rounded-xl bg-white border border-[#E8DFD5] space-y-3.5 shadow-sm">
+                {/* Vivino-style Did-You-Mean suggestion banner */}
+                {didYouMean && (
+                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300 flex items-center justify-between text-xs animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                      <div className="text-[11px] text-amber-900 leading-tight">
+                        <span>{t('beandex.did_you_mean', { name: `${didYouMean.suggestedRoaster}: ${didYouMean.matchedItem.name}` })}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditRoaster(didYouMean.suggestedRoaster);
+                        setEditName(didYouMean.matchedItem.name);
+                        setEditRoastLevel(didYouMean.matchedItem.roastLevel);
+                        if (didYouMean.matchedItem.flavorNotes) {
+                          setEditFlavorNotes(didYouMean.matchedItem.flavorNotes);
+                        }
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] transition shrink-0 ml-2"
+                    >
+                      {t('beandex.apply_suggestion')}
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
+                  <div className="relative">
                     <label className="text-[10px] font-bold text-[#7A6E65] uppercase block mb-1">
                       Bean Origin / Name
                     </label>
                     <input
                       type="text"
                       value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      placeholder="e.g. Kenya Nyeri AA (Washed)"
+                      onFocus={() => setShowNameSuggestions(true)}
+                      onChange={(e) => {
+                        setEditName(e.target.value);
+                        setShowNameSuggestions(true);
+                      }}
+                      placeholder="e.g. Ristemesterens Foretrukne"
                       className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-xs font-semibold text-[#2C2018] focus:outline-none focus:border-[#C26D52]"
                     />
+
+                    {/* Autocomplete suggestions dropdown */}
+                    {showNameSuggestions && editName.length >= 2 && nameSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-[#E8DFD5] rounded-xl shadow-lg p-1.5 space-y-1 animate-fadeIn">
+                        <span className="text-[9px] font-bold uppercase text-[#7A6E65] px-2 block">
+                          {t('beandex.catalog_suggestions')}
+                        </span>
+                        {nameSuggestions.map((item: CatalogCoffeeItem) => (
+                          <button
+                            key={item.name}
+                            type="button"
+                            onClick={() => {
+                              setEditName(item.name);
+                              setEditRoaster(item.roaster);
+                              setEditRoastLevel(item.roastLevel);
+                              if (item.flavorNotes) setEditFlavorNotes(item.flavorNotes);
+                              setShowNameSuggestions(false);
+                            }}
+                            className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-[#FAF7F2] text-xs text-[#2C2018] flex items-center justify-between transition"
+                          >
+                            <span className="font-semibold truncate">{item.name}</span>
+                            <span className="text-[10px] text-[#C26D52] font-mono shrink-0 ml-2">{item.roaster}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  <div className="relative">
                     <label className="text-[10px] font-bold text-[#7A6E65] uppercase block mb-1">
                       Roaster / Brand
                     </label>
                     <input
                       type="text"
                       value={editRoaster}
-                      onChange={(e) => setEditRoaster(e.target.value)}
-                      placeholder="e.g. Coffee Collective or Lavazza"
+                      onFocus={() => setShowRoasterSuggestions(true)}
+                      onChange={(e) => {
+                        setEditRoaster(e.target.value);
+                        setShowRoasterSuggestions(true);
+                      }}
+                      placeholder="e.g. Hedekaffe or Lavazza"
                       className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-xs font-semibold text-[#2C2018] focus:outline-none focus:border-[#C26D52]"
                     />
+
+                    {/* Roaster quick suggestions */}
+                    {showRoasterSuggestions && editRoaster.length >= 2 && roasterSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-[#E8DFD5] rounded-xl shadow-lg p-1.5 flex flex-wrap gap-1 animate-fadeIn">
+                        {roasterSuggestions.map((r: string) => (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() => {
+                              setEditRoaster(r);
+                              setShowRoasterSuggestions(false);
+                            }}
+                            className="px-2 py-1 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[11px] font-semibold text-[#2C2018] transition"
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bag Photo Attachment Row */}
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]">
+                  <div className="w-12 h-12 rounded-lg bg-white border border-[#E8DFD5] flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                    {editImageUrl ? (
+                      <img src={editImageUrl} alt="Coffee Bag" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="w-5 h-5 text-[#A6998E]" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      ref={bagImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const dataUrl = await compressImageToDataUrl(file);
+                          setEditImageUrl(dataUrl);
+                        } catch (err) {
+                          console.warn('Bag photo error', err);
+                        }
+                        if (e.target) e.target.value = '';
+                      }}
+                      className="hidden"
+                    />
+                    <span className="text-[10px] font-bold uppercase text-[#7A6E65] block">
+                      {editImageUrl ? 'Posefoto Tilføjet' : 'Kaffepose Foto'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => bagImageInputRef.current?.click()}
+                      className="mt-0.5 text-xs font-bold text-[#C26D52] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>{editImageUrl ? t('beandex.change_photo') : t('beandex.photo_btn')}</span>
+                    </button>
+                  </div>
+                  {editImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setEditImageUrl(undefined)}
+                      className="text-[10px] text-red-600 hover:underline px-2 py-1"
+                    >
+                      Fjern
+                    </button>
+                  )}
+                </div>
+
+                {/* Vivino-style Sensory Flavor Notes Selector */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[10px] font-bold text-[#7A6E65] uppercase flex items-center gap-1">
+                      <Tag className="w-3 h-3 text-[#C26D52]" />
+                      <span>{t('beandex.flavor_notes_title')}</span>
+                    </label>
+                    <span className="text-[9px] text-[#A6998E]">Tap to select flavor profile</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {POPULAR_FLAVOR_TAGS.map((tag) => {
+                      const isSelected = editFlavorNotes.includes(tag.labelDa) || editFlavorNotes.includes(tag.labelEn);
+                      return (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setEditFlavorNotes(editFlavorNotes.filter((n) => n !== tag.labelDa && n !== tag.labelEn));
+                            } else {
+                              setEditFlavorNotes([...editFlavorNotes, tag.labelDa]);
+                            }
+                          }}
+                          className={`px-2 py-1 rounded-full text-[10px] font-semibold flex items-center gap-1 transition ${
+                            isSelected
+                              ? 'bg-[#C26D52] text-white shadow-xs'
+                              : 'bg-[#FAF7F2] border border-[#E8DFD5] text-[#7A6E65] hover:text-[#2C2018] hover:bg-white'
+                          }`}
+                        >
+                          <span>{tag.icon}</span>
+                          <span>{tag.labelDa}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

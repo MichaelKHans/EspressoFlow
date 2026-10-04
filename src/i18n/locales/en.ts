@@ -381,6 +381,14 @@ export const en = {
   'beandex.expert_badge': 'SCA EXPERT {score} PTS',
   'beandex.community_votes': '{rating} ★ ({votes} ratings)',
   'beandex.delete_bag_confirm': 'Are you sure you want to remove "{name}" from your vault?',
+  'beandex.flavor_notes_title': 'Sensory Flavor Notes',
+  'beandex.add_flavor_btn': '+ Add Flavor Notes',
+  'beandex.photo_btn': 'Add Bag Photo',
+  'beandex.change_photo': 'Change Photo',
+  'beandex.catalog_suggestions': 'Verified Specialty Blends',
+  'beandex.did_you_mean': 'Did you mean: {name}?',
+  'beandex.apply_suggestion': 'Apply',
+  'beandex.origin_label': 'Origin / Country',
 
   // Shot Summary Modal (Immediate Post-Shot Feedback)
   'shotsummary.title': 'Extraction Complete',

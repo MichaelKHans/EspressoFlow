@@ -40,6 +40,9 @@ export interface CoffeeBeanProfile {
   communityVotes?: number;
   expertScore?: number; // 0-100 scale (e.g. 94.0 from Coffee Review or SCA Q-Grader)
   expertSource?: string; // e.g. 'Coffee Review' | 'SCA Cupping' | 'Cup of Excellence'
+  imageUrl?: string; // Optional bag photo thumbnail (data URL or cloud link)
+  flavorNotes?: string[]; // Vivino-style sensory flavor tags (e.g. ['Dark Chocolate', 'Caramel'])
+  originCountry?: string; // Origin region or country (e.g. 'Colombia', 'Vestjylland')
 }
 
 export interface ShotRecord {
