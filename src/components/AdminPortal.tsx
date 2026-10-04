@@ -204,14 +204,14 @@ CREATE POLICY "Allow public insert bean_drink_ratings" ON bean_drink_ratings FOR
 DROP POLICY IF EXISTS "Allow public delete bean_drink_ratings" ON bean_drink_ratings;
 CREATE POLICY "Allow public delete bean_drink_ratings" ON bean_drink_ratings FOR DELETE USING (true);
 
--- 6. VERIFIED SPECIALTY SEEDS
+-- 6. VERIFIED SPECIALTY SEEDS (Clean: Only genuine public cup records have expert_score)
 INSERT INTO global_coffee_beans (barcode, roaster, name, roast_level, origin_country, purchase_country, suitable_for, flavor_notes, avg_rating, ratings_count, is_verified, expert_score, expert_source)
 VALUES
-  ('4056489503019', 'Hedekaffe', 'Ristemesterens Foretrukne Mellemristet', 'medium', 'Sydamerika & Indonesien (Ulfborg)', 'DK', ARRAY['pure_espresso', 'flat_white', 'cortado', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Karamel'], 4.85, 24, true, 89.0, 'Barista Tech Review'),
+  ('4056489503019', 'Hedekaffe', 'Ristemesterens Foretrukne Mellemristet', 'medium', 'Sydamerika & Indonesien (Ulfborg)', 'DK', ARRAY['pure_espresso', 'flat_white', 'cortado', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Karamel'], 4.85, 24, true, NULL, NULL),
   ('5700000000010', 'The Coffee Collective', 'Kieni', 'light', 'Kenya', 'DK', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Solbær', 'Rabarber', 'Rørsukker'], 4.90, 84, true, 94.0, 'Coffee Review'),
-  ('8000070025066', 'Lavazza', 'Espresso Barista Gran Crema', 'dark', 'Sydamerika & Sydøstasien', 'IT', ARRAY['pure_espresso', 'cappuccino', 'flat_white'], ARRAY['Mørk Chokolade', 'Krydderier', 'Karamel'], 4.75, 95, true, 88.0, 'Italian Barista Guild'),
-  ('8000070025080', 'Lavazza', 'Espresso Barista Perfetto', 'medium', 'Central & Sydamerika (100% Arabica)', 'IT', ARRAY['pure_espresso', 'cortado', 'flat_white'], ARRAY['Chokolade', 'Jasmin & Blomster', 'Frugtagtig'], 4.72, 68, true, 89.0, 'Coffee Review'),
-  ('8000070025059', 'Lavazza', 'Espresso Barista Intenso', 'dark', 'Sydamerika & Afrika', 'IT', ARRAY['pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 4.65, 74, true, 87.5, 'Barista Cupping'),
+  ('8000070025066', 'Lavazza', 'Espresso Barista Gran Crema', 'dark', 'Sydamerika & Sydøstasien', 'IT', ARRAY['pure_espresso', 'cappuccino', 'flat_white'], ARRAY['Mørk Chokolade', 'Krydderier', 'Karamel'], 4.75, 95, true, NULL, NULL),
+  ('8000070025080', 'Lavazza', 'Espresso Barista Perfetto', 'medium', 'Central & Sydamerika (100% Arabica)', 'IT', ARRAY['pure_espresso', 'cortado', 'flat_white'], ARRAY['Chokolade', 'Jasmin & Blomster', 'Frugtagtig'], 4.72, 68, true, NULL, NULL),
+  ('8000070025059', 'Lavazza', 'Espresso Barista Intenso', 'dark', 'Sydamerika & Afrika', 'IT', ARRAY['pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 4.65, 74, true, NULL, NULL),
   ('7072611000018', 'Tim Wendelboe', 'Caballero Geisha', 'light', 'Honduras', 'NO', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Jasmin & Blomster', 'Fersken & Abrikos', 'Bergamot'], 4.98, 28, true, 95.5, 'Cup of Excellence')
 ON CONFLICT (barcode) DO UPDATE SET
   expert_score = EXCLUDED.expert_score,
@@ -390,15 +390,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     if (!editingBean) return;
     setIsSubmittingCurator(true);
 
-    const scoreNum = formExpertScore.trim() ? parseFloat(formExpertScore) : undefined;
-    const updates: Partial<GlobalCoffeeBean> = {
+    const scoreNum = formExpertScore.trim() ? parseFloat(formExpertScore) : null;
+    const updates: any = {
       roaster: formRoaster.trim(),
       name: formName.trim(),
       roast_level: formRoastLevel,
       origin_country: formOrigin.trim() || undefined,
       purchase_country: formPurchaseCountry.trim(),
       expert_score: scoreNum,
-      expert_source: scoreNum ? formExpertSource.trim() : undefined,
+      expert_source: scoreNum ? formExpertSource.trim() : null,
       flavor_notes: formFlavorNotes,
       suitable_for: formSuitableFor,
       image_url: formImageUrl,
@@ -1398,14 +1398,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                     {/* SCA Cupping Score */}
                     <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 space-y-2 sm:col-span-2">
-                      <div className="flex items-center gap-1.5 text-amber-900 font-bold font-mono text-xs">
-                        <Award className="w-4 h-4 text-amber-600" />
-                        <span>Officiel SCA Cupping Score (0–100 Point)</span>
+                      <div className="flex items-center justify-between flex-wrap gap-1">
+                        <div className="flex items-center gap-1.5 text-amber-900 font-bold font-mono text-xs">
+                          <Award className="w-4 h-4 text-amber-600" />
+                          <span>Officiel SCA Cupping Score (0–100 Point)</span>
+                        </div>
+                        <span className="text-[9.5px] uppercase font-mono px-2 py-0.5 rounded bg-amber-100 border border-amber-300 text-amber-800 font-bold">
+                          Valgfri (Efterlad tom hvis ikke certificeret)
+                        </span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <p className="text-[10px] text-amber-800/80 font-sans leading-tight">
+                        Må <strong>KUN</strong> udfyldes hvis kaffen har en verificeret officiel bedømmelse fra CQI Q-Graders, Cup of Excellence eller Coffee Review. Efterlad tom for almindelige kaffer.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                         <div>
                           <label className="text-[9.5px] uppercase font-mono text-amber-800 block mb-0.5">
-                            SCA Score (f.eks. 88.5, 91.0, 94.0)
+                            SCA Score (f.eks. 91.5, 94.0 — eller tom)
                           </label>
                           <input
                             type="number"
@@ -1414,25 +1422,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             max="100"
                             value={formExpertScore}
                             onChange={(e) => setFormExpertScore(e.target.value)}
-                            placeholder="f.eks. 91.0"
+                            placeholder="Efterlad tom hvis ingen officiel score"
                             className="w-full px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-xs font-mono focus:outline-hidden"
                           />
                         </div>
                         <div>
                           <label className="text-[9.5px] uppercase font-mono text-amber-800 block mb-0.5">
-                            Cupping Kilde / Bedømmer
+                            Akkrediteret Cupping Kilde
                           </label>
                           <select
                             value={formExpertSource}
                             onChange={(e) => setFormExpertSource(e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-xs font-mono focus:outline-hidden"
+                            disabled={!formExpertScore.trim()}
+                            className="w-full px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-xs font-mono focus:outline-hidden disabled:opacity-50"
                           >
-                            <option value="SCA Q-Grader">SCA Q-Grader Cupping</option>
-                            <option value="Coffee Review">Coffee Review (Blind Tested)</option>
-                            <option value="Cup of Excellence">Cup of Excellence Auction</option>
-                            <option value="World Barista Championship">World Barista Championship</option>
+                            <option value="SCA Q-Grader">SCA Q-Grader (CQI Certificeret)</option>
+                            <option value="Coffee Review">Coffee Review (Officiel Blindtest)</option>
+                            <option value="Cup of Excellence">Cup of Excellence (ACE Auktion)</option>
+                            <option value="World Barista Championship">World Barista Championship (WBC)</option>
                             <option value="Nordic Roaster Forum">Nordic Roaster Forum</option>
-                            <option value="Barista Tech Review">Barista Tech Review (Admin)</option>
                           </select>
                         </div>
                       </div>

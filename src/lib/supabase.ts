@@ -466,8 +466,6 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       ratings_count: 19,
       verifications_count: 14,
       is_verified: true,
-      expert_score: 89.0,
-      expert_source: 'Barista Tech Review',
     },
     {
       barcode: '8000070025066',
@@ -482,8 +480,6 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       ratings_count: 88,
       verifications_count: 65,
       is_verified: true,
-      expert_score: 88.0,
-      expert_source: 'Italian Espresso Barista Guild',
     },
     {
       barcode: '5711953000012',
@@ -586,8 +582,6 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       ratings_count: 65,
       verifications_count: 50,
       is_verified: true,
-      expert_score: 91.0,
-      expert_source: 'SCA Cupping',
     },
     {
       barcode: '8027785055027',
