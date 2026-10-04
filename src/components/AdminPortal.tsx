@@ -33,6 +33,8 @@ import {
   Search,
   X,
   Copy,
+  ArrowUpDown,
+  Store,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, UserAccessState } from '../types/espresso';
 import {
@@ -140,6 +142,7 @@ CREATE TABLE IF NOT EXISTS global_coffee_beans (
   roast_level VARCHAR(30) NOT NULL,
   origin_country VARCHAR(100),
   purchase_country VARCHAR(10) DEFAULT 'DK',
+  purchase_location VARCHAR(120),
   suitable_for TEXT[] DEFAULT '{}',
   flavor_notes TEXT[] DEFAULT '{}',
   avg_rating NUMERIC(3,2) DEFAULT 0.00,
@@ -160,12 +163,15 @@ CREATE TABLE IF NOT EXISTS bean_drink_ratings (
   rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
   drink_type VARCHAR(50) NOT NULL,
   purchase_country VARCHAR(10) DEFAULT 'DK',
+  purchase_location VARCHAR(120),
   brew_ratio VARCHAR(20),
   comment TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 3. ENSURE ALL COLUMNS EXIST IF TABLE WAS CREATED FROM EARLIER DRAFT
+ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS purchase_location VARCHAR(120);
+ALTER TABLE bean_drink_ratings ADD COLUMN IF NOT EXISTS purchase_location VARCHAR(120);
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS flavor_notes TEXT[] DEFAULT '{}';
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS verifications_count INT DEFAULT 1;
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS expert_score NUMERIC(4,1);
@@ -204,16 +210,17 @@ CREATE POLICY "Allow public insert bean_drink_ratings" ON bean_drink_ratings FOR
 DROP POLICY IF EXISTS "Allow public delete bean_drink_ratings" ON bean_drink_ratings;
 CREATE POLICY "Allow public delete bean_drink_ratings" ON bean_drink_ratings FOR DELETE USING (true);
 
--- 6. VERIFIED SPECIALTY SEEDS (Clean: Only genuine public cup records have expert_score)
-INSERT INTO global_coffee_beans (barcode, roaster, name, roast_level, origin_country, purchase_country, suitable_for, flavor_notes, avg_rating, ratings_count, is_verified, expert_score, expert_source)
+-- 6. VERIFIED SPECIALTY SEEDS (Clean: Only genuine public cup records, Untappd retail locations, 0 user ratings)
+INSERT INTO global_coffee_beans (barcode, roaster, name, roast_level, origin_country, purchase_country, purchase_location, suitable_for, flavor_notes, avg_rating, ratings_count, is_verified, expert_score, expert_source)
 VALUES
-  ('4056489503019', 'Hedekaffe', 'Ristemesterens Foretrukne Mellemristet', 'medium', 'Sydamerika & Indonesien (Ulfborg)', 'DK', ARRAY['pure_espresso', 'flat_white', 'cortado', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Karamel'], 4.85, 24, true, NULL, NULL),
-  ('5700000000010', 'The Coffee Collective', 'Kieni', 'light', 'Kenya', 'DK', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Solbær', 'Rabarber', 'Rørsukker'], 4.90, 84, true, 94.0, 'Coffee Review'),
-  ('8000070025066', 'Lavazza', 'Espresso Barista Gran Crema', 'dark', 'Sydamerika & Sydøstasien', 'IT', ARRAY['pure_espresso', 'cappuccino', 'flat_white'], ARRAY['Mørk Chokolade', 'Krydderier', 'Karamel'], 4.75, 95, true, NULL, NULL),
-  ('8000070025080', 'Lavazza', 'Espresso Barista Perfetto', 'medium', 'Central & Sydamerika (100% Arabica)', 'IT', ARRAY['pure_espresso', 'cortado', 'flat_white'], ARRAY['Chokolade', 'Jasmin & Blomster', 'Frugtagtig'], 4.72, 68, true, NULL, NULL),
-  ('8000070025059', 'Lavazza', 'Espresso Barista Intenso', 'dark', 'Sydamerika & Afrika', 'IT', ARRAY['pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 4.65, 74, true, NULL, NULL),
-  ('7072611000018', 'Tim Wendelboe', 'Caballero Geisha', 'light', 'Honduras', 'NO', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Jasmin & Blomster', 'Fersken & Abrikos', 'Bergamot'], 4.98, 28, true, 95.5, 'Cup of Excellence')
+  ('4056489503019', 'Hedekaffe', 'Ristemesterens Foretrukne Mellemristet', 'medium', 'Sydamerika & Indonesien (Ulfborg)', 'DK', 'Hedekaffe Gårdbutik (Ulfborg) / Webshop', ARRAY['pure_espresso', 'flat_white', 'cortado', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Karamel'], 0.00, 0, true, NULL, NULL),
+  ('5700000000010', 'The Coffee Collective', 'Kieni', 'light', 'Kenya', 'DK', 'The Coffee Collective Kaffebarer / Webshop', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Solbær', 'Rabarber', 'Rørsukker'], 0.00, 0, true, 94.0, 'Coffee Review'),
+  ('8000070025066', 'Lavazza', 'Espresso Barista Gran Crema', 'dark', 'Sydamerika & Sydøstasien', 'IT', 'Føtex, Bilka, Meny, Nemlig', ARRAY['pure_espresso', 'cappuccino', 'flat_white'], ARRAY['Mørk Chokolade', 'Krydderier', 'Karamel'], 0.00, 0, true, NULL, NULL),
+  ('8000070025080', 'Lavazza', 'Espresso Barista Perfetto', 'medium', 'Central & Sydamerika (100% Arabica)', 'IT', 'Føtex, Bilka, Meny', ARRAY['pure_espresso', 'cortado', 'flat_white'], ARRAY['Chokolade', 'Jasmin & Blomster', 'Frugtagtig'], 0.00, 0, true, NULL, NULL),
+  ('8000070025059', 'Lavazza', 'Espresso Barista Intenso', 'dark', 'Sydamerika & Afrika', 'IT', 'Føtex, Bilka, Meny', ARRAY['pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 0.00, 0, true, NULL, NULL),
+  ('7072611000018', 'Tim Wendelboe', 'Caballero Geisha', 'light', 'Honduras', 'NO', 'Tim Wendelboe Oslo / Webshop', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Jasmin & Blomster', 'Fersken & Abrikos', 'Bergamot'], 0.00, 0, true, 95.5, 'Cup of Excellence')
 ON CONFLICT (barcode) DO UPDATE SET
+  purchase_location = EXCLUDED.purchase_location,
   expert_score = EXCLUDED.expert_score,
   expert_source = EXCLUDED.expert_source,
   is_verified = TRUE,
@@ -314,6 +321,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [isLoadingCurator, setIsLoadingCurator] = useState<boolean>(false);
   const [curatorSubTab, setCuratorSubTab] = useState<'pending' | 'verified' | 'create' | 'checklist'>('pending');
   const [curatorSearch, setCuratorSearch] = useState<string>('');
+  const [curatorSortBy, setCuratorSortBy] = useState<
+    'newest' | 'rating_desc' | 'votes_desc' | 'score_desc' | 'name_asc' | 'roaster_asc' | 'roast'
+  >('newest');
   const [editingBean, setEditingBean] = useState<GlobalCoffeeBean | null>(null);
   const [curatorFeedback, setCuratorFeedback] = useState<string | null>(null);
 
@@ -324,6 +334,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [formRoastLevel, setFormRoastLevel] = useState<'light' | 'medium' | 'dark'>('medium');
   const [formOrigin, setFormOrigin] = useState<string>('');
   const [formPurchaseCountry, setFormPurchaseCountry] = useState<string>('DK');
+  const [formPurchaseLocation, setFormPurchaseLocation] = useState<string>('');
   const [formExpertScore, setFormExpertScore] = useState<string>('');
   const [formExpertSource, setFormExpertSource] = useState<string>('SCA Q-Grader');
   const [formFlavorNotes, setFormFlavorNotes] = useState<string[]>([]);
@@ -378,6 +389,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setFormRoastLevel(bean.roast_level);
     setFormOrigin(bean.origin_country || '');
     setFormPurchaseCountry(bean.purchase_country || 'DK');
+    setFormPurchaseLocation(bean.purchase_location || '');
     setFormExpertScore(bean.expert_score ? String(bean.expert_score) : '');
     setFormExpertSource(bean.expert_source || 'SCA Q-Grader');
     setFormFlavorNotes(bean.flavor_notes || []);
@@ -397,6 +409,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       roast_level: formRoastLevel,
       origin_country: formOrigin.trim() || undefined,
       purchase_country: formPurchaseCountry.trim(),
+      purchase_location: formPurchaseLocation.trim() || undefined,
       expert_score: scoreNum,
       expert_source: scoreNum ? formExpertSource.trim() : null,
       flavor_notes: formFlavorNotes,
@@ -436,14 +449,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       roast_level: formRoastLevel,
       origin_country: formOrigin.trim() || undefined,
       purchase_country: formPurchaseCountry.trim() || 'DK',
+      purchase_location: formPurchaseLocation.trim() || undefined,
       expert_score: scoreNum,
       expert_source: scoreNum ? formExpertSource.trim() : undefined,
       flavor_notes: formFlavorNotes,
       suitable_for: formSuitableFor,
       image_url: formImageUrl,
       is_verified: true,
-      avg_rating: 5.0,
-      ratings_count: 1,
+      avg_rating: 0.0,
+      ratings_count: 0,
       verifications_count: 1,
     };
 
@@ -457,6 +471,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setFormRoaster('');
       setFormName('');
       setFormOrigin('');
+      setFormPurchaseLocation('');
       setFormExpertScore('');
       setFormFlavorNotes([]);
       setFormImageUrl(undefined);
@@ -543,7 +558,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             .reduce((acc, b) => acc + (b.rating || 0), 0) /
           beans.filter((b) => (b.rating || 0) > 0).length
         ).toFixed(1)
-      : '4.8';
+      : '–';
 
   // Metrics (Simulated real-world trial & paid metrics based on app install)
   const simulatedTrialUsers = 142;
@@ -1093,15 +1108,40 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {activeTab === 'curator' && (() => {
           const pendingBeans = curatorBeans.filter((b) => !b.is_verified);
           const verifiedBeans = curatorBeans.filter((b) => b.is_verified);
-          const displayedBeans = (curatorSubTab === 'pending' ? pendingBeans : verifiedBeans).filter((b) => {
+          const filteredBeans = (curatorSubTab === 'pending' ? pendingBeans : verifiedBeans).filter((b) => {
             if (!curatorSearch.trim()) return true;
             const q = curatorSearch.toLowerCase();
             return (
               b.name.toLowerCase().includes(q) ||
               b.roaster.toLowerCase().includes(q) ||
               b.barcode.includes(q) ||
-              (b.origin_country && b.origin_country.toLowerCase().includes(q))
+              (b.origin_country && b.origin_country.toLowerCase().includes(q)) ||
+              (b.purchase_location && b.purchase_location.toLowerCase().includes(q))
             );
+          });
+
+          const displayedBeans = [...filteredBeans].sort((a, b) => {
+            if (curatorSortBy === 'rating_desc') {
+              if (b.avg_rating !== a.avg_rating) return b.avg_rating - a.avg_rating;
+              return b.ratings_count - a.ratings_count;
+            }
+            if (curatorSortBy === 'votes_desc') {
+              return b.ratings_count - a.ratings_count;
+            }
+            if (curatorSortBy === 'score_desc') {
+              return (b.expert_score || 0) - (a.expert_score || 0);
+            }
+            if (curatorSortBy === 'name_asc') {
+              return a.name.localeCompare(b.name);
+            }
+            if (curatorSortBy === 'roaster_asc') {
+              return a.roaster.localeCompare(b.roaster);
+            }
+            if (curatorSortBy === 'roast') {
+              const order: Record<string, number> = { light: 1, medium: 2, dark: 3 };
+              return (order[a.roast_level] || 2) - (order[b.roast_level] || 2);
+            }
+            return (b.created_at || '').localeCompare(a.created_at || '');
           });
 
           return (
@@ -1396,6 +1436,36 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       />
                     </div>
 
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] text-[#7A6E65] uppercase font-mono flex items-center justify-between mb-1">
+                        <span className="flex items-center gap-1 font-bold text-[#2C2018]">
+                          <Store className="w-3.5 h-3.5 text-[#C26D52]" />
+                          <span>Købssted / Butik (Untappd-stil)</span>
+                        </span>
+                        <span className="text-[9.5px] text-[#A6998E]">Hvor kan kaffen købes?</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formPurchaseLocation}
+                        onChange={(e) => setFormPurchaseLocation(e.target.value)}
+                        placeholder="f.eks. Føtex, Meny, Hedekaffe Gårdbutik, Webshop..."
+                        className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-hidden focus:ring-1 focus:ring-[#C26D52]"
+                      />
+                      <div className="flex flex-wrap items-center gap-1 pt-1.5 text-[9.5px]">
+                        <span className="text-[#A6998E]">Hurtigvalg:</span>
+                        {['Føtex, Bilka, Meny', 'SuperBrugsen', 'Rema 1000', 'Meny', 'Kaffebar / Risteri', 'Webshop', 'Hedekaffe Gårdbutik'].map((st) => (
+                          <button
+                            key={st}
+                            type="button"
+                            onClick={() => setFormPurchaseLocation(st)}
+                            className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#DECFC0] hover:border-[#C26D52] hover:text-[#C26D52] text-[#7A6E65] transition cursor-pointer"
+                          >
+                            {st}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* SCA Cupping Score */}
                     <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 space-y-2 sm:col-span-2">
                       <div className="flex items-center justify-between flex-wrap gap-1">
@@ -1569,15 +1639,35 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       </span>
                     </div>
 
-                    <div className="relative sm:w-60">
-                      <Search className="w-3.5 h-3.5 text-[#7A6E65] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={curatorSearch}
-                        onChange={(e) => setCuratorSearch(e.target.value)}
-                        placeholder="Søg på risteri, navn el. EAN..."
-                        className="w-full pl-8 pr-2.5 py-1.5 rounded-xl border border-[#E8DFD5] bg-white text-[11px] focus:outline-hidden focus:border-[#C26D52]"
-                      />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 bg-[#FAF7F2] border border-[#E8DFD5] px-2.5 py-1 rounded-xl">
+                        <ArrowUpDown className="w-3.5 h-3.5 text-[#C26D52]" />
+                        <span className="text-[10px] text-[#7A6E65] font-bold">Sorter:</span>
+                        <select
+                          value={curatorSortBy}
+                          onChange={(e) => setCuratorSortBy(e.target.value as any)}
+                          className="bg-transparent text-[10.5px] font-bold text-[#2C2018] focus:outline-hidden cursor-pointer"
+                        >
+                          <option value="newest">Nyeste tilføjet</option>
+                          <option value="rating_desc">Højeste bedømmelse (★)</option>
+                          <option value="votes_desc">Flest stemmer</option>
+                          <option value="score_desc">SCA Cupping Score (90+ PTS)</option>
+                          <option value="name_asc">Navn (A-Å)</option>
+                          <option value="roaster_asc">Risteri (A-Å)</option>
+                          <option value="roast">Risteprofil (Lys → Mørk)</option>
+                        </select>
+                      </div>
+
+                      <div className="relative sm:w-56">
+                        <Search className="w-3.5 h-3.5 text-[#7A6E65] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={curatorSearch}
+                          onChange={(e) => setCuratorSearch(e.target.value)}
+                          placeholder="Søg på risteri, navn el. EAN..."
+                          className="w-full pl-8 pr-2.5 py-1.5 rounded-xl border border-[#E8DFD5] bg-white text-[11px] focus:outline-hidden focus:border-[#C26D52]"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1641,9 +1731,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                   {bean.roast_level}
                                 </span>
                                 {bean.expert_score && (
-                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs">
                                     <Award className="w-3 h-3 text-amber-600" />
                                     <span>{bean.expert_score} PTS</span>
+                                  </span>
+                                )}
+                                {bean.ratings_count > 0 ? (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs">
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
+                                    <span>{bean.avg_rating.toFixed(1)}</span>
+                                    <span className="text-[8px] text-amber-700/80 font-normal">({bean.ratings_count} stemmer)</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-[8.5px] px-1.5 py-0.2 rounded bg-[#FAF7F2] text-[#8C7E72] border border-[#E8DFD5] font-sans">
+                                    Ny (0 stemmer)
                                   </span>
                                 )}
                               </div>
@@ -1652,8 +1753,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 <span>EAN: {bean.barcode}</span>
                                 <span>•</span>
                                 <span>{bean.origin_country || bean.purchase_country}</span>
-                                <span>•</span>
-                                <span>★ {bean.avg_rating.toFixed(1)} ({bean.ratings_count} stemmer)</span>
+                                {bean.purchase_location && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-[#C26D52] font-sans font-semibold flex items-center gap-1">
+                                      <Store className="w-3 h-3 inline text-[#C26D52]" />
+                                      <span>{bean.purchase_location}</span>
+                                    </span>
+                                  </>
+                                )}
                               </div>
 
                               {bean.flavor_notes && bean.flavor_notes.length > 0 && (
@@ -1811,6 +1919,36 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         placeholder="DK, SE, NO, IT, DE..."
                         className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-hidden focus:ring-1 focus:ring-[#C26D52]"
                       />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] text-[#7A6E65] uppercase font-mono flex items-center justify-between mb-1">
+                        <span className="flex items-center gap-1 font-bold text-[#2C2018]">
+                          <Store className="w-3.5 h-3.5 text-[#C26D52]" />
+                          <span>Købssted / Butik (Untappd-stil)</span>
+                        </span>
+                        <span className="text-[9.5px] text-[#A6998E]">Hvor kan kaffen købes?</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formPurchaseLocation}
+                        onChange={(e) => setFormPurchaseLocation(e.target.value)}
+                        placeholder="f.eks. Føtex, Meny, Hedekaffe Gårdbutik, Webshop..."
+                        className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-hidden focus:ring-1 focus:ring-[#C26D52]"
+                      />
+                      <div className="flex flex-wrap items-center gap-1 pt-1.5 text-[9.5px]">
+                        <span className="text-[#A6998E]">Hurtigvalg:</span>
+                        {['Føtex, Bilka, Meny', 'SuperBrugsen', 'Rema 1000', 'Meny', 'Kaffebar / Risteri', 'Webshop', 'Hedekaffe Gårdbutik'].map((st) => (
+                          <button
+                            key={st}
+                            type="button"
+                            onClick={() => setFormPurchaseLocation(st)}
+                            className="px-2 py-0.5 rounded-md bg-[#FAF7F2] border border-[#DECFC0] hover:border-[#C26D52] hover:text-[#C26D52] text-[#7A6E65] transition cursor-pointer"
+                          >
+                            {st}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* SCA Score */}

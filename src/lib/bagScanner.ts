@@ -13,6 +13,7 @@ export interface ScannedBeanInfo {
   isEstimatedFromBBD?: boolean;
   bestBeforeDate?: string;
   purchaseCountry?: string;
+  purchaseLocation?: string;
   suitableFor?: string[];
   communityRating?: number;
   communityVotes?: number;
@@ -539,12 +540,16 @@ export async function lookupBarcode(barcode: string): Promise<ScannedBeanInfo | 
         barcode: cleanCode,
         detectedFormat: cloudBean.is_verified ? 'Supabase Verified Vault' : 'Community Bean Vault',
         purchaseCountry: cloudBean.purchase_country,
+        purchaseLocation: cloudBean.purchase_location,
         suitableFor: cloudBean.suitable_for,
         communityRating: cloudBean.avg_rating,
         communityVotes: cloudBean.ratings_count,
         isVerified: cloudBean.is_verified,
         expertScore: cloudBean.expert_score,
         expertSource: cloudBean.expert_source,
+        imageUrl: cloudBean.image_url,
+        flavorNotes: cloudBean.flavor_notes,
+        originCountry: cloudBean.origin_country,
       };
     }
   } catch (cloudErr) {

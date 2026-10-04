@@ -14,6 +14,7 @@ export interface GlobalCoffeeBean {
   roast_level: 'light' | 'medium' | 'dark';
   origin_country?: string;
   purchase_country: string; // e.g. 'DK', 'SE', 'NO', 'DE', 'IT'
+  purchase_location?: string; // Untappd-style retail store/venue (e.g. 'Føtex', 'Hedekaffe Gårdbutik', 'Meny', 'Online')
   suitable_for: string[]; // e.g. ['pure_espresso', 'flat_white', 'cortado', 'cappuccino']
   flavor_notes: string[];
   avg_rating: number;
@@ -33,6 +34,7 @@ export interface BeanDrinkRating {
   rating: number;
   drink_type: 'pure_espresso' | 'flat_white' | 'cortado' | 'cappuccino' | 'all_rounder';
   purchase_country: string;
+  purchase_location?: string; // Untappd-style store where coffee was purchased
   brew_ratio?: string;
   comment?: string;
   created_at?: string;
@@ -161,6 +163,7 @@ export async function fetchGlobalBean(
       roast_level: data.roast_level,
       origin_country: data.origin_country,
       purchase_country: data.purchase_country || 'DK',
+      purchase_location: data.purchase_location || undefined,
       suitable_for: data.suitable_for || [],
       flavor_notes: data.flavor_notes || [],
       avg_rating: Number(data.avg_rating) || 0,
@@ -230,6 +233,7 @@ export async function upsertGlobalBean(
     roast_level: bean.roast_level,
     origin_country: bean.origin_country || existing?.origin_country || '',
     purchase_country: bean.purchase_country || existing?.purchase_country || 'DK',
+    purchase_location: bean.purchase_location || existing?.purchase_location,
     suitable_for: bean.suitable_for || existing?.suitable_for || [],
     flavor_notes: bean.flavor_notes || existing?.flavor_notes || [],
     avg_rating: existing?.avg_rating || 0,
@@ -258,6 +262,7 @@ export async function upsertGlobalBean(
           roast_level: updatedBean.roast_level,
           origin_country: updatedBean.origin_country,
           purchase_country: updatedBean.purchase_country,
+          purchase_location: updatedBean.purchase_location,
           suitable_for: updatedBean.suitable_for,
           flavor_notes: updatedBean.flavor_notes,
           verifications_count: updatedBean.verifications_count,
@@ -275,7 +280,8 @@ export async function upsertGlobalBean(
       if (
         error.message.includes('expert_score') ||
         error.message.includes('expert_source') ||
-        error.message.includes('image_url')
+        error.message.includes('image_url') ||
+        error.message.includes('purchase_location')
       ) {
         console.warn('[Supabase Fallback] Remote schema missing new columns, retrying with base columns.');
         const { data: legacyData, error: legacyErr } = await client
@@ -452,6 +458,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
   }
 
   // Built-in verified beans fallback for 100% offline reliability
+  // Real community ratings start at 0 until real app users rate them
   return [
     {
       barcode: '4056489503019',
@@ -460,10 +467,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'medium',
       origin_country: 'Sydamerika & Indonesien (Ulfborg)',
       purchase_country: 'DK',
+      purchase_location: 'Hedekaffe Gårdbutik (Ulfborg) / Webshop',
       suitable_for: ['pure_espresso', 'flat_white', 'cortado', 'cappuccino'],
       flavor_notes: ['Mørk Chokolade', 'Ristede Nødder', 'Karamel'],
-      avg_rating: 4.85,
-      ratings_count: 19,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 14,
       is_verified: true,
     },
@@ -474,10 +482,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'dark',
       origin_country: 'Sydamerika & Sydøstasien',
       purchase_country: 'IT',
+      purchase_location: 'Føtex, Bilka, Meny, Nemlig',
       suitable_for: ['pure_espresso', 'cappuccino', 'flat_white'],
       flavor_notes: ['Mørk Chokolade', 'Krydderier', 'Fløjlsblød Crema'],
-      avg_rating: 4.75,
-      ratings_count: 88,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 65,
       is_verified: true,
     },
@@ -488,10 +497,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'light',
       origin_country: 'Kenya',
       purchase_country: 'DK',
+      purchase_location: 'The Coffee Collective Kaffebarer / Webshop',
       suitable_for: ['pure_espresso', 'flat_white'],
       flavor_notes: ['Blackcurrant', 'Rhubarb', 'Sugarcane'],
-      avg_rating: 4.9,
-      ratings_count: 24,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 18,
       is_verified: true,
       expert_score: 94.0,
@@ -504,10 +514,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'light',
       origin_country: 'Bolivia',
       purchase_country: 'DK',
+      purchase_location: 'The Coffee Collective Kaffebarer / Webshop',
       suitable_for: ['pure_espresso', 'cortado'],
       flavor_notes: ['Jasmine', 'White Peach', 'Bergamot'],
-      avg_rating: 4.95,
-      ratings_count: 31,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 22,
       is_verified: true,
       expert_score: 95.0,
@@ -520,10 +531,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'medium',
       origin_country: 'Brazil & Central America',
       purchase_country: 'DK',
+      purchase_location: 'Føtex, Bilka, Rema 1000, Kvickly',
       suitable_for: ['flat_white', 'cappuccino', 'all_rounder'],
       flavor_notes: ['Milk Chocolate', 'Roasted Nuts', 'Toffee'],
-      avg_rating: 4.6,
-      ratings_count: 42,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 35,
       is_verified: true,
     },
@@ -534,10 +546,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'dark',
       origin_country: 'Latin America',
       purchase_country: 'DK',
+      purchase_location: 'Føtex, Bilka, SuperBrugsen',
       suitable_for: ['cappuccino', 'flat_white'],
       flavor_notes: ['Dark Cacao', 'Brown Sugar', 'Dense Crema'],
-      avg_rating: 4.5,
-      ratings_count: 19,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 14,
       is_verified: true,
     },
@@ -548,10 +561,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'medium',
       origin_country: 'South America',
       purchase_country: 'DK',
+      purchase_location: 'SuperBrugsen, Kvickly, Meny, Spar',
       suitable_for: ['pure_espresso', 'all_rounder'],
       flavor_notes: ['Sweet Hazelnut', 'Caramel'],
-      avg_rating: 4.4,
-      ratings_count: 28,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 20,
       is_verified: true,
     },
@@ -562,10 +576,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'dark',
       origin_country: 'Arabica & Robusta Blend',
       purchase_country: 'DK',
+      purchase_location: 'SuperBrugsen, Meny, Bilka',
       suitable_for: ['cappuccino', 'flat_white'],
       flavor_notes: ['Spiced Wood', 'Bitter Chocolate', 'Dense Body'],
-      avg_rating: 4.3,
-      ratings_count: 16,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 12,
       is_verified: true,
     },
@@ -576,10 +591,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'medium',
       origin_country: 'Italy',
       purchase_country: 'IT',
+      purchase_location: 'Meny, Salling, Magasin, SuperBrugsen',
       suitable_for: ['pure_espresso', 'cappuccino'],
       flavor_notes: ['Caramel', 'Orange Blossom', 'Jasmine'],
-      avg_rating: 4.7,
-      ratings_count: 65,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 50,
       is_verified: true,
     },
@@ -590,10 +606,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'dark',
       origin_country: 'Italy',
       purchase_country: 'IT',
+      purchase_location: 'Meny, Salling, Magasin',
       suitable_for: ['pure_espresso', 'cappuccino'],
       flavor_notes: ['Dark Cocoa', 'Dried Figs', 'Toasted Bread'],
-      avg_rating: 4.65,
-      ratings_count: 38,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 29,
       is_verified: true,
     },
@@ -604,10 +621,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'medium',
       origin_country: 'Italy',
       purchase_country: 'IT',
+      purchase_location: 'Føtex, Bilka, Meny, Nemlig',
       suitable_for: ['pure_espresso', 'flat_white', 'all_rounder'],
       flavor_notes: ['Floral Aromas', 'Malt', 'Honey'],
-      avg_rating: 4.6,
-      ratings_count: 54,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 42,
       is_verified: true,
     },
@@ -618,10 +636,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'dark',
       origin_country: 'Italy',
       purchase_country: 'IT',
+      purchase_location: 'Føtex, Bilka, Nemlig',
       suitable_for: ['cappuccino', 'flat_white'],
       flavor_notes: ['Dark Chocolate', 'Spiced Cedar', 'Velvety Body'],
-      avg_rating: 4.4,
-      ratings_count: 32,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 25,
       is_verified: true,
     },
@@ -632,10 +651,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'medium',
       origin_country: 'Italy',
       purchase_country: 'IT',
+      purchase_location: 'Føtex, Bilka, SuperBrugsen',
       suitable_for: ['flat_white', 'cappuccino', 'all_rounder'],
       flavor_notes: ['Hazelnut', 'Brown Sugar', 'Almonds'],
-      avg_rating: 4.75,
-      ratings_count: 72,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 61,
       is_verified: true,
     },
@@ -646,10 +666,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'dark',
       origin_country: 'Latin America & Asia/Pacific',
       purchase_country: 'DK',
+      purchase_location: 'Føtex, Bilka, Meny, Starbucks Kaffebar',
       suitable_for: ['cappuccino', 'flat_white'],
       flavor_notes: ['Molasses', 'Caramelized Sugar', 'Smoky Cocoa'],
-      avg_rating: 4.35,
-      ratings_count: 45,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 30,
       is_verified: true,
     },
@@ -660,10 +681,11 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       roast_level: 'light',
       origin_country: 'Latin America',
       purchase_country: 'DK',
+      purchase_location: 'Føtex, Bilka, Meny, Starbucks Kaffebar',
       suitable_for: ['pure_espresso', 'flat_white'],
       flavor_notes: ['Bright Citrus', 'Sweet Candied Lemon'],
-      avg_rating: 4.5,
-      ratings_count: 39,
+      avg_rating: 0,
+      ratings_count: 0,
       verifications_count: 27,
       is_verified: true,
     },
@@ -751,13 +773,15 @@ export async function adminVerifyGlobalBean(
       if (
         error.message.includes('expert_score') ||
         error.message.includes('expert_source') ||
-        error.message.includes('image_url')
+        error.message.includes('image_url') ||
+        error.message.includes('purchase_location')
       ) {
         console.warn('[Admin Verify Fallback] Remote schema missing new columns, stripping them for update.');
         const fallbackPayload = { ...payload };
         delete fallbackPayload.expert_score;
         delete fallbackPayload.expert_source;
         delete fallbackPayload.image_url;
+        delete fallbackPayload.purchase_location;
         const { data: fbData, error: fbErr } = await client
           .from('global_coffee_beans')
           .update(fallbackPayload)
@@ -821,8 +845,8 @@ export async function adminCreateGlobalBean(
     barcode: cleanBarcode,
     is_verified: true,
     verifications_count: Math.max(1, bean.verifications_count || 1),
-    avg_rating: bean.avg_rating || 5.0,
-    ratings_count: bean.ratings_count || 1,
+    avg_rating: bean.avg_rating || 0.0,
+    ratings_count: bean.ratings_count || 0,
   };
 
   localBeanCache.set(cleanBarcode, beanToInsert);
@@ -844,12 +868,14 @@ export async function adminCreateGlobalBean(
       if (
         error.message.includes('expert_score') ||
         error.message.includes('expert_source') ||
-        error.message.includes('image_url')
+        error.message.includes('image_url') ||
+        error.message.includes('purchase_location')
       ) {
         const fallbackBean = { ...beanToInsert };
         delete fallbackBean.expert_score;
         delete fallbackBean.expert_source;
         delete fallbackBean.image_url;
+        delete fallbackBean.purchase_location;
         const { data: fbData, error: fbErr } = await client
           .from('global_coffee_beans')
           .upsert(fallbackBean, { onConflict: 'barcode' })

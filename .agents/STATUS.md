@@ -11,6 +11,28 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Ægte Brugerstemmer, Forbedret Stjerneplacering, Sortering & Untappd-stil Butiksvisning (v1.2.30)
+- **Eliminering af Fiktive Rating-Stemmer (Nul Opdigtede Data):**
+  - Alle bønner med syntetiske stjerner/stemmer (f.eks. "★ 4.8 (24 stemmer)") i live Supabase databasen, `schema.sql` og offline cachen er nulstillet (`avg_rating: 0.00`, `ratings_count: 0`).
+  - Kaffer fremstår nu ærligt og troværdigt som "Ny (0 stemmer)" eller "Ny kaffe i bønnehvælvingen", indtil rigtige brugere rent faktisk brygger og afgiver stjerner via `submitDrinkRating` og smagsevalueringen.
+  - Ingen hårde fallback-tal (tidligere `4.8` eller `5.0`) eksisterer længere i koden.
+- **Forbedret Stjerneplacering & Visuelt Hierarki:**
+  - Fjernet den overfyldte inline-tekst i bønnekortenes brødtekst og erstattet den med dedikerede, elegante status-badges øverst på kortene.
+  - Tydelig adskillelse mellem officielle SCA Cupping point (ekspertbedømmelse) og barista-fællesskabets stjerner.
+- **Avanceret Sorteringsmotor i Kurator Studiet:**
+  - Indført lynhurtig sortering på bønnelister med 7 parametre:
+    1. Nyeste først (Standard)
+    2. Højeste vurdering (Stjerner)
+    3. Flest stemmer (Mest populære)
+    4. Højeste SCA Cupping Score (Ekspertpoint)
+    5. Navn (A-Z)
+    6. Risteri (A-Z)
+    7. Ristegrad (Lys $\rightarrow$ Mørk)
+- **Untappd-Inspireret Butiksvisning (`purchase_location`):**
+  - Tilføjet `purchase_location` kolonne i Supabase (`global_coffee_beans` og `bean_drink_ratings`), TypeScript types (`CoffeeBeanProfile`, `ScannedBeanInfo`, `GlobalCoffeeBean`) og baggrunds-sync.
+  - Understøtter visning af indkøbssted ("🏪 Føtex", "🏪 Meny", "🏪 Bilka", "🏪 Hedekaffe Gårdbutik", "🏪 SuperBrugsen", "🏪 Webshop") med genvejs-chips i Curator Studio editoren.
+  - Butiksvisning fremgår nu på bønnekort i Beandex, i Central Bean Vault og ved live scanning i Bean Scanner Modal.
+
 ### 2026-10-04 -- Data Integritet & SCA Cupping Score Revision: Nul Opdigtede Data
 - **Fuldstændig Udrensning af Fiktive Cupping Scores:**
   - Efter grundig gennemgang af kurator-data blev det konstateret, at midlertidige test-tal (f.eks. Hedekaffe: 89 PTS / "Barista Tech Review" og Lavazza: 88 PTS) var oprettet som prototype-pladsholdere.

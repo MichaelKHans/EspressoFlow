@@ -365,6 +365,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       notes: scannedResult?.notes || 'Added via Mobile Vision & Barcode Scanner.',
       barcode: scannedResult?.barcode,
       purchaseCountry: scannedResult?.purchaseCountry || 'DK',
+      purchaseLocation: scannedResult?.purchaseLocation,
       suitableFor: scannedResult?.suitableFor,
       communityRating: scannedResult?.communityRating,
       communityVotes: scannedResult?.communityVotes,
@@ -382,6 +383,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
         name: editName.trim(),
         roast_level: editRoastLevel === 'medium-dark' ? 'dark' : editRoastLevel,
         purchase_country: scannedResult?.purchaseCountry || 'DK',
+        purchase_location: scannedResult?.purchaseLocation,
         expert_score: scannedResult?.expertScore,
         expert_source: scannedResult?.expertSource,
         flavor_notes: editFlavorNotes,
@@ -709,6 +711,11 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                         <span>{scannedResult.expertScore.toFixed(0)} PTS</span>
                         <span className="text-[9px] font-normal text-amber-800">({scannedResult.expertSource || 'Expert Review'})</span>
                       </div>
+                    )}
+                    {scannedResult.purchaseLocation && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] text-[#2C2018] text-[10px] font-mono">
+                        🏪 {scannedResult.purchaseLocation}
+                      </span>
                     )}
                   </div>
                   {scannedResult.suitableFor && scannedResult.suitableFor.length > 0 && (

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS global_coffee_beans (
   roast_level VARCHAR(30) NOT NULL,
   origin_country VARCHAR(100),
   purchase_country VARCHAR(10) DEFAULT 'DK',
+  purchase_location VARCHAR(120), -- Untappd-style store/venue (e.g. 'Føtex', 'Hedekaffe Gårdbutik', 'Meny', 'Online')
   suitable_for TEXT[] DEFAULT '{}',
   flavor_notes TEXT[] DEFAULT '{}',
   avg_rating NUMERIC(3,2) DEFAULT 0.00,
@@ -36,12 +37,15 @@ CREATE TABLE IF NOT EXISTS bean_drink_ratings (
   rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
   drink_type VARCHAR(50) NOT NULL,
   purchase_country VARCHAR(10) DEFAULT 'DK',
+  purchase_location VARCHAR(120),
   brew_ratio VARCHAR(20),
   comment TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 3. ENSURE ALL COLUMNS EXIST IF TABLE WAS CREATED FROM EARLIER DRAFT
+ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS purchase_location VARCHAR(120);
+ALTER TABLE bean_drink_ratings ADD COLUMN IF NOT EXISTS purchase_location VARCHAR(120);
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS flavor_notes TEXT[] DEFAULT '{}';
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS verifications_count INT DEFAULT 1;
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS expert_score NUMERIC(4,1);
@@ -102,31 +106,33 @@ CREATE POLICY "Allow public delete bean_drink_ratings"
   USING (true);
 
 -- 6. KICKSTART SEED DATA: 100% VERIFIED SPECIALTY & SUPERMARKET ROASTERS
--- Strict rule: expert_score is ONLY assigned if officially documented by Coffee Review, Cup of Excellence, or SCA Q-Graders. Commercial/everyday coffees have NULL score.
-INSERT INTO global_coffee_beans (barcode, roaster, name, roast_level, origin_country, purchase_country, suitable_for, flavor_notes, avg_rating, ratings_count, is_verified, expert_score, expert_source)
+-- Strict rule: expert_score is ONLY assigned if officially documented by Coffee Review, Cup of Excellence, or SCA Q-Graders.
+-- Strict rule: avg_rating starts at 0.00 (0 ratings) - Real ratings must be crowdsourced from genuine app users!
+INSERT INTO global_coffee_beans (barcode, roaster, name, roast_level, origin_country, purchase_country, purchase_location, suitable_for, flavor_notes, avg_rating, ratings_count, is_verified, expert_score, expert_source)
 VALUES
-  -- Scandinavian Specialty with verified Cup Records
-  ('4056489503019', 'Hedekaffe', 'Ristemesterens Foretrukne Mellemristet', 'medium', 'Sydamerika & Indonesien (Ulfborg)', 'DK', ARRAY['pure_espresso', 'flat_white', 'cortado', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Karamel'], 4.85, 24, true, NULL, NULL),
-  ('5700000000010', 'The Coffee Collective', 'Kieni', 'light', 'Kenya', 'DK', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Solbær', 'Rabarber', 'Rørsukker'], 4.90, 84, true, 94.0, 'Coffee Review'),
-  ('5700000000027', 'The Coffee Collective', 'Akmel', 'medium', 'Ethiopia', 'DK', ARRAY['pure_espresso', 'flat_white'], ARRAY['Mælkechokolade', 'Appelsinblomst', 'Karamel'], 4.80, 52, true, NULL, NULL),
-  ('5700000000034', 'The Coffee Collective', 'Takesi', 'light', 'Bolivia', 'DK', ARRAY['pure_espresso'], ARRAY['Jasmin & Blomster', 'Fersken & Abrikos', 'Mandarin'], 4.95, 31, true, NULL, NULL),
-  ('5700000000041', 'Prolog Coffee', 'Vera', 'light', 'Colombia', 'DK', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Røde Bær', 'Karamel', 'Stenfrugt'], 4.85, 41, true, NULL, NULL),
-  ('5700000000058', 'La Cabra', 'San Fermin', 'light', 'Colombia', 'DK', ARRAY['pure_espresso', 'flat_white'], ARRAY['Appelsinskal', 'Røde Æbler', 'Panela'], 4.78, 63, true, NULL, NULL),
-  ('7072611000018', 'Tim Wendelboe', 'Caballero Geisha', 'light', 'Honduras', 'NO', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Jasmin & Blomster', 'Fersken & Abrikos', 'Bergamot'], 4.98, 28, true, 95.5, 'Cup of Excellence'),
-  ('5700000000099', 'April Coffee', 'Filter & Espresso Blend', 'light', 'Etiopien & Costa Rica', 'DK', ARRAY['pure_espresso', 'flat_white'], ARRAY['Citrus & Bergamot', 'Røde Bær', 'Mælkechokolade'], 4.82, 35, true, NULL, NULL),
+  -- Scandinavian Specialty with verified Cup Records & authentic Danish purchase stores
+  ('4056489503019', 'Hedekaffe', 'Ristemesterens Foretrukne Mellemristet', 'medium', 'Sydamerika & Indonesien (Ulfborg)', 'DK', 'Hedekaffe Gårdbutik (Ulfborg) / Webshop', ARRAY['pure_espresso', 'flat_white', 'cortado', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Karamel'], 0.00, 0, true, NULL, NULL),
+  ('5700000000010', 'The Coffee Collective', 'Kieni', 'light', 'Kenya', 'DK', 'The Coffee Collective Kaffebarer / Webshop', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Solbær', 'Rabarber', 'Rørsukker'], 0.00, 0, true, 94.0, 'Coffee Review'),
+  ('5700000000027', 'The Coffee Collective', 'Akmel', 'medium', 'Ethiopia', 'DK', 'The Coffee Collective Kaffebarer / Webshop', ARRAY['pure_espresso', 'flat_white'], ARRAY['Mælkechokolade', 'Appelsinblomst', 'Karamel'], 0.00, 0, true, NULL, NULL),
+  ('5700000000034', 'The Coffee Collective', 'Takesi', 'light', 'Bolivia', 'DK', 'The Coffee Collective Kaffebarer / Webshop', ARRAY['pure_espresso'], ARRAY['Jasmin & Blomster', 'Fersken & Abrikos', 'Mandarin'], 0.00, 0, true, NULL, NULL),
+  ('5700000000041', 'Prolog Coffee', 'Vera', 'light', 'Colombia', 'DK', 'Prolog Kaffebar (Kødbyen) / Webshop', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Røde Bær', 'Karamel', 'Stenfrugt'], 0.00, 0, true, NULL, NULL),
+  ('5700000000058', 'La Cabra', 'San Fermin', 'light', 'Colombia', 'DK', 'La Cabra Aarhus & Kbh / Webshop', ARRAY['pure_espresso', 'flat_white'], ARRAY['Appelsinskal', 'Røde Æbler', 'Panela'], 0.00, 0, true, NULL, NULL),
+  ('7072611000018', 'Tim Wendelboe', 'Caballero Geisha', 'light', 'Honduras', 'NO', 'Tim Wendelboe Oslo / Webshop', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Jasmin & Blomster', 'Fersken & Abrikos', 'Bergamot'], 0.00, 0, true, 95.5, 'Cup of Excellence'),
+  ('5700000000099', 'April Coffee', 'Filter & Espresso Blend', 'light', 'Etiopien & Costa Rica', 'DK', 'April Coffee Store Kbh / Webshop', ARRAY['pure_espresso', 'flat_white'], ARRAY['Citrus & Bergamot', 'Røde Bær', 'Mælkechokolade'], 0.00, 0, true, NULL, NULL),
   
-  -- Classical Supermarket & Italian Espresso (Clean: NULL expert scores, real community ratings)
-  ('8000070025066', 'Lavazza', 'Espresso Barista Gran Crema', 'dark', 'Sydamerika & Sydøstasien', 'IT', ARRAY['pure_espresso', 'cappuccino', 'flat_white'], ARRAY['Mørk Chokolade', 'Krydderier', 'Karamel'], 4.75, 95, true, NULL, NULL),
-  ('8000070025080', 'Lavazza', 'Espresso Barista Perfetto', 'medium', 'Central & Sydamerika (100% Arabica)', 'IT', ARRAY['pure_espresso', 'cortado', 'flat_white'], ARRAY['Chokolade', 'Jasmin & Blomster', 'Frugtagtig'], 4.72, 68, true, NULL, NULL),
-  ('8000070025059', 'Lavazza', 'Espresso Barista Intenso', 'dark', 'Sydamerika & Afrika', 'IT', ARRAY['pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 4.65, 74, true, NULL, NULL),
-  ('8000070010413', 'Lavazza', 'Qualità Oro', 'medium', 'Central/South America', 'DK', ARRAY['pure_espresso', 'flat_white', 'cortado'], ARRAY['Jasmin & Blomster', 'Honning', 'Malt'], 4.60, 142, true, NULL, NULL),
-  ('8000070020566', 'Lavazza', 'Crema e Aroma', 'dark', 'South America & Africa', 'DK', ARRAY['flat_white', 'cappuccino', 'cortado'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 4.55, 210, true, NULL, NULL),
-  ('8003753900490', 'Illy', 'Classico Medium Roast', 'medium', 'Multi-Origin 100% Arabica', 'DK', ARRAY['pure_espresso', 'cortado'], ARRAY['Karamel', 'Appelsinblomst', 'Jasmin & Blomster'], 4.65, 118, true, NULL, NULL),
-  ('8003753900506', 'Illy', 'Intenso Dark Roast', 'dark', 'Multi-Origin 100% Arabica', 'DK', ARRAY['flat_white', 'cappuccino', 'pure_espresso'], ARRAY['Mørk Chokolade', 'Tørret Frugt'], 4.68, 88, true, NULL, NULL),
-  ('5701441011685', 'Peter Larsen Kaffe', 'Espresso Hele Bønner (Økologisk)', 'dark', 'South America', 'DK', ARRAY['flat_white', 'pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder'], 4.50, 76, true, NULL, NULL),
-  ('5701027003058', 'BKI', 'Ekstra Espresso', 'dark', 'South America & Asia', 'DK', ARRAY['flat_white', 'cappuccino'], ARRAY['Krydderier', 'Mørk Chokolade'], 4.42, 60, true, NULL, NULL),
-  ('7613036931532', 'Starbucks', 'Espresso Roast (Whole Bean)', 'dark', 'Latin America & Asia/Pacific', 'DK', ARRAY['flat_white', 'cappuccino'], ARRAY['Melasse', 'Karamel'], 4.45, 130, true, NULL, NULL)
+  -- Classical Supermarket & Italian Espresso (Clean: NULL expert scores, Untappd retail locations, 0 user ratings)
+  ('8000070025066', 'Lavazza', 'Espresso Barista Gran Crema', 'dark', 'Sydamerika & Sydøstasien', 'IT', 'Føtex, Bilka, Meny, Nemlig', ARRAY['pure_espresso', 'cappuccino', 'flat_white'], ARRAY['Mørk Chokolade', 'Krydderier', 'Karamel'], 0.00, 0, true, NULL, NULL),
+  ('8000070025080', 'Lavazza', 'Espresso Barista Perfetto', 'medium', 'Central & Sydamerika (100% Arabica)', 'IT', 'Føtex, Bilka, Meny', ARRAY['pure_espresso', 'cortado', 'flat_white'], ARRAY['Chokolade', 'Jasmin & Blomster', 'Frugtagtig'], 0.00, 0, true, NULL, NULL),
+  ('8000070025059', 'Lavazza', 'Espresso Barista Intenso', 'dark', 'Sydamerika & Afrika', 'IT', 'Føtex, Bilka, Meny', ARRAY['pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 0.00, 0, true, NULL, NULL),
+  ('8000070010413', 'Lavazza', 'Qualità Oro', 'medium', 'Central/South America', 'DK', 'Føtex, Bilka, Meny, Nemlig', ARRAY['pure_espresso', 'flat_white', 'cortado'], ARRAY['Jasmin & Blomster', 'Honning', 'Malt'], 0.00, 0, true, NULL, NULL),
+  ('8000070020566', 'Lavazza', 'Crema e Aroma', 'dark', 'South America & Africa', 'DK', 'Føtex, Bilka, SuperBrugsen', ARRAY['flat_white', 'cappuccino', 'cortado'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 0.00, 0, true, NULL, NULL),
+  ('8003753900490', 'Illy', 'Classico Medium Roast', 'medium', 'Multi-Origin 100% Arabica', 'DK', 'Meny, Salling, Magasin, SuperBrugsen', ARRAY['pure_espresso', 'cortado'], ARRAY['Karamel', 'Appelsinblomst', 'Jasmin & Blomster'], 0.00, 0, true, NULL, NULL),
+  ('8003753900506', 'Illy', 'Intenso Dark Roast', 'dark', 'Multi-Origin 100% Arabica', 'DK', 'Meny, Salling, Magasin', ARRAY['flat_white', 'cappuccino', 'pure_espresso'], ARRAY['Mørk Chokolade', 'Tørret Frugt'], 0.00, 0, true, NULL, NULL),
+  ('5701441011685', 'Peter Larsen Kaffe', 'Espresso Hele Bønner (Økologisk)', 'dark', 'South America', 'DK', 'Føtex, Bilka, Rema 1000, Kvickly', ARRAY['flat_white', 'pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder'], 0.00, 0, true, NULL, NULL),
+  ('5701027003058', 'BKI', 'Ekstra Espresso', 'dark', 'South America & Asia', 'DK', 'SuperBrugsen, Kvickly, Meny, Spar', ARRAY['flat_white', 'cappuccino'], ARRAY['Krydderier', 'Mørk Chokolade'], 0.00, 0, true, NULL, NULL),
+  ('7613036931532', 'Starbucks', 'Espresso Roast (Whole Bean)', 'dark', 'Latin America & Asia/Pacific', 'DK', 'Føtex, Bilka, Meny, Starbucks Kaffebar', ARRAY['flat_white', 'cappuccino'], ARRAY['Melasse', 'Karamel'], 0.00, 0, true, NULL, NULL)
 ON CONFLICT (barcode) DO UPDATE SET
+  purchase_location = EXCLUDED.purchase_location,
   expert_score = EXCLUDED.expert_score,
   expert_source = EXCLUDED.expert_source,
   flavor_notes = CASE WHEN array_length(global_coffee_beans.flavor_notes, 1) IS NULL OR array_length(global_coffee_beans.flavor_notes, 1) = 0 THEN EXCLUDED.flavor_notes ELSE global_coffee_beans.flavor_notes END,

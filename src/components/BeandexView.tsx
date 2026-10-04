@@ -326,14 +326,15 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
       grinderName: activeGrinderName,
       barcode: gb.barcode,
       notes: gb.flavor_notes.join(', '),
-      rating: Math.round(gb.avg_rating),
-      isFavorite: gb.avg_rating >= 4.5,
+      rating: 0,
+      isFavorite: false,
       suitableFor: gb.suitable_for,
       expertScore: gb.expert_score,
       expertSource: gb.expert_source,
       imageUrl: gb.image_url,
       flavorNotes: gb.flavor_notes,
       originCountry: gb.origin_country || gb.purchase_country,
+      purchaseLocation: gb.purchase_location,
     });
 
     setAddedFeedback(gb.name);
@@ -899,6 +900,12 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                             {bean.originCountry && <span className="text-[#A6998E]">{bean.originCountry}</span>}
                           </p>
                         )}
+                        {bean.purchaseLocation && (
+                          <p className="text-[10px] text-[#C26D52] font-sans flex items-center gap-1 mt-0.5 truncate" title={`Købt i: ${bean.purchaseLocation}`}>
+                            <span>🏪</span>
+                            <span className="font-semibold">{bean.purchaseLocation}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -1231,14 +1238,26 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       <span className="text-[10px] text-[#7A6E65] font-sans block mt-0.5">
                         {gb.roaster} • {gb.purchase_country}
                       </span>
+                      {gb.purchase_location && (
+                        <span className="text-[9.5px] text-[#C26D52] font-semibold flex items-center gap-1 mt-0.5 truncate" title={`Købt i: ${gb.purchase_location}`}>
+                          <span>🏪</span>
+                          <span>{gb.purchase_location}</span>
+                        </span>
+                      )}
                     </div>
 
                     {/* Community Rating & Flavor Notes */}
-                    <div className="flex items-center gap-1 text-[10px] text-amber-700">
-                      <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                      <strong className="font-bold">{gb.avg_rating.toFixed(1)}</strong>
-                      <span className="text-[#A6998E]">({gb.ratings_count} ratings)</span>
-                    </div>
+                    {gb.ratings_count > 0 ? (
+                      <div className="flex items-center gap-1 text-[10px] text-amber-700">
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        <strong className="font-bold">{gb.avg_rating.toFixed(1)}</strong>
+                        <span className="text-[#A6998E]">({gb.ratings_count} stemmer)</span>
+                      </div>
+                    ) : (
+                      <div className="text-[9.5px] text-[#A6998E] font-sans">
+                        Ny kaffe (0 stemmer)
+                      </div>
+                    )}
 
                     <div className="flex flex-wrap gap-1 pt-1">
                       {gb.flavor_notes.slice(0, 3).map((note, idx) => (

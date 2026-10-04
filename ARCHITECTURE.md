@@ -1,7 +1,7 @@
 # 🗺️ ESPRESSO FLOW – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.2.29  
+> **Gældende version:** v1.2.30  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Espresso Flow. Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -173,18 +173,18 @@ flowchart TD
     DidYouMean -- Nej --> RetainInput[Behold indtastning]
 
     %% Berigelse
-    SuggestBanner --> EnrichBean[Berig med Vivino Smagspiller & Posefoto]
+    SuggestBanner --> EnrichBean[Berig med Smagsnoter, Butik/Købssted & Posefoto]
     RetainInput --> EnrichBean
     EnrichBean --> CompressPhoto[compressImageToDataUrl: Komprimer til <40 KB]
-    CompressPhoto --> SaveBeandex[Gem i Brugerens Beandex]
+    CompressPhoto --> SaveBeandex[Gem i Brugerens Beandex med purchaseLocation]
 
     %% Sky & Kurator
-    SaveBeandex --> PushCloud[Supabase upsertGlobalBean: is_verified = false]
-    PushCloud --> CuratorQueue[Admin Curator Studio Godkendelseskø]
+    SaveBeandex --> PushCloud[Supabase upsertGlobalBean: is_verified = false, avg_rating = 0]
+    PushCloud --> CuratorQueue[Admin Curator Studio Godkendelseskø & Sortering]
     CuratorQueue --> AdminAction{Kurator Vurdering}
-    AdminAction -- Godkend & Tildel SCA Score --> VerifyBean[is_verified = true, expert_score = 92 PTS]
+    AdminAction -- Godkend & Tildel Butik/SCA Score --> VerifyBean[is_verified = true, purchase_location opdateret]
     AdminAction -- Afvis / Dublet --> DeleteBean[Fjern fra sky-katalog]
-    VerifyBean --> LiveVault[Verificeret i Central Bean Vault for alle brugere]
+    VerifyBean --> LiveVault[Verificeret i Central Bean Vault med ægte brugerbedømmelser]
 ```
 
 ---

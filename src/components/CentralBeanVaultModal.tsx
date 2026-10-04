@@ -133,6 +133,13 @@ export const CentralBeanVaultModal: React.FC<CentralBeanVaultModalProps> = ({
       grinderName: currentGrinderName || 'Baratza Encore ESP Pro',
       rating: globalBean.avg_rating ? Math.round(globalBean.avg_rating) : undefined,
       notes: globalBean.flavor_notes?.join(' • '),
+      purchaseCountry: globalBean.purchase_country,
+      purchaseLocation: globalBean.purchase_location,
+      expertScore: globalBean.expert_score,
+      expertSource: globalBean.expert_source,
+      imageUrl: globalBean.image_url,
+      flavorNotes: globalBean.flavor_notes,
+      originCountry: globalBean.origin_country,
     };
 
     onAddBeanToVault(newBean);
@@ -327,6 +334,14 @@ export const CentralBeanVaultModal: React.FC<CentralBeanVaultModalProps> = ({
                               {bean.purchase_country === 'DK' ? '🇩🇰 DK' : bean.purchase_country === 'IT' ? '🇮🇹 IT' : bean.purchase_country}
                             </span>
                           )}
+                          {bean.purchase_location && (
+                            <span
+                              className="text-[9px] font-sans text-[#7A6E65] bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.5 rounded truncate max-w-[130px]"
+                              title={`Købt i: ${bean.purchase_location}`}
+                            >
+                              🏪 {bean.purchase_location}
+                            </span>
+                          )}
                         </div>
 
                         {bean.expert_score && (
@@ -370,12 +385,19 @@ export const CentralBeanVaultModal: React.FC<CentralBeanVaultModalProps> = ({
                     {/* Footer: Rating, Suitable drinks & Action Button */}
                     <div className="mt-3 pt-2.5 border-t border-[#E8DFD5] flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-[10px]">
-                        <span className="flex items-center gap-0.5 text-amber-600 font-bold font-mono">
-                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                          <span>{bean.avg_rating > 0 ? bean.avg_rating.toFixed(1) : '4.8'}</span>
-                        </span>
+                        {bean.ratings_count > 0 ? (
+                          <span className="flex items-center gap-1 text-amber-600 font-bold font-mono">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            <span>{bean.avg_rating.toFixed(1)}</span>
+                            <span className="text-[8.5px] text-[#A6998E] font-normal">({bean.ratings_count})</span>
+                          </span>
+                        ) : (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FAF7F2] text-[#8C7E72] border border-[#E8DFD5] font-sans">
+                            Ny (0 stemmer)
+                          </span>
+                        )}
                         {bean.suitable_for && bean.suitable_for.length > 0 && (
-                          <span className="text-[9px] text-[#72806B] font-mono truncate max-w-[120px]">
+                          <span className="text-[9px] text-[#72806B] font-mono truncate max-w-[110px]">
                             {bean.suitable_for.map((s) => s.replace('_', ' ')).join(', ')}
                           </span>
                         )}
