@@ -334,4 +334,49 @@ export const da: Partial<Record<TranslationKeys, string>> = {
 
   // Mobile Back Navigation
   'mobile.press_back_again': 'Tryk tilbage igen for at afslutte Espresso Flow',
+
+  // Mode Switcher
+  'mode.flow': 'Espresso Flow',
+  'mode.beandex': 'Beandex',
+  'mode.flow_short': 'Flow',
+  'mode.beandex_short': 'Beandex',
+
+  // Gear Setup (Clean Equipment Tab)
+  'gear.title': 'Gear Setup',
+  'gear.active_station': 'Aktivt Bar Setup',
+  'gear.active_bean_title': 'Aktiv Bønne på Kaffebaren',
+  'gear.manage_beans_beandex': 'Administrer i Beandex →',
+  'gear.open_dial_in_studio': 'Åbn Dial-In Studio',
+  'gear.grinder_fleet': 'Kværnflåde & Kalibrering',
+  'gear.machine_setup': 'Espressomaskine & Pre-Infusion',
+
+  // Beandex Universe
+  'beandex.title': 'BEANDEX',
+  'beandex.subtitle': 'Globalt Specialty Kaffeindeks & Bønnelager',
+  'beandex.my_bags': 'Mine Kaffeposer',
+  'beandex.my_bags_count': '{count} Poser på Lager',
+  'beandex.my_bags_subtitle': 'Bedøm med stjerner, gem favoritter og hold styr på friskheden',
+  'beandex.scan_bag_btn': 'Scan Pose / Stregkode',
+  'beandex.add_bag_btn': 'Opret Ny Bønne',
+  'beandex.explore_global_btn': 'Globalt Indeks',
+  'beandex.active_in_flow': 'AKTIV I FLOW',
+  'beandex.set_active_btn': 'Vælg til Flow',
+  'beandex.dial_in_btn': 'Dial-In Studio',
+  'beandex.days_off_roast': '{days}d fra ristning',
+  'beandex.personal_rating': 'Min Vurdering',
+  'beandex.unrated': 'Ikke bedømt',
+  'beandex.search_placeholder': 'Søg i poser, risterier, oprindelse eller noter...',
+  'beandex.filter_all': 'Alle Ristegrader',
+  'beandex.filter_light': 'Lysristet',
+  'beandex.filter_medium': 'Mellemristet',
+  'beandex.filter_dark': 'Mørkristet',
+  'beandex.filter_favorites': 'Favoritter (★ 4-5)',
+  'beandex.empty_vault': 'Ingen kaffebønner fundet. Tryk på "Scan Pose" eller "Opret Ny Bønne" for at starte.',
+  'beandex.global_section_title': 'Globalt Fællesskab & SCA Indeks',
+  'beandex.global_section_subtitle': 'Brugeranmeldelser og 90+ PTS SCA cupping-bedømmelser',
+  'beandex.add_to_my_bags': '+ Føj til Mine Poser',
+  'beandex.in_my_bags': '✓ På Mit Lager',
+  'beandex.expert_badge': 'SCA EKSPERT {score} PTS',
+  'beandex.community_votes': '{rating} ★ ({votes} stemmer)',
+  'beandex.delete_bag_confirm': 'Er du sikker på, at du vil slette "{name}" fra dit lager?',
 };

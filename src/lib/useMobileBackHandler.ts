@@ -9,6 +9,8 @@ export interface ModalRegistration {
 export interface UseMobileBackHandlerOptions {
   activeTab: 'drinks' | 'monitor' | 'logbook' | 'equipment';
   setActiveTab: (tab: 'drinks' | 'monitor' | 'logbook' | 'equipment') => void;
+  activeMode?: 'flow' | 'beandex';
+  setActiveMode?: (mode: 'flow' | 'beandex') => void;
   modals: ModalRegistration[];
   exitToastMessage?: string;
 }
@@ -18,12 +20,15 @@ export interface UseMobileBackHandlerOptions {
  *
  * Intercepts Android hardware/gesture back button and browser/iOS popstate navigation:
  * 1. Closes active modals/sheets first before navigating away.
- * 2. Navigates back to the root 'Coffee Bar' (drinks) tab if on another tab.
- * 3. Shows a double-press exit toast if on the root tab to prevent accidental closing.
+ * 2. Navigates back from Beandex mode to Espresso Flow root.
+ * 3. Navigates back to the root 'Coffee Bar' (drinks) tab if on another tab.
+ * 4. Shows a double-press exit toast if on the root tab to prevent accidental closing.
  */
 export function useMobileBackHandler({
   activeTab,
   setActiveTab,
+  activeMode = 'flow',
+  setActiveMode,
   modals,
   exitToastMessage = 'Tryk tilbage igen for at afslutte',
 }: UseMobileBackHandlerOptions) {
@@ -37,6 +42,12 @@ export function useMobileBackHandler({
 
   const setActiveTabRef = useRef(setActiveTab);
   setActiveTabRef.current = setActiveTab;
+
+  const activeModeRef = useRef(activeMode);
+  activeModeRef.current = activeMode;
+
+  const setActiveModeRef = useRef(setActiveMode);
+  setActiveModeRef.current = setActiveMode;
 
   const modalsRef = useRef(modals);
   modalsRef.current = modals;
@@ -76,6 +87,19 @@ export function useMobileBackHandler({
       prevOpenModalsRef.current[modal.name] = modal.isOpen;
     });
   }, [modals]);
+
+  // Monitor mode changes and push history state when entering beandex
+  const prevModeRef = useRef(activeMode);
+  useEffect(() => {
+    if (prevModeRef.current === 'flow' && activeMode === 'beandex') {
+      try {
+        window.history.pushState({ espresso_flow_mode: 'beandex' }, '');
+      } catch {
+        // Ignore
+      }
+    }
+    prevModeRef.current = activeMode;
+  }, [activeMode]);
 
   // Monitor tab changes and push history state if navigating away from drinks
   const prevTabRef = useRef(activeTab);
@@ -121,7 +145,13 @@ export function useMobileBackHandler({
         return;
       }
 
-      // 2. Check if user is on a secondary tab -> Navigate back to Coffee Bar (drinks)
+      // 2. Check if user is in Beandex mode -> Navigate back to Espresso Flow
+      if (activeModeRef.current === 'beandex' && setActiveModeRef.current) {
+        setActiveModeRef.current('flow');
+        return;
+      }
+
+      // 3. Check if user is on a secondary tab -> Navigate back to Coffee Bar (drinks)
       if (activeTabRef.current !== 'drinks') {
         setActiveTabRef.current('drinks');
         return;

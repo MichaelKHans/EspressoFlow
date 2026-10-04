@@ -11,6 +11,36 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Beandex Univers, Dual-Mode Switcher og 100% Hardware-fokuseret Gear Setup (v1.2.22)
+- **Oprydning i Gear (100% Hardware & Bar Setup):**
+  - Fjernet alle forvirrende duplikerede dial-in inputs (`[-] [15] [+]`), risteprofil-knapper og ratio-multipliers inde i Gear-fanen.
+  - Fjernet det overvældende "Dial-In & Roast Profile: {coffeeBeanName}" laboratorium fra Gear, som duplikerede Dial-In Studio.
+  - Indført et roligt, arkitektonisk og lækkert **Aktivt Bar Setup**-kort:
+    - Viser overblik over aktiv kaffebønne (ristegrad, dage fra ristning, risteri) og aktiv kværn med dial-indstilling.
+    - Direkte 1-klik knap til `[ 🎛️ Åbn Dial-In Studio ]` (til opskrifts- og ekstraktionsindstilling).
+    - Direkte 1-klik knap til `[ 🫘 Administrer i Beandex → ]` (til lagerstyring, bønnevurdering og scanning).
+  - Gear-fanen er nu 100% fokuseret på fysisk bar-udstyr: Kværnflåde (Mine Kværne i Kaffehjørnet, stepped/stepless, tilføj kværn), Espressomaskine & Pumpe Pre-Infusion, samt Lifetime Licens & Lovmæssige vilkår.
+- **Top Header Dual-Mode Switcher (`Espresso Flow` | `Beandex`):**
+  - Elegant og taktil segmented pill-kontrol i toppen af appen.
+  - Skifter ubesværet mellem **Espresso Flow** (brygge-værktøjet med drink deck, Scale Cam OCR, logbog og gear) og **Beandex** (kaffebønne-universet).
+  - Viser live bønnetæller (`Beandex (3)`) i pillen.
+- **Beandex (Global Specialty Coffee Index & Vault):**
+  - **Mine Kaffeposer / My Fresh Bags:**
+    - Viser alle brugerens kaffebønner med højkontrast-design ("kontrastspring" mellem mørk mokka `#1E1510`, varm latte `#FFFDF9` og guldstjerner `#F59E0B`).
+    - **1–5 Interaktive Stjerner:** Brugeren kan med et enkelt tryk rate enhver bønne fra 1 til 5 stjerner direkte på kortet.
+    - Dage fra ristning (`{days}d fra ristning`), risteri, smagsnoter, og tilknyttet kværn.
+    - 1-klik `Vælg til Flow` knap der aktiverer bønnen til brygning og skifter direkte over til Espresso Flow.
+    - Direkte genvej `[ 🎛️ Dial-In Studio ]` der åbner den 4-trins kalibreringsguide for den valgte bønne.
+    - Søgefelt og filtre (Alle ristegrader, lys, mellem, mørk, og kun favoritter 4-5★).
+  - **Scan & Opret Kaffepose:**
+    - Hurtigknapper til kamerabaseret AI bag/etiket scanning, stregkodescanning og manuel tilføjelse.
+  - **Det Globale Bønnekatalog & SCA Ratings:**
+    - Live fremvisning af verified specialty beans fra Supabase med fællesskabsbedømmelser (`★ 4.8 (34 stemmer)`), SCA Q-Grader ekspertbedømmelser (`94 PTS SCA Cupping`) og smagsnoter.
+    - 1-klik `[ + Føj til Mine Poser ]` handling.
+- **Mobil Back-Knap Integration med Beandex:**
+  - `useMobileBackHandler` opdateret, så et tryk på mobilens tilbageknap (eller swipe-back gesture) inde i Beandex flydende fører brugeren tilbage til Espresso Flow i stedet for at lukke appen.
+- **Verificering:** `npm run build` og Browser Subagent test kompileret og gennemført 100% fejlfrit (0 fejl, 426ms).
+
 ### 2026-10-04 -- Samlet Dial-In Studio (Trin 1 Bønnevælger), Ren & Overskuelig Forside, og Mobil Hardware/Gesture Tilbage-knap (v1.2.21)
 - **Ren & Lækker Startside (Coffee Bar Uden Rod):**
   - Fjernet de forvirrende +/- kværnindstillingsknapper og "Lock Setting" formularer fra forsiden.

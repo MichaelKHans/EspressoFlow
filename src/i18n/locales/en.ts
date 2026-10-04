@@ -332,6 +332,51 @@ export const en = {
 
   // Mobile Back Navigation
   'mobile.press_back_again': 'Press back again to exit Espresso Flow',
+
+  // Mode Switcher
+  'mode.flow': 'Espresso Flow',
+  'mode.beandex': 'Beandex',
+  'mode.flow_short': 'Flow',
+  'mode.beandex_short': 'Beandex',
+
+  // Gear Setup (Clean Equipment Tab)
+  'gear.title': 'Gear Setup',
+  'gear.active_station': 'Active Bar Setup',
+  'gear.active_bean_title': 'Current Bean on Bar',
+  'gear.manage_beans_beandex': 'Manage in Beandex →',
+  'gear.open_dial_in_studio': 'Open Dial-In Studio',
+  'gear.grinder_fleet': 'Grinder Fleet & Calibration',
+  'gear.machine_setup': 'Espresso Machine & Pre-Infusion',
+
+  // Beandex Universe
+  'beandex.title': 'BEANDEX',
+  'beandex.subtitle': 'Global Specialty Coffee Index & Vault',
+  'beandex.my_bags': 'My Coffee Bags',
+  'beandex.my_bags_count': '{count} Bags In Stock',
+  'beandex.my_bags_subtitle': 'Rate, bookmark, and organize your specialty coffee inventory',
+  'beandex.scan_bag_btn': 'Scan Bag / Barcode',
+  'beandex.add_bag_btn': 'Add Custom Bag',
+  'beandex.explore_global_btn': 'Global Index',
+  'beandex.active_in_flow': 'ACTIVE IN FLOW',
+  'beandex.set_active_btn': 'Select for Flow',
+  'beandex.dial_in_btn': 'Dial-In Studio',
+  'beandex.days_off_roast': '{days}d off roast',
+  'beandex.personal_rating': 'My Rating',
+  'beandex.unrated': 'Not rated',
+  'beandex.search_placeholder': 'Search bags, roasters, origins, or notes...',
+  'beandex.filter_all': 'All Roasts',
+  'beandex.filter_light': 'Light Roast',
+  'beandex.filter_medium': 'Medium Roast',
+  'beandex.filter_dark': 'Dark Roast',
+  'beandex.filter_favorites': 'Favorites (★ 4-5)',
+  'beandex.empty_vault': 'No coffee bags in stock. Tap "Scan Bag" or "Add Custom Bag" to begin.',
+  'beandex.global_section_title': 'Global Community & SCA Index',
+  'beandex.global_section_subtitle': 'Crowdsourced specialty ratings & 90+ PTS blind-tasting cuppings',
+  'beandex.add_to_my_bags': '+ Add to My Bags',
+  'beandex.in_my_bags': '✓ In My Stock',
+  'beandex.expert_badge': 'SCA EXPERT {score} PTS',
+  'beandex.community_votes': '{rating} ★ ({votes} ratings)',
+  'beandex.delete_bag_confirm': 'Are you sure you want to remove "{name}" from your vault?',
 } as const;
 
 export type TranslationKeys = keyof typeof en;

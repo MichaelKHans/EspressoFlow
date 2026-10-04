@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, FlaskConical, Barcode, Globe, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, Globe } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
@@ -14,6 +14,7 @@ import { BeanScannerModal } from './components/BeanScannerModal';
 import { AdminPortal } from './components/AdminPortal';
 import { TrialCountdownBanner } from './components/TrialCountdownBanner';
 import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
+import { BeandexView } from './components/BeandexView';
 import { useMobileBackHandler } from './lib/useMobileBackHandler';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
@@ -47,11 +48,11 @@ import {
   resolveGrinder,
 } from './lib/storage';
 import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS } from './lib/espressoMath';
-import { parseCoffeeBagPhoto } from './lib/bagScanner';
 
 export function App() {
   const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
   const [activeTab, setActiveTab] = useState<'drinks' | 'monitor' | 'logbook' | 'equipment'>('drinks');
+  const [activeMode, setActiveMode] = useState<'flow' | 'beandex'>('flow');
   const [activeDrinkId, setActiveDrinkId] = useState<string>('cappuccino');
   const [isDialInWizardOpen, setIsDialInWizardOpen] = useState<boolean>(false);
   const [shots, setShots] = useState<ShotRecord[]>([]);
@@ -64,18 +65,7 @@ export function App() {
   const [beans, setBeans] = useState<CoffeeBeanProfile[]>(() => loadBeans());
   const [activeBeanId, setActiveBeanId] = useState<string>(() => loadBeans()[0]?.id || 'bean-ethiopia');
   const [grinders, setGrinders] = useState<GrinderProfile[]>(() => loadGrinders());
-  const [isAddingBean, setIsAddingBean] = useState<boolean>(false);
-  const [newBeanName, setNewBeanName] = useState<string>('');
-  const [newBeanRoaster, setNewBeanRoaster] = useState<string>('');
-  const [newBeanRoastLevel, setNewBeanRoastLevel] = useState<RoastLevel>('medium');
-  const [newBeanGrinderName, setNewBeanGrinderName] = useState<string>('');
-  const [newBeanRoastDate, setNewBeanRoastDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
-  const [isScanningBag, setIsScanningBag] = useState<boolean>(false);
   const [isBeanScannerOpen, setIsBeanScannerOpen] = useState<boolean>(false);
-  const [scanMessage, setScanMessage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Active Bean derived
   const currentBean = beans.find((b) => b.id === activeBeanId) || beans[0] || {
@@ -136,6 +126,8 @@ export function App() {
   const { showExitToast, exitToastMessage } = useMobileBackHandler({
     activeTab,
     setActiveTab,
+    activeMode,
+    setActiveMode,
     modals: [
       { name: 'dialin', isOpen: isDialInWizardOpen, close: () => setIsDialInWizardOpen(false) },
       { name: 'scanner', isOpen: isBeanScannerOpen, close: () => setIsBeanScannerOpen(false) },
@@ -324,102 +316,10 @@ export function App() {
     setIsOnboardingDone(true);
   };
 
-  const handleSetRoastLevel = (level: RoastLevel) => {
-    setRoastLevel(level);
-    const preset = ROAST_PRESETS[level];
-    const newRatio = preset.defaultRatio;
-    setRatioStyle(newRatio);
-    const mult = RATIO_PRESETS[newRatio].multiplier;
-    const newYield = Math.round(doseGrams * mult * 10) / 10;
-    setTargetYieldGrams(newYield);
-
-    const updated = beans.map((b) =>
-      b.id === activeBeanId
-        ? { ...b, roastLevel: level, ratioStyle: newRatio, targetYieldGrams: newYield }
-        : b
-    );
-    setBeans(updated);
-    saveBeans(updated);
-  };
-
-  const handleSetRatioStyle = (style: RatioStyle) => {
-    setRatioStyle(style);
-    if (style !== 'custom') {
-      const mult = RATIO_PRESETS[style].multiplier;
-      const newYield = Math.round(doseGrams * mult * 10) / 10;
-      setTargetYieldGrams(newYield);
-
-      const updated = beans.map((b) =>
-        b.id === activeBeanId ? { ...b, ratioStyle: style, targetYieldGrams: newYield } : b
-      );
-      setBeans(updated);
-      saveBeans(updated);
-    }
-  };
-
   const handleUpdateBeanField = (patch: Partial<CoffeeBeanProfile>) => {
     const updated = beans.map((b) => (b.id === activeBeanId ? { ...b, ...patch } : b));
     setBeans(updated);
     saveBeans(updated);
-  };
-
-  const handleCreateNewBean = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newBeanName.trim()) return;
-    const defaultRatio = ROAST_PRESETS[newBeanRoastLevel].defaultRatio;
-    const mult = RATIO_PRESETS[defaultRatio].multiplier;
-    const chosenGrinder = resolveGrinder(newBeanGrinderName || grinderName, grinders) || currentGrinder;
-    const newBean: CoffeeBeanProfile = {
-      id: `bean-${Date.now()}`,
-      name: newBeanName.trim(),
-      roaster: newBeanRoaster.trim() || undefined,
-      roastDate: newBeanRoastDate,
-      roastLevel: newBeanRoastLevel,
-      doseGrams: 18.0,
-      ratioStyle: defaultRatio,
-      targetYieldGrams: Math.round(18.0 * mult * 10) / 10,
-      grindSetting: chosenGrinder.defaultSetting || grindSetting,
-      grinderName: chosenGrinder.name,
-    };
-
-    const updated = [newBean, ...beans];
-    setBeans(updated);
-    saveBeans(updated);
-    setActiveBeanId(newBean.id);
-    setCoffeeBeanName(newBean.name);
-    setRoastDate(newBean.roastDate);
-    setRoastLevel(newBean.roastLevel);
-    setRatioStyle(newBean.ratioStyle);
-    setDoseGrams(newBean.doseGrams);
-    setTargetYieldGrams(newBean.targetYieldGrams);
-    setGrinderName(chosenGrinder.name);
-    setGrindSetting(newBean.grindSetting);
-    setIsAddingBean(false);
-    setNewBeanName('');
-    setNewBeanRoaster('');
-    setNewBeanGrinderName('');
-    setScanMessage(null);
-  };
-
-  const handleScanBagFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsScanningBag(true);
-    setScanMessage(null);
-    try {
-      const scanned = await parseCoffeeBagPhoto(file);
-      setNewBeanName(scanned.name);
-      setNewBeanRoaster(scanned.roaster || '');
-      setNewBeanRoastDate(scanned.roastDate);
-      setNewBeanRoastLevel(scanned.roastLevel);
-      setIsAddingBean(true);
-      setScanMessage(`Scanned label: "${scanned.name}" (${scanned.roastLevel} roast)`);
-    } catch (err) {
-      console.error('Failed to scan coffee bag photo', err);
-    } finally {
-      setIsScanningBag(false);
-      if (e.target) e.target.value = '';
-    }
   };
 
   const handleSaveBeanFromScanner = (scannedBean: CoffeeBeanProfile, makeActive?: boolean) => {
@@ -429,7 +329,6 @@ export function App() {
     if (makeActive) {
       handleSelectBean(scannedBean.id);
     }
-    setScanMessage(`Scanned & added "${scannedBean.name}" to Vault!`);
   };
 
   const handleAddBeanFromCentralVault = (newBean: CoffeeBeanProfile) => {
@@ -574,12 +473,51 @@ export function App() {
             </div>
             <div className="min-w-0">
               <h1 className="font-bold text-xs sm:text-sm tracking-wider text-[#2C2018] font-mono whitespace-nowrap truncate">
-                ESPRESSO FLOW
+                {activeMode === 'flow' ? 'ESPRESSO FLOW' : 'BEANDEX'}
               </h1>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono hidden sm:block truncate">
-                {t('app.subtitle')}
+                {activeMode === 'flow' ? t('app.subtitle') : t('beandex.subtitle')}
               </p>
             </div>
+          </div>
+
+          {/* Center: Dual-Mode Segmented Switcher */}
+          <div className="flex items-center p-0.5 sm:p-1 bg-[#EFE8DE] rounded-xl border border-[#DECFC0] text-xs font-mono shadow-inner shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveMode('flow')}
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 transition-all ${
+                activeMode === 'flow'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
+                  : 'text-[#7A6E65] hover:text-[#2C2018]'
+              }`}
+            >
+              <Coffee className={`w-3.5 h-3.5 shrink-0 ${activeMode === 'flow' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
+              <span className="font-semibold text-[10.5px] sm:text-xs">
+                <span className="sm:hidden">{t('mode.flow_short')}</span>
+                <span className="hidden sm:inline">{t('mode.flow')}</span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveMode('beandex')}
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 transition-all ${
+                activeMode === 'beandex'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
+                  : 'text-[#7A6E65] hover:text-[#2C2018]'
+              }`}
+            >
+              <span className="text-xs">🫘</span>
+              <span className="font-semibold text-[10.5px] sm:text-xs">
+                <span className="sm:hidden">{t('mode.beandex_short')}</span>
+                <span className="hidden sm:inline">{t('mode.beandex')}</span>
+              </span>
+              <span className={`text-[8.5px] sm:text-[9px] px-1 sm:px-1.5 py-0.2 rounded-full font-bold ${
+                activeMode === 'beandex' ? 'bg-[#C26D52] text-white' : 'bg-[#DECFC0] text-[#2C2018]'
+              }`}>
+                {beans.length}
+              </span>
+            </button>
           </div>
 
           {/* Right Action Chips: Language & Access Badge */}
@@ -619,69 +557,71 @@ export function App() {
           </div>
         </div>
 
-        {/* Tab Navigation (Segmented Tactile Bar - 100% Mobile Clean & Never Overflows) */}
-        <div className="max-w-4xl mx-auto px-2 sm:px-4 pb-2 pt-0.5">
-          <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#E8DFD5] text-[11px] sm:text-xs font-mono shadow-inner">
-            <button
-              onClick={() => setActiveTab('drinks')}
-              className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
-                activeTab === 'drinks'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
-                  : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
-              }`}
-            >
-              <Coffee className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'drinks' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
-              <span className="whitespace-nowrap font-semibold text-[10.5px] sm:text-xs">
-                {t('nav.coffee_bar')}
-              </span>
-            </button>
+        {/* Tab Navigation (Segmented Tactile Bar - only visible in Espresso Flow mode) */}
+        {activeMode === 'flow' && (
+          <div className="max-w-4xl mx-auto px-2 sm:px-4 pb-2 pt-0.5">
+            <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#E8DFD5] text-[11px] sm:text-xs font-mono shadow-inner">
+              <button
+                onClick={() => setActiveTab('drinks')}
+                className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
+                  activeTab === 'drinks'
+                    ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
+                    : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
+                }`}
+              >
+                <Coffee className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'drinks' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
+                <span className="whitespace-nowrap font-semibold text-[10.5px] sm:text-xs">
+                  {t('nav.coffee_bar')}
+                </span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('monitor')}
-              className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
-                activeTab === 'monitor'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
-                  : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
-              }`}
-            >
-              <Camera className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'monitor' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
-              <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
-                <span className="sm:hidden">{t('nav.scale')}</span>
-                <span className="hidden sm:inline">{t('nav.scale_cam')}</span>
-              </span>
-            </button>
+              <button
+                onClick={() => setActiveTab('monitor')}
+                className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
+                  activeTab === 'monitor'
+                    ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
+                    : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
+                }`}
+              >
+                <Camera className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'monitor' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
+                <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
+                  <span className="sm:hidden">{t('nav.scale')}</span>
+                  <span className="hidden sm:inline">{t('nav.scale_cam')}</span>
+                </span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('logbook')}
-              className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
-                activeTab === 'logbook'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
-                  : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
-              }`}
-            >
-              <BookOpen className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'logbook' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
-              <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
-                <span className="sm:hidden">{t('nav.logs')}</span>
-                <span className="hidden sm:inline">{t('nav.logbook')}</span>
-              </span>
-            </button>
+              <button
+                onClick={() => setActiveTab('logbook')}
+                className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
+                  activeTab === 'logbook'
+                    ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
+                    : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
+                }`}
+              >
+                <BookOpen className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'logbook' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
+                <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
+                  <span className="sm:hidden">{t('nav.logs')}</span>
+                  <span className="hidden sm:inline">{t('nav.logbook')}</span>
+                </span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('equipment')}
-              className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
-                activeTab === 'equipment'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
-                  : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
-              }`}
-            >
-              <Sliders className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'equipment' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
-              <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
-                <span className="sm:hidden">{t('nav.gear')}</span>
-                <span className="hidden sm:inline">{t('nav.beans_and_gear')}</span>
-              </span>
-            </button>
-          </nav>
-        </div>
+              <button
+                onClick={() => setActiveTab('equipment')}
+                className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
+                  activeTab === 'equipment'
+                    ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
+                    : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
+                }`}
+              >
+                <Sliders className={`w-3.5 h-3.5 shrink-0 ${activeTab === 'equipment' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
+                <span className="whitespace-nowrap text-[10.5px] sm:text-xs">
+                  <span className="sm:hidden">{t('nav.gear')}</span>
+                  <span className="hidden sm:inline">{t('gear.title') || 'Gear Setup'}</span>
+                </span>
+              </button>
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* 7-Day Free Trial Countdown Progress Banner */}
@@ -692,24 +632,66 @@ export function App() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
-        {/* Tab 0: Digital Barista Deck & Drink Selector */}
-        {activeTab === 'drinks' && (
-          <DrinkSelector
-            currentBean={currentBean}
-            currentGrinder={currentGrinder}
-            activeDrinkId={activeDrinkId}
-            shots={shots}
-            allBeans={beans}
-            onSelectDrink={handleSelectDrink}
-            onLaunchScaleCam={handleLaunchScaleCam}
-            onOpenDialInWizard={handleOpenDialInWizard}
-            onOpenBeanVault={() => setActiveTab('equipment')}
-            onGrindSettingChange={setGrindSetting}
-            onSwitchBean={handleSelectBean}
-            onScanBean={() => setIsBeanScannerOpen(true)}
-            onUpdateBeanDialIn={handleUpdateBeanField}
+        {/* BEANDEX MODE: Dedicated Coffee Bean Vault, Ratings & Global Index */}
+        {activeMode === 'beandex' ? (
+          <BeandexView
+            beans={beans}
+            activeBeanId={activeBeanId}
+            onSelectBean={handleSelectBean}
+            onUpdateBean={(id, patch) => {
+              const updated = beans.map((b) => (b.id === id ? { ...b, ...patch } : b));
+              setBeans(updated);
+              saveBeans(updated);
+            }}
+            onDeleteBean={handleDeleteBean}
+            onCreateBean={(newBeanData) => {
+              const defaultRatio = ROAST_PRESETS[newBeanData.roastLevel].defaultRatio;
+              const mult = RATIO_PRESETS[defaultRatio].multiplier;
+              const newBean: CoffeeBeanProfile = {
+                ...newBeanData,
+                id: `bean-${Date.now()}`,
+                doseGrams: newBeanData.doseGrams || 18,
+                targetYieldGrams: newBeanData.targetYieldGrams || Math.round(18 * mult * 10) / 10,
+                ratioStyle: newBeanData.ratioStyle || defaultRatio,
+                grindSetting: newBeanData.grindSetting || '15',
+                grinderName: newBeanData.grinderName || grinderName,
+              };
+              const updated = [newBean, ...beans];
+              setBeans(updated);
+              saveBeans(updated);
+              setActiveBeanId(newBean.id);
+              handleSelectBean(newBean.id);
+            }}
+            onOpenScanner={() => setIsBeanScannerOpen(true)}
+            onOpenCentralVault={() => setIsCentralVaultOpen(true)}
+            onOpenDialInForBean={(beanId) => {
+              handleSelectBean(beanId);
+              setIsDialInWizardOpen(true);
+            }}
+            onSwitchToFlow={() => setActiveMode('flow')}
+            grinders={grinders}
+            activeGrinderName={grinderName}
           />
-        )}
+        ) : (
+          <>
+            {/* Tab 0: Digital Barista Deck & Drink Selector */}
+            {activeTab === 'drinks' && (
+              <DrinkSelector
+                currentBean={currentBean}
+                currentGrinder={currentGrinder}
+                activeDrinkId={activeDrinkId}
+                shots={shots}
+                allBeans={beans}
+                onSelectDrink={handleSelectDrink}
+                onLaunchScaleCam={handleLaunchScaleCam}
+                onOpenDialInWizard={handleOpenDialInWizard}
+                onOpenBeanVault={() => setActiveMode('beandex')}
+                onGrindSettingChange={setGrindSetting}
+                onSwitchBean={handleSelectBean}
+                onScanBean={() => setIsBeanScannerOpen(true)}
+                onUpdateBeanDialIn={handleUpdateBeanField}
+              />
+            )}
 
         {/* Quick Context Bar (Shown for Monitor, Logbook, and Equipment) */}
         {activeTab !== 'drinks' && (
@@ -822,717 +804,83 @@ export function App() {
         {/* Tab 3: Beans & Gear */}
         {activeTab === 'equipment' && (
           <div className="space-y-6 font-mono text-xs">
-            {/* Bean Vault (Active Bags & Roasts) */}
-            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Coffee className="w-4 h-4 text-[#C26D52]" />
+            {/* Station Overview: Active Bean & Grinder on Bar */}
+            <div className="bg-linear-to-br from-[#FFFDF9] via-[#FAF7F2] to-[#F5EFEB] rounded-2xl border border-[#DECFC0] p-5 shadow-xs space-y-4 font-mono">
+              <div className="flex items-center justify-between border-b border-[#DECFC0] pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Coffee className="w-4 h-4 text-[#C26D52]" />
+                  <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-                      Coffee Bean Vault ({beans.length} Bags In Stock)
+                      {t('gear.active_station')}
                     </h3>
+                    <p className="text-[10px] text-[#7A6E65] font-sans">
+                      {t('gear.active_bean_title')}
+                    </p>
                   </div>
-                  <p className="text-[11px] text-[#7A6E65] mt-0.5">
-                    Switch between active beans with 1 tap. Grind settings & extraction ratios are remembered per bag.
-                  </p>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleScanBagFile}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setIsCentralVaultOpen(true)}
-                    className="px-3 py-1.5 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
-                    title="Browse Verified Specialty Coffee Beans, Blind-Tasting Scores & Calibrated Targets"
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    <span>{t('vault.browse_central')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsBeanScannerOpen(true)}
-                    disabled={isScanningBag}
-                    className="px-3 py-1.5 rounded-lg border border-[#72806B] bg-[#72806B]/10 hover:bg-[#72806B]/20 text-[#72806B] text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
-                    title="Scan coffee bag barcodes, packaging labels, and roast date stamps"
-                  >
-                    <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
-                    <span>{isScanningBag ? 'Scanning...' : 'Scan Bag / Barcode'}</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsAddingBean(!isAddingBean);
-                      setScanMessage(null);
-                    }}
-                    className="px-3 py-1.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{isAddingBean ? 'Close' : 'Add Custom Bag'}</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveMode('beandex')}
+                  className="px-3 py-1.5 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] font-semibold text-xs flex items-center gap-1.5 transition shadow-2xs"
+                  title="Open Beandex to manage your bean vault, ratings, and fresh bags"
+                >
+                  <span>{t('gear.manage_beans_beandex')}</span>
+                </button>
               </div>
 
-              {/* Inline Add New Bean Form */}
-              {isAddingBean && (
-                <form
-                  onSubmit={handleCreateNewBean}
-                  className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3 animate-fadeIn"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-bold text-[#2C2018] uppercase">Add Coffee Bean To Vault</div>
-                    {scanMessage && (
-                      <span className="text-[11px] text-[#72806B] font-mono font-semibold animate-pulse">
-                        {scanMessage}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Bean Origin / Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={newBeanName}
-                        onChange={(e) => setNewBeanName(e.target.value)}
-                        placeholder="e.g. Kenya Nyeri AA (Washed)"
-                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Roaster (Optional)</label>
-                      <input
-                        type="text"
-                        value={newBeanRoaster}
-                        onChange={(e) => setNewBeanRoaster(e.target.value)}
-                        placeholder="e.g. La Cabra, Tim Wendelboe, Nomad"
-                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Roast Level</label>
-                      <select
-                        value={newBeanRoastLevel}
-                        onChange={(e) => setNewBeanRoastLevel(e.target.value as RoastLevel)}
-                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
-                      >
-                        <option value="light">Light Roast (Floral / Citric / High Acidity)</option>
-                        <option value="medium">Medium Roast (Caramel / Chocolate / Sweet)</option>
-                        <option value="medium-dark">Medium-Dark (Rich Body / Crema)</option>
-                        <option value="dark">Dark Roast (Smoky / Dark Cacao / Low Acidity)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Roast Date</label>
-                      <input
-                        type="date"
-                        value={newBeanRoastDate}
-                        onChange={(e) => setNewBeanRoastDate(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="text-[10px] text-[#7A6E65] uppercase block mb-1">Assigned Grinder</label>
-                      <select
-                        value={resolveGrinder(newBeanGrinderName || grinderName, grinders)?.name || newBeanGrinderName || grinderName}
-                        onChange={(e) => setNewBeanGrinderName(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white text-xs font-semibold text-[#2C2018]"
-                      >
-                        {grinders.map((g) => (
-                          <option key={g.id} value={g.name}>
-                            {g.name} ({g.type})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-lg bg-[#2C2018] text-[#FAF7F2] font-semibold text-xs flex items-center gap-1.5 hover:bg-[#3D2D22] transition"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Save Bean to Vault
-                  </button>
-                </form>
-              )}
-
-              {/* Bean Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {beans.map((bean) => {
-                  const isActive = bean.id === activeBeanId;
-                  const beanRoastDate = new Date(bean.roastDate);
-                  const daysOff = Math.max(0, Math.floor((Date.now() - beanRoastDate.getTime()) / (1000 * 60 * 60 * 24)));
-                  const beanGrinder = resolveGrinder(bean.grinderName, grinders);
-                  const grinderDisplayBrand = beanGrinder
-                    ? beanGrinder.name.split(' ')[0]
-                    : (bean.grinderName ? bean.grinderName.split(' ')[0] : 'Grind');
-
-                  return (
-                    <div
-                      key={bean.id}
-                      onClick={() => handleSelectBean(bean.id)}
-                      className={`p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
-                        isActive
-                          ? 'border-[#C26D52] bg-white ring-2 ring-[#C26D52] shadow-md'
-                          : bean.roastLevel === 'light'
-                          ? 'border-amber-200 bg-amber-50/25 hover:border-amber-400 hover:bg-amber-50/45'
-                          : bean.roastLevel === 'medium'
-                          ? 'border-[#C26D52]/25 bg-[#C26D52]/5 hover:border-[#C26D52]/50 hover:bg-[#C26D52]/10'
-                          : bean.roastLevel === 'medium-dark'
-                          ? 'border-[#8C6046]/30 bg-[#8C6046]/5 hover:border-[#8C6046]/50 hover:bg-[#8C6046]/10'
-                          : 'border-[#2C2018]/25 bg-[#2C2018]/5 hover:border-[#2C2018]/50 hover:bg-[#2C2018]/10'
+              {/* Active Bean & Grinder Details Card */}
+              <div className="p-4 rounded-xl bg-white border border-[#E8DFD5] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${
+                        currentBean.roastLevel === 'light'
+                          ? 'bg-amber-50 text-amber-800 border-amber-300'
+                          : currentBean.roastLevel === 'medium'
+                          ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                          : currentBean.roastLevel === 'medium-dark'
+                          ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
+                          : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
                       }`}
                     >
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span
-                            className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${
-                              bean.roastLevel === 'light'
-                                ? 'bg-amber-50 text-amber-800 border-amber-300'
-                                : bean.roastLevel === 'medium'
-                                ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
-                                : bean.roastLevel === 'medium-dark'
-                                ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
-                                : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
-                            }`}
-                          >
-                            {bean.roastLevel}
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            {isActive && (
-                              <span className="flex items-center gap-1 text-[10px] text-[#72806B] font-bold">
-                                <Check className="w-3 h-3" /> ACTIVE
-                              </span>
-                            )}
-                            {beans.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteBean(bean.id);
-                                }}
-                                className="w-6 h-6 rounded-md flex items-center justify-center text-[#7A6E65]/50 hover:text-red-600 hover:bg-red-50 transition"
-                                title="Remove bean from vault"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="font-bold text-[#2C2018] text-xs leading-snug">{bean.name}</div>
-                        {bean.roaster && (
-                          <div className="text-[10px] text-[#7A6E65]">{bean.roaster}</div>
-                        )}
-                        <div className="text-[10px] text-[#7A6E65] flex items-center justify-between gap-1 pt-0.5">
-                          <span>{daysOff}d off roast</span>
-                          <span className="font-mono bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.5 rounded text-[10px] inline-flex items-center gap-1">
-                            <span className="text-[#7A6E65]">{grinderDisplayBrand}:</span>
-                            <strong className="text-[#C26D52] font-bold">{bean.grindSetting}</strong>
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-[#E8DFD5]/60 flex items-center justify-between text-[10px]">
-                        <span className="text-[#7A6E65]">
-                          Ratio: {bean.doseGrams}g → {bean.targetYieldGrams}g
-                        </span>
-                      </div>
-
-                      {/* Inline Quick Dial-In Tuner (Expands directly on active card) */}
-                      {isActive && (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          className="mt-3 pt-3 border-t border-[#E8DFD5] space-y-2.5 animate-fadeIn"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-[#C26D52] uppercase flex items-center gap-1 font-mono">
-                              <Sliders className="w-3 h-3" />
-                              <span>Quick Dial-In</span>
-                            </span>
-                            <span className="text-[9px] font-mono text-[#72806B] bg-[#72806B]/15 px-1.5 py-0.5 rounded font-semibold">
-                              Live Sync
-                            </span>
-                          </div>
-
-                          {/* 1. Quick Dial Setting with +/- buttons */}
-                          <div className="bg-white p-2 rounded-lg border border-[#E8DFD5] space-y-1">
-                            <div className="flex items-center justify-between text-[10px] text-[#7A6E65]">
-                              <span>Grind Dial ({grinderDisplayBrand}):</span>
-                              <span className="font-mono text-[9px]">
-                                {beanGrinder?.stepUnit || 'steps'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const num = parseFloat(bean.grindSetting);
-                                  if (!isNaN(num)) {
-                                    const updated = (num - 0.5).toFixed(1);
-                                    setGrindSetting(updated);
-                                    handleUpdateBeanField({ grindSetting: updated });
-                                  }
-                                }}
-                                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] text-[#2C2018] font-bold text-sm hover:bg-[#E8DFD5] active:scale-95 transition"
-                                title="Finer / lower setting"
-                              >
-                                -
-                              </button>
-                              <input
-                                type="text"
-                                value={bean.grindSetting}
-                                onChange={(e) => {
-                                  setGrindSetting(e.target.value);
-                                  handleUpdateBeanField({ grindSetting: e.target.value });
-                                }}
-                                className="flex-1 text-center font-mono font-bold text-sm text-[#C26D52] bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg py-1"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const num = parseFloat(bean.grindSetting);
-                                  if (!isNaN(num)) {
-                                    const updated = (num + 0.5).toFixed(1);
-                                    setGrindSetting(updated);
-                                    handleUpdateBeanField({ grindSetting: updated });
-                                  }
-                                }}
-                                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] text-[#2C2018] font-bold text-sm hover:bg-[#E8DFD5] active:scale-95 transition"
-                                title="Coarser / higher setting"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* 2. Roast Level Quick Buttons */}
-                          <div className="space-y-1">
-                            <span className="text-[9px] uppercase font-bold text-[#7A6E65] block font-mono">
-                              Roast Profile
-                            </span>
-                            <div className="grid grid-cols-4 gap-1">
-                              {(['light', 'medium', 'medium-dark', 'dark'] as RoastLevel[]).map((level) => (
-                                <button
-                                  key={level}
-                                  type="button"
-                                  onClick={() => handleSetRoastLevel(level)}
-                                  className={`py-1 text-[9px] rounded font-semibold capitalize transition ${
-                                    bean.roastLevel === level
-                                      ? 'bg-[#C26D52] text-white shadow-xs font-bold'
-                                      : 'bg-white border border-[#E8DFD5] text-[#7A6E65] hover:bg-[#FAF7F2]'
-                                  }`}
-                                >
-                                  {level === 'medium-dark' ? 'Med-Dark' : level}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* 3. Dose & Yield Quick Ratio */}
-                          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-                            <div className="p-1.5 rounded bg-white border border-[#E8DFD5]">
-                              <span className="text-[9px] text-[#7A6E65] uppercase block font-sans">Dose (In)</span>
-                              <div className="flex items-center justify-between mt-0.5">
-                                <input
-                                  type="number"
-                                  step="0.1"
-                                  value={bean.doseGrams}
-                                  onChange={(e) => {
-                                    const d = parseFloat(e.target.value) || 18;
-                                    setDoseGrams(d);
-                                    const mult = RATIO_PRESETS[bean.ratioStyle]?.multiplier || 2.0;
-                                    const newYield = Math.round(d * mult * 10) / 10;
-                                    setTargetYieldGrams(newYield);
-                                    handleUpdateBeanField({ doseGrams: d, targetYieldGrams: newYield });
-                                  }}
-                                  className="w-12 font-bold text-[#2C2018] bg-transparent text-xs"
-                                />
-                                <span className="text-[#A6998E]">g</span>
-                              </div>
-                            </div>
-                            <div className="p-1.5 rounded bg-white border border-[#E8DFD5]">
-                              <span className="text-[9px] text-[#7A6E65] uppercase block font-sans">Yield (Out)</span>
-                              <div className="flex items-center justify-between mt-0.5">
-                                <input
-                                  type="number"
-                                  step="0.5"
-                                  value={bean.targetYieldGrams}
-                                  onChange={(e) => {
-                                    const y = parseFloat(e.target.value) || 36;
-                                    setTargetYieldGrams(y);
-                                    handleUpdateBeanField({ targetYieldGrams: y });
-                                  }}
-                                  className="w-12 font-bold text-[#C26D52] bg-transparent text-xs"
-                                />
-                                <span className="text-[#A6998E]">g</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* 4. Assigned Grinder Selector */}
-                          {grinders.length > 1 && (
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-[9px] uppercase font-bold text-[#7A6E65] font-mono">
-                                <span>Assigned Grinder</span>
-                                {beanGrinder?.inSetup && (
-                                  <span className="text-[#72806B] font-semibold">In your setup</span>
-                                )}
-                              </div>
-                              <select
-                                value={beanGrinder?.name || bean.grinderName}
-                                onChange={(e) => {
-                                  const g = e.target.value;
-                                  setGrinderName(g);
-                                  handleUpdateBeanField({ grinderName: g });
-                                }}
-                                className="w-full px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[11px] font-semibold text-[#2C2018]"
-                              >
-                                <optgroup label="Grinders in your setup">
-                                  {grinders
-                                    .filter((g) => g.inSetup)
-                                    .map((g) => (
-                                      <option key={g.id} value={g.name}>
-                                        {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
-                                      </option>
-                                    ))}
-                                </optgroup>
-                                {grinders.filter((g) => !g.inSetup).length > 0 && (
-                                  <optgroup label="Other grinders in library">
-                                    {grinders
-                                      .filter((g) => !g.inSetup)
-                                      .map((g) => (
-                                        <option key={g.id} value={g.name}>
-                                          {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
-                                        </option>
-                                      ))}
-                                  </optgroup>
-                                )}
-                              </select>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Compact Favorite Beans Kardotek / Rolodex */}
-              <div className="mt-4 pt-4 border-t border-[#E8DFD5] space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#2C2018] uppercase tracking-wider font-mono">
-                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span>Favorite Beans Rolodex ({beans.filter((b) => (b.rating || 0) > 0 || b.isFavorite).length || beans.length})</span>
+                      {currentBean.roastLevel}
+                    </span>
+                    <span className="text-[10px] text-[#7A6E65]">
+                      {Math.max(0, Math.floor((Date.now() - new Date(currentBean.roastDate).getTime()) / (1000 * 60 * 60 * 24)))}d off roast
+                    </span>
                   </div>
-                  <span className="text-[10px] text-[#7A6E65] font-mono">
-                    Rate with stars to bookmark favorites
-                  </span>
+                  <h4 className="font-bold text-xs text-[#2C2018] leading-tight">
+                    {currentBean.name}
+                  </h4>
+                  {currentBean.roaster && (
+                    <p className="text-[11px] text-[#7A6E65] font-sans">
+                      {currentBean.roaster}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3 text-[11px] text-[#7A6E65] pt-1 font-mono">
+                    <span>
+                      Grinder: <strong className="text-[#2C2018]">{grinderName}</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Grind Setting: <strong className="text-[#C26D52]">{grindSetting}</strong>
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  {beans.map((bean) => {
-                    const rating = bean.rating || 0;
-                    const isActive = bean.id === activeBeanId;
-
-                    return (
-                      <div
-                        key={`fav-${bean.id}`}
-                        onClick={() => handleSelectBean(bean.id)}
-                        className={`p-2.5 rounded-xl border text-xs font-mono transition cursor-pointer flex flex-col gap-1.5 ${
-                          isActive
-                            ? 'bg-[#FAF7F2] border-[#C26D52] ring-1 ring-[#C26D52]/30 shadow-2xs'
-                            : 'bg-white border-[#E8DFD5] hover:border-[#C26D52]/30'
-                        }`}
-                      >
-                        {/* Top Line: Roast Badge + Full Bean Name + Action Button */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                            <span
-                              className={`text-[8px] uppercase font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${
-                                bean.roastLevel === 'light'
-                                  ? 'bg-amber-50 text-amber-800 border-amber-300'
-                                  : bean.roastLevel === 'medium'
-                                  ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
-                                  : bean.roastLevel === 'medium-dark'
-                                  ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
-                                  : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
-                              }`}
-                            >
-                              {bean.roastLevel}
-                            </span>
-                            <span className="font-bold text-[#2C2018] text-xs truncate">
-                              {bean.name}
-                            </span>
-                          </div>
-
-                          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-                            {isActive ? (
-                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 inline-flex items-center gap-1">
-                                <Check className="w-2.5 h-2.5" /> Active
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleSelectBean(bean.id)}
-                                className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] transition"
-                              >
-                                Select
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Bottom Line: 5 Interactive Stars + Roaster & Grind Setting */}
-                        <div className="flex items-center justify-between pt-1 border-t border-[#E8DFD5]/50 text-[10px]">
-                          {/* Left: Star Rating */}
-                          <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const newRating = rating === star ? 0 : star;
-                                  const updated = beans.map((b) =>
-                                    b.id === bean.id
-                                      ? { ...b, rating: newRating, isFavorite: newRating >= 4 }
-                                      : b
-                                  );
-                                  setBeans(updated);
-                                  saveBeans(updated);
-                                }}
-                                className="p-0.5 hover:scale-125 transition"
-                                title={`${star} stars`}
-                              >
-                                <Star
-                                  className={`w-3.5 h-3.5 transition ${
-                                    star <= rating
-                                      ? 'text-amber-500 fill-amber-500 drop-shadow-xs'
-                                      : 'text-[#E8DFD5] hover:text-amber-300'
-                                  }`}
-                                />
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Right: Roaster + Grind info */}
-                          <div className="flex items-center gap-2 text-[#7A6E65] text-[10px] truncate">
-                            {bean.roaster && (
-                              <span className="truncate max-w-[120px] sm:max-w-none">
-                                {bean.roaster}
-                              </span>
-                            )}
-                            <span className="font-mono bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.2 rounded text-[9px] shrink-0">
-                              Grind: <strong className="text-[#C26D52]">{bean.grindSetting}</strong>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Active Bean Dial-In & Chemistry Section */}
-            <div className="bg-linear-to-b from-[#FDFBF7] to-[#F5EFEB] rounded-2xl border border-[#DECFC0] p-5 shadow-xs space-y-5">
-              <div className="flex items-center justify-between border-b border-[#DECFC0] pb-3">
-                <div className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-[#C26D52]" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-                    Dial-In & Roast Profile: {coffeeBeanName}
-                  </h3>
-                </div>
-                <span className="text-[10px] font-bold text-[#C26D52] bg-[#C26D52]/10 border border-[#C26D52]/20 px-2 py-0.5 rounded-full shrink-0">
-                  Extraction Lab
-                </span>
-              </div>
-
-              {/* 1. Roast Level Selection */}
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#7A6E65] uppercase tracking-wider font-semibold block">
-                  Select Bean Roast Level
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {(['light', 'medium', 'medium-dark', 'dark'] as RoastLevel[]).map((level) => {
-                    const preset = ROAST_PRESETS[level];
-                    const isSelected = roastLevel === level;
-                    return (
-                      <button
-                        key={level}
-                        type="button"
-                        onClick={() => handleSetRoastLevel(level)}
-                        className={`p-2.5 rounded-xl border text-left transition ${
-                          isSelected
-                            ? 'border-[#C26D52] bg-white ring-1 ring-[#C26D52] shadow-xs'
-                            : 'border-[#DECFC0] bg-white/70 hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold capitalize text-[#2C2018]">
-                            {preset.label}
-                          </span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-[#C26D52]" />}
-                        </div>
-                        <div className="text-[10px] text-[#7A6E65] leading-tight">
-                          Auto-suggests: {RATIO_PRESETS[preset.defaultRatio].label}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 2. Beverage Style & Target Ratio Presets */}
-              <div className="space-y-2">
-                <label className="text-[10px] text-[#7A6E65] uppercase tracking-wider font-semibold block">
-                  Beverage Style & Extraction Ratio
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {(['ristretto', 'standard', 'lungo', 'allonge'] as RatioStyle[]).map((style) => {
-                    const preset = RATIO_PRESETS[style];
-                    const isSelected = ratioStyle === style;
-                    return (
-                      <button
-                        key={style}
-                        type="button"
-                        onClick={() => handleSetRatioStyle(style)}
-                        className={`p-2.5 rounded-xl border text-left transition ${
-                          isSelected
-                            ? 'border-[#C26D52] bg-white ring-1 ring-[#C26D52] shadow-xs'
-                            : 'border-[#DECFC0] bg-white/70 hover:bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold text-[#2C2018]">{preset.label}</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-[#C26D52]" />}
-                        </div>
-                        <div className="text-[10px] text-[#7A6E65] leading-tight">{preset.shortDesc}</div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Barista Chemistry Advice Banner */}
-              <div className="p-3.5 rounded-xl bg-[#72806B]/10 border border-[#72806B]/30 text-[11px] text-[#2C2018] leading-relaxed flex items-start gap-2">
-                <FlaskConical className="w-4 h-4 text-[#72806B] shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-[#72806B] uppercase text-[10px] tracking-wider block mb-0.5">
-                    Extraction Physics for {ROAST_PRESETS[roastLevel].label}:
-                  </strong>
-                  <span>{ROAST_PRESETS[roastLevel].advice}</span>
-                </div>
-              </div>
-
-              {/* Manual Tweaks Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#E8DFD5]/60">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-[#7A6E65] uppercase">Target Dry Dose (Grams)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={doseGrams}
-                    onChange={(e) => {
-                      const newDose = parseFloat(e.target.value) || 0;
-                      setDoseGrams(newDose);
-                      const mult = ratioStyle !== 'custom' ? RATIO_PRESETS[ratioStyle].multiplier : 2.0;
-                      const newYield = Math.round(newDose * mult * 10) / 10;
-                      setTargetYieldGrams(newYield);
-                      handleUpdateBeanField({ doseGrams: newDose, targetYieldGrams: newYield });
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const activeDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0];
+                      handleOpenDialInWizard(activeDrink);
                     }}
-                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-[#7A6E65] uppercase">Target Liquid Yield (Grams)</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={targetYieldGrams}
-                    onChange={(e) => {
-                      const newYield = parseFloat(e.target.value) || 0;
-                      setTargetYieldGrams(newYield);
-                      setRatioStyle('custom');
-                      handleUpdateBeanField({ targetYieldGrams: newYield, ratioStyle: 'custom' });
-                    }}
-                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-[#7A6E65] uppercase">Dialed Grinder for this Bean</label>
-                  <select
-                    value={resolveGrinder(grinderName, grinders)?.name || grinderName}
-                    onChange={(e) => {
-                      const g = e.target.value;
-                      if (g === '__ADD_NEW__') {
-                        const custom = prompt('Enter custom grinder model:');
-                        if (custom && custom.trim()) {
-                          const newG: GrinderProfile = {
-                            id: `grinder-${Date.now()}`,
-                            name: custom.trim(),
-                            type: 'stepless',
-                            defaultSetting: '1.0',
-                            stepUnit: 'steps',
-                            inSetup: true,
-                          };
-                          const updated = [...grinders, newG];
-                          setGrinders(updated);
-                          saveGrinders(updated);
-                          setGrinderName(newG.name);
-                          handleUpdateBeanField({ grinderName: newG.name });
-                        }
-                        return;
-                      }
-                      setGrinderName(g);
-                      handleUpdateBeanField({ grinderName: g });
-                    }}
-                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                    className="px-3.5 py-2 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] font-semibold text-xs flex items-center gap-1.5 transition shadow-xs"
+                    title="Open Dial-In Studio to calibrate grind, dose & yield"
                   >
-                    <optgroup label="Grinders in your setup">
-                      {grinders
-                        .filter((g) => g.inSetup)
-                        .map((g) => (
-                          <option key={g.id} value={g.name}>
-                            {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
-                          </option>
-                        ))}
-                    </optgroup>
-                    {grinders.filter((g) => !g.inSetup).length > 0 && (
-                      <optgroup label="Other grinders in library">
-                        {grinders
-                          .filter((g) => !g.inSetup)
-                          .map((g) => (
-                            <option key={g.id} value={g.name}>
-                              {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
-                            </option>
-                          ))}
-                      </optgroup>
-                    )}
-                    <option value="__ADD_NEW__">+ Add Custom Grinder...</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-[#7A6E65] uppercase">Dial Setting for this Bean</label>
-                  <input
-                    type="text"
-                    value={grindSetting}
-                    onChange={(e) => {
-                      const s = e.target.value;
-                      setGrindSetting(s);
-                      handleUpdateBeanField({ grindSetting: s });
-                    }}
-                    placeholder="e.g. 15 for Baratza ESP, 1.4 for Eureka"
-                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
-                  />
+                    <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
+                    <span>{t('gear.open_dial_in_studio')}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1874,6 +1222,8 @@ export function App() {
             )}
           </div>
         )}
+          </>
+        )}
       </main>
 
       {/* Footer & Store Compliance Links */}
@@ -1949,7 +1299,10 @@ export function App() {
           setActiveTab('monitor');
         }}
         onSaveDialIn={handleSaveAndProceedFromWizard}
-        onOpenBeanVault={() => setActiveTab('equipment')}
+        onOpenBeanVault={() => {
+          setIsDialInWizardOpen(false);
+          setActiveMode('beandex');
+        }}
         onScanBean={() => setIsBeanScannerOpen(true)}
       />
 
