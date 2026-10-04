@@ -65,6 +65,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   // Dedicated Date Stamp OCR scanning state
   const [isDateOcrScanning, setIsDateOcrScanning] = useState<boolean>(false);
   const [dateScanNote, setDateScanNote] = useState<string | null>(null);
+  const [dateScanError, setDateScanError] = useState<string | null>(null);
   const dateFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Editable fields when a scan is found
@@ -177,8 +178,27 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   }, []);
 
   // Toggle or start scanning loop
+  // Close handler that thoroughly stops camera and clears transient scan states
+  const handleCloseModal = useCallback(() => {
+    stopCamera();
+    setScannedResult(null);
+    setFeedbackMessage(null);
+    setDateScanNote(null);
+    setDateScanError(null);
+    setManualCode('');
+    setIsDateOcrScanning(false);
+    onClose();
+  }, [stopCamera, onClose]);
+
+  // Clean initialization every time the modal is opened
   useEffect(() => {
-    if (isOpen && !scannedResult) {
+    if (isOpen) {
+      setScannedResult(null);
+      setFeedbackMessage(null);
+      setDateScanNote(null);
+      setDateScanError(null);
+      setManualCode('');
+      setIsDateOcrScanning(false);
       startCamera();
     } else {
       stopCamera();
@@ -186,10 +206,10 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     return () => {
       stopCamera();
     };
-  }, [isOpen, scannedResult, startCamera, stopCamera]);
+  }, [isOpen, startCamera, stopCamera]);
 
   useEffect(() => {
-    if (isCameraActive && !scannedResult) {
+    if (isOpen && isCameraActive && !scannedResult) {
       animFrameIdRef.current = requestAnimationFrame(scanLoop);
     }
     return () => {
@@ -198,7 +218,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
         animFrameIdRef.current = null;
       }
     };
-  }, [isCameraActive, scannedResult, scanLoop]);
+  }, [isOpen, isCameraActive, scannedResult, scanLoop]);
 
   if (!isOpen) return null;
 
@@ -245,6 +265,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     setIsDateOcrScanning(true);
+    setDateScanError(null);
     setFeedbackMessage('Scanning date stamp on bag with OCR...');
     try {
       const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
@@ -258,6 +279,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
         if (ocrResult.detectedRoastLevel) {
           setEditRoastLevel(ocrResult.detectedRoastLevel);
         }
+        setDateScanError(null);
         setFeedbackMessage(
           ocrResult.isEstimatedFromBBD
             ? `Estimated roast date from Best Before: ${ocrResult.roastDate}`
@@ -266,14 +288,12 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       } else {
         if (ocrResult.detectedRoastLevel) {
           setEditRoastLevel(ocrResult.detectedRoastLevel);
-          setFeedbackMessage(`Roast level detected: ${ocrResult.detectedRoastLevel.toUpperCase()}. Please select the date manually below.`);
-        } else {
-          setFeedbackMessage(t('bean.date_not_found'));
         }
+        setDateScanError(t('bean.date_not_found'));
       }
     } catch (err) {
       console.warn('Date photo OCR error', err);
-      setFeedbackMessage(t('bean.date_not_found'));
+      setDateScanError(t('bean.date_not_found'));
     } finally {
       setIsDateOcrScanning(false);
       if (e.target) e.target.value = '';
@@ -334,12 +354,22 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   const handleResetScan = () => {
     setScannedResult(null);
     setFeedbackMessage(null);
+    setDateScanNote(null);
+    setDateScanError(null);
     setManualCode('');
+    setIsDateOcrScanning(false);
     startCamera();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleCloseModal();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+    >
       <div className="relative w-full max-w-lg bg-[#FAF7F2] border border-[#E8DFD5] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="p-4 bg-[#FFFDF9] border-b border-[#E8DFD5] flex items-center justify-between">
@@ -360,10 +390,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
             </div>
           </div>
           <button
-            onClick={() => {
-              stopCamera();
-              onClose();
-            }}
+            onClick={handleCloseModal}
             className="p-1.5 rounded-lg text-[#7A6E65] hover:text-[#2C2018] hover:bg-[#FAF7F2] transition"
           >
             <X className="w-4 h-4" />
@@ -728,6 +755,24 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                         )}
                       </button>
                     </div>
+
+                    {/* Inline OCR failure guidance banner */}
+                    {dateScanError && (
+                      <div className="p-2.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-900 text-xs flex items-start gap-2 animate-fadeIn">
+                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium leading-relaxed">{dateScanError}</p>
+                          <button
+                            type="button"
+                            onClick={() => dateFileInputRef.current?.click()}
+                            className="mt-1 text-[11px] font-bold text-[#C26D52] hover:underline flex items-center gap-1"
+                          >
+                            <Camera className="w-3 h-3" />
+                            <span>{t('bean.date_scan_retry')}</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs text-emerald-900 animate-fadeIn">

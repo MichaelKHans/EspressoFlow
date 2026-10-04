@@ -6,7 +6,8 @@ import { extractDatesAndRoastFromBagText, type BagDateAndRoastExtraction } from 
  */
 export function preprocessImageForOcr(
   imageElement: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
-  cropArea?: { x: number; y: number; width: number; height: number }
+  cropArea?: { x: number; y: number; width: number; height: number },
+  invert: boolean = false
 ): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   const sourceW = 'videoWidth' in imageElement ? (imageElement as HTMLVideoElement).videoWidth : imageElement.width;
@@ -17,7 +18,8 @@ export function preprocessImageForOcr(
   const sw = cropArea ? cropArea.width * sourceW : sourceW;
   const sh = cropArea ? cropArea.height * sourceH : sourceH;
 
-  const maxDim = 1200;
+  // Max dimension 1800px ensures small printed dot-matrix or ink stamps remain legible
+  const maxDim = 1800;
   let targetW = Math.max(1, sw);
   let targetH = Math.max(1, sh);
   if (targetW > maxDim || targetH > maxDim) {
@@ -32,18 +34,21 @@ export function preprocessImageForOcr(
 
   canvas.width = targetW;
   canvas.height = targetH;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return canvas;
 
   ctx.drawImage(imageElement as CanvasImageSource, sx, sy, sw, sh, 0, 0, targetW, targetH);
 
-  // Apply high-contrast grayscale filter for stamped dot-matrix / ink text
+  // Apply high-contrast grayscale filter with optional inversion for dark bags with white text
   try {
     const imgData = ctx.getImageData(0, 0, targetW, targetH);
     const d = imgData.data;
     for (let i = 0; i < d.length; i += 4) {
-      const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      const contrasted = lum < 128 ? Math.max(0, lum * 0.8) : Math.min(255, lum * 1.25);
+      let lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      if (invert) {
+        lum = 255 - lum;
+      }
+      const contrasted = lum < 128 ? Math.max(0, lum * 0.75) : Math.min(255, lum * 1.25);
       d[i] = contrasted;
       d[i + 1] = contrasted;
       d[i + 2] = contrasted;
@@ -62,24 +67,23 @@ export function preprocessImageForOcr(
 export async function scanCoffeeBagForDateAndRoast(
   imageInput: File | Blob | HTMLCanvasElement | HTMLVideoElement | HTMLImageElement
 ): Promise<BagDateAndRoastExtraction> {
-  let canvas: HTMLCanvasElement;
+  let sourceEl: HTMLCanvasElement | HTMLVideoElement | HTMLImageElement;
 
-  if (imageInput instanceof HTMLCanvasElement) {
-    canvas = imageInput;
-  } else if (imageInput instanceof HTMLVideoElement || imageInput instanceof HTMLImageElement) {
-    canvas = preprocessImageForOcr(imageInput);
+  if (imageInput instanceof HTMLCanvasElement || imageInput instanceof HTMLVideoElement || imageInput instanceof HTMLImageElement) {
+    sourceEl = imageInput;
   } else {
     // File or Blob
-    const img = await loadImageFromFileOrBlob(imageInput);
-    canvas = preprocessImageForOcr(img);
+    sourceEl = await loadImageFromFileOrBlob(imageInput);
   }
+
+  const canvasStandard = preprocessImageForOcr(sourceEl, undefined, false);
 
   // 1. Try Native Browser TextDetector if available (e.g. Android Chrome Shape Detection API)
   if (typeof window !== 'undefined' && 'TextDetector' in window) {
     try {
       const TextDetectorClass = (window as unknown as { TextDetector: new () => { detect: (s: unknown) => Promise<Array<{ rawValue: string }>> } }).TextDetector;
       const detector = new TextDetectorClass();
-      const detected = await detector.detect(canvas);
+      const detected = await detector.detect(canvasStandard);
       if (detected && detected.length > 0) {
         const rawText = detected.map((d: { rawValue: string }) => d.rawValue).join('\n');
         const parsed = extractDatesAndRoastFromBagText(rawText);
@@ -96,11 +100,32 @@ export async function scanCoffeeBagForDateAndRoast(
   try {
     const { createWorker } = await import('tesseract.js');
     const worker = await createWorker('eng');
-    const ret = await worker.recognize(canvas);
+    
+    // Pass 1: Standard high contrast
+    const ret1 = await worker.recognize(canvasStandard);
+    const text1 = ret1.data.text || '';
+    const parsed1 = extractDatesAndRoastFromBagText(text1);
+
+    if (parsed1.roastDate) {
+      await worker.terminate();
+      return parsed1;
+    }
+
+    // Pass 2: Inverted high-contrast (Crucial for black / dark bags with silver/white ink like Lavazza / Illy)
+    const canvasInverted = preprocessImageForOcr(sourceEl, undefined, true);
+    const ret2 = await worker.recognize(canvasInverted);
+    const text2 = ret2.data.text || '';
+    const parsed2 = extractDatesAndRoastFromBagText(text2);
+
     await worker.terminate();
 
-    const rawText = ret.data.text || '';
-    return extractDatesAndRoastFromBagText(rawText);
+    if (parsed2.roastDate) {
+      return parsed2;
+    }
+
+    // If neither pass found a date, combine whatever text and roast level was seen
+    const combinedRaw = `${text1}\n${text2}`;
+    return extractDatesAndRoastFromBagText(combinedRaw);
   } catch (err) {
     console.warn('Tesseract OCR error:', err);
     return {

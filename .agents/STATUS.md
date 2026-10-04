@@ -11,6 +11,32 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Bønnescanner OCR Perfektion, Dansk Ristedato, Lavazza 24-mdr BBD & Modal Reset (v1.2.27)
+- **Fuldstændig Modal Nulstilling ved Lukning (`X` / Backdrop):**
+  - Rettet tilstandshukommelse i `BeanScannerModal`, hvor genåbning af scanneren fastholdt den forrige bønnes data.
+  - Implementeret dedikeret `handleCloseModal` og ren `useEffect` lytter på `isOpen`, som nulstiller `scannedResult`, `manualCode`, `dateScanNote`, `dateScanError` og genstarter kameraet rent.
+- **Dansk Ristedato- & Mærkningsmotor (`extractDatesAndRoastFromBagText`):**
+  - Udvidet dato-parseren til at genkende danske og nordiske ristedato-stempler (f.eks. `LOT: MH9K Ristedato 02/03-26` på Hedekaffe-posen).
+  - Robust håndtering af blandede skilletegn (`/` og `-` som i `02/03-26`), valgfrie mellemrum, og 2-cifrede årstal (`-26` $\rightarrow$ `2026`).
+  - Støtte for danske nøgleord: `Ristedato`, `Ristet og pakket`, `Produktionsdato`, `Fremstillet`, `Bedst før`, `Best før`.
+  - Måned-år stempler uden dagsangivelse understøttet (fx `Best før: SEP 2027` eller `09/2027`).
+- **Kommerciel Italiensk Holdbarhed & BBD Heuristik:**
+  - Udvidet datovalideringstærskel til $currentYear + 5$ for at rumme 24–36 måneders fabriks-MHD.
+  - Automatisk genkendelse af fremtidige datoer ($> 2$ måneder fremme som Lavazzas `30/03/2028` fundet under lot-koden `Lotto n. / Batch n. / Lot N° : CK17DH 30/03/2028`).
+  - Italiensk 24-måneders standard: For italienske brands (Lavazza, Illy, Segafredo, Kimbo) beregnes den estimerede ristedato som 24 måneder før BBD (fx `30/03/2028` $\rightarrow$ `2026-03-30`), og for øvrige 12–18 måneder.
+- **Offline Stregkodedatabase Udvidet (`KNOWN_BARCODE_DATABASE`):**
+  - Tilføjet Hedekaffe fra Ulfborg (`4056489503019`: *Ristemesterens Foretrukne Mellemristet*).
+  - Tilføjet Lavazza Espresso Barista serien (`8000070025066`: *Espresso Barista Gran Crema*, `8000070025080`: *Perfetto*, `8000070025059`: *Intenso*).
+  - 'Hedekaffe' tilføjet til globale risterier (`COMMON_ROASTERS`) og 'Ristemesterens Foretrukne' til `COMMON_ORIGINS`.
+- **Dobbelt-Pass Billede-OCR & Invertering for Mørke Poser (`bagOcr.ts`):**
+  - `preprocessImageForOcr` understøtter nu opløsning op til 1800px (undgår at små datostempler sløres væk).
+  - Inverteringsteknik (negativ): Hvid skrift på kulsorte poser (som Lavazzas glinsende foliepose) inverteres til sort skrift på hvid baggrund i et ekstra OCR-pass, hvilket markant forbedrer Tesseracts genkendelsesrate for dot-matrix printerstempler.
+  - Fotoscanning fletter nu automatisk OCR-fundet ristedato med stregkodedata i én arbejdsgang.
+- **Tydelig Taktil Brugerfeedback i Trin 2:**
+  - Hvis OCR ikke kan tyde datostemplet, vises en behagelig gul/orange vejledningsboks direkte i Trin 2 kortet med "Prøv igen med et tættere billede" knap, så baristaen aldrig efterlades i tvivl.
+
+---
+
 ### 2026-10-04 -- Beandex Udvidelser: Afgasning & Friskhedsvindue (Degas), Åbningsdato & Personlige Barista-Noter (v1.2.26)
 - **Kaffens Friskhed & Afgasningsmotor (`calculateBeanFreshness`):**
   - Matematisk model for specialty coffee ekstraktionsfysik baseret på ristningsgrad og tid:

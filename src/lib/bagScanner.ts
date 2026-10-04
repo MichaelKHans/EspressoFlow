@@ -53,16 +53,20 @@ export const COMMON_ROASTERS = [
   'Sey Coffee',
   'Manhattan Coffee',
   'Gardelli',
+  'Hedekaffe',
   'Caffè Vergnano',
   'Kaffemekka',
   'Rigtig Kaffe',
   'Contura Coffee',
   'Peter Larsen Kaffe',
+  'Peter Larsen',
   'BKI',
   'Lavazza',
   'Illy',
   'Dallmayr',
   'Segafredo',
+  'Kimbo',
+  'Pellini',
   'Starbucks',
 ];
 
@@ -73,6 +77,7 @@ export const COMMON_ORIGINS = [
   { origin: 'Guatemala Antigua Pastoral', level: 'medium' as RoastLevel, keywords: ['guatemala', 'antigua', 'huehuetenango'] },
   { origin: 'Costa Rica Tarrazú Honey', level: 'medium' as RoastLevel, keywords: ['costa rica', 'tarrazu', 'honey', 'central valley'] },
   { origin: 'Brazil Cerrado Natural', level: 'medium-dark' as RoastLevel, keywords: ['brazil', 'cerrado', 'sul de minas', 'natural', 'mogiana'] },
+  { origin: 'Hedekaffe Ristemesterens Foretrukne', level: 'medium' as RoastLevel, keywords: ['hedekaffe', 'ristemesterens', 'foretrukne', 'vestjylland', 'ulfborg'] },
   { origin: 'Napoli Dark Velvet Espresso', level: 'dark' as RoastLevel, keywords: ['napoli', 'dark', 'italian', 'espresso blend', 'crema', 'intenso'] },
 ];
 
@@ -80,6 +85,32 @@ export const COMMON_ORIGINS = [
  * Built-in offline barcode database for common specialty and popular espresso beans
  */
 export const KNOWN_BARCODE_DATABASE: Record<string, { name: string; roaster: string; roastLevel: RoastLevel; notes: string }> = {
+  // Hedekaffe (Vestjysk mikroristeri)
+  '4056489503019': {
+    name: 'Ristemesterens Foretrukne Mellemristet',
+    roaster: 'Hedekaffe',
+    roastLevel: 'medium',
+    notes: 'Vestjysk skånsom langtidsristning af Arabica & Robusta fra Ulfborg. Blød, rund og fyldig uden bitterhed.',
+  },
+  // Lavazza (Torino, Italy)
+  '8000070025066': {
+    name: 'Espresso Barista Gran Crema',
+    roaster: 'Lavazza',
+    roastLevel: 'medium-dark',
+    notes: 'Aromatic, rich Italian espresso blend with notes of roasted chocolate and velvety crema.',
+  },
+  '8000070025080': {
+    name: 'Espresso Barista Perfetto',
+    roaster: 'Lavazza',
+    roastLevel: 'medium',
+    notes: 'Delicate Italian espresso blend with aromatic floral notes and gentle chocolate finish.',
+  },
+  '8000070025059': {
+    name: 'Espresso Barista Intenso',
+    roaster: 'Lavazza',
+    roastLevel: 'dark',
+    notes: 'Full-bodied, intense dark roast with lingering cocoa aroma and thick crema.',
+  },
   '8000070038806': {
     name: 'Qualità Oro 100% Arabica Espresso',
     roaster: 'Lavazza',
@@ -98,6 +129,7 @@ export const KNOWN_BARCODE_DATABASE: Record<string, { name: string; roaster: str
     roastLevel: 'medium',
     notes: 'Rich crema and balanced notes of hazelnut and brown sugar.',
   },
+  // Illy (Trieste, Italy)
   '8027785055003': {
     name: 'Classico 100% Arabica Espresso',
     roaster: 'Illy',
@@ -110,6 +142,7 @@ export const KNOWN_BARCODE_DATABASE: Record<string, { name: string; roaster: str
     roastLevel: 'dark',
     notes: 'Full-bodied bold roast with notes of cocoa and dried fruit.',
   },
+  // Peter Larsen Kaffe (Viborg, Danmark)
   '5701046101017': {
     name: 'Rød Helbønner Mellemristet',
     roaster: 'Peter Larsen Kaffe',
@@ -122,6 +155,7 @@ export const KNOWN_BARCODE_DATABASE: Record<string, { name: string; roaster: str
     roastLevel: 'dark',
     notes: 'Rich, intense certified organic espresso with syrupy mouthfeel.',
   },
+  // BKI (Aarhus, Danmark)
   '5708537000103': {
     name: 'Guld Kaffe Hele Bønner',
     roaster: 'BKI',
@@ -134,6 +168,7 @@ export const KNOWN_BARCODE_DATABASE: Record<string, { name: string; roaster: str
     roastLevel: 'dark',
     notes: 'Dark roasted espresso blend crafted for dense crema and milk drinks.',
   },
+  // Coffee Collective (København, Danmark)
   '5711953000012': {
     name: 'Kieni Espresso (Nyeri, Kenya)',
     roaster: 'Coffee Collective',
@@ -146,6 +181,7 @@ export const KNOWN_BARCODE_DATABASE: Record<string, { name: string; roaster: str
     roastLevel: 'light',
     notes: 'World-famous high-altitude specialty lot (jasmine, peach, floral complexity).',
   },
+  // Starbucks
   '7613035760813': {
     name: 'Espresso Roast Whole Bean',
     roaster: 'Starbucks',
@@ -266,17 +302,22 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
     return `${year}-${pad(month)}-${pad(day)}`;
   };
 
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
   const isValidDate = (year: number, month: number, day: number): boolean => {
     if (month < 1 || month > 12) return false;
     if (day < 1 || day > 31) return false;
-    const currentYear = new Date().getFullYear();
-    if (year < currentYear - 5 || year > currentYear + 3) return false;
+    // Accept up to 5 years into the future for commercial coffee (e.g. 24-36 mo shelf life like Lavazza/Illy BBD)
+    if (year < currentYear - 5 || year > currentYear + 5) return false;
     return true;
   };
 
   const parseDateCandidate = (raw: string): { iso: string; year: number; month: number; day: number } | null => {
-    // 1. European: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY
-    const euro = raw.match(/\b(0?[1-9]|[12]\d|3[01])[-./](0?[1-9]|1[0-2])[-./](202\d|\d{2})\b/);
+    if (!raw) return null;
+
+    // 1. European & Nordic: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY or DD/MM-YY (e.g. "02/03-26")
+    const euro = raw.match(/\b(0?[1-9]|[12]\d|3[01])\s*[-.\/]\s*(0?[1-9]|1[0-2])\s*[-.\/]\s*(202\d|203\d|\d{2})\b/);
     if (euro) {
       const day = parseInt(euro[1], 10);
       const month = parseInt(euro[2], 10);
@@ -288,7 +329,7 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
     }
 
     // 2. ISO: YYYY-MM-DD or YYYY.MM.DD
-    const iso = raw.match(/\b(202\d)[-./](0?[1-9]|1[0-2])[-./](0?[1-9]|[12]\d|3[01])\b/);
+    const iso = raw.match(/\b(202\d|203\d)\s*[-.\/]\s*(0?[1-9]|1[0-2])\s*[-.\/]\s*(0?[1-9]|[12]\d|3[01])\b/);
     if (iso) {
       const year = parseInt(iso[1], 10);
       const month = parseInt(iso[2], 10);
@@ -298,8 +339,8 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
       }
     }
 
-    // 3. Text Month: e.g. "14 SEP 2026", "14. maj 2026"
-    const textMonth = raw.match(/\b(0?[1-9]|[12]\d|3[01])[\s./-]+([a-zæøåéäöü]{3,10})[\s./,-]+(202\d|\d{2})\b/i);
+    // 3. Text Month with Day: e.g. "14 SEP 2026", "14. maj 2026"
+    const textMonth = raw.match(/\b(0?[1-9]|[12]\d|3[01])[\s./-]+([a-zæøåéäöü]{3,10})[\s./,-]+(202\d|203\d|\d{2})\b/i);
     if (textMonth) {
       const day = parseInt(textMonth[1], 10);
       const mKey = textMonth[2].toLowerCase().replace(/[.,]/g, '');
@@ -311,11 +352,38 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
       }
     }
 
+    // 4. Text Month with Year only: e.g. "SEP 2027", "September 2027" (Common European BBD stamp)
+    const monthYearText = raw.match(/\b([a-zæøåéäöü]{3,10})\s*[-.\/,]?\s*(202\d|203\d|\d{2})\b/i);
+    if (monthYearText) {
+      const mKey = monthYearText[1].toLowerCase().replace(/[.,]/g, '');
+      const month = MONTH_MAP[mKey];
+      let year = parseInt(monthYearText[2], 10);
+      if (year < 100) year += 2000;
+      if (month && isValidDate(year, month, 1)) {
+        return { iso: formatISO(year, month, 1), year, month, day: 1 };
+      }
+    }
+
+    // 5. Numeric Month and Year only: e.g. "09/2027" or "03/2028"
+    const monthYearNum = raw.match(/\b(0?[1-9]|1[0-2])\s*[\/.-]\s*(202\d|203\d)\b/);
+    if (monthYearNum) {
+      const month = parseInt(monthYearNum[1], 10);
+      const year = parseInt(monthYearNum[2], 10);
+      if (isValidDate(year, month, 1)) {
+        return { iso: formatISO(year, month, 1), year, month, day: 1 };
+      }
+    }
+
     return null;
   };
 
+  // Determine brand heuristics for shelf life
+  const isItalianCommercial = /lavazza|illy|segafredo|kimbo|pellini|vergnano/i.test(text);
+  const shelfLifeYears = isItalianCommercial ? 2 : 1; // Italian commercial espresso standard is 24 months BBD
+
   // 1. Check for labeled Production / Roast Date (HIGHEST PRIORITY)
-  const prodRegex = /(?:production\s*date|production|prod\.?\s*date|datum\s*v[yý]roby|data\s*produkcji|fecha\s*de\s*fabricaci[oó]n|produktionsdatum|produktionsdato|fremstillingsdato|roasted\s*on|roast\s*date|ristedato|ristet|herstelldatum|data\s*di\s*produzione|date\s*de\s*production)[\s:\-\/.]*([0-9]{1,2}[-.\/][0-9]{1,2}[-.\/][0-9]{2,4}|[0-9]{4}[-.\/][0-9]{1,2}[-.\/][0-9]{1,2}|[0-9]{1,2}\s+[a-zæøåéäöü]{3,10}\s+[0-9]{2,4})/i;
+  // Supports Danish "Ristedato 02/03-26", "Ristet og pakket", "Produktionsdato", etc.
+  const prodRegex = /(?:production\s*date|production|prod\.?\s*date|datum\s*v[yý]roby|data\s*produkcji|fecha\s*de\s*fabricaci[oó]n|produktionsdatum|produktionsdato|fremstillingsdato|fremstillet|roasted\s*on|roast\s*date|ristedato|ristet\s*og\s*pakket|ristet|herstelldatum|data\s*di\s*produzione|date\s*de\s*production)[\s:\-\/.]*([0-9]{1,2}\s*[-.\/]\s*[0-9]{1,2}\s*[-.\/]\s*[0-9]{2,4}|[0-9]{4}\s*[-.\/]\s*[0-9]{1,2}\s*[-.\/]\s*[0-9]{1,2}|[0-9]{1,2}\s+[a-zæøåéäöü]{3,10}\s+[0-9]{2,4})/i;
   const prodMatch = text.match(prodRegex);
   let confirmedRoastDate: string | null = null;
   let prodSnippet: string | undefined = undefined;
@@ -328,9 +396,15 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
     }
   }
 
-  // 2. Check for labeled Best Before Date (BBD)
-  const bbdRegex = /(?:best\s*before|best\s*by|bedst\s*f[øo]r|b[aä]st\s*f[oö]re|parasta\s*ennen|mindestens\s*haltbar|mhd|najlepiej\s*spo[zż]y[cć]\s*przed|minim[aá]ln[ií]\s*trvanlivost\s*do|consumir\s*preferentemente\s*antes\s*del|a\s*consommer\s*(?:de\s*pr[eé]f[eé]rence\s*)?avant|da\s*consumarsi\s*preferibilmente\s*entro|valability|validade)[\s:\-\/.]*([0-9]{1,2}[-.\/][0-9]{1,2}[-.\/][0-9]{2,4}|[0-9]{4}[-.\/][0-9]{1,2}[-.\/][0-9]{1,2}|[0-9]{1,2}\s+[a-zæøåéäöü]{3,10}\s+[0-9]{2,4})/i;
+  // 2. Check for labeled Best Before Date (BBD) or Lot/Batch Date
+  // Supports Danish "Best før: SEP 2027", "Bedst før", "MHD", Italian "Lotto n. ... 30/03/2028", etc.
+  const bbdRegex = /(?:best\s*f[øo]r|bedst\s*f[øo]r|best\s*before|best\s*by|b[aä]st\s*f[oö]re|parasta\s*ennen|mindestens\s*haltbar|mhd|najlepiej\s*spo[zż]y[cć]\s*przed|minim[aá]ln[ií]\s*trvanlivost\s*do|consumir\s*preferentemente\s*antes\s*del|a\s*consommer\s*(?:de\s*pr[eé]f[eé]rence\s*)?avant|da\s*consumarsi\s*preferibilmente\s*entro|valability|validade)[\s:\-\/.]*([0-9]{1,2}\s*[-.\/]\s*[0-9]{1,2}\s*[-.\/]\s*[0-9]{2,4}|[0-9]{4}\s*[-.\/]\s*[0-9]{1,2}\s*[-.\/]\s*[0-9]{1,2}|[0-9]{1,2}\s+[a-zæøåéäöü]{3,10}\s+[0-9]{2,4}|[a-zæøåéäöü]{3,10}\s+[0-9]{2,4}|[0-9]{1,2}\s*[\/.-]\s*[0-9]{4})/i;
   const bbdMatch = text.match(bbdRegex);
+
+  // Lot / Batch pattern (e.g. Italian "Lotto n. / Batch n. / Lot N° : CK17DH 30/03/2028")
+  const lotRegex = /(?:lotto\s*(?:n\.?)?|batch\s*(?:n\.?|no\.?)?|lot\s*(?:n[°\.]?)?)[\s:\-\/.]*([a-z0-9\s:]{1,25}?)[\r\n\s]+([0-9]{1,2}\s*[-.\/]\s*[0-9]{1,2}\s*[-.\/]\s*(?:202\d|203\d|\d{2})|[a-zæøåéäöü]{3,10}\s+[0-9]{2,4})/i;
+  const lotMatch = text.match(lotRegex);
+
   let confirmedBBD: string | null = null;
   let estimatedFromBBD = false;
 
@@ -338,9 +412,18 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
     const candidate = parseDateCandidate(bbdMatch[1]);
     if (candidate) {
       confirmedBBD = candidate.iso;
-      // If no explicit production date exists, approximate roast date: 12 months prior
       if (!confirmedRoastDate) {
-        const estYear = candidate.year - 1;
+        const estYear = candidate.year - shelfLifeYears;
+        confirmedRoastDate = formatISO(estYear, candidate.month, candidate.day);
+        estimatedFromBBD = true;
+      }
+    }
+  } else if (lotMatch && lotMatch[2]) {
+    const candidate = parseDateCandidate(lotMatch[2]);
+    if (candidate) {
+      confirmedBBD = candidate.iso;
+      if (!confirmedRoastDate) {
+        const estYear = candidate.year - shelfLifeYears;
         confirmedRoastDate = formatISO(estYear, candidate.month, candidate.day);
         estimatedFromBBD = true;
       }
@@ -351,7 +434,16 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
   if (!confirmedRoastDate) {
     const standaloneCandidate = parseDateCandidate(text);
     if (standaloneCandidate) {
-      confirmedRoastDate = standaloneCandidate.iso;
+      // Check if standalone date is in the future (> 2 months ahead) -> Must be BBD!
+      const isFuture = standaloneCandidate.year > currentYear || (standaloneCandidate.year === currentYear && standaloneCandidate.month > currentMonth + 2);
+      if (isFuture) {
+        confirmedBBD = standaloneCandidate.iso;
+        const estYear = standaloneCandidate.year - shelfLifeYears;
+        confirmedRoastDate = formatISO(estYear, standaloneCandidate.month, standaloneCandidate.day);
+        estimatedFromBBD = true;
+      } else {
+        confirmedRoastDate = standaloneCandidate.iso;
+      }
     }
   }
 
@@ -360,9 +452,11 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
   let formatDesc: string | null = null;
   if (confirmedRoastDate) {
     if (estimatedFromBBD && confirmedBBD) {
-      formatDesc = `Estimated from Best Before (${confirmedBBD} - 12 mo)`;
+      formatDesc = isItalianCommercial
+        ? `Estimated from BBD (${confirmedBBD} - 24 mo Italian std)`
+        : `Estimated from BBD (${confirmedBBD} - 12 mo)`;
     } else if (prodSnippet) {
-      formatDesc = `Production Date (${confirmedRoastDate})`;
+      formatDesc = `Roast Date (${confirmedRoastDate})`;
     } else {
       formatDesc = `Roast Date Stamp (${confirmedRoastDate})`;
     }
@@ -373,9 +467,9 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
     bestBeforeDate: confirmedBBD,
     isEstimatedFromBBD: estimatedFromBBD,
     detectedRoastLevel,
-    confidence: confirmedRoastDate ? (estimatedFromBBD ? 0.8 : 0.98) : 0,
+    confidence: confirmedRoastDate ? (estimatedFromBBD ? 0.85 : 0.98) : 0,
     formatDescription: formatDesc,
-    rawMatchedSnippet: prodSnippet || bbdMatch?.[0],
+    rawMatchedSnippet: prodSnippet || bbdMatch?.[0] || lotMatch?.[0],
     rawText: text,
   };
 }
@@ -528,7 +622,7 @@ export async function lookupBarcode(barcode: string): Promise<ScannedBeanInfo | 
     console.warn('Open Food Facts API lookup timed out or network error', err);
   }
 
-  // 3. Fallback for unrecognized barcode: return clean profile ready for user editing (never fake date)
+  // 4. Fallback for unrecognized barcode: return clean profile ready for user editing (never fake date)
   return {
     name: `Coffee (${cleanCode.slice(-4)})`,
     roaster: 'Specialty Roaster',
@@ -570,14 +664,13 @@ export async function detectBarcodeFromImageSource(
  */
 export async function parseCoffeeBagPhoto(imageFile: File, userExtractedText?: string): Promise<ScannedBeanInfo> {
   // 1. Try detecting barcode first
+  let detectedBarcode: string | null = null;
+  let barcodeResult: ScannedBeanInfo | null = null;
   try {
     const imgBitmap = await createImageBitmap(imageFile);
-    const detectedBarcode = await detectBarcodeFromImageSource(imgBitmap);
+    detectedBarcode = await detectBarcodeFromImageSource(imgBitmap);
     if (detectedBarcode) {
-      const barcodeResult = await lookupBarcode(detectedBarcode);
-      if (barcodeResult) {
-        return barcodeResult;
-      }
+      barcodeResult = await lookupBarcode(detectedBarcode);
     }
   } catch (e) {
     console.debug('Bitmap barcode detection error', e);
@@ -603,18 +696,32 @@ export async function parseCoffeeBagPhoto(imageFile: File, userExtractedText?: s
 
   const combinedText = `${(imageFile.name || '').toLowerCase()} ${ocrExtraction.rawText || ''} ${userExtractedText || ''}`;
 
+  // If barcode already matched a known product, enrich with any roast date detected on the bag photo!
+  if (barcodeResult && barcodeResult.name && !barcodeResult.name.startsWith('Coffee (')) {
+    if (ocrExtraction.roastDate) {
+      barcodeResult.roastDate = ocrExtraction.roastDate;
+      barcodeResult.hasExplicitRoastDate = !ocrExtraction.isEstimatedFromBBD;
+      barcodeResult.isEstimatedFromBBD = ocrExtraction.isEstimatedFromBBD;
+      barcodeResult.bestBeforeDate = ocrExtraction.bestBeforeDate || undefined;
+      barcodeResult.detectedFormat = `${barcodeResult.detectedFormat} + Date OCR`;
+    }
+    return barcodeResult;
+  }
+
   // 3. Match roaster
-  let matchedRoaster: string | undefined = undefined;
-  for (const roaster of COMMON_ROASTERS) {
-    if (combinedText.includes(roaster.toLowerCase())) {
-      matchedRoaster = roaster;
-      break;
+  let matchedRoaster: string | undefined = barcodeResult?.roaster && barcodeResult.roaster !== 'Specialty Roaster' ? barcodeResult.roaster : undefined;
+  if (!matchedRoaster) {
+    for (const roaster of COMMON_ROASTERS) {
+      if (combinedText.includes(roaster.toLowerCase())) {
+        matchedRoaster = roaster;
+        break;
+      }
     }
   }
 
   // 4. Match origin and roast level
-  let matchedOrigin = 'Single Origin Specialty Coffee';
-  let matchedRoastLevel: RoastLevel = ocrExtraction.detectedRoastLevel || 'medium';
+  let matchedOrigin = barcodeResult?.name && !barcodeResult.name.startsWith('Coffee (') ? barcodeResult.name : 'Single Origin Specialty Coffee';
+  let matchedRoastLevel: RoastLevel = ocrExtraction.detectedRoastLevel || barcodeResult?.roastLevel || 'medium';
 
   for (const orig of COMMON_ORIGINS) {
     if (orig.keywords.some((k) => combinedText.includes(k))) {
@@ -626,17 +733,23 @@ export async function parseCoffeeBagPhoto(imageFile: File, userExtractedText?: s
     }
   }
 
+  // If fallback "Coffee (3019)" but OCR found roaster:
+  if (matchedRoaster && matchedOrigin === 'Single Origin Specialty Coffee') {
+    matchedOrigin = `${matchedRoaster} Specialty Roast`;
+  }
+
   return {
     name: matchedOrigin,
-    roaster: matchedRoaster,
+    roaster: matchedRoaster || 'Specialty Roaster',
     roastDate: ocrExtraction.roastDate || '',
-    hasExplicitRoastDate: !!ocrExtraction.roastDate,
+    hasExplicitRoastDate: !!ocrExtraction.roastDate && !ocrExtraction.isEstimatedFromBBD,
     roastLevel: matchedRoastLevel,
     notes: ocrExtraction.formatDescription
       ? `Extracted ${ocrExtraction.formatDescription} via Mobile Vision OCR.`
       : 'Scanned from coffee bag label via Mobile Vision.',
-    detectedFormat: ocrExtraction.formatDescription || 'Optical Vision Scan',
+    detectedFormat: ocrExtraction.formatDescription || (detectedBarcode ? `Barcode: ${detectedBarcode}` : 'Optical Vision Scan'),
     isEstimatedFromBBD: ocrExtraction.isEstimatedFromBBD,
     bestBeforeDate: ocrExtraction.bestBeforeDate || undefined,
+    barcode: detectedBarcode || undefined,
   };
 }
