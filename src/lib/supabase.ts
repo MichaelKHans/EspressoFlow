@@ -41,18 +41,24 @@ export interface BeanDrinkRating {
 // In-memory LRU cache to guarantee sub-millisecond barcode lookups (< 0.1ms)
 const localBeanCache = new Map<string, GlobalCoffeeBean>();
 
+export const DEFAULT_SUPABASE_URL = 'https://vdxfmvzdmcqfixbegumb.supabase.co';
+export const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkeGZtdnpkbWNxZml4YmVndW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTY3NzYsImV4cCI6MjEwNjA5Mjc3Nn0.8MlspGgPxNuIiRWH819Z59MKgVWzAQdqKPE3cqFv9P4';
+
 /**
  * Get or initialize the active Supabase Client
  */
-export function getSupabaseClient(): SupabaseClient | null {
+export function getSupabaseClient(customUrl?: string, customKey?: string): SupabaseClient | null {
   const url =
-    import.meta.env.VITE_SUPABASE_URL ||
+    customUrl ||
     localStorage.getItem('espresso_supabase_url') ||
-    '';
+    import.meta.env.VITE_SUPABASE_URL ||
+    DEFAULT_SUPABASE_URL;
   const key =
-    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    customKey ||
     localStorage.getItem('espresso_supabase_anon_key') ||
-    '';
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    DEFAULT_SUPABASE_ANON_KEY;
 
   if (!url || !key || url.includes('xyzcompany')) {
     return null;
@@ -71,13 +77,16 @@ export function getSupabaseClient(): SupabaseClient | null {
 /**
  * Test the active connection to Supabase
  */
-export async function testSupabaseConnection(): Promise<{
+export async function testSupabaseConnection(
+  customUrl?: string,
+  customKey?: string
+): Promise<{
   ok: boolean;
   message: string;
   pingMs?: number;
   schemaUpToDate?: boolean;
 }> {
-  const client = getSupabaseClient();
+  const client = getSupabaseClient(customUrl, customKey);
   if (!client) {
     return { ok: false, message: 'Missing Supabase URL or Anon Public Key.' };
   }

@@ -281,18 +281,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Supabase & Cloud Config State
   const [supabaseUrl, setSupabaseUrl] = useState<string>(() => {
-    return (
-      localStorage.getItem('espresso_supabase_url') ||
-      import.meta.env.VITE_SUPABASE_URL ||
-      'https://vdxfmvzdmcqfixbegumb.supabase.co'
-    );
+    const saved = localStorage.getItem('espresso_supabase_url');
+    if (saved) return saved;
+    const fallback = import.meta.env.VITE_SUPABASE_URL || 'https://vdxfmvzdmcqfixbegumb.supabase.co';
+    localStorage.setItem('espresso_supabase_url', fallback);
+    return fallback;
   });
   const [supabaseKey, setSupabaseKey] = useState<string>(() => {
-    return (
-      localStorage.getItem('espresso_supabase_anon_key') ||
+    const saved = localStorage.getItem('espresso_supabase_anon_key');
+    if (saved) return saved;
+    const fallback =
       import.meta.env.VITE_SUPABASE_ANON_KEY ||
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkeGZtdnpkbWNxZml4YmVndW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTY3NzYsImV4cCI6MjEwNjA5Mjc3Nn0.8MlspGgPxNuIiRWH819Z59MKgVWzAQdqKPE3cqFv9P4'
-    );
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkeGZtdnpkbWNxZml4YmVndW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTY3NzYsImV4cCI6MjEwNjA5Mjc3Nn0.8MlspGgPxNuIiRWH819Z59MKgVWzAQdqKPE3cqFv9P4';
+    localStorage.setItem('espresso_supabase_anon_key', fallback);
+    return fallback;
   });
   const [isSavedSupabase, setIsSavedSupabase] = useState<boolean>(false);
   const [connStatus, setConnStatus] = useState<{
@@ -493,15 +495,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     return suggestRoasters(formRoaster, 5);
   }, [formRoaster]);
 
-  const testConnection = useCallback(async () => {
+  const testConnection = useCallback(async (overrideUrl?: string, overrideKey?: string) => {
     setIsTestingConn(true);
-    const res = await testSupabaseConnection();
+    const targetUrl = overrideUrl || supabaseUrl;
+    const targetKey = overrideKey || supabaseKey;
+    const res = await testSupabaseConnection(targetUrl, targetKey);
     setConnStatus(res);
     setIsTestingConn(false);
     if (res.ok) {
       loadCloudBeans();
     }
-  }, []);
+  }, [supabaseUrl, supabaseKey]);
 
   const loadCloudBeans = useCallback(async () => {
     setIsLoadingCloudBeans(true);
@@ -625,6 +629,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     localStorage.setItem('espresso_supabase_url', supabaseUrl);
     localStorage.setItem('espresso_supabase_anon_key', supabaseKey);
     setIsSavedSupabase(true);
+    testConnection(supabaseUrl, supabaseKey);
     setTimeout(() => setIsSavedSupabase(false), 2500);
   };
 
@@ -2246,7 +2251,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={testConnection}
+                      onClick={() => testConnection()}
                       disabled={isTestingConn}
                       className="px-3 py-2 rounded-xl border border-[#E8DFD5] hover:bg-[#FAF7F2] text-[#7A6E65] text-xs font-semibold flex items-center gap-1.5 transition"
                     >
