@@ -218,11 +218,10 @@ flowchart TD
     subgraph Backend Cloud (Supabase PostgreSQL)
         subgraph Cloud Vault Tables
             SB_Beans[(global_coffee_beans)]
-            SB_Ratings[(bean_ratings)]
-            SB_Audit[(curator_audit_logs)]
+            SB_Ratings[(bean_drink_ratings)]
         end
         subgraph Cloud Security
-            RLS[Row Level Security]
+            RLS[Row Level Security: SELECT, INSERT, UPDATE, DELETE]
         end
     end
 
@@ -237,6 +236,12 @@ flowchart TD
     SB_Beans -- Hent Verificerede Kaffer --> In-Memory React State
     SB_Beans <--> RLS
 ```
+
+### Oversigt over Supabase Cloud Tabeller:
+| Tabel | Nøglefelter | Beskrivelse & Sikkerhed |
+| :--- | :--- | :--- |
+| `global_coffee_beans` | `barcode` (PK), `name`, `roaster`, `roast_level`, `origin_country`, `suitable_for`, `flavor_notes`, `avg_rating`, `ratings_count`, `verifications_count`, `is_verified`, `expert_score`, `expert_source`, `image_url` | Centralt bønnekatalog. Offentlig læsning, bruger-crowdsourcing (sanitiseret), kurator-verificering og sletning med RLS. |
+| `bean_drink_ratings` | `id` (PK), `barcode` (FK), `user_fingerprint`, `rating` (1-5), `drink_type`, `brew_ratio`, `comment` | Barista-bedømmelser pr. drikketype (Pure Espresso, Flat White, Cortado) med automatisk 70% konsensus-aggregering. |
 
 ### Oversigt over Nøgler i LocalStorage:
 | Nøgle | Type / Model | Beskrivelse |

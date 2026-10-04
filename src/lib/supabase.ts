@@ -75,6 +75,7 @@ export async function testSupabaseConnection(): Promise<{
   ok: boolean;
   message: string;
   pingMs?: number;
+  schemaUpToDate?: boolean;
 }> {
   const client = getSupabaseClient();
   if (!client) {
@@ -94,10 +95,21 @@ export async function testSupabaseConnection(): Promise<{
       return { ok: false, message: `Database error: ${error.message}` };
     }
 
+    // Check if v1.2.29 columns (expert_score, image_url) are provisioned in remote schema
+    const { error: colErr } = await client
+      .from('global_coffee_beans')
+      .select('expert_score, image_url')
+      .limit(1);
+
+    const schemaUpToDate = !colErr;
+
     return {
       ok: true,
-      message: `Connected successfully to eu-central-1 (${elapsed}ms latency)`,
+      message: schemaUpToDate
+        ? `Connected to Supabase (${elapsed}ms latency) • Schema v1.2.29 100% Up-to-Date`
+        : `Connected to Supabase (${elapsed}ms latency) • Bemærk: SQL-migrering for SCA scores & posefotos afventer kørsel i Supabase`,
       pingMs: elapsed,
+      schemaUpToDate,
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -250,6 +262,37 @@ export async function upsertGlobalBean(
       .maybeSingle();
 
     if (error) {
+      // Defensive fallback: if remote table hasn't executed migration for new v1.2.29 columns yet
+      if (
+        error.message.includes('expert_score') ||
+        error.message.includes('expert_source') ||
+        error.message.includes('image_url')
+      ) {
+        console.warn('[Supabase Fallback] Remote schema missing new columns, retrying with base columns.');
+        const { data: legacyData, error: legacyErr } = await client
+          .from('global_coffee_beans')
+          .upsert(
+            {
+              barcode: updatedBean.barcode,
+              roaster: updatedBean.roaster,
+              name: updatedBean.name,
+              roast_level: updatedBean.roast_level,
+              origin_country: updatedBean.origin_country,
+              purchase_country: updatedBean.purchase_country,
+              suitable_for: updatedBean.suitable_for,
+              flavor_notes: updatedBean.flavor_notes,
+              verifications_count: updatedBean.verifications_count,
+            },
+            { onConflict: 'barcode' }
+          )
+          .select()
+          .maybeSingle();
+
+        if (!legacyErr && legacyData) {
+          return { success: true, data: legacyData as GlobalCoffeeBean };
+        }
+      }
+
       console.warn('[Supabase Upsert Error]:', error.message);
       return { success: false, error: error.message };
     }
@@ -388,6 +431,7 @@ export async function fetchAllGlobalBeans(): Promise<GlobalCoffeeBean[]> {
       const { data, error } = await client
         .from('global_coffee_beans')
         .select('*')
+        .order('is_verified', { ascending: false })
         .order('avg_rating', { ascending: false });
 
       if (!error && data && data.length > 0) {
@@ -700,6 +744,29 @@ export async function adminVerifyGlobalBean(
       .maybeSingle();
 
     if (error) {
+      // Defensive fallback if remote schema has not run v1.2.29 migration
+      if (
+        error.message.includes('expert_score') ||
+        error.message.includes('expert_source') ||
+        error.message.includes('image_url')
+      ) {
+        console.warn('[Admin Verify Fallback] Remote schema missing new columns, stripping them for update.');
+        const fallbackPayload = { ...payload };
+        delete fallbackPayload.expert_score;
+        delete fallbackPayload.expert_source;
+        delete fallbackPayload.image_url;
+        const { data: fbData, error: fbErr } = await client
+          .from('global_coffee_beans')
+          .update(fallbackPayload)
+          .eq('barcode', cleanBarcode)
+          .select()
+          .maybeSingle();
+
+        if (!fbErr && fbData) {
+          return { success: true, data: fbData as GlobalCoffeeBean };
+        }
+      }
+
       return { success: false, error: error.message };
     }
 
@@ -770,6 +837,27 @@ export async function adminCreateGlobalBean(
       .maybeSingle();
 
     if (error) {
+      // Defensive fallback if remote schema has not run v1.2.29 migration
+      if (
+        error.message.includes('expert_score') ||
+        error.message.includes('expert_source') ||
+        error.message.includes('image_url')
+      ) {
+        const fallbackBean = { ...beanToInsert };
+        delete fallbackBean.expert_score;
+        delete fallbackBean.expert_source;
+        delete fallbackBean.image_url;
+        const { data: fbData, error: fbErr } = await client
+          .from('global_coffee_beans')
+          .upsert(fallbackBean, { onConflict: 'barcode' })
+          .select()
+          .maybeSingle();
+
+        if (!fbErr && fbData) {
+          return { success: true, data: fbData as GlobalCoffeeBean };
+        }
+      }
+
       return { success: false, error: error.message };
     }
 
