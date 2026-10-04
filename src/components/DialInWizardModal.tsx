@@ -1,7 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile } from '../types/espresso';
+import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, RoastLevel } from '../types/espresso';
 import { resolveGrinder } from '../lib/storage';
-import { X, Sliders, ChevronRight, Target, Sparkles, Scale, Minus, Plus, RotateCcw, CheckCircle2 } from 'lucide-react';
+import {
+  X,
+  Sliders,
+  ChevronRight,
+  Target,
+  Sparkles,
+  Scale,
+  Minus,
+  Plus,
+  RotateCcw,
+  CheckCircle2,
+  Coffee,
+  Barcode,
+  Check,
+} from 'lucide-react';
+import { getOptimalBeanGuidanceForDrink, matchBeansForDrink } from '../lib/beanMatcher';
+
+export const getRoastBadgeStyles = (level: RoastLevel) => {
+  switch (level) {
+    case 'light':
+      return 'bg-amber-50 text-amber-800 border-amber-300';
+    case 'medium':
+      return 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30';
+    case 'medium-dark':
+      return 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30';
+    case 'dark':
+      return 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]';
+    default:
+      return 'bg-neutral-100 text-neutral-800 border-neutral-300';
+  }
+};
 
 interface DialInWizardModalProps {
   isOpen: boolean;
@@ -11,13 +41,19 @@ interface DialInWizardModalProps {
   currentGrinder: GrinderProfile;
   availableGrinders?: GrinderProfile[];
   allGrinders?: GrinderProfile[];
+  allBeans?: CoffeeBeanProfile[];
+  onSelectBean?: (beanId: string) => void;
   onProceedToScaleCam: () => void;
   onSaveDialIn?: (updated: {
+    beanId?: string;
     doseGrams: number;
     targetYieldGrams: number;
     grindSetting: string;
     grinderName: string;
+    launchScaleCam?: boolean;
   }) => void;
+  onOpenBeanVault?: () => void;
+  onScanBean?: () => void;
 }
 
 export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
@@ -28,17 +64,32 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   currentGrinder,
   availableGrinders = [],
   allGrinders = [],
+  allBeans = [],
+  onSelectBean,
   onProceedToScaleCam,
   onSaveDialIn,
+  onOpenBeanVault,
+  onScanBean,
 }) => {
   // Master pool of all available grinders
   const pool = allGrinders.length > 0
     ? allGrinders
     : (availableGrinders.length > 0 ? availableGrinders : [currentGrinder]);
 
+  // Master pool of all available coffee beans
+  const beanPool = allBeans && allBeans.length > 0 ? allBeans : [currentBean];
+
+  // Active bean selection state inside Dial-In Studio
+  const [selectedBeanId, setSelectedBeanId] = useState<string>(currentBean.id);
+
+  const activeBean =
+    beanPool.find((b) => b.id === selectedBeanId) ||
+    currentBean ||
+    beanPool[0];
+
   // Grinder selection state: defaults to bean's dialed grinder or current bar grinder
   const [selectedGrinderName, setSelectedGrinderName] = useState<string>(() => {
-    const raw = currentBean.grinderName || currentGrinder.name;
+    const raw = activeBean.grinderName || currentGrinder.name;
     const res = resolveGrinder(raw, pool);
     return res?.name || raw;
   });
@@ -51,26 +102,26 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
 
   // Grinders that are marked inSetup (from user's personal setup in Gear)
   const setupGrinders = pool.filter((g) => g.inSetup === true);
-  // Ensure the active grinder is always visible in the chips
   const displayGrinders = setupGrinders.length > 0
     ? (setupGrinders.some((g) => g.name === activeGrinder.name)
         ? setupGrinders
         : [activeGrinder, ...setupGrinders])
     : pool.slice(0, 4);
 
-  // Initialize state with current active bean & drink targets
-  const initialDose = currentBean.doseGrams || drink.defaultDoseGrams || 18.0;
-  const initialYield = drink.targetYieldGrams || currentBean.targetYieldGrams || 36.0;
-  const initialGrind = currentBean.grindSetting || activeGrinder.defaultSetting || '15';
+  // Initialize state with active bean & drink targets
+  const initialDose = activeBean.doseGrams || drink.defaultDoseGrams || 18.0;
+  const initialYield = drink.targetYieldGrams || activeBean.targetYieldGrams || 36.0;
+  const initialGrind = activeBean.grindSetting || activeGrinder.defaultSetting || '15';
 
   const [doseGrams, setDoseGrams] = useState<number>(initialDose);
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(initialYield);
   const [grindSetting, setGrindSetting] = useState<string>(initialGrind);
   const [isSavedFeedback, setIsSavedFeedback] = useState<boolean>(false);
 
-  // Sync state whenever modal opens or bean/drink changes
+  // Sync state whenever modal opens or drink/bean changes
   useEffect(() => {
     if (isOpen) {
+      setSelectedBeanId(currentBean.id);
       const raw = currentBean.grinderName || currentGrinder.name;
       const res = resolveGrinder(raw, pool);
       setSelectedGrinderName(res?.name || raw);
@@ -96,12 +147,39 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   // Real-time calculated extraction ratio
   const ratio = doseGrams > 0 ? (targetYieldGrams / doseGrams).toFixed(1) : '2.0';
 
+  // Optimal pairing guidance between current drink and active bean
+  const guidance = getOptimalBeanGuidanceForDrink(drink, activeBean);
+  const matches = matchBeansForDrink(beanPool, drink);
+  const currentMatch = matches.find((m) => m.bean.id === activeBean.id);
+  const currentScore = currentMatch?.matchScore ?? (guidance.isCurrentBeanOptimal ? 92 : 75);
+
+  // Switch bean in Dial-In Studio
+  const handleSelectBean = (bean: CoffeeBeanProfile) => {
+    setSelectedBeanId(bean.id);
+    if (onSelectBean) {
+      onSelectBean(bean.id);
+    }
+    // Update grinder and grind settings associated with newly selected bean
+    if (bean.grinderName) {
+      const res = resolveGrinder(bean.grinderName, pool);
+      if (res) setSelectedGrinderName(res.name);
+    }
+    if (bean.grindSetting) {
+      setGrindSetting(bean.grindSetting);
+    }
+    if (bean.doseGrams) {
+      setDoseGrams(bean.doseGrams);
+    }
+    if (bean.targetYieldGrams) {
+      setTargetYieldGrams(bean.targetYieldGrams);
+    }
+  };
+
   // Handle switching grinder in Dial-In Studio
   const handleSelectGrinder = (grinder: GrinderProfile) => {
     setSelectedGrinderName(grinder.name);
-    // If switching to this bean's existing grinder, keep bean's setting, else use grinder's defaultSetting
-    if (grinder.name === currentBean.grinderName && currentBean.grindSetting) {
-      setGrindSetting(currentBean.grindSetting);
+    if (grinder.name === activeBean.grinderName && activeBean.grindSetting) {
+      setGrindSetting(activeBean.grindSetting);
     } else {
       setGrindSetting(grinder.defaultSetting || '15');
     }
@@ -115,7 +193,6 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         ? (delta > 0 ? 0.2 : -0.2)
         : (delta > 0 ? 0.5 : -0.5);
       const next = Math.max(0.1, Math.round((parsed + stepDelta) * 10) / 10);
-      // Format with 1 decimal if float, otherwise whole number
       const formatted = next % 1 === 0 ? next.toString() : next.toFixed(1);
       setGrindSetting(formatted);
     }
@@ -144,15 +221,36 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     setGrindSetting(activeGrinder.defaultSetting || '15');
   };
 
-  // Save changes & proceed
-  const handleSaveAndLock = () => {
+  // Save changes without launching scale monitor
+  const handleSaveOnly = () => {
     setIsSavedFeedback(true);
     if (onSaveDialIn) {
       onSaveDialIn({
+        beanId: activeBean.id,
         doseGrams,
         targetYieldGrams,
         grindSetting,
         grinderName: activeGrinder.name,
+        launchScaleCam: false,
+      });
+    }
+    setTimeout(() => {
+      setIsSavedFeedback(false);
+      onClose();
+    }, 900);
+  };
+
+  // Save changes & proceed to Scale Cam
+  const handleSaveAndProceed = () => {
+    setIsSavedFeedback(true);
+    if (onSaveDialIn) {
+      onSaveDialIn({
+        beanId: activeBean.id,
+        doseGrams,
+        targetYieldGrams,
+        grindSetting,
+        grinderName: activeGrinder.name,
+        launchScaleCam: true,
       });
     } else {
       onProceedToScaleCam();
@@ -163,12 +261,12 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto">
       <div className="bg-[#FFFDF9] border border-[#E8DFD5] rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 relative overflow-hidden my-auto max-h-[95vh] overflow-y-auto">
         {/* Ambient Top Glow */}
-        <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[#C26D52]/15 blur-2xl pointer-events-none" />
+        <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-[#C26D52]/15 blur-2xl pointer-events-none" />
 
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-3 sm:pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0 shadow-xs">
               <Sliders className="w-4 h-4 text-[#C26D52]" />
             </div>
             <div className="min-w-0">
@@ -181,50 +279,191 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[#7A6E65] font-mono truncate">
-                <span className="truncate">{currentBean.name}</span>
+                <span className="font-semibold text-[#2C2018] truncate">{activeBean.name}</span>
                 <span
-                  className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${
-                    currentBean.roastLevel === 'light'
-                      ? 'bg-amber-50 text-amber-800 border-amber-300'
-                      : currentBean.roastLevel === 'medium'
-                      ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
-                      : currentBean.roastLevel === 'medium-dark'
-                      ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
-                      : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
-                  }`}
+                  className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                    activeBean.roastLevel
+                  )}`}
                 >
-                  {currentBean.roastLevel}
+                  {activeBean.roastLevel}
                 </span>
                 <span>•</span>
-                <span className="truncate font-semibold text-[#2C2018]">{activeGrinder.name}</span>
+                <span className="truncate">{activeGrinder.name.split(' ')[0]} (Setting {grindSetting})</span>
               </div>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-center text-[#7A6E65] hover:text-[#2C2018] transition shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-center text-[#7A6E65] hover:text-[#2C2018] transition shrink-0 cursor-pointer"
             title="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Step 1: Starting Burr Gap & Grind Setting */}
+        {/* STEP 1: Select Coffee Bean & Review Roast Matching */}
         <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5" /> Step 1: Grinder & Setting for Bean
+              <Coffee className="w-3.5 h-3.5" /> Step 1: Coffee Bean Selection
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                  currentScore >= 80
+                    ? 'bg-[#72806B]/15 text-[#72806B] border-[#72806B]/30'
+                    : 'bg-[#C26D52]/15 text-[#C26D52] border-[#C26D52]/30'
+                }`}
+              >
+                {currentScore}% Pairing Match
+              </span>
+            </div>
+          </div>
+
+          {/* Active Bean Banner */}
+          <div className="p-2.5 sm:p-3 rounded-xl bg-white border border-[#E8DFD5] space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span
+                    className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                      activeBean.roastLevel
+                    )}`}
+                  >
+                    {activeBean.roastLevel}
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-[#2C2018] font-serif truncate">
+                    {activeBean.name}
+                  </span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#72806B] text-white font-bold font-mono">
+                    ACTIVE
+                  </span>
+                </div>
+                {activeBean.roaster && (
+                  <p className="text-[10px] text-[#7A6E65] font-mono mt-0.5">
+                    Roaster: <strong className="text-[#2C2018]">{activeBean.roaster}</strong>
+                  </p>
+                )}
+              </div>
+
+              {/* Action buttons to scan or open vault */}
+              <div className="flex items-center gap-1 shrink-0">
+                {onScanBean && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onScanBean();
+                    }}
+                    className="p-1.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] text-[10px] font-mono font-bold flex items-center gap-1 transition"
+                    title="Scan new coffee bag"
+                  >
+                    <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
+                    <span className="hidden xs:inline">Scan Bag</span>
+                  </button>
+                )}
+                {onOpenBeanVault && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenBeanVault();
+                    }}
+                    className="p-1.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] text-[10px] font-mono font-bold flex items-center gap-1 transition"
+                    title="Open Bean Vault"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-[#C26D52]" />
+                    <span className="hidden xs:inline">Vault</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Flavor & Roast Notes for this drink */}
+            <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed border-t border-[#E8DFD5]/60 pt-1.5">
+              {currentMatch?.reason || guidance.whyIdeal} {guidance.idealFlavorNotes && `• Target notes: ${guidance.idealFlavorNotes}`}
+            </p>
+          </div>
+
+          {/* Quick Bean Switcher (If multiple beans exist) */}
+          {beanPool.length > 1 && (
+            <div className="space-y-1.5">
+              <span className="text-[9px] font-mono uppercase font-bold text-[#7A6E65] block">
+                Switch Bean for this Dial-In:
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-0.5 no-scrollbar">
+                {beanPool.map((b) => {
+                  const isSelected = b.id === activeBean.id;
+                  const match = matches.find((m) => m.bean.id === b.id);
+                  const score = match?.matchScore ?? 75;
+
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => handleSelectBean(b)}
+                      className={`p-2 rounded-xl border text-left transition flex items-center justify-between gap-2 cursor-pointer ${
+                        isSelected
+                          ? 'border-[#C26D52] bg-white ring-1 ring-[#C26D52] shadow-2xs'
+                          : 'border-[#E8DFD5] bg-white/70 hover:bg-white hover:border-[#C26D52]/40'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span
+                            className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                              b.roastLevel
+                            )}`}
+                          >
+                            {b.roastLevel}
+                          </span>
+                          <span className="text-xs font-bold text-[#2C2018] truncate font-serif">
+                            {b.name}
+                          </span>
+                        </div>
+                        <div className="text-[9px] text-[#7A6E65] font-mono mt-0.5 flex items-center gap-1.5">
+                          <span>Grind: <strong className="text-[#2C2018]">{b.grindSetting}</strong></span>
+                          <span>•</span>
+                          <span className="truncate">{b.roaster || 'Specialty'}</span>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <span
+                          className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full border ${
+                            score >= 80
+                              ? 'bg-[#72806B]/15 text-[#72806B] border-[#72806B]/30'
+                              : 'bg-[#C26D52]/15 text-[#C26D52] border-[#C26D52]/30'
+                          }`}
+                        >
+                          {score}%
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* STEP 2: Grinder & Grind Setting for this Bean */}
+        <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
+              <Target className="w-3.5 h-3.5" /> Step 2: Grinder & Setting for Bean
             </span>
             <span className="text-[10px] font-mono text-[#7A6E65]">
-              {activeGrinder.name.split(' ')[0]} ({activeGrinder.stepUnit || 'steps'})
+              {activeGrinder.name.split(' ')[0]} ({activeGrinder.stepUnit || 'micro-steps'})
             </span>
           </div>
 
           {/* Grinder selector from setup / library */}
           <div className="space-y-1.5 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
             <div className="flex items-center justify-between text-[10px] font-mono">
-              <span className="text-[#7A6E65] uppercase font-bold flex items-center gap-1">
-                <span>Select Grinder for this Bean:</span>
+              <span className="text-[#7A6E65] uppercase font-bold">
+                Select Grinder for this Bean:
               </span>
               <span className="text-[#C26D52] font-bold">
                 Selected: {activeGrinder.name.split(' ')[0]}
@@ -281,7 +520,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
             <div className="text-[11px] text-[#7A6E65] font-mono">
               Dial setting on <strong className="text-[#2C2018]">{activeGrinder.name.split(' ')[0]}</strong>:
-              <span className="block text-[9px] text-[#A6998E]">({activeGrinder.stepUnit || 'steps'})</span>
+              <span className="block text-[9px] text-[#A6998E]">({activeGrinder.stepUnit || 'micro-steps'})</span>
             </div>
 
             {/* Grind Stepper */}
@@ -289,7 +528,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleAdjustGrind(-1)}
-                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95"
+                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95 cursor-pointer"
                 title={`Finer grind (-${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
               >
                 <Minus className="w-3.5 h-3.5" />
@@ -304,7 +543,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               <button
                 type="button"
                 onClick={() => handleAdjustGrind(1)}
-                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95"
+                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95 cursor-pointer"
                 title={`Coarser grind (+${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -317,11 +556,11 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           </p>
         </div>
 
-        {/* Step 2: Target Weight, Dose & Live Extraction Ratio */}
+        {/* STEP 3: Dose, Target Yield & Live Extraction Ratio */}
         <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
-              <Scale className="w-3.5 h-3.5" /> Step 2: Dose, Yield & Extraction Ratio
+              <Scale className="w-3.5 h-3.5" /> Step 3: Dose, Yield & Extraction Ratio
             </span>
             <span className="text-[10px] font-mono font-bold text-[#2C2018] bg-[#C26D52]/10 border border-[#C26D52]/30 px-2 py-0.5 rounded-full">
               Ratio 1:{ratio}
@@ -336,7 +575,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleAdjustDose(-0.5)}
-                  className="w-6 h-6 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95"
+                  className="w-6 h-6 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95 cursor-pointer"
                   title="-0.5g"
                 >
                   <Minus className="w-3 h-3" />
@@ -347,7 +586,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleAdjustDose(0.5)}
-                  className="w-6 h-6 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95"
+                  className="w-6 h-6 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95 cursor-pointer"
                   title="+0.5g"
                 >
                   <Plus className="w-3 h-3" />
@@ -363,7 +602,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleAdjustYield(-1.0)}
-                  className="w-6 h-6 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95"
+                  className="w-6 h-6 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95 cursor-pointer"
                   title="-1.0g"
                 >
                   <Minus className="w-3 h-3" />
@@ -374,7 +613,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleAdjustYield(1.0)}
-                  className="w-6 h-6 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95"
+                  className="w-6 h-6 rounded-md bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold transition active:scale-95 cursor-pointer"
                   title="+1.0g"
                 >
                   <Plus className="w-3 h-3" />
@@ -396,16 +635,16 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           </div>
         </div>
 
-        {/* Step 3: Puck Preparation & Scale Synchronization */}
-        <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1 text-xs text-[#2C2018]">
+        {/* STEP 4: Synchronization & Confirmation Summary */}
+        <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1.5 text-xs text-[#2C2018]">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> Step 3: Synchronization & Prep
+              <Sparkles className="w-3.5 h-3.5" /> Step 4: Synchronization & Confirmation
             </span>
             <button
               type="button"
               onClick={handleResetToBaseline}
-              className="text-[10px] font-mono text-[#7A6E65] hover:text-[#2C2018] flex items-center gap-1 transition"
+              className="text-[10px] font-mono text-[#7A6E65] hover:text-[#2C2018] flex items-center gap-1 transition cursor-pointer"
               title="Reset to recipe baseline"
             >
               <RotateCcw className="w-3 h-3" />
@@ -413,36 +652,51 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             </button>
           </div>
           <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed">
-            Your calibration is saved directly to <strong>{currentBean.name}</strong> with <strong>{activeGrinder.name}</strong> as dialed grinder and synchronized in <strong>Beans & Gear</strong>. Scale Cam will automatically track toward your target of <strong>{targetYieldGrams.toFixed(1)}g</strong>!
+            Calibration will be locked for <strong>{activeBean.name}</strong> using <strong>{activeGrinder.name.split(' ')[0]}</strong> on setting <strong>{grindSetting}</strong> ({doseGrams.toFixed(1)}g in → {targetYieldGrams.toFixed(1)}g out).
           </p>
         </div>
 
         {/* Modal Action Buttons */}
-        <div className="pt-2 flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3">
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#E8DFD5] text-xs font-mono font-medium text-[#7A6E65] hover:text-[#2C2018] transition text-center"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#E8DFD5] text-xs font-mono font-medium text-[#7A6E65] hover:text-[#2C2018] transition text-center cursor-pointer"
           >
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={handleSaveAndLock}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition shadow-md group"
-          >
-            {isSavedFeedback ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-[#72806B]" />
-                <span>Saved to Bean!</span>
-              </>
-            ) : (
-              <>
-                <span>Lock Calibration & Launch Scale Cam</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
-              </>
-            )}
-          </button>
+
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            {/* Save Calibration Only Button */}
+            <button
+              type="button"
+              onClick={handleSaveOnly}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#C26D52] bg-[#FAF7F2] hover:bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+              title="Save settings to bean without opening camera"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Save Calibration</span>
+            </button>
+
+            {/* Lock & Launch Scale Cam Primary Button */}
+            <button
+              type="button"
+              onClick={handleSaveAndProceed}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition shadow-md group cursor-pointer"
+            >
+              {isSavedFeedback ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-[#72806B]" />
+                  <span>Calibration Locked!</span>
+                </>
+              ) : (
+                <>
+                  <span>Lock & Launch Scale Cam</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

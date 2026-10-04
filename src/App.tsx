@@ -14,6 +14,7 @@ import { BeanScannerModal } from './components/BeanScannerModal';
 import { AdminPortal } from './components/AdminPortal';
 import { TrialCountdownBanner } from './components/TrialCountdownBanner';
 import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
+import { useMobileBackHandler } from './lib/useMobileBackHandler';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
 import type {
@@ -131,6 +132,20 @@ export function App() {
     return p.includes('admin') || h.includes('admin');
   });
 
+  // Mobile hardware & gesture back button handling
+  const { showExitToast, exitToastMessage } = useMobileBackHandler({
+    activeTab,
+    setActiveTab,
+    modals: [
+      { name: 'dialin', isOpen: isDialInWizardOpen, close: () => setIsDialInWizardOpen(false) },
+      { name: 'scanner', isOpen: isBeanScannerOpen, close: () => setIsBeanScannerOpen(false) },
+      { name: 'vault', isOpen: isCentralVaultOpen, close: () => setIsCentralVaultOpen(false) },
+      { name: 'paywall', isOpen: isPaywallOpen, close: () => setIsPaywallOpen(false) },
+      { name: 'legal', isOpen: legalModalTab !== null, close: () => setLegalModalTab(null) },
+    ],
+    exitToastMessage: t('mobile.press_back_again') || 'Tryk tilbage igen for at afslutte',
+  });
+
   // Load persistence, handle legal deep links, and listen for route changes
   useEffect(() => {
     setShots(loadShots());
@@ -201,12 +216,21 @@ export function App() {
   };
 
   const handleSaveAndProceedFromWizard = (dialInData: {
+    beanId?: string;
     doseGrams: number;
     targetYieldGrams: number;
     grindSetting: string;
     grinderName?: string;
+    launchScaleCam?: boolean;
   }) => {
-    // 1. Update active brewing state
+    const targetBeanId = dialInData.beanId || activeBeanId;
+
+    // 1. If user switched bean inside Dial-In Studio, update active bean state
+    if (dialInData.beanId && dialInData.beanId !== activeBeanId) {
+      handleSelectBean(dialInData.beanId);
+    }
+
+    // 2. Update active brewing state
     setDoseGrams(dialInData.doseGrams);
     setTargetYieldGrams(dialInData.targetYieldGrams);
     setGrindSetting(dialInData.grindSetting);
@@ -226,9 +250,9 @@ export function App() {
       });
     }
 
-    // 2. Persist directly onto active bean in vault
+    // 3. Persist directly onto target bean in vault
     const updated = beans.map((b) =>
-      b.id === activeBeanId
+      b.id === targetBeanId
         ? {
             ...b,
             doseGrams: dialInData.doseGrams,
@@ -241,13 +265,15 @@ export function App() {
     setBeans(updated);
     saveBeans(updated);
 
-    // 3. Save drink-specific grind setting mapping
-    const calibrationKey = `${activeBeanId}_${activeDrinkId}`;
+    // 4. Save drink-specific grind setting mapping
+    const calibrationKey = `${targetBeanId}_${activeDrinkId}`;
     saveDrinkGrindSetting(calibrationKey, dialInData.grindSetting);
 
-    // 4. Close wizard and launch scale monitor
+    // 5. Close wizard and conditionally launch scale monitor
     setIsDialInWizardOpen(false);
-    setActiveTab('monitor');
+    if (dialInData.launchScaleCam !== false) {
+      setActiveTab('monitor');
+    }
   };
 
   const handleOnboardingComplete = (result: OnboardingResult) => {
@@ -1916,11 +1942,15 @@ export function App() {
         currentGrinder={currentGrinder}
         availableGrinders={grinders.filter((g) => g.inSetup)}
         allGrinders={grinders}
+        allBeans={beans}
+        onSelectBean={handleSelectBean}
         onProceedToScaleCam={() => {
           setIsDialInWizardOpen(false);
           setActiveTab('monitor');
         }}
         onSaveDialIn={handleSaveAndProceedFromWizard}
+        onOpenBeanVault={() => setActiveTab('equipment')}
+        onScanBean={() => setIsBeanScannerOpen(true)}
       />
 
       {/* First-Time Onboarding Wizard */}
@@ -1950,6 +1980,14 @@ export function App() {
         currentVaultBeans={beans}
         currentGrinderName={currentGrinder.name}
       />
+
+      {/* Mobile Back Double-Press Exit Toast */}
+      {showExitToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018]/95 text-[#FAF7F2] border border-[#C26D52]/40 text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2 pointer-events-none">
+          <span className="w-2 h-2 rounded-full bg-[#C26D52] animate-ping" />
+          <span>{exitToastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

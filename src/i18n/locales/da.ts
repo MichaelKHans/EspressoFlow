@@ -302,4 +302,36 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'vault.filter_all_drinks': 'Alle Drikketyper',
   'vault.expert_rated_only': 'Kun Ekspert-Bedømte (90+ Point)',
   'vault.toast_added': 'Tilføjet til din Kaffebars Samling!',
+
+  // Dial-In Studio
+  'dialin.studio_title': 'Dial-In Studio: {drink}',
+  'dialin.live_tuning': 'LIVE INDSTILLING',
+  'dialin.step1_bean_title': 'Trin 1: Vælg Kaffebønne & Ristningsprofil',
+  'dialin.step1_bean_subtitle': 'Vælg hvilken kaffebønne du brygger til denne drik',
+  'dialin.step2_grinder_title': 'Trin 2: Kværn & Kværnindstilling for Bønne',
+  'dialin.step3_ratio_title': 'Trin 3: Dosis, Udbytte & Forhold (Ratio)',
+  'dialin.step4_sync_title': 'Trin 4: Gem Kalibrering & Synkronisering',
+  'dialin.selected_bean': 'Valgt Kaffebønne:',
+  'dialin.switch_bean': 'Skift Bønne',
+  'dialin.scan_new_bean': 'Scan Ny Pose',
+  'dialin.pairing_match': '{score}% Parringsmatch',
+  'dialin.setting_for': 'Indstilling på {grinder}:',
+  'dialin.finer_hint': 'Finere formaling øger puck-modstanden og sænker flowet (g/s). Grovere formaling giver hurtigere ekstraktion.',
+  'dialin.save_calibration_only': 'Gem Kalibrering',
+  'dialin.save_and_launch_scale': 'Lås Indstillinger & Start Scale Cam',
+  'dialin.saved_feedback': 'Kalibrering Låst!',
+  'dialin.reset_baseline': 'Nulstil',
+  'dialin.cancel': 'Annuller',
+
+  // Recipe Card (Forside Display)
+  'recipe.active_bean_label': 'Tilknyttet Kaffebønne',
+  'recipe.grinder_setting_label': 'Dial-In Kværn & Indstilling',
+  'recipe.dial_in_button': 'Dial-In',
+  'recipe.pull_shot_button': 'Kør Shot på Scale Cam',
+  'recipe.tune_hint': 'Tryk på "Dial-In" foroven for at skifte bønne, kværn eller finjustere kværnindstillingen i Dial-In Studio.',
+  'recipe.status_dialed_in': 'DIALED IN',
+  'recipe.status_needs_dialin': 'KRÆVER DIAL-IN',
+
+  // Mobile Back Navigation
+  'mobile.press_back_again': 'Tryk tilbage igen for at afslutte Espresso Flow',
 };

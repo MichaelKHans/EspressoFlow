@@ -11,19 +11,13 @@ import {
   Settings2,
   Check,
   X,
-  Lightbulb,
   Layers,
   Plus,
-  Minus,
-  AlertCircle,
-  Barcode,
-  Sparkles,
 } from 'lucide-react';
 import {
   loadActiveBarDrinkIds,
   saveActiveBarDrinkIds,
   loadDrinkGrindSettings,
-  saveDrinkGrindSetting,
   loadShots,
 } from '../lib/storage';
 import { GRINDER_CALIBRATIONS } from '../lib/espressoMath';
@@ -70,18 +64,17 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onSelectDrink,
   onLaunchScaleCam,
   onOpenDialInWizard,
-  onOpenBeanVault,
-  onGrindSettingChange,
-  onSwitchBean,
-  onScanBean,
-  onUpdateBeanDialIn,
+  onOpenBeanVault: _onOpenBeanVault,
+  onGrindSettingChange: _onGrindSettingChange,
+  onSwitchBean: _onSwitchBean,
+  onScanBean: _onScanBean,
+  onUpdateBeanDialIn: _onUpdateBeanDialIn,
 }) => {
   const [activeDeckIds, setActiveDeckIds] = useState<string[]>(() => loadActiveBarDrinkIds());
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState<boolean>(false);
   const [isLibraryExpanded, setIsLibraryExpanded] = useState<boolean>(false); // Collapsed by default per user request!
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'milk' | 'black' | 'dessert'>('all');
-  const [drinkGrinds, setDrinkGrinds] = useState<Record<string, string>>(() => loadDrinkGrindSettings());
-  const [isSavedFeedback, setIsSavedFeedback] = useState<boolean>(false);
+  const [drinkGrinds] = useState<Record<string, string>>(() => loadDrinkGrindSettings());
 
   const selectedDrinkCardRef = useRef<HTMLDivElement>(null);
 
@@ -220,28 +213,6 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
       tip: `Grind ${steps} ${grinderSpec.unitName} COARSER to speed flow up to target ~${targetTime}s.`,
     };
   })();
-
-  const handleAdjustStep = (delta: number) => {
-    const num = parseFloat(currentSettingInput);
-    if (!isNaN(num)) {
-      const next = Math.max(0, num + delta);
-      const formatted = next.toFixed(1).replace('.0', '');
-      setCurrentSettingInput(formatted);
-    }
-  };
-
-  const handleSaveSetting = () => {
-    saveDrinkGrindSetting(calibrationKey, currentSettingInput);
-    setDrinkGrinds((prev) => ({
-      ...prev,
-      [calibrationKey]: currentSettingInput,
-    }));
-    if (onGrindSettingChange) {
-      onGrindSettingChange(currentSettingInput);
-    }
-    setIsSavedFeedback(true);
-    setTimeout(() => setIsSavedFeedback(false), 2200);
-  };
 
   // Dynamic greeting based on time of day
   const hour = new Date().getHours();
@@ -410,21 +381,20 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
           {/* Primary Action Buttons */}
           <div className="flex flex-row items-center gap-2 w-full sm:w-auto shrink-0">
-            {!isDialedIn && (
-              <button
-                type="button"
-                onClick={() => onOpenDialInWizard(selectedDrink)}
-                className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl border border-[#C26D52] bg-[#FAF7F2] hover:bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition"
-              >
-                <Sliders className="w-3.5 h-3.5" />
-                <span>Dial-In</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => onOpenDialInWizard(selectedDrink)}
+              className="flex-1 sm:flex-none px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border border-[#C26D52] bg-[#FAF7F2] hover:bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
+              title="Open Dial-In Studio to adjust beans, grinder settings, and ratios"
+            >
+              <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
+              <span>Dial-In</span>
+            </button>
 
             <button
               type="button"
               onClick={() => onLaunchScaleCam(selectedDrink)}
-              className="flex-2 sm:flex-none px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition shadow-md group"
+              className="flex-2 sm:flex-none px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition shadow-md group cursor-pointer"
             >
               <span>Pull Shot on Scale Cam</span>
               <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
@@ -536,430 +506,102 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               </div>
             )}
 
-            {/* 4. Dial-In Grind Memory & Smart Improvement Engine */}
-            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3">
-              {/* Header */}
-              <div className="flex items-center justify-between gap-2 border-b border-[#E8DFD5]/60 pb-2">
-                <div className="flex items-center gap-1.5">
-                  <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
-                  <span className="text-xs font-bold text-[#2C2018] font-mono">
-                    Grind Memory: {selectedDrink.name.split('/')[0].trim()}
-                  </span>
-                </div>
-                <div className="text-[10px] font-mono text-[#7A6E65]">
-                  Target: <strong className="text-[#2C2018]">~{targetTime}s</strong> ({targetYield}g)
-                </div>
-              </div>
+            {/* 4. Active Recipe Equipment & Calibration Overview (Clean, Read-Only & Informative) */}
+            {(() => {
+              const guidance = getOptimalBeanGuidanceForDrink(selectedDrink, currentBean);
+              const matches = allBeans && allBeans.length > 0 ? matchBeansForDrink(allBeans, selectedDrink) : [];
+              const currentMatch = matches.find((m) => m.bean.id === currentBean.id);
+              const score = currentMatch?.matchScore ?? (guidance.isCurrentBeanOptimal ? 92 : 75);
 
-              {/* Setting Controls */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] font-mono text-[#7A6E65]">
-                    Setting ({currentGrinder.name.split(' ')[0]}):
-                  </span>
-                  <div className="flex items-center gap-1 bg-[#FFFDF9] border border-[#E8DFD5] rounded-xl p-1 shadow-2xs">
-                    <button
-                      type="button"
-                      onClick={() => handleAdjustStep(-0.5)}
-                      className="w-6 h-6 rounded-lg bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-xs transition"
-                      title="Adjust 0.5 finer"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <input
-                      type="text"
-                      value={currentSettingInput}
-                      onChange={(e) => setCurrentSettingInput(e.target.value)}
-                      className="w-12 text-center text-xs font-bold font-mono text-[#2C2018] bg-transparent focus:outline-hidden"
-                      title="Grind setting"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleAdjustStep(0.5)}
-                      className="w-6 h-6 rounded-lg bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-xs transition"
-                      title="Adjust 0.5 coarser"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <span className="text-[9px] font-mono text-[#7A6E65]">
-                    {grinderSpec.unitName}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleSaveSetting}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition flex items-center justify-center gap-1.5 ${
-                    isSavedFeedback
-                      ? 'bg-[#72806B] text-white shadow-xs'
-                      : 'bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] shadow-2xs'
-                  }`}
-                >
-                  {isSavedFeedback ? (
-                    <>
-                      <Check className="w-3 h-3" />
-                      <span>Locked for {selectedDrink.name.split('/')[0].trim()}!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-3 h-3 text-[#C26D52]" />
-                      <span>Lock Setting</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Dynamic Barista Improvement Advice */}
-              <div
-                className={`p-2.5 rounded-xl border text-[11px] leading-relaxed flex items-start gap-2 ${
-                  dialInAnalysis.status === 'dialed_in'
-                    ? 'bg-[#72806B]/10 border-[#72806B]/30 text-[#2C2018]'
-                    : dialInAnalysis.status === 'channeling'
-                    ? 'bg-amber-50 border-amber-300 text-amber-950'
-                    : dialInAnalysis.status === 'fast'
-                    ? 'bg-sky-50 border-sky-200 text-sky-950'
-                    : dialInAnalysis.status === 'slow'
-                    ? 'bg-amber-50 border-amber-200 text-amber-950'
-                    : 'bg-[#FFFDF9] border-[#E8DFD5] text-[#7A6E65]'
-                }`}
-              >
-                {dialInAnalysis.status === 'dialed_in' ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#72806B] shrink-0 mt-0.5" />
-                ) : dialInAnalysis.status === 'channeling' ? (
-                  <AlertCircle className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
-                ) : (
-                  <Lightbulb className="w-3.5 h-3.5 text-[#C26D52] shrink-0 mt-0.5" />
-                )}
-
-                <div className="flex-1 space-y-1">
-                  <div className="font-bold text-[10px] sm:text-[11px] font-mono flex items-center justify-between">
-                    <span>{dialInAnalysis.summary}</span>
-                    {dialInAnalysis.hasHistory && dialInAnalysis.actualTime !== undefined && dialInAnalysis.actualYield !== undefined && (
-                      <span className="text-[9px] text-[#7A6E65] font-normal">
-                        Last shot: {dialInAnalysis.actualTime.toFixed(1)}s / {dialInAnalysis.actualYield.toFixed(1)}g
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[10px] sm:text-[11px] text-[#7A6E65]">
-                    {dialInAnalysis.tip}
-                  </p>
-                  {(dialInAnalysis.status === 'fast' || dialInAnalysis.status === 'slow') && dialInAnalysis.suggestedSetting && (
-                    <div className="pt-1 flex items-center gap-2">
-                      <span className="text-[10px] font-mono font-semibold text-[#2C2018]">
-                        Suggested: Setting {dialInAnalysis.suggestedSetting}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentSettingInput(dialInAnalysis.suggestedSetting)}
-                        className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#C26D52] text-white hover:bg-[#A0523C] transition"
-                      >
-                        Apply {dialInAnalysis.suggestedSetting}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4b. Dedicated Coffee Bean Pairing Card (Flot Dyb Mokka Farve & Optimal Extraction Matching) */}
-      {(() => {
-        const guidance = getOptimalBeanGuidanceForDrink(selectedDrink, currentBean);
-        const matches = allBeans && allBeans.length > 0 ? matchBeansForDrink(allBeans, selectedDrink) : [];
-        const currentMatch = matches.find((m) => m.bean.id === currentBean.id);
-        const currentScore = currentMatch?.matchScore ?? (guidance.isCurrentBeanOptimal ? 90 : 65);
-        const hasMultipleBeans = allBeans && allBeans.length > 1;
-
-        return (
-          <div className="bg-gradient-to-br from-[#241A14] via-[#2C2018] to-[#1E1510] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3E2D22] p-4 sm:p-6 shadow-md space-y-4 font-mono">
-            {/* Header: Title + Scan/Add Action */}
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-[#C26D52] flex items-center justify-center text-white shrink-0 shadow-xs">
-                  <Coffee className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <h4 className="text-xs sm:text-sm font-bold tracking-wider text-[#FFFDF9] uppercase truncate">
-                    Bean Pairing: {selectedDrink.name.split('/')[0].trim()}
-                  </h4>
-                  <p className="text-[10px] text-[#E8DFD5]/70 truncate">
-                    Select bean & review optimal extraction chemistry
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                {onScanBean && (
-                  <button
-                    type="button"
-                    onClick={onScanBean}
-                    className="px-2.5 py-1 rounded-lg border border-[#72806B] bg-[#72806B]/20 hover:bg-[#72806B]/30 text-[#A4B39D] text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition shadow-xs"
-                    title="Scan coffee bag barcodes, packaging labels, or roast date stamps"
-                  >
-                    <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
-                    <span className="hidden sm:inline">Scan Bag</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={onOpenBeanVault}
-                  className="px-2.5 py-1 rounded-lg border border-white/15 bg-white/10 hover:bg-white/20 text-[#FAF7F2] text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition"
-                  title="Open bean vault and equipment manager"
-                >
-                  <Plus className="w-3.5 h-3.5 text-[#C26D52]" />
-                  <span>Vault</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Active Bean Selection Section */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-[10px] text-[#E8DFD5]/80 uppercase tracking-wider font-bold">
-                <span>Selected Coffee Bean:</span>
-                <span className={currentScore >= 80 ? 'text-[#A4B39D]' : 'text-[#C26D52]'}>
-                  {currentScore}% Pairing Match
-                </span>
-              </div>
-
-              {hasMultipleBeans ? (
-                /* Multi-bean quick selector right here at the drink! */
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {allBeans.map((bean) => {
-                    const isSelected = bean.id === currentBean.id;
-                    const beanMatch = matches.find((m) => m.bean.id === bean.id);
-                    const score = beanMatch?.matchScore ?? 75;
-
-                    return (
-                      <button
-                        key={bean.id}
-                        type="button"
-                        onClick={() => onSwitchBean && onSwitchBean(bean.id)}
-                        className={`p-3 rounded-xl border text-left transition flex items-center justify-between gap-3 ${
-                          isSelected
-                            ? 'border-[#C26D52] bg-[#FAF7F2]/10 ring-1 ring-[#C26D52]'
-                            : 'border-white/10 bg-white/5 hover:bg-white/10'
-                        }`}
-                      >
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span
-                              className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border shrink-0 ${getRoastBadgeStyles(
-                                bean.roastLevel
-                              )}`}
-                            >
-                              {bean.roastLevel}
-                            </span>
-                            <span className="text-xs font-bold text-[#FFFDF9] truncate">
-                              {bean.name}
-                            </span>
-                            {isSelected && (
-                              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#72806B] text-white font-bold shrink-0">
-                                ACTIVE
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[10px] text-[#E8DFD5]/70 flex items-center gap-2">
-                            <span>Grind: <strong className="text-white font-mono">{bean.grindSetting}</strong></span>
-                            {bean.roaster && (
-                              <>
-                                <span>•</span>
-                                <span className="truncate max-w-[130px]">{bean.roaster}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="shrink-0 text-right">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              score >= 80
-                                ? 'bg-[#72806B]/20 text-[#A4B39D] border-[#72806B]/40'
-                                : score >= 60
-                                ? 'bg-white/10 text-[#E8DFD5] border-white/20'
-                                : 'bg-amber-900/30 text-amber-200 border-amber-600/30'
-                            }`}
-                          >
-                            {score}%
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                /* Single Bean Highlight Badge */
-                <div className="p-3 rounded-xl border border-white/15 bg-white/5 flex items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span
-                        className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border shrink-0 ${getRoastBadgeStyles(
-                          currentBean.roastLevel
-                        )}`}
-                      >
-                        {currentBean.roastLevel}
-                      </span>
-                      <span className="text-xs font-bold text-white">
-                        {currentBean.name}
-                      </span>
-                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#C26D52] text-white font-bold uppercase shrink-0">
-                        Current Bag
+              return (
+                <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3 font-mono">
+                  {/* Header */}
+                  <div className="flex items-center justify-between gap-2 border-b border-[#E8DFD5]/60 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
+                      <span className="text-xs font-bold text-[#2C2018]">
+                        Kalibreret Kværn & Bønne
                       </span>
                     </div>
-                    <div className="text-[10px] text-[#E8DFD5]/70 flex items-center gap-2">
-                      <span>Grind Setting: <strong className="text-white font-mono">{savedDrinkSetting}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => onOpenDialInWizard(selectedDrink)}
+                      className="text-[10px] sm:text-[11px] text-[#C26D52] hover:text-[#2C2018] font-bold flex items-center gap-1 transition cursor-pointer"
+                      title="Open Dial-In Studio to adjust settings"
+                    >
+                      <span>Åbn Dial-In Studio</span>
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* 2 Read-Only Overview Information Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {/* Active Bean Info Card */}
+                    <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5] space-y-1">
+                      <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
+                        <span>Aktiv Kaffebønne</span>
+                        <span className="text-[#72806B] font-bold">{score}% match</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                            currentBean.roastLevel
+                          )}`}
+                        >
+                          {currentBean.roastLevel}
+                        </span>
+                        <span className="font-bold text-[#2C2018] truncate font-serif">
+                          {currentBean.name}
+                        </span>
+                      </div>
                       {currentBean.roaster && (
-                        <>
-                          <span>•</span>
-                          <span className="truncate max-w-[120px]">{currentBean.roaster}</span>
-                        </>
+                        <div className="text-[10px] text-[#7A6E65] truncate">
+                          {currentBean.roaster}
+                        </div>
                       )}
                     </div>
+
+                    {/* Grinder & Dial Setting Card */}
+                    <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5] space-y-1">
+                      <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
+                        <span>Kværn & Indstilling</span>
+                        <span className="text-[#C26D52] font-bold">
+                          {currentGrinder.name.split(' ')[0]}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base font-bold text-[#2C2018] font-mono">
+                          Indstilling {currentSettingInput}
+                        </span>
+                        <span className="text-[9px] text-[#7A6E65]">
+                          ({grinderSpec.unitName})
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-[#7A6E65] truncate">
+                        Måltid: ~{targetTime}s ({targetYield}g)
+                      </div>
+                    </div>
                   </div>
 
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                    currentScore >= 80
-                      ? 'bg-[#72806B]/20 text-[#A4B39D] border-[#72806B]/40'
-                      : 'bg-amber-900/30 text-amber-200 border-amber-600/30'
-                  }`}>
-                    {currentScore}% Match
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Live Bean Dial-In Tuning Row directly on the Mocha Card */}
-            {/* Live Bean Dial-In Tuning Row directly on the Mocha Card */}
-            <div className="p-3 sm:p-3.5 rounded-xl bg-black/40 border border-white/15 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-[#C26D52]">
-                  <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
-                  <span>Bean Calibration & Live Dial-In</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onOpenDialInWizard(selectedDrink)}
-                  className="text-[10px] font-mono text-[#FAF7F2] hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition font-semibold"
-                  title="Open full Dial-In Studio with step tuning"
-                >
-                  <span>Open Studio</span>
-                  <ChevronRight className="w-3 h-3 text-[#C26D52]" />
-                </button>
-              </div>
-
-              {/* 3 Metrics: Grind Quick Adjust, Dose, and Yield */}
-              <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
-                {/* 1. Grind Quick Notcher */}
-                <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
-                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Grind ({currentGrinder.name.split(' ')[0]})</div>
-                  <div className="flex items-center justify-center gap-1 my-0.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const parsed = parseFloat(currentSettingInput);
-                        if (!isNaN(parsed)) {
-                          const next = Math.max(0.1, parsed - 0.5);
-                          const str = next % 1 === 0 ? next.toString() : next.toFixed(1);
-                          setCurrentSettingInput(str);
-                          if (onGrindSettingChange) onGrindSettingChange(str);
-                          if (onUpdateBeanDialIn) onUpdateBeanDialIn({ grindSetting: str });
-                          saveDrinkGrindSetting(`${currentBean.id}_${selectedDrink.id}`, str);
-                        }
-                      }}
-                      className="w-5 h-5 rounded bg-white/10 hover:bg-white/25 text-white flex items-center justify-center font-bold text-xs transition active:scale-95"
-                      title="-0.5"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="font-bold text-[#FFFDF9] text-xs px-1">
-                      {currentSettingInput}
+                  {/* Subtle guidance row */}
+                  <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-[#7A6E65] pt-0.5">
+                    <span className="truncate">
+                      Alle justeringer foretages samlet i Dial-In Studio.
                     </span>
                     <button
                       type="button"
-                      onClick={() => {
-                        const parsed = parseFloat(currentSettingInput);
-                        if (!isNaN(parsed)) {
-                          const next = Math.max(0.1, parsed + 0.5);
-                          const str = next % 1 === 0 ? next.toString() : next.toFixed(1);
-                          setCurrentSettingInput(str);
-                          if (onGrindSettingChange) onGrindSettingChange(str);
-                          if (onUpdateBeanDialIn) onUpdateBeanDialIn({ grindSetting: str });
-                          saveDrinkGrindSetting(`${currentBean.id}_${selectedDrink.id}`, str);
-                        }
-                      }}
-                      className="w-5 h-5 rounded bg-white/10 hover:bg-white/25 text-white flex items-center justify-center font-bold text-xs transition active:scale-95"
-                      title="+0.5"
+                      onClick={() => onOpenDialInWizard(selectedDrink)}
+                      className="font-bold text-[#C26D52] hover:underline shrink-0 ml-1 cursor-pointer"
                     >
-                      <Plus className="w-3 h-3" />
+                      Finjustér her →
                     </button>
                   </div>
-                  <div className="text-[8px] text-[#E8DFD5]/60">{grinderSpec.unitName}</div>
                 </div>
-
-                {/* 2. Dose */}
-                <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
-                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Dose (In)</div>
-                  <div className="font-bold text-[#FFFDF9] text-xs my-0.5">
-                    {(currentBean.doseGrams || selectedDrink.defaultDoseGrams).toFixed(1)}g
-                  </div>
-                  <div className="text-[8px] text-[#E8DFD5]/60">Basket Dose</div>
-                </div>
-
-                {/* 3. Target Yield & Ratio */}
-                <div className="bg-black/30 p-2 rounded-lg border border-white/10 flex flex-col justify-between">
-                  <div className="text-[9px] text-[#E8DFD5]/70 uppercase">Yield (Out)</div>
-                  <div className="font-bold text-[#C26D52] text-xs my-0.5">
-                    {(selectedDrink.targetYieldGrams || currentBean.targetYieldGrams).toFixed(1)}g
-                  </div>
-                  <div className="text-[8px] text-[#A4B39D] font-semibold">
-                    1:{selectedDrink.targetRatio.toFixed(1)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Optimal Roast Blueprint for this specific beverage */}
-            <div className="p-3.5 rounded-xl bg-black/35 border border-white/10 space-y-2 text-xs">
-              <div className="flex items-center justify-between text-[#C26D52] font-bold text-[10px] uppercase tracking-wider flex-wrap gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
-                  <span>Optimal Profile for {selectedDrink.name.split('/')[0].trim()}</span>
-                </div>
-                <span className="text-white/90 font-mono bg-white/10 px-2 py-0.5 rounded">
-                  {guidance.idealRoastSummary}
-                </span>
-              </div>
-
-              <p className="text-[11px] text-[#E8DFD5]/80 font-sans leading-relaxed">
-                {guidance.whyIdeal}
-              </p>
-
-              <div className="text-[10px] text-[#E8DFD5]/70 pt-1.5 border-t border-white/10 flex items-center gap-1.5 flex-wrap">
-                <span className="text-white/90 font-bold font-mono">Ideal Tasting Notes:</span>
-                <span>{guidance.idealFlavorNotes}</span>
-              </div>
-            </div>
-
-            {/* Smart Buying Recommendation for Users with Only 1 Bean */}
-            {(!allBeans || allBeans.length <= 1) && (
-              <div className="p-3.5 rounded-xl bg-[#C26D52]/15 border border-[#C26D52]/35 text-xs text-[#FAF7F2] space-y-1.5 animate-fadeIn">
-                <div className="flex items-center gap-1.5 text-[#C26D52] font-bold text-[10px] uppercase tracking-wider">
-                  <Lightbulb className="w-3.5 h-3.5 text-[#C26D52]" />
-                  <span>Barista Recommendation for Next Bag</span>
-                </div>
-                <p className="text-[11px] font-sans text-[#FAF7F2]/90 leading-relaxed">
-                  {guidance.recommendationForNextBag}
-                </p>
-                <p className="text-[9px] text-[#E8DFD5]/60 italic font-sans">
-                  *Tip: No specific brands needed—simply look for this roast and origin profile at your local roaster.
-                </p>
-              </div>
-            )}
+              );
+            })()}
           </div>
-        );
-      })()}
+        </div>
+      </div>
 
       {/* 5. Complete Specialty Drink Menu (Collapsible - Collapsed by default) */}
       <div className="border border-[#E8DFD5] bg-[#FFFDF9] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xs transition-all">

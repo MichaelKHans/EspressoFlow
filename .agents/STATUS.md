@@ -11,6 +11,34 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Samlet Dial-In Studio (Trin 1 Bønnevælger), Ren & Overskuelig Forside, og Mobil Hardware/Gesture Tilbage-knap (v1.2.21)
+- **Ren & Lækker Startside (Coffee Bar Uden Rod):**
+  - Fjernet de forvirrende +/- kværnindstillingsknapper og "Lock Setting" formularer fra forsiden.
+  - Fjernet det store multi-bønnevælger kort fra bunden af forsiden, så startsiden ikke længere er et uoverskueligt kontrolpanel.
+  - Erstattet med et roligt, arkitektonisk og læsbart opskriftsoverblik:
+    - Viser tydeligt den tilknyttede kværn og dial-in indstilling (f.eks. `Baratza Encore ESP Pro • Indstilling 15 micro-steps`).
+    - Viser den aktive kaffebønne, risteri og ristningsgrad.
+    - Fremhæver `[ Dial-In ]` knappen, som altid er synlig og direkte tilgængelig ved siden af `[ Pull Shot on Scale Cam ]`.
+    - Tydelig vejledning: *"Alle justeringer foretages samlet i Dial-In Studio."*
+- **Samlet Dial-In Studio (Alt samlet på ét sted med Bønnevælger i Trin 1):**
+  - **Trin 1: Kaffebønne & Ristningsprofil:**
+    - Viser den aktive bønne med ristegrad, parringsmatch for drikken og smagsnoter.
+    - Giver baristaen mulighed for at skifte kaffebønne direkte i Dial-In Studio med et enkelt tryk på en bønne-chip.
+    - Hurtigknapper til `Scan Bag` og `Bean Vault`.
+  - **Trin 2: Kværn & Kværnindstilling for Bønne:**
+    - Kværnvælger (udstyr i baren + bibliotek) og fin/grov stepper tilpasset stepped (0.5) og stepless (0.2).
+  - **Trin 3: Dosis, Udbytte & Forhold (Ratio):**
+    - Justering af tør dosis og målvægt med live ratio (`1:2.0`) og profilnavn (Normale, Ristretto, Lungo).
+  - **Trin 4: Gem Kalibrering & Synkronisering:**
+    - Mulighed for enten `Kun Gem Kalibrering` (hvis man blot vil kalibrere uden at starte kameraet) eller `Lås Indstillinger & Start Scale Cam`.
+- **Mobil Hardware & Gesture Tilbage-knap Håndtering (Android & iOS):**
+  - Løst det kritiske problem, hvor et tryk på telefonens tilbageknap lukkede hele appen i mobilbrowser / PWA / Capacitor.
+  - Implementeret `useMobileBackHandler`:
+    - Hvis en modal er åben (Dial-In Studio, Bean Scanner, Central Vault, Paywall, Legal), lukkes modalen først — appen forbliver åben!
+    - Hvis brugeren er på en fane som `Scale`, `Logs` eller `Gear`, navigerer tilbageknappen tilbage til `Coffee Bar` (forsiden).
+    - Hvis brugeren er på forsiden uden åbne modaler, vises en diskret toast *"Tryk tilbage igen for at afslutte"*, og appen lukkes først ved et ekstra tryk inden for 2 sekunder.
+- **Verificering:** `npm run build` og `npm run lint` kompileret 100% fejlfrit (0 fejl, 373ms).
+
 ### 2026-09-29 -- OCR 0, 2, 6 Disambiguation, Auto Digit Framing, Telemetry Deck & Live Curve (v1.2.20)
 - **OCR 0, 2, 6 & 8 Disambiguering:**
   - `seg.g` (vandret centerstreg) probes nu med dedikeret `'g'` orientering (`radiusX = 0.10 * width`, `radiusY = 0.06 * height`, tærskel 0.32), så sampling-vinduet aldrig mere snitter de lodrette sidestreger på et `0`.

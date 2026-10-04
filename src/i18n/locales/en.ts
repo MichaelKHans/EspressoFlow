@@ -300,6 +300,38 @@ export const en = {
   'vault.filter_all_drinks': 'All Drinks',
   'vault.expert_rated_only': 'Expert Rated (90+ PTS)',
   'vault.toast_added': 'Added to your Coffee Bean Vault!',
+
+  // Dial-In Studio
+  'dialin.studio_title': 'Dial-In Studio: {drink}',
+  'dialin.live_tuning': 'LIVE TUNING',
+  'dialin.step1_bean_title': 'Step 1: Select Coffee Bean & Roast Profile',
+  'dialin.step1_bean_subtitle': 'Choose which bean profile you are brewing for this drink',
+  'dialin.step2_grinder_title': 'Step 2: Grinder & Setting for Bean',
+  'dialin.step3_ratio_title': 'Step 3: Dose, Yield & Extraction Ratio',
+  'dialin.step4_sync_title': 'Step 4: Synchronization & Launch',
+  'dialin.selected_bean': 'Selected Bean:',
+  'dialin.switch_bean': 'Switch Bean',
+  'dialin.scan_new_bean': 'Scan New Bag',
+  'dialin.pairing_match': '{score}% Pairing Match',
+  'dialin.setting_for': 'Dial setting on {grinder}:',
+  'dialin.finer_hint': 'Finer setting increases puck resistance and slows flow rate (g/s). Coarser setting yields faster extraction.',
+  'dialin.save_calibration_only': 'Save Calibration',
+  'dialin.save_and_launch_scale': 'Lock Calibration & Launch Scale Cam',
+  'dialin.saved_feedback': 'Calibration Locked!',
+  'dialin.reset_baseline': 'Reset Baseline',
+  'dialin.cancel': 'Cancel',
+
+  // Recipe Card (Frontpage Display)
+  'recipe.active_bean_label': 'Assigned Coffee Bean',
+  'recipe.grinder_setting_label': 'Dial-In Grinder & Setting',
+  'recipe.dial_in_button': 'Dial-In',
+  'recipe.pull_shot_button': 'Pull Shot on Scale Cam',
+  'recipe.tune_hint': 'To change bean, grinder, or calibrate grind setting, use Dial-In above.',
+  'recipe.status_dialed_in': 'DIALED IN',
+  'recipe.status_needs_dialin': 'NEEDS DIAL-IN',
+
+  // Mobile Back Navigation
+  'mobile.press_back_again': 'Press back again to exit Espresso Flow',
 } as const;
 
 export type TranslationKeys = keyof typeof en;
