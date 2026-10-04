@@ -53,10 +53,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [cameraState, setCameraState] = useState<'standby' | 'live' | 'demo'>('live');
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Scale Arming & Pre-Brewing State
-  const [isArmed, setIsArmed] = useState<boolean>(false);
-  const isArmedRef = useRef<boolean>(false);
-
   // Camera Optical Zoom & Interactive ROI Alignment state
   const [zoomLevel, setZoomLevel] = useState<number>(1.8);
   const [roiSize, setRoiSize] = useState<'compact' | 'standard'>('compact');
@@ -376,11 +372,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           // Zero / Tare detection
           if (w === 0.0) {
             setIsZeroDetected(true);
-          } else if (isArmedRef.current && !isBrewing && w >= 0.2) {
-            // Auto-start extraction shot ONLY when user has armed the scale and liquid flows (>= 0.2g)!
-            isArmedRef.current = false;
-            setIsArmed(false);
-            onBrewStart();
           }
         }
       }
@@ -434,8 +425,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         currentWeightRef.current = weight;
       }
 
-      // Check for First Drip (Split-Timer Pre-Infusion Lock)
-      if (weight >= 0.1) {
+      // Check for First Drip with vibration filter (≥ 0.4g ensures only real espresso drops trigger flow phase)
+      if (weight >= 0.4) {
         if (firstDropTimeRef.current === null) {
           firstDropTimeRef.current = roundedSeconds;
           setFirstDropTime(roundedSeconds);
@@ -475,23 +466,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   }, [isBrewing, targetYield, cameraState, onLivePointsUpdate]);
 
   const handleStartBrewing = () => {
-    isArmedRef.current = false;
-    setIsArmed(false);
     if (cameraState === 'standby') {
       setCameraState('live');
     }
     onBrewStart();
-  };
-
-  const handleArmScale = () => {
-    handleCalibrateTare();
-    isArmedRef.current = true;
-    setIsArmed(true);
-  };
-
-  const handleDisarm = () => {
-    isArmedRef.current = false;
-    setIsArmed(false);
   };
 
   const handleStartCamera = () => {
@@ -500,8 +478,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleStopCamera = () => {
-    isArmedRef.current = false;
-    setIsArmed(false);
     setCameraState('standby');
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -515,8 +491,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleCancelBrewing = () => {
-    isArmedRef.current = false;
-    setIsArmed(false);
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     startTimeRef.current = 0;
     firstDropTimeRef.current = null;
@@ -536,8 +510,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleStopBrewing = () => {
-    isArmedRef.current = false;
-    setIsArmed(false);
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     const finalWeight = currentWeightRef.current;
     const finalTime = elapsedTime;
@@ -587,12 +559,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             className={`text-[9px] px-2 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider ${
               isBrewing
                 ? 'bg-amber-400 text-black animate-pulse'
-                : isArmed
-                ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 animate-pulse'
                 : 'bg-[#C26D52]/15 text-[#C26D52] border border-[#C26D52]/30'
             }`}
           >
-            {isBrewing ? 'Brewing' : isArmed ? 'Armed' : 'Aligning'}
+            {isBrewing ? 'Brewing' : 'Ready'}
           </span>
         </div>
 
@@ -748,18 +718,16 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               } ${
                 isBrewing
                   ? 'border-2 border-solid border-amber-400/90 bg-amber-400/5 shadow-[0_0_20px_rgba(251,191,36,0.25)]'
-                  : isArmed
-                  ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/10 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
                   : isDigitLocked
                   ? 'border-2 border-solid border-[#10B981] bg-[#10B981]/5 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
                   : 'border-2 border-dashed border-[#C26D52]/80 bg-black/10'
               }`}
             >
               {/* Target corner indicators */}
-              <div className={`absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
-              <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
-              <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
-              <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isBrewing ? 'border-amber-400' : isArmed || isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+              <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
 
               {/* Status Header Badge (Compact pill on top edge) */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] tracking-widest uppercase font-mono px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs flex items-center gap-1.5 shadow-sm border border-white/10 whitespace-nowrap">
@@ -767,11 +735,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                   <>
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                     <span className="text-amber-300 font-bold">☕ BREWING</span>
-                  </>
-                ) : isArmed ? (
-                  <>
-                    <CheckCircle2 className="w-3 h-3 text-[#10B981] animate-pulse" />
-                    <span className="text-[#10B981] font-bold">ARMED • AUTO-START</span>
                   </>
                 ) : isDigitLocked ? (
                   <>
@@ -1081,24 +1044,12 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         )}
 
         {/* Status / Guidance Banner */}
-        {!isBrewing && !isArmed ? (
+        {!isBrewing ? (
           <div className="px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between gap-2 text-xs font-mono">
             <div className="flex items-center gap-2 text-[#7A6E65]">
-              <span className="text-[#C26D52] text-base leading-none">👆</span>
+              <span className="text-[#C26D52] text-sm leading-none">☕</span>
               <span className="text-[11px] sm:text-xs leading-tight">
-                {t('scale.align_instruction')}
-              </span>
-            </div>
-            <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
-              <span className="text-[#C26D52]">{targetDose}g</span> → <span className="text-[#72806B]">{targetYield}g</span>
-            </div>
-          </div>
-        ) : isArmed ? (
-          <div className="px-3 py-2 rounded-xl bg-[#10B981]/10 border border-[#10B981]/30 flex items-center justify-between gap-2 text-xs font-mono">
-            <div className="flex items-center gap-2 text-[#10B981] font-bold">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-ping shrink-0" />
-              <span className="text-[11px] sm:text-xs leading-tight">
-                {t('scale.armed_waiting')}
+                {t('scale.manual_start_hint')}
               </span>
             </div>
             <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
@@ -1110,7 +1061,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             <div className="flex items-center gap-2 text-amber-900 font-bold">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
               <span className="text-[11px] sm:text-xs leading-tight">
-                {t('scale.brewing_status')}
+                {firstDropTime === null
+                  ? t('scale.pre_infusion_status')
+                  : t('scale.brewing_status')}
               </span>
             </div>
             <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
@@ -1121,12 +1074,12 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
         {/* Action Buttons Row */}
         <div className="flex items-center gap-2">
-          {!isBrewing && !isArmed ? (
+          {!isBrewing ? (
             <>
               <button
                 type="button"
                 onClick={handleCalibrateTare}
-                className="px-3.5 py-2.5 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5]/40 text-[#2C2018] text-xs font-bold font-mono flex items-center gap-1.5 transition shadow-xs active:scale-95 shrink-0"
+                className="px-4 py-3 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5]/40 text-[#2C2018] text-xs font-bold font-mono flex items-center gap-1.5 transition shadow-xs active:scale-95 shrink-0"
                 title="Tare the scale to 0.0g"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-[#7A6E65]" />
@@ -1135,31 +1088,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
               <button
                 type="button"
-                onClick={handleArmScale}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                <span>{t('scale.arm_scale')}</span>
-              </button>
-            </>
-          ) : isArmed ? (
-            <>
-              <button
-                type="button"
-                onClick={handleDisarm}
-                className="px-3.5 py-2.5 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5]/40 text-[#7A6E65] hover:text-[#2C2018] text-xs font-bold font-mono flex items-center gap-1.5 transition shadow-xs active:scale-95 shrink-0"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{t('scale.adjust_alignment')}</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={handleStartBrewing}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-sm transition active:scale-95 animate-pulse"
+                className="flex-1 px-4 py-3 rounded-xl bg-[#2C2018] hover:bg-[#3D2C22] text-[#FAF7F2] text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-sm transition active:scale-95 border border-[#C26D52]/40"
               >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                <span>{t('scale.start_shot_now')}</span>
+                <Play className="w-4 h-4 text-[#C26D52] fill-[#C26D52]" />
+                <span>{t('scale.start_shot')}</span>
               </button>
             </>
           ) : (
@@ -1167,7 +1100,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <button
                 type="button"
                 onClick={handleCancelBrewing}
-                className="px-3.5 py-2.5 rounded-xl border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] text-xs font-bold font-mono flex items-center gap-1.5 transition active:scale-95 shrink-0 shadow-xs"
+                className="px-3.5 py-3 rounded-xl border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] text-xs font-bold font-mono flex items-center gap-1.5 transition active:scale-95 shrink-0 shadow-xs"
                 title={t('scale.reset_title')}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -1177,7 +1110,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <button
                 type="button"
                 onClick={handleStopBrewing}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#B85B48] hover:bg-[#a34d3b] text-white text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-xs transition active:scale-95 animate-pulse font-mono truncate"
+                className="flex-1 px-4 py-3 rounded-xl bg-[#B85B48] hover:bg-[#a34d3b] text-white text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-xs transition active:scale-95 animate-pulse font-mono truncate"
               >
                 <Square className="w-3.5 h-3.5 fill-white shrink-0" />
                 <span className="truncate">{t('scale.stop_and_save', { duration: elapsedTime.toFixed(1) })}</span>

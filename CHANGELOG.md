@@ -4,6 +4,22 @@ Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette do
 
 ---
 
+## [1.2.24] - 2026-10-04
+### Scale Cam: Metode A - Manuel Barista Start & Vibrationsfilter ved Første Dråbe
+- **Metode A: Manuel Barista Start (Brugerens Valg):**
+  - Fjernet den forvirrende to-trins "Armér vægt" $\rightarrow$ "Venter på dråber" proces, som udløste falsk timer-start, når maskinens pumpe rystede koppen.
+  - Indført direkte, taktil **`[ ☕ Start Shot (Timer) ]`** knap:
+    - Baristaen tarrer vægten til 0.0g med `[ 🔄 Tarér ]`, starter espressomaskinen / løfter armen, og trykker `Start Shot`.
+    - Timeren starter prompte fra `0.0s`, så præ-infusionen måles 100% matematisk præcist fra det øjeblik, vandet rammer kaffepucken.
+- **Vibrationsfilter ved Første Dråbe ($\ge 0.4$g):**
+  - Tærsklen for detektion af første dråbe (first drop split-timer) er hævet fra $0.1$g til $\ge 0.4$g.
+  - Eliminerer fuldstændigt at maskinens pumpevibrationer fejlagtigt registreres som kaffedråber.
+  - Split-timeren viser i realtid: `Præ-infusion: {tid}s (Venter på 1. dråbe ≥ 0,4g)`, og skifter flydende til `Præ: {pre}s • Flow: {flow}s`, så snart kaffen rent faktisk flyder i koppen.
+- **i18n Global-First:**
+  - Opdaterede præ-infusion og barista-hints i `en.ts` og `da.ts`.
+
+---
+
 ## [1.2.23] - 2026-10-04
 ### ShotSummaryModal (Umiddelbar Brygoverblik & Kurve), Dato-opdelt Logbog & Clean Scale Cam
 - **Umiddelbar Shot Auto-Save & ShotSummaryModal:**
