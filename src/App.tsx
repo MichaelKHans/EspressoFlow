@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Flame, Plus, Check, Trash2, Layers, Camera, Globe } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Plus, Check, Trash2, Layers, Camera, Globe } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
-import { TasteFeedback } from './components/TasteFeedback';
 import { Logbook } from './components/Logbook';
 import { PaywallModal } from './components/PaywallModal';
 import { LegalModal } from './components/LegalModal';
@@ -15,13 +14,13 @@ import { AdminPortal } from './components/AdminPortal';
 import { TrialCountdownBanner } from './components/TrialCountdownBanner';
 import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
 import { BeandexView } from './components/BeandexView';
+import { ShotSummaryModal } from './components/ShotSummaryModal';
 import { useMobileBackHandler } from './lib/useMobileBackHandler';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
 import type {
   ShotDataPoint,
   ShotRecord,
-  TasteRating,
   UserAccessState,
   CoffeeBeanProfile,
   GrinderProfile,
@@ -105,6 +104,9 @@ export function App() {
     stepUnit: 'micro-steps',
   };
 
+  // Active Drink derived
+  const activeDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0];
+
   // Brewing State
   const [isBrewing, setIsBrewing] = useState<boolean>(false);
   const [currentPoints, setCurrentPoints] = useState<ShotDataPoint[]>([]);
@@ -113,6 +115,7 @@ export function App() {
   // Modals
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
   const [isCentralVaultOpen, setIsCentralVaultOpen] = useState<boolean>(false);
+  const [isShotSummaryOpen, setIsShotSummaryOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'privacy' | 'terms' | 'support' | null>(null);
 
   // Admin Route state (e.g. espressoflow.vercel.app/admin or #admin)
@@ -129,6 +132,7 @@ export function App() {
     activeMode,
     setActiveMode,
     modals: [
+      { name: 'shotSummary', isOpen: isShotSummaryOpen, close: () => setIsShotSummaryOpen(false) },
       { name: 'dialin', isOpen: isDialInWizardOpen, close: () => setIsDialInWizardOpen(false) },
       { name: 'scanner', isOpen: isBeanScannerOpen, close: () => setIsBeanScannerOpen(false) },
       { name: 'vault', isOpen: isCentralVaultOpen, close: () => setIsCentralVaultOpen(false) },
@@ -137,6 +141,11 @@ export function App() {
     ],
     exitToastMessage: t('mobile.press_back_again') || 'Tryk tilbage igen for at afslutte',
   });
+
+  // Scroll to top on navigation tab or mode switch
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeMode, activeTab]);
 
   // Load persistence, handle legal deep links, and listen for route changes
   useEffect(() => {
@@ -403,26 +412,24 @@ export function App() {
       grindSetting: grindSetting,
       machineName: machineName,
       dataPoints: points,
+      tasteRating: 'balanced',
     };
 
+    saveShot(newShot);
+    setShots((prev) => [newShot, ...prev]);
     setLastFinishedShot(newShot);
+    setIsShotSummaryOpen(true);
+  };
+
+  const handleUpdateShot = (updatedShot: ShotRecord) => {
+    saveShot(updatedShot);
+    setShots((prev) => prev.map((s) => (s.id === updatedShot.id ? updatedShot : s)));
+    setLastFinishedShot(updatedShot);
   };
 
   const handleDeleteShot = (shotId: string) => {
     const updated = deleteShot(shotId);
     setShots(updated);
-  };
-
-  const handleSaveFeedback = (taste: TasteRating, notes: string) => {
-    if (!lastFinishedShot) return;
-    const updatedShot: ShotRecord = {
-      ...lastFinishedShot,
-      tasteRating: taste,
-      notes: notes || undefined,
-    };
-
-    saveShot(updatedShot);
-    setShots([updatedShot, ...shots]);
   };
 
   const handleUnlockPro = () => {
@@ -441,11 +448,6 @@ export function App() {
       setIsPaywallOpen(true);
     }
   }, [accessState.isProLifetime, accessState.isWithinTrial]);
-
-  // Calculate days off roast
-  const roastDateObj = new Date(roastDate);
-  const daysOffRoast = Math.max(0, Math.floor((Date.now() - roastDateObj.getTime()) / (1000 * 60 * 60 * 24)));
-  const isTooFresh = daysOffRoast < 4;
 
   // Render Admin Portal if navigating to /admin, /admin/ or #admin
   if (isAdminRoute) {
@@ -693,80 +695,42 @@ export function App() {
               />
             )}
 
-        {/* Quick Context Bar (Shown for Monitor, Logbook, and Equipment) */}
-        {activeTab !== 'drinks' && (
-          <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-2.5 sm:p-3 text-xs font-mono shadow-xs space-y-2">
-            {/* Top row: Bean Selector + Days off roast */}
-            <div className="flex items-center justify-between gap-1.5 sm:gap-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <select
-                  value={activeBeanId}
-                  onChange={(e) => handleSelectBean(e.target.value)}
-                  className="bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg px-2 py-1 font-bold text-[#2C2018] text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52] truncate max-w-[110px] xs:max-w-[145px] sm:max-w-xs shrink-0"
-                >
-                  {beans.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-                <span
-                  className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-md border shrink-0 ${
-                    roastLevel === 'light'
-                      ? 'bg-amber-50 text-amber-800 border-amber-300'
-                      : roastLevel === 'medium'
-                      ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
-                      : roastLevel === 'medium-dark'
-                      ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
-                      : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
-                  }`}
-                >
-                  {roastLevel}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1 shrink-0 text-[10px] sm:text-[11px] text-[#7A6E65]">
-                <span>
-                  {t('active_bean.days_off_roast', { days: daysOffRoast })}
-                </span>
-                {isTooFresh && (
-                  <span className="flex items-center gap-0.5 text-[9px] sm:text-[10px] text-amber-700 bg-amber-100 px-1 py-0.5 rounded font-bold">
-                    <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> CO₂
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Bottom row: Clean 4-segment telemetry grid with hairline dividers */}
-            <div className="grid grid-cols-4 gap-1 pt-1.5 border-t border-[#E8DFD5]/60 text-[10px] sm:text-[11px] text-center">
-              <div className="px-1 py-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]/40">
-                <span className="text-[#7A6E65] text-[9px] block uppercase">{t('active_bean.ratio')}</span>
-                <span className="font-bold text-[#C26D52]">
-                  1:{(doseGrams > 0 ? (targetYieldGrams / doseGrams).toFixed(1) : '2.0')}
-                </span>
-              </div>
-              <div className="px-1 py-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]/40">
-                <span className="text-[#7A6E65] text-[9px] block uppercase">{t('active_bean.dose')}</span>
-                <span className="font-bold text-[#2C2018]">{doseGrams}g</span>
-              </div>
-              <div className="px-1 py-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]/40">
-                <span className="text-[#7A6E65] text-[9px] block uppercase">{t('active_bean.yield')}</span>
-                <span className="font-bold text-[#72806B]">{targetYieldGrams}g</span>
-              </div>
-              <div className="px-1 py-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]/40 truncate">
-                <span className="text-[#7A6E65] text-[9px] block uppercase">{t('active_bean.grind')}</span>
-                <span className="font-bold text-[#2C2018] truncate">
-                  {grindSetting}
-                  <span className="text-[9px] text-[#7A6E65] font-normal hidden sm:inline"> ({currentGrinder.name.split(' ')[0]})</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Tab 1: Live Monitor & Flow Dynamics */}
         {activeTab === 'monitor' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
+            {/* Active Brew Recipe Badge */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-3 text-xs font-mono shadow-xs flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C26D52] shrink-0 animate-pulse" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold text-[#2C2018]">{activeDrink.name}</span>
+                    <span className="text-[#7A6E65]">•</span>
+                    <span className="text-[#2C2018] truncate font-medium">{currentBean.name}</span>
+                  </div>
+                  <div className="text-[10px] text-[#7A6E65] flex items-center gap-1.5 flex-wrap mt-0.5">
+                    <span>
+                      {doseGrams}g → <strong className="text-[#C26D52]">{targetYieldGrams}g</strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Grind: <strong className="text-[#2C2018]">{grindSetting}</strong>{' '}
+                      ({currentGrinder.name.split(' ')[0]})
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDialInWizardOpen(true)}
+                className="px-2.5 py-1.5 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] font-bold text-xs shrink-0 flex items-center gap-1.5 transition"
+                title="Open Dial-In Studio to adjust recipe"
+              >
+                <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
+                <span>{t('scale.open_dialin')}</span>
+              </button>
+            </div>
+
             <ScaleMonitor
               isBrewing={isBrewing}
               onBrewStart={handleBrewStart}
@@ -786,13 +750,6 @@ export function App() {
               preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
               isLive={isBrewing}
             />
-
-            {lastFinishedShot && (
-              <TasteFeedback
-                lastShot={lastFinishedShot}
-                onSaveWithFeedback={handleSaveFeedback}
-              />
-            )}
           </div>
         )}
 
@@ -1281,6 +1238,18 @@ export function App() {
         isOpen={legalModalTab !== null}
         onClose={() => setLegalModalTab(null)}
         initialTab={legalModalTab || 'privacy'}
+      />
+
+      {/* Immediate Post-Shot Summary Modal */}
+      <ShotSummaryModal
+        isOpen={isShotSummaryOpen}
+        shot={lastFinishedShot}
+        onClose={() => setIsShotSummaryOpen(false)}
+        onViewInLogbook={() => {
+          setIsShotSummaryOpen(false);
+          setActiveTab('logbook');
+        }}
+        onUpdateShot={handleUpdateShot}
       />
 
       {/* Dial-In Wizard Modal */}

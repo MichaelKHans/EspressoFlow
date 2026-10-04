@@ -11,6 +11,30 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- ShotSummaryModal, Umiddelbar Auto-Save, Dato-opdelt Logbog & Clean Scale Cam (v1.2.23)
+- **Umiddelbar Shot Auto-Save & ShotSummaryModal:**
+  - Løst root cause til manglende logs efter bryg: Skud gemmes nu 100% automatisk og øjeblikkeligt i `localStorage` og app-state så snart brygget stopper (`handleBrewFinish`).
+  - Ny dedikeret `ShotSummaryModal` popper op med det samme med:
+    - Ekstraktionstelemetri: Yield, Total tid (opdelt i præ-infusion og flowfase), Gns. flowhastighed og ratio ($1:X.X$).
+    - Komplet `FlowChart` kurve der viser realtids-vægt, flowdynamik og eventuelle kanaliseringsspikes (channeling).
+    - 1-tryks smagsvurdering (`Sød / Balanceret`, `Sur / For Hurtig`, `Bitter / Astringent`, `Vandet / Tynd`) med dynamisk barista dial-in vejledning (kværnjustering i trin/klik, ristevejledning og puck-prep).
+    - Smagsnoter-felt til hurtig dokumentation.
+    - Handlingsknapper: `[ 📖 Se i Logbog ]` (fører direkte til Logbogen) og `[ ☕ Kør Nyt Shot ]` (lukker modalen og klargør Scale Cam).
+    - Fuld integration med mobilens hardware/gesture tilbage-knap (`useMobileBackHandler`).
+- **Dato-opdelt Logbog med Ekspanderbare Flow-Kurver:**
+  - Logbogen grupperer nu automatisk alle skud efter kalenderdage (`I dag • Søndag 4. okt`, `I går • Lørdag 3. okt` og ældre datoer).
+  - Hver dag har en overskuelig tæller for antal bryg udført den pågældende dag.
+  - Hvert brygkort har nu en `[ 📈 Flow Kurve ]` / `[ Skjul Kurve ]` knap, der ekspanderer og viser hele den gemte ekstraktionskurve med flowhastighed og Golden Zone direkte i logkortet.
+- **Fjernelse af Redundant Quick Context Bar & Ny Rolig Scale Cam Badge:**
+  - Den forvirrende bønne-dropdown og overvældende telemetribar på tværs af toppen af Scale Cam og Logbog er fjernet.
+  - På Scale Cam er den erstattet med en rolig, højkontrast **Aktiv Brygprofil** (`☕ Drik • Bønne • Dosis → Mål-yield • Kværnindstilling [ 🎛️ Dial-In ]`), så baristaen altid har overblik før brygstart.
+- **Automatisk Scroll-To-Top:**
+  - Skift mellem navigationstabs eller mellem Espresso Flow og Beandex nulstiller nu altid scroll-positionen til toppen (`window.scrollTo({ top: 0, behavior: 'instant' })`).
+- **i18n Global-First:**
+  - Alle nye tekster tilføjet til `en.ts` og `da.ts`.
+
+---
+
 ### 2026-10-04 -- Beandex Univers, Dual-Mode Switcher og 100% Hardware-fokuseret Gear Setup (v1.2.22)
 - **Oprydning i Gear (100% Hardware & Bar Setup):**
   - Fjernet alle forvirrende duplikerede dial-in inputs (`[-] [15] [+]`), risteprofil-knapper og ratio-multipliers inde i Gear-fanen.

@@ -377,6 +377,33 @@ export const en = {
   'beandex.expert_badge': 'SCA EXPERT {score} PTS',
   'beandex.community_votes': '{rating} ★ ({votes} ratings)',
   'beandex.delete_bag_confirm': 'Are you sure you want to remove "{name}" from your vault?',
+
+  // Shot Summary Modal (Immediate Post-Shot Feedback)
+  'shotsummary.title': 'Extraction Complete',
+  'shotsummary.subtitle': 'Shot summary & dial-in telemetry',
+  'shotsummary.view_in_logbook': 'View in Logbook',
+  'shotsummary.pull_new_shot': 'Pull New Shot',
+  'shotsummary.rate_taste': 'How did it taste?',
+  'shotsummary.notes_placeholder': 'Tasting notes, aroma, crema...',
+  'shotsummary.smooth_flow': 'Smooth Flow',
+  'shotsummary.channeling_alert': 'Channeling Spike Detected',
+  'shotsummary.saved_notice': 'Shot saved to logbook',
+  'shotsummary.grinder_adjustment': 'Grinder Dial Adjustment:',
+  'shotsummary.pre_infusion_abbr': 'Pre-Infusion',
+  'shotsummary.flow_phase_abbr': 'Flow Phase',
+
+  // Logbook Date Grouping & Curve Expansion
+  'logbook.today': 'Today',
+  'logbook.yesterday': 'Yesterday',
+  'logbook.shots_count': '{count} shots',
+  'logbook.one_shot_count': '1 shot',
+  'logbook.view_curve': 'Flow Curve',
+  'logbook.hide_curve': 'Hide Curve',
+  'logbook.no_curve_data': 'No curve data points recorded for this shot',
+
+  // Scale Active Brew Badge
+  'scale.active_target_badge': 'ACTIVE BREW',
+  'scale.open_dialin': 'Dial-In Studio',
 } as const;
 
 export type TranslationKeys = keyof typeof en;

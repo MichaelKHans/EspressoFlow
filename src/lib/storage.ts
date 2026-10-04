@@ -88,7 +88,14 @@ export function loadShots(): ShotRecord[] {
 export function saveShot(shot: ShotRecord): void {
   try {
     const current = loadShots();
-    const updated = [shot, ...current];
+    const existingIndex = current.findIndex((s) => s.id === shot.id);
+    let updated: ShotRecord[];
+    if (existingIndex >= 0) {
+      updated = [...current];
+      updated[existingIndex] = shot;
+    } else {
+      updated = [shot, ...current];
+    }
     localStorage.setItem(STORAGE_KEYS.SHOTS, JSON.stringify(updated));
   } catch (err) {
     console.error('Failed to save shot record', err);

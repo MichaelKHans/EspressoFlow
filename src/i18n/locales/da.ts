@@ -379,4 +379,31 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'beandex.expert_badge': 'SCA EKSPERT {score} PTS',
   'beandex.community_votes': '{rating} ★ ({votes} stemmer)',
   'beandex.delete_bag_confirm': 'Er du sikker på, at du vil slette "{name}" fra dit lager?',
+
+  // Shot Summary Modal (Immediate Post-Shot Feedback)
+  'shotsummary.title': 'Ekstraktion Gennemført',
+  'shotsummary.subtitle': 'Brygoversigt & dial-in telemetri',
+  'shotsummary.view_in_logbook': 'Se i Logbog',
+  'shotsummary.pull_new_shot': 'Kør Nyt Shot',
+  'shotsummary.rate_taste': 'Hvordan smagte den?',
+  'shotsummary.notes_placeholder': 'Smagsnoter, aroma, crema...',
+  'shotsummary.smooth_flow': 'Jævnt Flow',
+  'shotsummary.channeling_alert': 'Kanalisering Registreret',
+  'shotsummary.saved_notice': 'Bryg gemt i logbogen',
+  'shotsummary.grinder_adjustment': 'Kværnjustering:',
+  'shotsummary.pre_infusion_abbr': 'Præ-infusion',
+  'shotsummary.flow_phase_abbr': 'Flowfase',
+
+  // Logbook Date Grouping & Curve Expansion
+  'logbook.today': 'I dag',
+  'logbook.yesterday': 'I går',
+  'logbook.shots_count': '{count} bryg',
+  'logbook.one_shot_count': '1 bryg',
+  'logbook.view_curve': 'Flow Kurve',
+  'logbook.hide_curve': 'Skjul Kurve',
+  'logbook.no_curve_data': 'Ingen kurvedata registreret for dette bryg',
+
+  // Scale Active Brew Badge
+  'scale.active_target_badge': 'AKTIV BRYGPROFIL',
+  'scale.open_dialin': 'Dial-In Studio',
 };
