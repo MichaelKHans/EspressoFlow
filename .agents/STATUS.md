@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-04 -- Data Integritet & SCA Cupping Score Revision: Nul Opdigtede Data
+- **Fuldstændig Udrensning af Fiktive Cupping Scores:**
+  - Efter grundig gennemgang af kurator-data blev det konstateret, at midlertidige test-tal (f.eks. Hedekaffe: 89 PTS / "Barista Tech Review" og Lavazza: 88 PTS) var oprettet som prototype-pladsholdere.
+  - I overensstemmelse med reglen om at intet må være opdigtet, er alle uofficielle cupping scores fjernet (`NULL` point) fra live Supabase, SQL-skemaet og appens offline fallbacks.
+  - Kun bønner med verificerede, offentligt tilgængelige cupping certifikater (The Coffee Collective Kieni 94 PTS via Coffee Review; Tim Wendelboe Caballero Geisha 95.5 PTS via Cup of Excellence) bevarer officielle point.
+  - Kurator-editoren er opdateret så Cupping Score er tydeligt markeret som **(Valgfri)** med streng advarsel om kun at indtaste point fra anerkendte organisationer (CQI Q-Grader, Cup of Excellence, Coffee Review).
+
 ### 2026-10-04 -- Admin Coffee Curator Studio: Central Godkendelsespult, SCA Cupping Scores & Sky-Kvalitetssikring (v1.2.29)
 - **Admin Coffee Curator Studio & Godkendelsespult (`AdminPortal.tsx` Tab 3):**
   - Live godkendelseskø for kaffer indsendt af brugere eller scannet via Vision OCR (`is_verified: false` vs `is_verified: true`).
