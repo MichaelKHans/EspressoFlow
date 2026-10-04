@@ -18,6 +18,7 @@ Du er en **Senior Fullstack Arkitekt og Barista Tech Specialist** med speciale i
 3. **TEST LOKALT FØR PUSH:** Du skal altid køre `npm run build` lokalt i terminalen og bekræfte, at projektet compiler 100% fejlfrit, før koden pushes til GitHub.
 4. **I18N GLOBAL-FIRST (LETVAEGTS ZERO-DEPENDENCY MOTOR):** Alle nye UI-tekster defineres i `src/i18n/locales/en.ts` som Single Source of Truth og tilgås via `useTranslation()`. Engelsk er altid automatisk fallback, hvis en nøgle mangler i et lokalt sprog. Specialty coffee fagtermer (f.eks. Pre-infusion, Channeling, Ratio, Dose, Yield, Dial-In) bevares standardiseret internationalt. UI-layouts skal altid tage højde for længere tekstlængder (f.eks. tysk).
 5. **FORRETNINGSMODEL RESPEKTERES:** 7 dages in-app prøveperiode efterfulgt af et engangskøb på **$4.99 USD / 49,- DKK Lifetime Unlock** via RevenueCat. Ingen månedlig abonnementstræthed.
+6. **ARKITEKTURKORT & PROCESOVERBLIK (ARCHITECTURE.md):** Før enhver ny funktion, etape eller væsentlig refaktorering påbegyndes, SKAL `ARCHITECTURE.md` konsulteres for at identificere afhængigheder og potentielle sideeffekter på tværs af moduler. Efter enhver ændring, der introducerer nye flows, komponenter, ruter eller datamodeller, SKAL `ARCHITECTURE.md` opdateres, så arkitekturkortet altid afspejler 100% af appens aktuelle virkelighed.
 
 ## 🧠 Mobil Opgavestyring & Workflow (TASK.md)
 - **GitHub Repository:** `MichaelKHans/EspressoFlow`.
