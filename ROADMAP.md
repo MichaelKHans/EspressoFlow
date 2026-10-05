@@ -94,3 +94,13 @@
 - [x] Android native scaffold (`android/`) med tilladelser for kamera, autofokus og wakelock
 - [x] Hardware-optimering for mobilers OCR (Screen WakeLock, taktil haptik, zoom mod makro-spring, 12.5 FPS $\rightarrow$ 30 FPS adaptiv frekvens)
 - [ ] Android App Bundle (`.aab`) generering og intern test i Google Play Console
+
+---
+
+## 🌟 FASE 7: KICKSTARTER KAMPAGNE & FOUNDER PIONEER PROGRAM (PLANLAGT)
+- [ ] **TestFlight Backer Distribution:** Hemmelig TestFlight invitationsgruppe for tidlige Kickstarter-støtter før officiel App Store lancering.
+- [ ] **Founder Voucher Engine (Supabase):** Tabel `founder_vouchers` med engangskoder (fx `FLOW-FOUNDER-XXXX`), der permanent låser op for Lifetime Pro på tværs af iOS og Android.
+- [ ] **Founding Barista Badge 🎖️:** Eksklusivt terracotta/guld digitalt stempel i profil og indstillinger (*"Espresso Flow — Founding Member 2026"*).
+- [ ] **Hall of Founders Credits 📜:** Hædringsside i appen under *"Om Espresso Flow"* med navne/kredittering af støttere.
+- [ ] **The Lab (Beta Toggle) 🧪:** Eksperimentel toggle for Founders til nye flow-filtre, grafer og vægtspecifikke OCR-optimeringer forud for officiel release.
+
