@@ -431,6 +431,8 @@ export function calculateBeanFreshness(
 
   const isOpenedWarning = daysOpened !== undefined && daysOpened > 21;
 
+  const isFuture = !isNaN(roastTime) && roastTime > now;
+
   let phase: FreshnessPhase = 'peak';
   let labelKey = 'freshness.peak';
   let badgeClasses = 'bg-[#72806B]/15 text-[#54624F] border-[#72806B]/30';
@@ -438,7 +440,14 @@ export function calculateBeanFreshness(
   let summary = 'Optimal Flavor Peak';
   let baristaTip = 'Peak flavor clarity and caramelized sugars. Optimal stability for espresso.';
 
-  if (daysOffRoast < degasDaysMin) {
+  if (isFuture) {
+    phase = 'degassing';
+    labelKey = 'freshness.degassing';
+    badgeClasses = 'bg-red-500/15 text-red-900 border-red-500/40';
+    dotColor = 'bg-red-600';
+    summary = 'Date in future';
+    baristaTip = 'Roast date is set in the future. Please verify date stamp on bag.';
+  } else if (daysOffRoast < degasDaysMin) {
     phase = 'degassing';
     labelKey = 'freshness.degassing';
     badgeClasses = 'bg-amber-500/15 text-amber-900 border-amber-500/40';

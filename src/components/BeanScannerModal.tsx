@@ -307,7 +307,10 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setFeedbackMessage('Scanning date stamp on bag with OCR...');
     try {
       const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
-      const ocrResult = await scanCoffeeBagForDateAndRoast(file);
+      const ocrResult = await scanCoffeeBagForDateAndRoast(file, {
+        roaster: editRoaster,
+        beanName: editName,
+      });
 
       if (ocrResult.roastDate) {
         setEditRoastDate(ocrResult.roastDate);
@@ -338,12 +341,17 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     }
   };
 
-  // Calculate days off roast
+  // Calculate days off roast (supports negative for future date detection)
   const getDaysOffRoast = (dateStr: string): number => {
+    if (!dateStr) return 0;
     const roast = new Date(dateStr);
     if (isNaN(roast.getTime())) return 7;
-    const diff = Date.now() - roast.getTime();
-    return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const roastZero = new Date(roast);
+    roastZero.setHours(0, 0, 0, 0);
+    const diff = today.getTime() - roastZero.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
   };
 
   const daysOff = getDaysOffRoast(editRoastDate);
@@ -1055,29 +1063,39 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 
                 {/* Freshness & CO2 Degassing Banner */}
                 {editRoastDate ? (
-                  <div
-                    className={`p-2.5 rounded-lg border flex items-center gap-2.5 text-xs ${
-                      daysOff < 4
-                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-800'
-                        : daysOff <= 28
-                        ? 'bg-[#72806B]/10 border-[#72806B]/30 text-[#72806B]'
-                        : 'bg-[#2C2018]/5 border-[#2C2018]/15 text-[#7A6E65]'
-                    }`}
-                  >
-                    <Clock className="w-4 h-4 flex-shrink-0" />
-                    <div className="flex-1 text-[11px] leading-tight">
-                      <span className="font-bold">
-                        {daysOff === 0 ? 'Roasted Today' : `${daysOff} days off roast`}:
-                      </span>{' '}
-                      {daysOff < 4 ? (
-                        <span>Active CO₂ degassing. Rest 2–3 more days for calmer espresso flow.</span>
-                      ) : daysOff <= 28 ? (
-                        <span className="font-medium">Prime espresso extraction window. Optimum CO₂ release.</span>
-                      ) : (
-                        <span>Mature / Aged roast ({daysOff}d). May require a finer grind setting to maintain puck resistance.</span>
-                      )}
+                  daysOff < 0 ? (
+                    <div className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 flex items-center gap-2.5 text-xs text-red-900">
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                      <div className="flex-1 text-[11px] leading-tight">
+                        <span className="font-bold">Dato i fremtiden ({editRoastDate}):</span>{' '}
+                        <span>Kaffe kan ikke være ristet ude i fremtiden. Tjek venligst datoen eller årstallet ovenfor.</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div
+                      className={`p-2.5 rounded-lg border flex items-center gap-2.5 text-xs ${
+                        daysOff < 4
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-800'
+                          : daysOff <= 28
+                          ? 'bg-[#72806B]/10 border-[#72806B]/30 text-[#72806B]'
+                          : 'bg-[#2C2018]/5 border-[#2C2018]/15 text-[#7A6E65]'
+                      }`}
+                    >
+                      <Clock className="w-4 h-4 flex-shrink-0" />
+                      <div className="flex-1 text-[11px] leading-tight">
+                        <span className="font-bold">
+                          {daysOff === 0 ? 'Roasted Today' : `${daysOff} days off roast`}:
+                        </span>{' '}
+                        {daysOff < 4 ? (
+                          <span>Active CO₂ degassing. Rest 2–3 more days for calmer espresso flow.</span>
+                        ) : daysOff <= 28 ? (
+                          <span className="font-medium">Prime espresso extraction window. Optimum CO₂ release.</span>
+                        ) : (
+                          <span>Mature / Aged roast ({daysOff}d). May require a finer grind setting to maintain puck resistance.</span>
+                        )}
+                      </div>
+                    </div>
+                  )
                 ) : (
                   <div className="p-2.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] flex items-center gap-2 text-xs text-[#7A6E65]">
                     <Info className="w-4 h-4 text-[#C26D52] shrink-0" />

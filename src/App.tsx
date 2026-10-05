@@ -293,17 +293,23 @@ export function App() {
   };
 
   const handleOnboardingComplete = (result: OnboardingResult) => {
-    // 1. Set grinder
+    // 1. Set grinder and activate ONLY the chosen grinder in setup
     const chosenGrinder = grinders.find((g) => g.id === result.grinderId);
     if (chosenGrinder) {
       setGrinderName(chosenGrinder.name);
     }
+    const updatedGrinders = grinders.map((g) => ({
+      ...g,
+      inSetup: g.id === result.grinderId,
+    }));
+    setGrinders(updatedGrinders);
+    saveGrinders(updatedGrinders);
 
     // 2. Set machine
     setMachineName(result.machineName);
     saveMachineName(result.machineName);
 
-    // 3. Create first bean and set as active
+    // 3. Create first bean and set as active (Clean start with only user's bean)
     const newBeanId = `bean-${Date.now()}`;
     const newBean: CoffeeBeanProfile = {
       id: newBeanId,
@@ -318,7 +324,11 @@ export function App() {
       grinderName: chosenGrinder?.name || 'Baratza Encore ESP Pro',
     };
 
-    const updatedBeans = [newBean, ...beans];
+    // Filter out any legacy sample beans (Ethiopia, Colombia, Napoli) for a clean start
+    const cleanExisting = beans.filter(
+      (b) => b.id !== 'bean-ethiopia' && b.id !== 'bean-colombia' && b.id !== 'bean-napoli'
+    );
+    const updatedBeans = [newBean, ...cleanExisting];
     setBeans(updatedBeans);
     saveBeans(updatedBeans);
     setActiveBeanId(newBeanId);
@@ -488,12 +498,12 @@ export function App() {
       <header className="border-b border-[#E8DFD5] bg-[#FAF7F2] sticky top-0 z-40 pt-safe">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
           {/* Brand Logo & Title */}
-          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <div className="w-8 h-8 rounded-xl bg-[#2C2018] flex items-center justify-center text-[#C26D52] shadow-xs shrink-0">
               <Coffee className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
-            <div className="min-w-0">
-              <h1 className="font-bold text-xs sm:text-sm tracking-wider text-[#2C2018] font-mono whitespace-nowrap truncate">
+            <div className="shrink-0">
+              <h1 className="font-bold text-[11px] xs:text-xs sm:text-sm tracking-wider text-[#2C2018] font-mono whitespace-nowrap">
                 {activeMode === 'flow' ? 'ESPRESSO FLOW' : 'BEANDEX'}
               </h1>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono hidden sm:block truncate">
@@ -507,7 +517,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setActiveMode('flow')}
-              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 transition-all ${
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 transition-all ${
                 activeMode === 'flow'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018]'
@@ -522,7 +532,7 @@ export function App() {
             <button
               type="button"
               onClick={() => setActiveMode('beandex')}
-              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 transition-all ${
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 transition-all ${
                 activeMode === 'beandex'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                   : 'text-[#7A6E65] hover:text-[#2C2018]'
@@ -559,18 +569,15 @@ export function App() {
               </select>
             )}
 
-            {/* Trial Access Chip - Only visible during 7-day trial; completely hidden once unlocked! */}
+            {/* Trial Access Chip - Hidden on mobile (<md) since TrialCountdownBanner handles it directly below; visible on desktop */}
             {!accessState.isProLifetime && (
               <button
                 onClick={() => setIsPaywallOpen(true)}
-                className="text-[11px] sm:text-xs font-mono px-2 sm:px-2.5 py-1 rounded-xl border border-[#C26D52]/40 bg-[#C26D52]/10 text-[#C26D52] font-semibold hover:bg-[#C26D52]/20 transition flex items-center gap-1 sm:gap-1.5 shrink-0"
+                className="hidden md:flex text-[11px] sm:text-xs font-mono px-2 sm:px-2.5 py-1 rounded-xl border border-[#C26D52]/40 bg-[#C26D52]/10 text-[#C26D52] font-semibold hover:bg-[#C26D52]/20 transition items-center gap-1 sm:gap-1.5 shrink-0"
                 title="7-Day Free Trial - Tap to unlock lifetime access"
               >
                 <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                <span className="sm:hidden font-bold">
-                  {accessState.daysRemainingInTrial}d
-                </span>
-                <span className="hidden sm:inline">
+                <span className="font-bold">
                   {t('app.trial_days', { days: accessState.daysRemainingInTrial })}
                 </span>
               </button>
@@ -662,7 +669,10 @@ export function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <main
+        className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-28 sm:pb-20"
+        style={{ paddingBottom: 'max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem))' }}
+      >
         {/* BEANDEX MODE: Dedicated Coffee Bean Vault, Ratings & Global Index */}
         {activeMode === 'beandex' ? (
           <BeandexView
@@ -1297,7 +1307,10 @@ export function App() {
       </main>
 
       {/* Footer & Store Compliance Links */}
-      <footer className="border-t border-[#E8DFD5] bg-[#FAF7F2] py-4 pb-safe text-center text-xs font-mono text-[#7A6E65]">
+      <footer
+        className="border-t border-[#E8DFD5] bg-[#FAF7F2] py-4 text-center text-xs font-mono text-[#7A6E65]"
+        style={{ paddingBottom: 'max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))' }}
+      >
         <div className="max-w-4xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             {t('footer.rights', { year: new Date().getFullYear() })}

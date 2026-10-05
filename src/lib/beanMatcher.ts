@@ -37,9 +37,13 @@ function scoreBeanForDrink(bean: CoffeeBeanProfile, drink: DrinkRecipe): BeanMat
 
   // Freshness bonus (7-21 days off roast is peak, <4 too fresh CO2, >30 stale)
   const roastDate = new Date(bean.roastDate);
-  const daysOff = Math.max(0, Math.floor((Date.now() - roastDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const diffDays = Math.floor((Date.now() - roastDate.getTime()) / (1000 * 60 * 60 * 24));
+  const isFuture = diffDays < 0;
+  const daysOff = Math.max(0, diffDays);
   let freshnessScore = 100;
-  if (daysOff < 4) {
+  if (isFuture) {
+    freshnessScore = 50; // Unverified future date
+  } else if (daysOff < 4) {
     freshnessScore = 60; // CO2 outgassing, too fresh
   } else if (daysOff <= 21) {
     freshnessScore = 100; // Peak window
@@ -64,7 +68,9 @@ function scoreBeanForDrink(bean: CoffeeBeanProfile, drink: DrinkRecipe): BeanMat
     reason = `Low compatibility. ${drink.name} typically calls for a ${bestMatchLevel} roast profile.`;
   }
 
-  if (daysOff < 4) {
+  if (isFuture) {
+    reason += ' (Roast date is set in the future - please verify).';
+  } else if (daysOff < 4) {
     reason += ` Bean is only ${daysOff}d off roast (CO2 outgassing phase).`;
   } else if (daysOff > 35) {
     reason += ` Bean is ${daysOff}d off roast -- consider a fresher bag.`;

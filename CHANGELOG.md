@@ -2,6 +2,23 @@
 
 Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.3.3] - 2026-10-05
+### Etape 11: Real-World Android UI & OCR Fikser (Dato-Sikkerhed, Ren Start, Top Bar & Navigation Bar Space)
+- **OCR Dato-Præcision & Fremtidssikring (`bagScanner.ts`, `bagOcr.ts`, `BeanScannerModal.tsx`):**
+  - Tilføjet `BagExtractionContext` (`roaster`, `beanName`, `shelfLifeYears`) til OCR motoren. Italienske mærker som Lavazza og Illy identificeres automatisk med 24 måneders BBD-standard i stedet for 12 måneder.
+  - Streng fremtids-spærre: En estimeret eller scannet ristedato kan ALDRIG ligge i fremtiden. Ved udløbsdatoer i fremtiden (fx `30/03/2028`) trækkes automatisk 24 eller 36 måneder, så datoen matcher den reelle produktionsdato (`2026-03-30`).
+  - Håndteret fremtidsdatoer i UI: Hvis en bruger indtaster en dato i fremtiden (`daysOff < 0`), vises en advarsel i stedet for at melde "Roasted Today: Active CO2 degassing".
+- **100% Ren Start Uden Gammel Testdata (`storage.ts`, `App.tsx`):**
+  - Fjernet syntetiske demobønner (`Ethiopia Yirgacheffe`, `Colombia Huila Pink Bourbon`, `Napoli Dark Velvet Espresso`) fra standardlageret (`getDefaultBeans` returnerer nu et tomt array `[]`).
+  - Automatisk udrensning af legacy testbønner i `loadBeans()`, så eksisterende og nye brugere altid starter med en ren bønneboks (Beandex) med kun deres egne scannede kaffer.
+  - Rettet kværn-opsætning: Kun den kværn brugeren vælger under intro/onboarding (`result.grinderId`) markeres som aktiv i deres personlige setup (`inSetup: true`). Eureka Mignon er ikke længere slået til som standard ved siden af Baratza.
+- **Top Header Rummelighed & Titel-Bevaring (`App.tsx`):**
+  - Fjernet den overflødige `[🛡️ 7d]` prøveknap fra den øverste menulinje på mobil, da den store `TrialCountdownBanner` kortet under allerede indeholder al information og handlingsknap.
+  - Fastlåst `shrink-0` og optimeret typografi på `ESPRESSO FLOW` logo-titlen, så navnet aldrig mere forkortes til `ES...` på mindre mobilskærme.
+- **Android System Navigation Bar Buffer (`App.tsx`):**
+  - Tilføjet dynamisk bund-padding (`style={{ paddingBottom: 'max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem))' }}`) på `<main>` og udvidet footer-padding.
+  - Eliminerer overlap mellem Androids 3-knaps navigation (tilbage, hjem, apps) og appens nederste handlingskort og knapper ("Americano / Long Black" og "Switch >").
+
 ## [1.3.2] - 2026-10-05
 ### Etape 10: Første iOS TestFlight Deployment Live (App ID: 6819161308)
 - **Fuldautomatisk CI/CD TestFlight Succes (`ios-build.yml`):**

@@ -151,7 +151,15 @@ export function resolveGrinder(name: string | undefined, grinders: GrinderProfil
 export function loadBeans(): CoffeeBeanProfile[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.BEANS);
-    const beans: CoffeeBeanProfile[] = raw ? JSON.parse(raw) : getDefaultBeans();
+    let beans: CoffeeBeanProfile[] = raw ? JSON.parse(raw) : getDefaultBeans();
+    // Purge legacy sample/test beans to ensure a clean start with only user's own beans
+    const beforeCount = beans.length;
+    beans = beans.filter(
+      (b) => b.id !== 'bean-ethiopia' && b.id !== 'bean-colombia' && b.id !== 'bean-napoli'
+    );
+    if (raw && beans.length !== beforeCount) {
+      saveBeans(beans);
+    }
     // Normalize grinder names to ensure 100% exact match with grinder catalog
     return beans.map((b) => {
       let gName = b.grinderName;
@@ -165,7 +173,7 @@ export function loadBeans(): CoffeeBeanProfile[] {
       };
     });
   } catch {
-    return getDefaultBeans();
+    return [];
   }
 }
 
@@ -178,71 +186,29 @@ export function saveBeans(beans: CoffeeBeanProfile[]): void {
 }
 
 export function getDefaultBeans(): CoffeeBeanProfile[] {
-  const getRoastDateAgo = (days: number) => {
-    const d = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    return d.toISOString().split('T')[0];
-  };
-
-  return [
-    {
-      id: 'bean-ethiopia',
-      name: 'Ethiopia Yirgacheffe (Washed)',
-      roaster: 'Nomad Coffee',
-      roastDate: getRoastDateAgo(5),
-      roastLevel: 'light',
-      doseGrams: 18.0,
-      ratioStyle: 'lungo',
-      targetYieldGrams: 45.0,
-      grindSetting: '1.4',
-      grinderName: 'Eureka Mignon Specialita 16CR',
-      brewTempC: 94,
-      notes: 'Floral jasmine, bergamot, peach sweetness.',
-      rating: 0,
-    },
-    {
-      id: 'bean-colombia',
-      name: 'Colombia Huila Pink Bourbon',
-      roaster: 'La Cabra',
-      roastDate: getRoastDateAgo(8),
-      roastLevel: 'medium',
-      doseGrams: 18.0,
-      ratioStyle: 'standard',
-      targetYieldGrams: 36.0,
-      grindSetting: '14.0',
-      grinderName: 'DF64 Gen 2 (Single Dose)',
-      brewTempC: 93,
-      notes: 'Juicy red apple, cane sugar, creamy chocolate body.',
-      rating: 0,
-    },
-    {
-      id: 'bean-napoli',
-      name: 'Napoli Dark Velvet Espresso',
-      roaster: 'Caffè Vergnano',
-      roastDate: getRoastDateAgo(12),
-      roastLevel: 'dark',
-      doseGrams: 18.0,
-      ratioStyle: 'ristretto',
-      targetYieldGrams: 27.0,
-      grindSetting: '2.2',
-      grinderName: 'Eureka Mignon Specialita 16CR',
-      brewTempC: 89,
-      notes: 'Dark cacao, toasted hazelnuts, thick crema syrup.',
-      rating: 0,
-    },
-  ];
+  // Clean start: no synthetic mock beans by default
+  return [];
 }
 
 export function loadGrinders(): GrinderProfile[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.GRINDERS);
     const grinders: GrinderProfile[] = raw ? JSON.parse(raw) : getDefaultGrinders();
-    // Guarantee at least one or two grinders have inSetup: true
+
+    // Clean up older legacy default where Eureka was unintentionally enabled alongside Baratza
+    const baratza = grinders.find((g) => g.id === 'grinder-baratza-esp');
+    const eureka = grinders.find((g) => g.id === 'grinder-eureka-specialita');
+    const legacyFlag = localStorage.getItem('espressoflow_eureka_cleaned_v1');
+    if (!legacyFlag && baratza?.inSetup && eureka?.inSetup) {
+      eureka.inSetup = false;
+      localStorage.setItem('espressoflow_eureka_cleaned_v1', 'true');
+      saveGrinders(grinders);
+    }
+
+    // Guarantee at least one grinder has inSetup: true
     const hasAnyInSetup = grinders.some((g) => g.inSetup === true);
     if (!hasAnyInSetup && grinders.length > 0) {
       grinders[0].inSetup = true;
-      if (grinders.length > 1) {
-        grinders[1].inSetup = true;
-      }
       saveGrinders(grinders);
     }
     return grinders;
@@ -277,7 +243,7 @@ export function getDefaultGrinders(): GrinderProfile[] {
       defaultSetting: '1.4',
       stepUnit: 'micrometric dial (0-5)',
       secondsPerStep: 6.0,
-      inSetup: true,
+      inSetup: false,
     },
     {
       id: 'grinder-varia-vs3',

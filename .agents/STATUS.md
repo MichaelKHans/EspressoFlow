@@ -11,6 +11,21 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-05 -- Real-World Android UI & OCR Fikser (v1.3.3)
+- **OCR Dato-Præcision & BBD Fremtids-Spærre:**
+  - `BagExtractionContext` introduceret, så italienske kaffemærker (Lavazza, Illy osv.) automatisk bruger 24 måneders BBD-standard i stedet for 12 måneder.
+  - Fremtidsdato-beskyttelse: Ristedatoer kan aldrig ligge i fremtiden. Ved scanning af fx `30/03/2028` udregnes ristedatoen nu korrekt til `2026-03-30`.
+  - UI-advarsel: Hvis ristedatoen mod forventning ligger i fremtiden (`daysOff < 0`), vises rød advarsel i stedet for "Roasted Today: Active CO2 degassing".
+- **100% Ren Start (Nul Mock Data):**
+  - Syntetiske testbønner (Ethiopia, Colombia, Napoli) fjernet fra standardlageret; `getDefaultBeans()` returnerer `[]`.
+  - Automatisk udrensning af legacy mock bønner i `loadBeans()`.
+  - Eureka Mignon fjernet fra standard inSetup; kun den kværn brugeren vælger i onboarding eller gear aktiveres (`inSetup: true`).
+- **Top Header Friplads & Titel-Bevaring:**
+  - Redundant `[🛡️ 7d]` prøvebadge skjult på mobil, da `TrialCountdownBanner` nedenunder dækker det.
+  - Logo-titel `ESPRESSO FLOW` sikret mod tekstafskæring (`ES...`).
+- **Android System Navigation Bar Buffer:**
+  - Dynamisk safe-area bund-padding (`max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem))`) tilføjet til `<main>` og udvidet footer-padding, så bundkort ikke dækkes af Android navigationstaster.
+
 ### 2026-10-05 -- Første iOS TestFlight Deployment Live (App ID: 6819161308 / v1.3.2)
 - **Fuldautomatisk CI/CD TestFlight Succes (`ios-build.yml`):**
   - Oprettet `com.mh.espressoflow` (App Store Navn: *Espresso Flow: Smart Barista*) og parret med Team `39T28DB5D4`.

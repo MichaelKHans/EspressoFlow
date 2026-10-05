@@ -44,6 +44,12 @@ export interface BagDateAndRoastExtraction {
   rawText: string;
 }
 
+export interface BagExtractionContext {
+  roaster?: string;
+  beanName?: string;
+  shelfLifeYears?: number;
+}
+
 export const COMMON_ROASTERS = [
   'La Cabra',
   'Nomad Coffee',
@@ -288,7 +294,10 @@ export function extractRoastLevelFromText(text: string): RoastLevel | null {
 /**
  * Robust multi-lingual date & roast level extraction engine from coffee bag text/stamps
  */
-export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastExtraction {
+export function extractDatesAndRoastFromBagText(
+  text: string,
+  context?: BagExtractionContext
+): BagDateAndRoastExtraction {
   if (!text || text.trim().length === 0) {
     return {
       roastDate: null,
@@ -307,7 +316,6 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
   };
 
   const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
 
   const isValidDate = (year: number, month: number, day: number): boolean => {
     if (month < 1 || month > 12) return false;
@@ -382,8 +390,34 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
   };
 
   // Determine brand heuristics for shelf life
-  const isItalianCommercial = /lavazza|illy|segafredo|kimbo|pellini|vergnano/i.test(text);
-  const shelfLifeYears = isItalianCommercial ? 2 : 1; // Italian commercial espresso standard is 24 months BBD
+  const combinedContextText = `${text} ${context?.roaster || ''} ${context?.beanName || ''}`.toLowerCase();
+  const isItalianCommercial = /lavazza|illy|segafredo|kimbo|pellini|vergnano|caffè|caffe|bki|peter larsen/i.test(combinedContextText);
+  let defaultShelfLifeYears = context?.shelfLifeYears || (isItalianCommercial ? 2 : 1); // Italian commercial espresso standard is 24 months BBD
+
+  const today = new Date();
+  const todayISO = formatISO(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+  // Helper to safely calculate estimated roast date from BBD (never allowed to be in the future)
+  const estimateRoastFromBBD = (cand: { year: number; month: number; day: number }) => {
+    let years = defaultShelfLifeYears;
+    let iso = formatISO(cand.year - years, cand.month, cand.day);
+
+    // If initial subtraction still lands in the future, increase shelf life deduction (24 or 36 months)
+    if (iso > todayISO) {
+      if (cand.year - 2 <= today.getFullYear()) {
+        years = 2;
+        iso = formatISO(cand.year - 2, cand.month, cand.day);
+      }
+      if (iso > todayISO) {
+        years = 3;
+        iso = formatISO(cand.year - 3, cand.month, cand.day);
+      }
+      if (iso > todayISO) {
+        iso = todayISO;
+      }
+    }
+    return { iso, yearsDeducted: years };
+  };
 
   // 1. Check for labeled Production / Roast Date (HIGHEST PRIORITY)
   // Supports Danish "Ristedato 02/03-26", "Ristet og pakket", "Produktionsdato", etc.
@@ -395,7 +429,13 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
   if (prodMatch && prodMatch[1]) {
     const candidate = parseDateCandidate(prodMatch[1]);
     if (candidate) {
-      confirmedRoastDate = candidate.iso;
+      // If a labeled "production" date is in the future, it's either an OCR misread or actually a BBD
+      if (candidate.iso > todayISO) {
+        const est = estimateRoastFromBBD(candidate);
+        confirmedRoastDate = est.iso;
+      } else {
+        confirmedRoastDate = candidate.iso;
+      }
       prodSnippet = prodMatch[0];
     }
   }
@@ -411,14 +451,16 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
 
   let confirmedBBD: string | null = null;
   let estimatedFromBBD = false;
+  let finalYearsDeducted = defaultShelfLifeYears;
 
   if (bbdMatch && bbdMatch[1]) {
     const candidate = parseDateCandidate(bbdMatch[1]);
     if (candidate) {
       confirmedBBD = candidate.iso;
       if (!confirmedRoastDate) {
-        const estYear = candidate.year - shelfLifeYears;
-        confirmedRoastDate = formatISO(estYear, candidate.month, candidate.day);
+        const est = estimateRoastFromBBD(candidate);
+        confirmedRoastDate = est.iso;
+        finalYearsDeducted = est.yearsDeducted;
         estimatedFromBBD = true;
       }
     }
@@ -427,8 +469,9 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
     if (candidate) {
       confirmedBBD = candidate.iso;
       if (!confirmedRoastDate) {
-        const estYear = candidate.year - shelfLifeYears;
-        confirmedRoastDate = formatISO(estYear, candidate.month, candidate.day);
+        const est = estimateRoastFromBBD(candidate);
+        confirmedRoastDate = est.iso;
+        finalYearsDeducted = est.yearsDeducted;
         estimatedFromBBD = true;
       }
     }
@@ -438,12 +481,13 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
   if (!confirmedRoastDate) {
     const standaloneCandidate = parseDateCandidate(text);
     if (standaloneCandidate) {
-      // Check if standalone date is in the future (> 2 months ahead) -> Must be BBD!
-      const isFuture = standaloneCandidate.year > currentYear || (standaloneCandidate.year === currentYear && standaloneCandidate.month > currentMonth + 2);
+      // Check if standalone date is in the future (> today) -> Must be BBD!
+      const isFuture = standaloneCandidate.iso > todayISO;
       if (isFuture) {
         confirmedBBD = standaloneCandidate.iso;
-        const estYear = standaloneCandidate.year - shelfLifeYears;
-        confirmedRoastDate = formatISO(estYear, standaloneCandidate.month, standaloneCandidate.day);
+        const est = estimateRoastFromBBD(standaloneCandidate);
+        confirmedRoastDate = est.iso;
+        finalYearsDeducted = est.yearsDeducted;
         estimatedFromBBD = true;
       } else {
         confirmedRoastDate = standaloneCandidate.iso;
@@ -456,9 +500,7 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
   let formatDesc: string | null = null;
   if (confirmedRoastDate) {
     if (estimatedFromBBD && confirmedBBD) {
-      formatDesc = isItalianCommercial
-        ? `Estimated from BBD (${confirmedBBD} - 24 mo Italian std)`
-        : `Estimated from BBD (${confirmedBBD} - 12 mo)`;
+      formatDesc = `Estimated from BBD (${confirmedBBD} - ${finalYearsDeducted * 12} mo${isItalianCommercial ? ' Italian std' : ''})`;
     } else if (prodSnippet) {
       formatDesc = `Roast Date (${confirmedRoastDate})`;
     } else {
@@ -481,8 +523,8 @@ export function extractDatesAndRoastFromBagText(text: string): BagDateAndRoastEx
 /**
  * Intelligent multi-format date extraction parser for coffee labels and date stamps (Backwards compatible)
  */
-export function parseRoastDate(text: string): ParsedRoastDateResult | null {
-  const result = extractDatesAndRoastFromBagText(text);
+export function parseRoastDate(text: string, context?: BagExtractionContext): ParsedRoastDateResult | null {
+  const result = extractDatesAndRoastFromBagText(text, context);
   if (!result.roastDate) return null;
 
   return {
@@ -697,7 +739,10 @@ export async function parseCoffeeBagPhoto(imageFile: File, userExtractedText?: s
 
   try {
     const { scanCoffeeBagForDateAndRoast } = await import('./bagOcr');
-    ocrExtraction = await scanCoffeeBagForDateAndRoast(imageFile);
+    ocrExtraction = await scanCoffeeBagForDateAndRoast(imageFile, {
+      roaster: barcodeResult?.roaster,
+      beanName: barcodeResult?.name,
+    });
   } catch (ocrErr) {
     console.warn('OCR processing error on bag photo', ocrErr);
   }

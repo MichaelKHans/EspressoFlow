@@ -1,4 +1,8 @@
-import { extractDatesAndRoastFromBagText, type BagDateAndRoastExtraction } from './bagScanner';
+import {
+  extractDatesAndRoastFromBagText,
+  type BagDateAndRoastExtraction,
+  type BagExtractionContext,
+} from './bagScanner';
 
 /**
  * Preprocesses an image on an offscreen canvas to optimize Tesseract OCR:
@@ -65,7 +69,8 @@ export function preprocessImageForOcr(
  * Runs OCR on a coffee bag image using native TextDetector or Tesseract.js in a background worker
  */
 export async function scanCoffeeBagForDateAndRoast(
-  imageInput: File | Blob | HTMLCanvasElement | HTMLVideoElement | HTMLImageElement
+  imageInput: File | Blob | HTMLCanvasElement | HTMLVideoElement | HTMLImageElement,
+  context?: BagExtractionContext
 ): Promise<BagDateAndRoastExtraction> {
   let sourceEl: HTMLCanvasElement | HTMLVideoElement | HTMLImageElement;
 
@@ -86,7 +91,7 @@ export async function scanCoffeeBagForDateAndRoast(
       const detected = await detector.detect(canvasStandard);
       if (detected && detected.length > 0) {
         const rawText = detected.map((d: { rawValue: string }) => d.rawValue).join('\n');
-        const parsed = extractDatesAndRoastFromBagText(rawText);
+        const parsed = extractDatesAndRoastFromBagText(rawText, context);
         if (parsed.roastDate || parsed.detectedRoastLevel) {
           return parsed;
         }
@@ -104,7 +109,7 @@ export async function scanCoffeeBagForDateAndRoast(
     // Pass 1: Standard high contrast
     const ret1 = await worker.recognize(canvasStandard);
     const text1 = ret1.data.text || '';
-    const parsed1 = extractDatesAndRoastFromBagText(text1);
+    const parsed1 = extractDatesAndRoastFromBagText(text1, context);
 
     if (parsed1.roastDate) {
       await worker.terminate();
@@ -115,7 +120,7 @@ export async function scanCoffeeBagForDateAndRoast(
     const canvasInverted = preprocessImageForOcr(sourceEl, undefined, true);
     const ret2 = await worker.recognize(canvasInverted);
     const text2 = ret2.data.text || '';
-    const parsed2 = extractDatesAndRoastFromBagText(text2);
+    const parsed2 = extractDatesAndRoastFromBagText(text2, context);
 
     await worker.terminate();
 
@@ -125,7 +130,7 @@ export async function scanCoffeeBagForDateAndRoast(
 
     // If neither pass found a date, combine whatever text and roast level was seen
     const combinedRaw = `${text1}\n${text2}`;
-    return extractDatesAndRoastFromBagText(combinedRaw);
+    return extractDatesAndRoastFromBagText(combinedRaw, context);
   } catch (err) {
     console.warn('Tesseract OCR error:', err);
     return {
