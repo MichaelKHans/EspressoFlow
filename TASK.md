@@ -26,12 +26,34 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] Kværn-oversættelse for mikro-justeringer (f.eks. +/- 1 trin på Encore ESP = +/- 2.5s udtræk, Eureka delestreger)
 - [x] $CO_2$ afgasnings-alarm for friskristede bønner (< 4 dage fra ristning)
 
-## 📱 Aktuelle Opgaver (FASE 6: Nativ Mobil App & TestFlight)
+## 📱 FASE 6: Nativ Mobil App & TestFlight (AFSLUTTET)
 - [x] Initialiser Capacitor v8 for iOS og Android (`ios/` og `android/`)
 - [x] Etabler TestFlight byggepipeline (`.github/workflows/ios-build.yml` og `Fastfile` :beta)
 - [x] Forbedr OCR hardware-robusthed (Screen WakeLock, taktil haptik, zoom mod makro-spring, 12.5 FPS $\rightarrow$ 30 FPS adaptiv frekvens)
-- [ ] Opret `com.mh.espressoflow` App Identifier i Apple Developer Portal / App Store Connect
-- [ ] Konfigurer de 5 Apple Secrets i GitHub Repo Settings for `MichaelKHans/EspressoFlow`
+- [x] Opret `com.mh.espressoflow` App Identifier i Apple Developer Portal / App Store Connect (App ID: 6819161308)
+- [x] Konfigurer de 5 Apple Secrets i GitHub Repo Settings for `MichaelKHans/EspressoFlow`
+- [x] Løs Android real-world issues (OCR dato fremtidsspærre, 100% ren start uden testdata, topbar friplads og bundnavigation buffer - v1.3.3)
+
+---
+
+## 📌 Næste Opgaver (Morgen / Næste session): Bønne-Arkivering, Genkøbs-Labels & Juridisk Ajourføring
+- [ ] **Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags):**
+  - Tilføj mulighed for at markere en kaffepose som "Opbrugt" / "Arkiveret" i stedet for bare at slette den.
+  - Opret sektionering i Beandex: "Aktive kaffer" vs. "Arkiv / Kaffekirkegård" med fold-ud historik.
+- [ ] **Personlige Genkøbs-Labels (Barista Repurchase Intent):**
+  - Knapper / badges på arkiverede poser:
+    - 🟢 "Vil købe igen" (`buy_again`)
+    - 🟡 "Måske / Neutral" (`neutral`)
+    - 🔴 "Vil ikke købe igen" (`never_again`)
+  - Mulighed for en kort afsluttende dom/notat (fx "God med havremælk, for mørk til ren espresso").
+- [ ] **Anonymiseret Markedsindsigt & Trends:**
+  - Forberede anonym aggregering (fx *"84% af baristaer ville købe denne bønne igen"* i Central Bean Vault) uden personhenførbare data.
+- [ ] **Opdatering af Vilkår & Privatlivspolitik (`LegalModal.tsx`):**
+  - Ajourføre Privacy Policy og Terms of Service til 100% at afspejle den aktuelle arkitektur:
+    - 100% on-device OCR uden videostreaming til eksterne servere.
+    - Local-first lagring i browser/app SQLite/LocalStorage.
+    - Valgfri anonym synkronisering af kaffedata og fremtidig aggregeret markedsindsigt.
+    - Klare vilkår for 7-dages gratis prøveperiode og $4.99 / 49,- DKK engangskøb (Lifetime Pro).
 
 ---
 
