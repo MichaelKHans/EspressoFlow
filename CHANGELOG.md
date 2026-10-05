@@ -2,6 +2,16 @@
 
 Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.3.2] - 2026-10-05
+### Etape 10: Første iOS TestFlight Deployment Live (App ID: 6819161308)
+- **Fuldautomatisk CI/CD TestFlight Succes (`ios-build.yml`):**
+  - App ID `com.mh.espressoflow` (App Store Navn: *Espresso Flow: Smart Barista*) oprettet og parret med Apple Developer Team `39T28DB5D4`.
+  - Apple Distribution certifikat udstedt og pakket i legacy PKCS12 format med `-nomaciter -macalg sha1` for 100% kompatibilitet med macOS 15 Keychain importeren.
+  - Automatisk kørsel på GitHub Actions Mac cloud runner (`macos-15` ARM64 / Xcode 26.3) med Fastlane 2.240.1.
+  - IPA-fil arkiveret, signeret med officiel App Store Provisioning Profile og uploadet direkte til TestFlight på 3 minutter og 12 sekunder.
+- **5 Autoriseede Secrets Verificeret:**
+  - `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_PRIVATE_KEY`, `APPLE_CERTIFICATE_BASE64` og `APPLE_CERTIFICATE_PASSWORD` aktivt konfigurerede i `MichaelKHans/EspressoFlow`.
+
 ## [1.3.1] - 2026-10-04
 ### Etape 9: Hardware & Sikkerheds-Hærdning (iPhone-Only, Native WakeLock, Safe Areas, Lokale Skrifttyper, RLS Lockdown)
 - **iPhone-Only Målretning & Portræt-Lås:**

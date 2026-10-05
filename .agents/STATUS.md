@@ -11,6 +11,14 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-05 -- Første iOS TestFlight Deployment Live (App ID: 6819161308 / v1.3.2)
+- **Fuldautomatisk CI/CD TestFlight Succes (`ios-build.yml`):**
+  - Oprettet `com.mh.espressoflow` (App Store Navn: *Espresso Flow: Smart Barista*) og parret med Team `39T28DB5D4`.
+  - Apple Distribution certifikat udstedt og konverteret med `-nomaciter -macalg sha1` for 100% kompatibilitet med macOS 15 Keychain.
+  - Kompileret på GitHub Actions Mac cloud runner (`macos-15` ARM64 / Xcode 26.3) med Fastlane 2.240.1 på 3 minutter og 12 sekunder.
+  - IPA signeret og uploadet direkte til TestFlight.
+- **5 Autoriserede Secrets:** Konfigureret og verificeret i `MichaelKHans/EspressoFlow`.
+
 ### 2026-10-04 -- Hardware, Sikkerheds- og Mobilhærdning (iPhone-Only, Dobbelt WakeLock, Safe Areas, Lokale Fonts, RLS) (v1.3.1)
 - **iPhone-Only Målretning (`TARGETED_DEVICE_FAMILY = 1`):** iPad deaktiveret i Xcode-projektet for hurtigere, friktionsløs godkendelse uden krav om iPad-screenshots eller unødig tablet-review.
 - **Portræt-Lås (`Info.plist`):** Låst til Portrait på iPhone, så mobilen aldrig roterer under kaffebrygning på drypbakken eller bordet.
