@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.7.4 (Modal Arkitektur, createPortal Isolering & Zero-Trap Sikring)  
+> **Gældende version:** v1.7.5 (Fastforankret Flowbean Top-Banner z-[70] & Sikring mod Top-Overlapning på Tværs af Modaler)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -284,7 +284,7 @@ graph TD
     %% Ikoner & UI Assets
     App --> CustomIcons[CustomCoffeeIcons.tsx<br/>Professionelle Vector Line-Art Ikoner: CoffeeBean & Dripper]
 
-    %% Modaler & Overlays (Teleporteret til document.body med z-[60] - 4 uafhængige exit-veje)
+    %% Modaler & Overlays (Teleporteret til document.body med z-[60] - Starter under Header ved --app-header-height + 0.5rem)
     App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]
     App --> ScannerModal[BeanScannerModal.tsx<br/>Stregkode + Etiket OCR Scanner]
     App --> VaultModal[CentralBeanVaultModal.tsx<br/>Fællesskabs-katalog fra Supabase]
@@ -294,6 +294,12 @@ graph TD
     App --> LegalModal[LegalModal.tsx<br/>Privacy Policy, Terms of Service, Support]
     DrinkTab --> AllDrinksModal[DrinkSelector: All Drinks & Deck Modal<br/>createPortal z-[60], sticky top/bottom, back dismiss]
     BeandexTab --> FreshnessModal[FreshnessInfoModal.tsx<br/>createPortal z-[60], sticky top/bottom, back dismiss]
+
+    %% Top Header & Z-Index Lagdeling:
+    %% z-[70]: Flowbean Sticky Header (#app-header) - Altid synlig foroven, dækkes aldrig af modaler
+    %% z-[60]: Modaler & Dialog Overlays (items-start, top-padding: --app-header-height + 0.5rem)
+    %% z-40: Mobile Bottom Nav Bar (#nav-bar) & Floating Toasts
+    %% z-0-30: Sidens primære indhold, lister og grafer
 
     %% Mobil Back Button Hub
     App --> BackHandler[useMobileBackHandler.ts<br/>Android Hardware/Gesture Back prioritetskø]

@@ -175,6 +175,22 @@ export function App() {
     exitToastMessage: t('mobile.press_back_again') || 'Tryk tilbage igen for at afslutte',
   });
 
+  // Dynamic Flowbean Top Header Height: ensures modals are strictly bounded below the header
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      const header = document.getElementById('app-header');
+      if (header) {
+        const height = header.getBoundingClientRect().height;
+        if (height > 0) {
+          document.documentElement.style.setProperty('--app-header-height', `${height}px`);
+        }
+      }
+    };
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => window.removeEventListener('resize', updateHeaderHeight);
+  }, [activeMode]);
+
   // Scroll to top on navigation tab or mode switch
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -537,11 +553,23 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] flex flex-col font-sans">
-      {/* Top Header */}
-      <header className="border-b-2 border-[#CBB8A3] bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-40 pt-safe shadow-[0_4px_20px_rgba(44,32,24,0.06)]">
+      {/* Top Header - Always Elevated at z-[70] so Flowbean Brand Banner Remains 100% Visible */}
+      <header
+        id="app-header"
+        className="border-b-2 border-[#CBB8A3] bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-[70] pt-safe shadow-[0_4px_20px_rgba(44,32,24,0.06)]"
+      >
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-2">
-          {/* Brand Logo & Title */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Brand Logo & Title - Tapping returns to home deck and closes any open modals */}
+          <button
+            type="button"
+            onClick={() => {
+              closeAllActiveModals();
+              setActiveMode('flow');
+              setActiveTab('drinks');
+            }}
+            className="flex items-center gap-2 sm:gap-2.5 shrink-0 text-left cursor-pointer active:opacity-85 transition"
+            title="Flowbean Home"
+          >
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#2C2018] flex items-center justify-center shadow-xs shrink-0 overflow-hidden border border-[#C26D52]/25">
               <img src="/flowbean-logo.png" alt="Flowbean Logo" className="w-full h-full object-cover scale-135" />
             </div>
@@ -553,13 +581,16 @@ export function App() {
                 {activeMode === 'flow' ? t('app.subtitle') : t('beandex.subtitle')}
               </p>
             </div>
-          </div>
+          </button>
 
           {/* Center: Dual-Mode Segmented Switcher (Visible on desktop/tablet, mobile uses bottom tab bar) */}
           <div className="hidden md:flex items-center p-0.5 sm:p-1 bg-[#EFE8DE] rounded-xl border border-[#DECFC0] text-xs font-mono shadow-inner shrink-0">
             <button
               type="button"
-              onClick={() => setActiveMode('flow')}
+              onClick={() => {
+                closeAllActiveModals();
+                setActiveMode('flow');
+              }}
               className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 transition-all ${
                 activeMode === 'flow'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
@@ -574,7 +605,10 @@ export function App() {
             </button>
             <button
               type="button"
-              onClick={() => setActiveMode('beandex')}
+              onClick={() => {
+                closeAllActiveModals();
+                setActiveMode('beandex');
+              }}
               className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 transition-all ${
                 activeMode === 'beandex'
                   ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
@@ -615,7 +649,10 @@ export function App() {
             {/* Trial Access Chip - Hidden on mobile (<md) since TrialCountdownBanner handles it directly below; visible on desktop */}
             {!accessState.isProLifetime && (
               <button
-                onClick={() => setIsPaywallOpen(true)}
+                onClick={() => {
+                  closeAllActiveModals();
+                  setIsPaywallOpen(true);
+                }}
                 className="hidden md:flex text-[11px] sm:text-xs font-mono px-2 sm:px-2.5 py-1 rounded-xl border border-[#C26D52]/40 bg-[#C26D52]/10 text-[#C26D52] font-semibold hover:bg-[#C26D52]/20 transition items-center gap-1 sm:gap-1.5 shrink-0"
                 title="7-Day Free Trial - Tap to unlock lifetime access"
               >
@@ -626,10 +663,17 @@ export function App() {
               </button>
             )}
 
-            {/* Settings Gear Button */}
+            {/* Settings Gear Button - Toggles settings or cleanly opens it */}
             <button
               type="button"
-              onClick={() => setIsSettingsOpen(true)}
+              onClick={() => {
+                if (isSettingsOpen) {
+                  setIsSettingsOpen(false);
+                } else {
+                  closeAllActiveModals();
+                  setIsSettingsOpen(true);
+                }
+              }}
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl border border-[#DECFC0] bg-[#FFFDF9] hover:bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] flex items-center justify-center transition shadow-2xs cursor-pointer shrink-0"
               title={t('settings.modal_title')}
             >

@@ -96,13 +96,18 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[60] bg-[#2C2018]/85 flex items-center justify-center p-3 sm:p-6 overflow-hidden animate-fadeIn"
+      className="fixed inset-0 z-[60] bg-[#2C2018]/85 backdrop-blur-xs flex items-start justify-center p-3 sm:p-6 overflow-hidden animate-fadeIn"
       style={{
-        paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
-        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+        paddingTop: 'calc(var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) + 0.5rem)',
+        paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))',
       }}
     >
-      <div className="bg-[#FAF7F2] rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-lg border border-[#DECFC0] max-h-[calc(100dvh-3rem)] flex flex-col overflow-hidden animate-modal-pop-in">
+      <div
+        className="bg-[#FAF7F2] rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-lg border border-[#DECFC0] flex flex-col overflow-hidden animate-modal-pop-in"
+        style={{
+          maxHeight: 'calc(100dvh - var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) - max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem)))',
+        }}
+      >
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-[#E8DFD5] shrink-0">
           <div className="flex items-center justify-between gap-2.5">

@@ -37,13 +37,18 @@ export const FreshnessInfoModal: React.FC<FreshnessInfoModalProps> = ({
           onClose();
         }
       }}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-fadeIn overflow-hidden"
+      className="fixed inset-0 z-[60] flex items-start justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-fadeIn overflow-hidden"
       style={{
-        paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
-        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+        paddingTop: 'calc(var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) + 0.5rem)',
+        paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))',
       }}
     >
-      <div className="bg-[#FFFDF9] border border-[#DECFC0] rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[calc(100dvh-3rem)] font-sans animate-modal-pop-in">
+      <div
+        className="bg-[#FFFDF9] border border-[#DECFC0] rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col font-sans animate-modal-pop-in"
+        style={{
+          maxHeight: 'calc(100dvh - var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) - max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem)))',
+        }}
+      >
         {/* Ambient Top Glow */}
         <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-[#C26D52]/15 blur-2xl pointer-events-none" />
 

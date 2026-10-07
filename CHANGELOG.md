@@ -2,6 +2,20 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.7.5] - 2026-10-07
+### Etape 20: Fastforankret Flowbean Top-Banner & Sikring mod Top-Overlapning på Tværs af Modaler
+- **Permanent Synligt Flowbean Top-Banner (`z-[70]`):**
+  - **Identificeret Problem:** I v1.7.4 svævede modalerne med `z-[60]` og en løs `items-center` / `max-h` styling, hvilket fik høje modaler (såsom drikkevaretilpasseren i DrinkSelector og SettingsModal) til at strække sig hele vejen op i toppen af skærmen, hvor de dækkede for Flowbean top-banneret og kolliderede med mobilens Android statuslinje / ur (`21.56 ... 15%`).
+  - **Flowbean Header Elevation (`z-[70]`):** Appens primære `<header id="app-header">` er nu hævet til `z-[70]` og er sticky `top-0` med `border-b-2 border-[#CBB8A3]`. Flowbean logoet, brand-titlen og handlingsknapperne forbliver dermed 100% synlige, knivskarpe og uforstyrrede foroven til enhver tid.
+  - **Dynamisk Header-Højde Variabel (`--app-header-height`):** Tilføjet en reaktiv lytter i `App.tsx`, der måler den nøjagtige renderede højde af topbanneret (inkl. enhedens safe-area-inset-top) og eksporterer værdien som CSS-variabel til hele appen.
+  - **Hurtig Hjem-Navigation & Modal Dismissal:** Tryk på Flowbean logoet eller brand-titlen i top-banneret lukker øjeblikkeligt enhver åben dialog via `closeAllActiveModals()` og returnerer rent til kaffebarens hovedoversigt.
+- **Systematisk Top-Afgrænsning af Samtlige 10 Modaler:**
+  - Samtlige modaler i appen (`DrinkSelector`, `SettingsModal`, `FreshnessInfoModal`, `DialInWizardModal`, `LegalModal`, `PaywallModal`, `CentralBeanVaultModal`, `BeanScannerModal`, `ShotSummaryModal` og `OnboardingWizard`) har fået:
+    - `items-start justify-center` så de altid placerer sig pænt med start under top-banneret.
+    - Top-padding bundet til: `paddingTop: 'calc(var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) + 0.5rem)'` (8px frihøjde direkte under Flowbean headerens bundkant).
+    - Maksimal kort-højde begrænset til: `maxHeight: 'calc(100dvh - var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) - max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem)))'`.
+    - Indre rulning (`overflow-y-auto`) med faste sticky headers og footers. Modalerne kan dermed aldrig mere nå op over Flowbean banneret eller berøre telefonens statuslinje foroven, og de overlapper heller ikke Android systemknapperne i bunden.
+
 ## [1.7.4] - 2026-10-07
 ### Etape 19: Modal Arkitektur & U-fangbarhedssikring (Fix af "Kan ikke komme ud af Bar")
 - **Total Løsning på Fastlåsning i Bar / Drink Deck Tilpasning:**

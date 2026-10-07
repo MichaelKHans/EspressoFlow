@@ -11,6 +11,16 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-07 -- Fastforankret Flowbean Top-Banner & Sikring mod Top-Overlapning på Tværs af Modaler (v1.7.5)
+- **Permanent Synligt Flowbean Top-Banner (`z-[70]`):**
+  - **Identificeret Rodårsag:** I v1.7.4 lå modal overlays med `z-[60]` og `items-center` / `max-h` dimensionering. Store indholdsrige modaler (såsom `DrinkSelector` og `SettingsModal`) strakte sig derfor helt op i toppen, dækkede Flowbean brand-banneret og stødte ind i mobilens statuslinje (`21.56 ... 15%`).
+  - **Top-Banner Elevation (`z-[70]`):** `<header id="app-header">` er nu eleveret til `z-[70]` og er sticky `top-0` med `border-b-2 border-[#CBB8A3]`. Logoet, brand-titlen og knapperne forbliver knivskarpe og 100% synlige på alle tidspunkter.
+  - **Dynamisk Header-Højde Variabel (`--app-header-height`):** Måler renderet header-højde inkl. `safe-area-inset-top` og eksporterer til CSS `:root`.
+  - **Hurtig Hjem-Navigation & Modal Dismissal:** Tryk på Flowbean logoet eller titlen kalder `closeAllActiveModals()` og returnerer rent til hovedoversigten.
+- **Top-Afgrænsning af Samtlige 10 Modaler:**
+  - Samtlige modaler i appen (`DrinkSelector`, `SettingsModal`, `FreshnessInfoModal`, `DialInWizardModal`, `LegalModal`, `PaywallModal`, `CentralBeanVaultModal`, `BeanScannerModal`, `ShotSummaryModal` og `OnboardingWizard`) starter nu konsekvent under topbanneret med `paddingTop: 'calc(var(--app-header-height) + 0.5rem)'` og er begrænset med `maxHeight: 'calc(100dvh - var(--app-header-height) - bottomPadding)'`.
+  - Modalerne kan aldrig mere nå op over Flowbean banneret eller berøre telefonens statuslinje.
+
 ### 2026-10-07 -- Modal Arkitektur & U-fangbarhedssikring (Fix af "Kan ikke komme ud af Bar") (v1.7.4)
 - **Total Løsning på Fastlåsning i Bar / Drink Deck Tilpasning:**
   - **Identificeret Rodårsag:**

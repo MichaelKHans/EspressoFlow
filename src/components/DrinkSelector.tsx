@@ -870,13 +870,18 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               setIsCustomizeModalOpen(false);
             }
           }}
-          className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-fadeIn"
+          className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-xs flex items-start justify-center p-3 sm:p-4 overflow-hidden animate-fadeIn"
           style={{
-            paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
-            paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+            paddingTop: 'calc(var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) + 0.5rem)',
+            paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))',
           }}
         >
-          <div className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#DECFC0] max-w-md w-full shadow-2xl flex flex-col max-h-[calc(100dvh-3rem)] overflow-hidden animate-modal-pop-in">
+          <div
+            className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#DECFC0] max-w-md w-full shadow-2xl flex flex-col overflow-hidden animate-modal-pop-in"
+            style={{
+              maxHeight: 'calc(100dvh - var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) - max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem)))',
+            }}
+          >
             {/* STICKY HEADER - NEVER SCROLLS AWAY */}
             <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#E8DFD5] bg-[#FAF7F2] shrink-0">
               <div className="flex items-center gap-2.5">

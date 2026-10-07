@@ -94,6 +94,9 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Flowbean Top Header Height - Guarantees modals never cover top brand banner */
+  --app-header-height: calc(env(safe-area-inset-top, 0px) + 3.5rem);
 }
 
 .pt-safe {

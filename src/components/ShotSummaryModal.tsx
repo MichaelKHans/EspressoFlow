@@ -124,14 +124,17 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
           onClose();
         }
       }}
-      className="fixed inset-0 z-[60] bg-[#2C2018]/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden"
+      className="fixed inset-0 z-[60] bg-[#2C2018]/65 backdrop-blur-xs flex items-start justify-center p-3 sm:p-4 overflow-hidden"
       style={{
-        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
-        paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
+        paddingTop: 'calc(var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) + 0.5rem)',
+        paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))',
       }}
     >
       <div
-        className="bg-[#FFFDF9] w-full max-w-xl rounded-t-3xl sm:rounded-3xl border border-[#DECFC0] shadow-2xl overflow-hidden flex flex-col max-h-[calc(100dvh-2.5rem)] sm:max-h-[90vh] font-mono animate-modal-slide-up"
+        className="bg-[#FFFDF9] w-full max-w-xl rounded-2xl sm:rounded-3xl border border-[#DECFC0] shadow-2xl overflow-hidden flex flex-col font-mono animate-modal-slide-up"
+        style={{
+          maxHeight: 'calc(100dvh - var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) - max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem)))',
+        }}
       >
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-[#E8DFD5] bg-gradient-to-r from-[#FAF7F2] via-[#FFFDF9] to-[#FAF7F2] flex items-center justify-between shrink-0">
