@@ -1626,7 +1626,7 @@ export function App() {
       {showExitToast && (
         <div
           className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018]/95 text-[#FAF7F2] border border-[#C26D52]/40 text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2 pointer-events-none"
-          style={{ bottom: 'max(5rem, calc(env(safe-area-inset-bottom, 0px) + 4.75rem))' }}
+          style={{ bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 5rem))' }}
         >
           <span className="w-2 h-2 rounded-full bg-[#C26D52] animate-ping" />
           <span>{exitToastMessage}</span>

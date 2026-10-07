@@ -93,8 +93,14 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   const canFinish = beanName.trim() !== '';
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#2C2018]/80 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-[#FAF7F2] rounded-2xl sm:rounded-3xl shadow-xl w-full max-w-lg border border-[#E8DFD5] max-h-[90vh] flex flex-col">
+    <div
+      className="fixed inset-0 z-50 bg-[#2C2018]/80 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      style={{
+        paddingBottom: 'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
+        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+      }}
+    >
+      <div className="bg-[#FAF7F2] rounded-2xl sm:rounded-3xl shadow-xl w-full max-w-lg border border-[#DECFC0] max-h-[calc(100dvh-4.5rem)] flex flex-col animate-modal-pop-in">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-[#E8DFD5] shrink-0">
           <div className="flex items-center justify-between gap-2.5">

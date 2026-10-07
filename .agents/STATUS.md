@@ -863,3 +863,22 @@
   - Auto-ekspansion af seneste shot i `Logbook.tsx` viser straks den fulde ekstraktionskurve.
 - **Android Studio Synkroniseret:**
   - Koden compileret 100% fejlfrit med `npm run build` og synkroniseret til native Android med `npx cap sync android`.
+
+### 2026-10-07 – Mobil Navigation Sikring – Flydende Vinduer & Popups Løftet over Mobilmenu & Android Systemlinje (v1.7.2)
+- **Elimineret Kollision med Mobil Navigation & Systemknapper (`三` Recents / Hjem / Tilbage):**
+  - **Identificeret Problem:** I `ShotSummaryModal` lå handlingsknapperne (*View in Logbook* og *Pull New Shot*) i bunden med kun 14px padding uden hensyntagen til mobilens systemnavigationslinje (`三`), hvilket betød, at knapperne overlappede direkte med Android-systemknapperne.
+  - **Fuld Sikkerhedszone-Løft (`Safe Area Clearance`):**
+    - `ShotSummaryModal` footer er nu forsynet med dynamisk forhøjet safe-area padding: `style={{ paddingBottom: 'max(3.25rem, calc(env(safe-area-inset-bottom, 0px) + 2.25rem))' }}`.
+    - Handlingsknapperne svæver nu mindst 52px (og op til 84px på enheder med udvidet systemlinje) over skærmens bundkant, så de aldrig rører eller overlapper med systemets `三` knap eller iOS home indicator.
+- **Hardware-Accelereret Spring Slide-Up Animation (`.animate-modal-slide-up`):**
+  - Tilføjet ultra-smooth `@keyframes modalSlideUp` i `index.css` med native cubic-bezier kurve (`cubic-bezier(0.16, 1, 0.3, 1)`), så modaler og bottom-sheets ruller elegant og ubesværet op over bundnavigationen uden hakken eller forsinkelse.
+- **Konsistent Svævende Pop-In Animation (`.animate-modal-pop-in`) for Alle Popups:**
+  - `DialInWizardModal`, `SettingsModal`, `PaywallModal`, `LegalModal`, `CentralBeanVaultModal`, `BeanScannerModal`, `FreshnessInfoModal`, `DrinkSelector` menu og `OnboardingWizard` har alle fået:
+    - Tilføjet safe-area elevation (`paddingBottom: max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))`).
+    - Begrænset `max-h-[calc(100dvh-4.5rem)]`, så de altid svæver frit og centreret over navigationszonen.
+    - Taktil `.animate-modal-pop-in` animation med finjusteret skalering og translatio.
+- **Forhøjet Toast-Feedback i Beandex:**
+  - Flyttet "Added to Beandex" toasten fra `bottom: max(1.5rem, ...)` (hvor den lå halvt gemt bag mobilens 5-tab menu) til `bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 5rem))`, så den popper klart og tydeligt op ovenover mobilmenuen ligesom appens exit toast.
+- **Lokal Verifikation & Android Studio Synkronisering:**
+  - `npm run build` testet og bekræftet 100% fejlfri.
+  - `npx cap sync android` synkroniseret til native Android-build.

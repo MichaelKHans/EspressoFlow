@@ -116,14 +116,19 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#2C2018]/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 bg-[#2C2018]/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+      }}
+    >
       <div
-        className="bg-[#FFFDF9] w-full max-w-xl rounded-t-3xl sm:rounded-3xl border border-[#DECFC0] shadow-2xl overflow-hidden flex flex-col max-h-[92vh] font-mono animate-in fade-in slide-in-from-bottom duration-200"
+        className="bg-[#FFFDF9] w-full max-w-xl rounded-t-3xl sm:rounded-3xl border border-[#DECFC0] shadow-2xl overflow-hidden flex flex-col max-h-[calc(100dvh-2.5rem)] sm:max-h-[90vh] font-mono animate-modal-slide-up"
         role="dialog"
         aria-modal="true"
       >
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-[#E8DFD5] bg-gradient-to-r from-[#FAF7F2] via-[#FFFDF9] to-[#FAF7F2] flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-[#E8DFD5] bg-gradient-to-r from-[#FAF7F2] via-[#FFFDF9] to-[#FAF7F2] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#72806B]/15 text-[#72806B] flex items-center justify-center shrink-0">
               <CheckCircle className="w-5 h-5" />
@@ -315,11 +320,14 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
         </div>
 
         {/* Modal Action Buttons Footer */}
-        <div className="p-3.5 sm:p-4 bg-[#FAF7F2] border-t border-[#E8DFD5] flex items-center gap-2.5">
+        <div
+          className="p-4 sm:p-5 bg-[#FAF7F2] border-t border-[#DECFC0] flex items-center gap-2.5 shrink-0"
+          style={{ paddingBottom: 'max(3.25rem, calc(env(safe-area-inset-bottom, 0px) + 2.25rem))' }}
+        >
           <button
             type="button"
             onClick={onViewInLogbook}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-[#2C2018] hover:bg-[#3D2C22] text-[#FAF7F2] font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs"
+            className="flex-1 py-3 px-4 rounded-xl bg-[#2C2018] hover:bg-[#3D2C22] text-[#FAF7F2] font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer active:scale-98"
           >
             <BookOpen className="w-4 h-4 text-[#C26D52]" />
             <span>{t('shotsummary.view_in_logbook')}</span>
@@ -328,7 +336,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="py-2.5 px-4 rounded-xl border border-[#E8DFD5] bg-white hover:bg-[#FAF7F2] text-[#2C2018] font-bold text-xs flex items-center justify-center gap-1.5 transition"
+            className="py-3 px-4 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-98"
           >
             <RotateCcw className="w-3.5 h-3.5 text-[#7A6E65]" />
             <span>{t('shotsummary.pull_new_shot')}</span>

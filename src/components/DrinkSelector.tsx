@@ -845,8 +845,14 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
       {/* 6. All Drinks & Deck Customizer Modal */}
       {isCustomizeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#E8DFD5] max-w-md w-full p-4 sm:p-6 shadow-xl space-y-4 max-h-[90vh] flex flex-col">
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn overflow-y-auto"
+          style={{
+            paddingBottom: 'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
+            paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+          }}
+        >
+          <div className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#DECFC0] max-w-md w-full p-4 sm:p-6 shadow-xl space-y-4 max-h-[calc(100dvh-4.5rem)] flex flex-col animate-modal-pop-in">
             <div className="flex items-center justify-between pb-3 border-b border-[#E8DFD5]">
               <div className="flex items-center gap-2">
                 <Coffee className="w-4 h-4 text-[#C26D52]" />

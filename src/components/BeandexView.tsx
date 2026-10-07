@@ -1166,8 +1166,8 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
       {/* Added to vault toast banner */}
       {addedFeedback && (
         <div
-          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] border border-[#72806B] text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2"
-          style={{ bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))' }}
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] border border-[#72806B] text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2 pointer-events-none"
+          style={{ bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 5rem))' }}
         >
           <Check className="w-4 h-4 text-[#72806B]" />
           <span>Added "{addedFeedback}" to your Beandex stock!</span>
