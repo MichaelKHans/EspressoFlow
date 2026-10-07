@@ -40,6 +40,9 @@
 - **Logo-Tro Kaffebønne & Responsiv "Coffee Bar" Label:**
   - **Beandex Bønne-Ikon Matcher Master Logoet:** Opdateret `CoffeeBeanIcon` med præcis samme vinkel (35° hældning), to-delte bønnehalvdele, svunget spalte og den aerodynamiske flow-bølge svøbt under bunden ligesom master logoet.
   - **Responsiv "Coffee Bar" Label i Bunden:** På alle skærme fra 380px og op (iPhone 12/13/14/15/16, Plus, Pro, Pro Max og moderne Androids) vises det fulde, professionelle navn **Coffee Bar** (samt *Scale Cam* og *Logbook*), mens de smalleste telefoner (<380px) komprimerer til **Bar** uden risiko for linjebrud.
+- **Symmetrisk Mokkakant & Dybdeskygge under Topmenuen:**
+  - **Perfekt Viewport-Indramning:** Den øverste fastgjorte header (`<header>`) har fået nøjagtig samme markante 2px mokkakant (`border-b-2 border-[#CBB8A3]`) og bløde dybdeskygge (`shadow-[0_4px_20px_rgba(44,32,24,0.06)]`) som bundmenuen, suppleret med matchende frosted glassmorphism (`bg-[#FAF7F2]/95 backdrop-blur-md`).
+  - Herved glider kaffebaren, graferne og logbøgerne harmonisk ind og ud under to symmetriske, taktile rammer i top og bund med ensartet balance.
 - **Lokal Byggevalidering:** Testet med `npm run build` lokalt (100% succesfuld Vite + TS kompilering uden fejl).
 
 ### 2026-10-07 -- Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header (v1.5.0)
