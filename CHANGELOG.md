@@ -16,6 +16,11 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
 - **Rolig Metode-Omskifter i Coffee Bar (Ingen Uønsket Scroll-Hop):**
   - Rettet en uhensigtsmæssig scroll-adfærd: Når man skifter mellem `Espresso` og `Pour Over`, forbliver viewporten roligt i toppen af Barista Decket uden at hoppe ned til det store drikkekort.
   - Appen scroller nu først ned til ekstraktions- og kalibreringskortet, når baristaen aktivt klikker på en specifik drik fra baren eller kataloget.
+- **Tydelige Sektionskanter & Markant Bundmenu-Adskillelse:**
+  - **Tydelig Topkant på Bundmenuen:** Bundmenuen har fået en markant 2px mokka-kant (`border-t-2 border-[#CBB8A3]`) kombineret med en subtil opadrettet skygge (`shadow-[0_-4px_24px_rgba(44,32,24,0.08)]`), så der er et krystalklart visuelt skel mellem indholdet og navigationsbaren.
+  - **Universel Android & iOS Tilpasning:** Bundmenuens padding er udvidet (`max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))`), så den altid holder minimum 12px frihøjde over Androids system-navigationsbjælke (3-knapsbar el. gestusbjælke) og iOS Home Indicator uden overlap.
+  - **High-Definition Kantskarphed i Hele Appen:** Opgraderet alle sektions- og kortkanter (`border-[#E8DFD5]`) fra bleg sandfarve til en fyldig, taktil mokka-tone (`#D2C0AE` / `--color-line: #D0BDAA`) med `1.5px` stregtykkelse, så samtlige sektioner fremstår knivskarpt adskilte.
+  - **Tydeligt Beandex Antal-Badge:** Badget er forstørret (`min-w-[18px] h-[18px]`) med fed monospace tekst (`9.5px`), dyb espresso/terracotta baggrund og en 2px ren hvid afgrænsningsring (`ring-2 ring-[#FFFDF9]`), så bønneantallet altid er øjeblikkeligt læsbart.
 
 ## [1.5.0] - 2026-10-07
 ### Etape 13: Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header

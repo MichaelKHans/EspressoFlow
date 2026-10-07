@@ -673,8 +673,8 @@ export function App() {
 
       {/* Main Container */}
       <main
-        className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-28 sm:pb-20"
-        style={{ paddingBottom: 'max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem))' }}
+        className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-32 sm:pb-24"
+        style={{ paddingBottom: 'max(8rem, calc(env(safe-area-inset-bottom, 0px) + 6.5rem))' }}
       >
         {/* BEANDEX MODE: Dedicated Coffee Bean Vault, Ratings & Global Index */}
         {activeMode === 'beandex' ? (
@@ -1467,8 +1467,8 @@ export function App() {
       {/* Mobile Bottom Navigation Bar (Thumb-First 5-Tab Bar - Exclusively Professional Vector Icons, Zero Emojis) */}
       <nav
         aria-label="Mobile Navigation Bar"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#E8DFD5] shadow-lg select-none"
-        style={{ paddingBottom: 'max(0.35rem, env(safe-area-inset-bottom, 0px))' }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t-2 border-[#CBB8A3] shadow-[0_-4px_24px_rgba(44,32,24,0.08)] select-none"
+        style={{ paddingBottom: 'max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))' }}
       >
         <div className="grid grid-cols-5 w-full max-w-lg mx-auto px-1 pt-1.5 pb-1">
           {/* Tab 1: Bar */}
@@ -1533,9 +1533,13 @@ export function App() {
               activeMode === 'beandex' ? 'bg-[#F3EAE0]' : ''
             }`}>
               <CoffeeBeanIcon className="w-5 h-5 stroke-[2]" />
-              <span className={`absolute -top-0.5 -right-1 text-[8px] px-1 py-0.2 rounded-full font-bold font-mono ${
-                activeMode === 'beandex' ? 'bg-[#C26D52] text-white' : 'bg-[#E8DFD5] text-[#2C2018]'
-              }`}>
+              <span
+                className={`absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 rounded-full font-bold font-mono text-[9.5px] flex items-center justify-center shadow-xs ring-2 ring-[#FFFDF9] ${
+                  activeMode === 'beandex'
+                    ? 'bg-[#C26D52] text-white'
+                    : 'bg-[#2C2018] text-[#FAF7F2]'
+                }`}
+              >
                 {beans.length}
               </span>
             </div>
@@ -1596,7 +1600,7 @@ export function App() {
       {showExitToast && (
         <div
           className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018]/95 text-[#FAF7F2] border border-[#C26D52]/40 text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2 pointer-events-none"
-          style={{ bottom: 'max(4.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.25rem))' }}
+          style={{ bottom: 'max(5rem, calc(env(safe-area-inset-bottom, 0px) + 4.75rem))' }}
         >
           <span className="w-2 h-2 rounded-full bg-[#C26D52] animate-ping" />
           <span>{exitToastMessage}</span>

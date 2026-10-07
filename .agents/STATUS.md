@@ -32,6 +32,11 @@
 - **Rolig Metode-Omskifter i Coffee Bar (Ingen Uønsket Scroll-Hop):**
   - Rettet scroll-adfærd: Når man skifter mellem `Espresso` og `Pour Over`, forbliver viewporten roligt i toppen af Barista Decket uden at hoppe ned til det store drikkekort.
   - Appen scroller nu først ned til ekstraktionskortet, når baristaen aktivt vælger en specifik kaffedrik fra baren.
+- **Tydelige Sektionskanter & Markant Bundmenu-Adskillelse:**
+  - **Tydelig Topkant på Bundmenuen:** 2px mokka-kant (`border-t-2 border-[#CBB8A3]`) og opadrettet dybdeskygge (`shadow-[0_-4px_24px_rgba(44,32,24,0.08)]`), der skaber en 100% udtalt skillelinje.
+  - **Android & iOS Navigation Bar Buffer:** Bundmenuens padding udvidet (`max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))`), så den aldrig kommer i karambolage med 3-knaps systemmenuer eller gestusbjælker på Android og iPhones.
+  - **High-Definition Kantskarphed i Hele Appen:** Opgraderet alle sektions- og kortkanter (`border-[#E8DFD5]`) fra bleg sand til en fyldig, taktil mokka-kant (`#D2C0AE`) med `1.5px` stregtykkelse.
+  - **Tydeligt Beandex Antal-Badge:** Badget er forstørret (`min-w-[18px] h-[18px]`) med fed monospace tekst (`9.5px`), mørk espresso/terracotta baggrund og en 2px hvid afgrænsningsring (`ring-2 ring-[#FFFDF9]`).
 - **Lokal Byggevalidering:** Testet med `npm run build` lokalt (100% succesfuld Vite + TS kompilering uden fejl).
 
 ### 2026-10-07 -- Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header (v1.5.0)
