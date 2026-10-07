@@ -11,6 +11,28 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-07 -- Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header (v1.5.0)
+- **Tommelfinger-Optimeret Metode-Vælger i Coffee Bar (Model A):**
+  - Implementeret taktil, tommelfingervenlig 2-vejs omskifter (`[ ☕ Espresso Bar ]` | `[ 🫗 Pour Over Bar ]`) direkte under hero-hilsenen i Coffee Bar.
+  - Vælges `Espresso Bar`, vises de klassiske 13 espresso- og mælkedrikke (Espresso, Cortado, Flat White osv.).
+  - Vælges `Pour Over Bar`, vises de 6 nye specialty filtermetoder (V60 Standard, V60 4:6 Kasuya, Chemex Classic, Kalita Wave 185, AeroPress Inverted, French Press).
+  - Pinned deck ribbon og All Drinks Customize Modal tilpasser sig automatisk den aktive metode.
+- **Slank Mobil-Header (Frigivet 60px vandret plads på smartphone):**
+  - Sprogvælger-dropdownen er skjult på mobilskærme (`hidden sm:block`) og tilgængelig i `⚙️ Indstillinger`, så logo, brand og dual-mode switcheren får masser af luft på 375-393px telefoner uden at kollidere eller bryde linjer.
+- **Specialty Filter Drikkeprofiler & Arkitektonisk Kande-Vektorer:**
+  - Tilføjet 6 specialty filteropskrifter med ratios (1:14 til 1:16.6), dæmpede malinger, hældeteknikker og bloom-parametre.
+  - `ArchitecturalCup` udvidet med ægte glaskande (Range Server med dryptragt) og pressekolbe (`glassStyle: 'server' | 'press'`).
+- **Scale Cam Pour Over Mode (`ScaleMonitor.tsx`):**
+  - Automatisk genkendelse af aktiv metode: Når en filteropskrift vælges, starter Scale Cam i Pour Over tilstand.
+  - Bloom Countdown (0–45s med målvand fx 45g–50g) med visuel pulsering.
+  - Pacing Guide Flow-Meter (mål 4.0–6.0 g/s) vejleder rolige, jævne hældninger i stedet for kanaliseringsadvarsler.
+  - Tare-instruks tilpasset filterkaffe (placér server, tragt og kaffe, nulstil til 0.0g).
+  - Realistisk 3-faset simulering i Demo Mode (bloom saturation, pulse 1, pulse 2).
+- **Dynamisk FlowChart Tids- og Vægtskala (`FlowChart.tsx`):**
+  - Dynamisk tidsakse op til 4 minutter (240 sekunder) med minut-markeringer (`1m`, `2m`, `3m`, `4m`) og Y-akse op til 500g.
+  - Viser Pacing Zone bånd (4.0–6.0 g/s) og deaktiverer kanaliseringsmarkører ved filterkaffe.
+- **Lokal Byggevalidering:** Testet med `npm run build` lokalt (100% succesfuld Vite + TS kompilering uden fejl).
+
 ### 2026-10-07 -- Rebranding til Flowbean, Nyt Master Logo & Fuld Nativ Ikon-Suite (v1.4.0)
 - **Officielt Rebrand til Flowbean:**
   - Nyt navn fastlagt til `Flowbean` for at favne både Espresso, Pour Over og bønnehåndtering/rating.

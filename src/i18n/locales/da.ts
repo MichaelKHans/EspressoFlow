@@ -29,6 +29,19 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'active_bean.yield': 'UDBYTTE',
   'active_bean.grind': 'KVÆRN',
 
+  // Method selection (Espresso vs. Pour Over)
+  'method.espresso': 'Espresso Drikke',
+  'method.pour_over': 'Pour Over Metoder',
+  'method.espresso_short': 'Espresso',
+  'method.pour_over_short': 'Pour Over',
+  'deck.start_pourover': 'Start Bryg på Scale Cam',
+  'scale.bloom_timer': 'Bloom Nedtælling',
+  'scale.bloom_status': 'Bloom: {time}s (Mål ~{water}g)',
+  'scale.bloom_complete': 'Bloom færdig! Hæld i jævne cirkler',
+  'scale.pacing_guide': 'Hælderate: {flow} g/s (Mål {min}–{max} g/s)',
+  'scale.target_water': 'Samlet Vand',
+  'scale.tare_pourover_hint': 'Placer kande, tragt og kaffe på vægten, og nulstil til 0.0g',
+
   // Coffee Bar / Drink Deck
   'deck.title': 'Barista Ekstraktions-Deck',
   'deck.subtitle': 'Vælg drikkeprofil eller justér din ønskede ekstraktionskurve',

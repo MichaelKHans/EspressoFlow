@@ -2,6 +2,31 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.5.0] - 2026-10-07
+### Etape 13: Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header
+- **Mobil-Optimeret Metode-Vælger i Coffee Bar (Model A):**
+  - Løst pladsmangel på mobilskærme uden at belaste top-headeren: Tilføjet en taktil, tommelfingervenlig 2-vejs omskifter (`[ ☕ Espresso Bar ]` | `[ 🫗 Pour Over Bar ]`) direkte under hilsenen i Coffee Bar.
+  - Vælges `Espresso Bar`, vises de klassiske 13 espresso- og mælkedrikke (Espresso, Cortado, Flat White, Cappuccino osv.).
+  - Vælges `Pour Over Bar`, vises de 6 nye specialty filtermetoder (V60 Standard, V60 4:6 Kasuya, Chemex Classic, Kalita Wave 185, AeroPress Inverted, French Press).
+  - Pinned deck og Customize Modal tilpasser sig automatisk den valgte bryggemetode.
+- **Slank Mobil-Header (Frigivet 60px på Smartphone):**
+  - Sprogvælger-dropdownen er skjult på mobilskærme (`hidden sm:block`) og tilgængelig i `⚙️ Indstillinger`, hvilket giver masser af vandret luft til logo, brand og dual-mode switcheren på 375-393px telefoner.
+- **Specialty Filter Drikkeprofiler & Arkitektonisk Kande-Grafik (`ArchitecturalCup.tsx`, `drinkRecipes.ts`):**
+  - Tilføjet 6 specialty filteropskrifter med ratios (1:14 til 1:16.6), dæmpede malinger, hældeteknikker og bloom-parametre.
+  - `ArchitecturalCup` udvidet med ægte glaskande (Range Server med dryptragt) og cylindrisk pressekolbe (`glassStyle: 'server' | 'press'`).
+- **Scale Cam Pour Over Mode (`ScaleMonitor.tsx`):**
+  - Automatisk genkendelse af aktiv metode: Når en filteropskrift vælges, starter Scale Cam i Pour Over tilstand.
+  - Bloom Countdown (0–45 sekunder med målvand fx 45g–50g) med visuel pulsering.
+  - Pacing Guide Flow-Meter (mål 4.0–6.0 g/s) vejleder rolige, jævne hældninger i stedet for kanaliseringsadvarsler.
+  - Tare-instruks tilpasset filterkaffe (placér server, tragt og kaffe, nulstil til 0.0g).
+  - Realistisk 3-faset simulering i Demo Mode (bloom saturation, pulse 1, pulse 2).
+- **Dynamisk FlowChart Tids- og Vægtskala (`FlowChart.tsx`):**
+  - Dynamisk tidsakse op til 4 minutter (240 sekunder) med minut-markeringer (`1m`, `2m`, `3m`, `4m`) og Y-akse op til 500g.
+  - Viser Pacing Zone bånd (4.0–6.0 g/s) og deaktiverer kanaliseringsmarkører ved filterkaffe.
+- **Datamodeller & i18n:**
+  - Udvidet `BrewMethod`, `PourOverGuide`, `glassStyle` og `ShotRecord`.
+  - Tilføjet engelske og danske oversættelser for alle nye pour over elementer.
+
 ## [1.4.0] - 2026-10-07
 ### Etape 12: Rebranding til Flowbean, Nyt Master Logo & Fuld Nativ Ikon-Suite (iOS TestFlight & Android)
 - **Officielt Rebrand til Flowbean:**

@@ -36,11 +36,21 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 
 ---
 
-## 📌 Næste Opgaver: Pour Over Integration & Bønne-Arkivering (Beandex)
-- [ ] **Pour Over Mode & Profiler i Coffee Bar:**
-  - Tilføj top-toggle mellem `[ ☕ Espresso ]` og `[ 🫗 Pour Over ]`.
-  - Tilføj filterbryggemetoder: V60 (Standard & 4:6 Kasuya), Chemex, Kalita Wave, AeroPress, French Press.
-  - Dedikerede pour-over parametre: Bloom-timer (30-45s), target flow rate (4-6 g/s) og target ratios (1:15–1:17).
+## 🫗 FASE 8: Pour Over & Filterkaffe Integration (v1.5.0 - AFSLUTTET)
+- [x] **Mobil-Optimeret Metode-Vælger i Coffee Bar (Model A):**
+  - Tilføjet tommelfingervenlig 2-vejs toggle mellem `[ ☕ Espresso Bar ]` og `[ 🫗 Pour Over Bar ]` i Coffee Bar.
+  - Slanket mobil-headeren ved at flytte sprogvælgeren ind i `⚙️ Indstillinger` (`hidden sm:block`), frigivet 60px vandret plads på smartphones.
+- [x] **Specialty Filter Drikkeprofiler & Kande-Grafik:**
+  - Tilføjet 6 specialty filtermetoder: V60 (Standard & 4:6 Kasuya), Chemex, Kalita Wave, AeroPress, French Press.
+  - Udvidet `ArchitecturalCup` med ægte glaskande (Range Server med tragt) og pressekolbe.
+- [x] **Scale Cam Pour Over Mode & Telemetri:**
+  - Bloom-timer nedtælling (0–45s) med målvand (fx 45g–50g).
+  - Pacing Guide Flow-Meter (mål 4.0–6.0 g/s) og deaktivering af kanaliseringsalarm i filtermode.
+  - Dynamisk FlowChart tidsakse op til 4 minutter (240s) med minut-markeringer og Y-akse op til 500g.
+
+---
+
+## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)
 - [ ] **Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags):**
   - Tilføj mulighed for at markere en kaffepose som "Opbrugt" / "Arkiveret" i stedet for bare at slette den.
   - Opret sektionering i Beandex: "Aktive kaffer" vs. "Arkiv / Kaffekirkegård" med fold-ud historik.

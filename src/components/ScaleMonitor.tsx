@@ -34,6 +34,11 @@ interface ScaleMonitorProps {
   targetDose: number;
   targetYield: number;
   machinePreInfusionSetting?: number;
+  method?: 'espresso' | 'pour_over';
+  bloomSeconds?: number;
+  bloomWaterGrams?: number;
+  targetFlowRateMin?: number;
+  targetFlowRateMax?: number;
 }
 
 export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
@@ -45,6 +50,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   targetDose,
   targetYield,
   machinePreInfusionSetting = 5.0,
+  method = 'espresso',
+  bloomSeconds = 45,
+  bloomWaterGrams,
+  targetFlowRateMin = 4.0,
+  targetFlowRateMax = 6.0,
 }) => {
   const { t } = useTranslation();
   const [currentWeight, setCurrentWeight] = useState<number>(0.0);
@@ -446,23 +456,42 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
       let weight = currentWeightRef.current;
 
-      // In simulation mode, generate a realistic pre-infusion & extraction curve
+      // In simulation mode, generate a realistic curve
       if (cameraState === 'demo') {
         let simulatedWeight = 0;
-        // 0-6s: Pre-infusion saturation (pressure builds, drops start at ~5.5s)
-        if (seconds < 5.5) {
-          simulatedWeight = 0.0;
-        } else if (seconds <= 26) {
-          simulatedWeight = 0.1 + (seconds - 5.5) * 1.6;
+        if (method === 'pour_over') {
+          // Pour Over demo curve (Bloom + 2 pulse pours)
+          const bloomW = bloomWaterGrams || Math.round(targetDose * 3);
+          const bloomT = bloomSeconds || 45;
+          if (seconds < 10) {
+            simulatedWeight = (seconds / 10) * bloomW;
+          } else if (seconds < bloomT) {
+            simulatedWeight = bloomW;
+          } else if (seconds < 75) {
+            const p2Progress = (seconds - bloomT) / (75 - bloomT);
+            simulatedWeight = bloomW + p2Progress * (targetYield * 0.65 - bloomW);
+          } else if (seconds < 90) {
+            simulatedWeight = targetYield * 0.65;
+          } else {
+            const p3Progress = Math.min(1, (seconds - 90) / 30);
+            simulatedWeight = targetYield * 0.65 + p3Progress * (targetYield * 0.35);
+          }
         } else {
-          simulatedWeight = Math.min(targetYield + 0.4, 32.9 + (seconds - 26) * 0.8);
+          // Espresso: 0-6s pre-infusion, then steady pull
+          if (seconds < 5.5) {
+            simulatedWeight = 0.0;
+          } else if (seconds <= 26) {
+            simulatedWeight = 0.1 + (seconds - 5.5) * 1.6;
+          } else {
+            simulatedWeight = Math.min(targetYield + 0.4, 32.9 + (seconds - 26) * 0.8);
+          }
         }
         weight = Math.round(simulatedWeight * 10) / 10;
         setCurrentWeight(weight);
         currentWeightRef.current = weight;
       }
 
-      // Check for First Drip with vibration filter (≥ 0.4g ensures only real espresso drops trigger flow phase)
+      // Check for First Drip with vibration filter (≥ 0.4g ensures only real drops trigger flow phase)
       if (weight >= 0.4) {
         if (firstDropTimeRef.current === null) {
           firstDropTimeRef.current = roundedSeconds;
@@ -497,14 +526,15 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         Haptics.notification({ type: NotificationType.Success }).catch(() => {});
       }
 
-      // Channeling detection haptic alert (sudden spike > 4.2 g/s after pre-infusion)
-      if (firstDropTimeRef.current !== null && flow > 4.2 && !hasVibratedChannelingRef.current) {
+      // Channeling detection haptic alert (ONLY for espresso! Pour over flow is naturally high)
+      if (method !== 'pour_over' && firstDropTimeRef.current !== null && flow > 4.2 && !hasVibratedChannelingRef.current) {
         hasVibratedChannelingRef.current = true;
         Haptics.notification({ type: NotificationType.Warning }).catch(() => {});
       }
 
       // Auto-finish if target reached in demo mode
-      if (cameraState === 'demo' && weight >= targetYield && seconds > 25) {
+      const minDemoSecs = method === 'pour_over' ? 120 : 25;
+      if (cameraState === 'demo' && weight >= targetYield && seconds > minDemoSecs) {
         handleStopBrewing();
       }
     }, 100);
@@ -512,7 +542,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [isBrewing, targetYield, cameraState, onLivePointsUpdate]);
+  }, [isBrewing, targetYield, targetDose, cameraState, method, bloomSeconds, bloomWaterGrams, onLivePointsUpdate]);
 
   const handleStartBrewing = () => {
     requestOrientationPermission();
@@ -1080,7 +1110,23 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         {/* Real-time Pre-infusion vs Active Flow split pill during active extraction */}
         {isBrewing && (
           <div className="flex items-center justify-between text-[11px] bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-xl text-amber-900 font-mono shadow-2xs">
-            {firstDropTime === null ? (
+            {method === 'pour_over' ? (
+              elapsedTime < bloomSeconds ? (
+                <span className="animate-pulse flex items-center gap-1.5 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  {t('scale.bloom_status', {
+                    time: Math.max(0, Math.round(bloomSeconds - elapsedTime)),
+                    water: bloomWaterGrams || Math.round(targetDose * 3),
+                  }) || `Bloom: ${Math.max(0, Math.round(bloomSeconds - elapsedTime))}s (Target ~${bloomWaterGrams || Math.round(targetDose * 3)}g)`}
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <span>Pours: <strong className="text-emerald-700">{(elapsedTime - bloomSeconds).toFixed(1)}s</strong></span>
+                  <span>•</span>
+                  <span>Rate: <strong className="text-[#C26D52]">{currentFlow.toFixed(1)} g/s</strong></span>
+                </span>
+              )
+            ) : firstDropTime === null ? (
               <span className="animate-pulse flex items-center gap-1.5 font-bold">
                 <span className="w-2 h-2 rounded-full bg-amber-500" />
                 Pre-infusion: {preInfusionDuration.toFixed(1)}s (Waiting for 1st drip)
@@ -1092,7 +1138,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 <span>Flow: <strong className="text-emerald-700">{activeFlowDuration.toFixed(1)}s</strong></span>
               </span>
             )}
-            <span className="text-[10px] text-amber-700 font-bold shrink-0">Target: {targetYield}g</span>
+            <span className="text-[10px] text-amber-700 font-bold shrink-0">
+              {method === 'pour_over' ? 'Water: ' : 'Target: '}{targetYield}g
+            </span>
           </div>
         )}
 
@@ -1100,9 +1148,13 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         {!isBrewing ? (
           <div className="px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between gap-2 text-xs font-mono">
             <div className="flex items-center gap-2 text-[#7A6E65]">
-              <span className="text-[#C26D52] text-sm leading-none">☕</span>
+              <span className="text-[#C26D52] text-sm leading-none">
+                {method === 'pour_over' ? '🫗' : '☕'}
+              </span>
               <span className="text-[11px] sm:text-xs leading-tight">
-                {t('scale.manual_start_hint')}
+                {method === 'pour_over'
+                  ? (t('scale.tare_pourover_hint') || 'Place brewer, filter & coffee on scale, then tare to 0.0g')
+                  : t('scale.manual_start_hint')}
               </span>
             </div>
             <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
@@ -1114,7 +1166,15 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             <div className="flex items-center gap-2 text-amber-900 font-bold">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
               <span className="text-[11px] sm:text-xs leading-tight">
-                {firstDropTime === null
+                {method === 'pour_over'
+                  ? elapsedTime < bloomSeconds
+                    ? 'Bloom Saturation in progress...'
+                    : (t('scale.pacing_guide', {
+                        flow: currentFlow.toFixed(1),
+                        min: targetFlowRateMin,
+                        max: targetFlowRateMax,
+                      }) || `Pour Rate: ${currentFlow.toFixed(1)} g/s (Target ${targetFlowRateMin}–${targetFlowRateMax} g/s)`)
+                  : firstDropTime === null
                   ? t('scale.pre_infusion_status')
                   : t('scale.brewing_status')}
               </span>
@@ -1145,7 +1205,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 className="flex-1 px-4 py-3 rounded-xl bg-[#2C2018] hover:bg-[#3D2C22] text-[#FAF7F2] text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-sm transition active:scale-95 border border-[#C26D52]/40"
               >
                 <Play className="w-4 h-4 text-[#C26D52] fill-[#C26D52]" />
-                <span>{t('scale.start_shot')}</span>
+                <span>
+                  {method === 'pour_over'
+                    ? (t('deck.start_pourover') || 'Start Brew (Timer)')
+                    : t('scale.start_shot')}
+                </span>
               </button>
             </>
           ) : (

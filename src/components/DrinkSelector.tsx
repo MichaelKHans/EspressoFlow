@@ -23,6 +23,7 @@ import {
 import { GRINDER_CALIBRATIONS } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
 import { matchBeansForDrink, getOptimalBeanGuidanceForDrink } from '../lib/beanMatcher';
+import { useTranslation } from '../i18n';
 
 export const getRoastBadgeStyles = (level: RoastLevel) => {
   switch (level) {
@@ -108,7 +109,19 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     });
   };
 
+  const { t } = useTranslation();
   const selectedDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0];
+  const [methodFilter, setMethodFilter] = useState<'espresso' | 'pour_over'>(() =>
+    selectedDrink.method === 'pour_over' ? 'pour_over' : 'espresso'
+  );
+
+  useEffect(() => {
+    if (selectedDrink.method === 'pour_over') {
+      setMethodFilter('pour_over');
+    } else {
+      setMethodFilter('espresso');
+    }
+  }, [selectedDrink.method]);
 
   // Specific calibration key for this exact bean + drink combination
   const calibrationKey = `${currentBean.id}_${selectedDrink.id}`;
@@ -236,9 +249,18 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   };
 
   const filteredCatalog = DRINK_RECIPES.filter((d) => {
+    if ((d.method || 'espresso') !== methodFilter) return false;
     if (categoryFilter === 'all') return true;
     return d.category === categoryFilter;
   });
+
+  const methodDeckDrinks = DRINK_RECIPES.filter(
+    (d) => (d.method || 'espresso') === methodFilter && activeDeckIds.includes(d.id)
+  );
+  const displayDeckDrinks =
+    methodDeckDrinks.length > 0
+      ? methodDeckDrinks
+      : DRINK_RECIPES.filter((d) => (d.method || 'espresso') === methodFilter).slice(0, 4);
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fadeIn pb-8 sm:pb-12">
@@ -264,17 +286,57 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
           </div>
         </div>
 
+        {/* Thumb-Friendly Brew Method Toggle (Keeps Top Mobile Header Clean) */}
+        <div className="mt-4 grid grid-cols-2 gap-1.5 p-1 bg-black/30 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 text-xs font-mono">
+          <button
+            type="button"
+            onClick={() => {
+              setMethodFilter('espresso');
+              const firstEspresso = DRINK_RECIPES.find((d) => (d.method || 'espresso') === 'espresso');
+              if (selectedDrink.method === 'pour_over' && firstEspresso) {
+                handleSelectDrinkWithScroll(firstEspresso);
+              }
+            }}
+            className={`py-2 px-3 rounded-lg sm:rounded-xl font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              methodFilter === 'espresso'
+                ? 'bg-[#C26D52] text-white shadow-md'
+                : 'text-[#E8DFD5]/70 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Coffee className="w-4 h-4" />
+            <span>{t('method.espresso_short') || 'Espresso'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMethodFilter('pour_over');
+              const firstFilter = DRINK_RECIPES.find((d) => d.method === 'pour_over');
+              if (selectedDrink.method !== 'pour_over' && firstFilter) {
+                handleSelectDrinkWithScroll(firstFilter);
+              }
+            }}
+            className={`py-2 px-3 rounded-lg sm:rounded-xl font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              methodFilter === 'pour_over'
+                ? 'bg-[#C26D52] text-white shadow-md'
+                : 'text-[#E8DFD5]/70 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <span className="text-sm">🫗</span>
+            <span>{t('method.pour_over_short') || 'Pour Over'}</span>
+          </button>
+        </div>
+
         {/* 2. Active Bar Deck Ribbon & Customizer */}
-        <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/10">
+        <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/10">
           <div className="flex items-center justify-between mb-2">
             <div className="text-[9px] sm:text-[10px] font-mono text-[#E8DFD5]/70 uppercase tracking-wider font-bold">
-              Your Active Bar Deck ({activeDeckIds.length} of {DRINK_RECIPES.length} pinned):
+              {methodFilter === 'espresso' ? 'Espresso Deck' : 'Pour Over Deck'} ({displayDeckDrinks.length} pinned):
             </div>
             <button
               type="button"
               onClick={() => setIsCustomizeModalOpen(true)}
-              className="text-[10px] sm:text-[11px] font-mono text-[#FAF7F2] hover:text-[#FFFDF9] bg-white/10 hover:bg-white/20 border border-white/15 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition"
-              title="Browse all 12 drinks or customize quick deck"
+              className="text-[10px] sm:text-[11px] font-mono text-[#FAF7F2] hover:text-[#FFFDF9] bg-white/10 hover:bg-white/20 border border-white/15 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+              title="Browse all drinks or customize quick deck"
             >
               <Settings2 className="w-3 h-3 text-[#C26D52]" />
               <span>All Drinks & Deck</span>
@@ -283,14 +345,14 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
           {/* Quick Deck Buttons: Wrapped so all pinned drinks are instantly visible! */}
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            {DRINK_RECIPES.filter((d) => activeDeckIds.includes(d.id)).map((drink) => {
+            {displayDeckDrinks.map((drink) => {
               const isSelected = drink.id === selectedDrink.id;
               const shortName = drink.name.split('/')[0].trim();
               return (
                 <button
                   key={drink.id}
                   onClick={() => handleSelectDrinkWithScroll(drink)}
-                  className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium transition flex items-center gap-1.5 sm:gap-2 ${
+                  className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium transition flex items-center gap-1.5 sm:gap-2 cursor-pointer ${
                     isSelected
                       ? 'bg-[#C26D52] text-white shadow-xs font-bold ring-2 ring-white/30 scale-[1.02]'
                       : 'bg-white/10 text-[#FAF7F2] hover:bg-white/20 border border-white/10'
@@ -306,11 +368,11 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             <button
               type="button"
               onClick={() => setIsCustomizeModalOpen(true)}
-              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium bg-white/5 hover:bg-white/15 border border-dashed border-white/30 text-[#E8DFD5] transition flex items-center gap-1.5"
-              title="Browse all 12 specialty recipes"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium bg-white/5 hover:bg-white/15 border border-dashed border-white/30 text-[#E8DFD5] transition flex items-center gap-1.5 cursor-pointer"
+              title="Browse all specialty recipes"
             >
               <Plus className="w-3.5 h-3.5 text-[#C26D52]" />
-              <span>More ({DRINK_RECIPES.length - activeDeckIds.length})</span>
+              <span>More</span>
             </button>
           </div>
         </div>
@@ -396,7 +458,11 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               onClick={() => onLaunchScaleCam(selectedDrink)}
               className="flex-2 sm:flex-none px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition shadow-md group cursor-pointer"
             >
-              <span>Pull Shot on Scale Cam</span>
+              <span>
+                {selectedDrink.method === 'pour_over'
+                  ? (t('deck.start_pourover') || 'Start Brew on Scale Cam')
+                  : (t('deck.pull_shot') || 'Pull Shot on Scale Cam')}
+              </span>
               <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
             </button>
           </div>
@@ -408,7 +474,9 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
           <div className="md:col-span-5 flex flex-col items-center justify-center bg-[#FAF7F2] p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-[#E8DFD5]">
             <div className="text-[10px] font-mono uppercase tracking-wider text-[#7A6E65] mb-2 font-bold flex items-center gap-1.5">
               <Layers className="w-3 h-3 text-[#C26D52]" />
-              <span>Cup Anatomy ({selectedDrink.cupVolumeMl || 180}ml)</span>
+              <span>
+                {selectedDrink.method === 'pour_over' ? 'Carafe / Server Anatomy' : 'Cup Anatomy'} ({selectedDrink.cupVolumeMl || 180}ml)
+              </span>
             </div>
 
             <div className="py-1">
@@ -434,22 +502,27 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             </div>
 
             <div className="text-[10px] text-[#7A6E65] font-mono mt-2 text-center">
-              Target Output: <strong className="text-[#2C2018]">{selectedDrink.targetYieldGrams.toFixed(1)}g</strong>
+              {selectedDrink.method === 'pour_over' ? 'Target Brew Water' : 'Target Output'}:{' '}
+              <strong className="text-[#2C2018]">{selectedDrink.targetYieldGrams.toFixed(1)}g</strong>
             </div>
           </div>
 
-          {/* Right Column: 4 Key Metrics + Milk Steam Guide + Dial-In Guidance */}
+          {/* Right Column: 4 Key Metrics + Guides */}
           <div className="md:col-span-7 flex flex-col justify-between space-y-3">
             {/* 4 Primary Extraction Metrics (2x2 on phone, 4-col on tablet/desktop) */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
-                <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">Dry Dose</div>
+                <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">
+                  {selectedDrink.method === 'pour_over' ? 'Coffee Dose' : 'Dry Dose'}
+                </div>
                 <div className="text-sm sm:text-base font-bold font-mono text-[#2C2018] mt-0.5">
                   {selectedDrink.defaultDoseGrams.toFixed(1)}g
                 </div>
               </div>
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
-                <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">Target Yield</div>
+                <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">
+                  {selectedDrink.method === 'pour_over' ? 'Total Water' : 'Target Yield'}
+                </div>
                 <div className="text-sm sm:text-base font-bold font-mono text-[#C26D52] mt-0.5">
                   {selectedDrink.targetYieldGrams.toFixed(1)}g
                 </div>
@@ -463,10 +536,36 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
                 <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">Target Time</div>
                 <div className="text-sm sm:text-base font-bold font-mono text-[#2C2018] mt-0.5">
-                  ~{selectedDrink.expectedTimeSeconds}s
+                  {selectedDrink.method === 'pour_over'
+                    ? `~${Math.floor(selectedDrink.expectedTimeSeconds / 60)}:${String(selectedDrink.expectedTimeSeconds % 60).padStart(2, '0')}m`
+                    : `~${selectedDrink.expectedTimeSeconds}s`}
                 </div>
               </div>
             </div>
+
+            {/* Pour Over Extraction & Pacing Guide */}
+            {selectedDrink.pourOverGuide && (
+              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FFFDF9] border border-[#E8DFD5] space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold text-[#2C2018] font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm">🫗</span>
+                    <span>Pour Over Guide</span>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 text-[11px] text-[#7A6E65]">
+                    <span>Bloom: <strong className="text-[#C26D52]">{selectedDrink.pourOverGuide.bloomSeconds}s</strong></span>
+                    <span>Pacing: <strong className="text-[#2C2018]">{selectedDrink.pourOverGuide.flowRateMinGps}–{selectedDrink.pourOverGuide.flowRateMaxGps} g/s</strong></span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[10px] sm:text-[11px] text-[#7A6E65]">
+                  <p>
+                    Grind: <span className="text-[#2C2018] font-semibold">{selectedDrink.pourOverGuide.grindType}</span>
+                  </p>
+                  <p>
+                    Pours: <span className="text-[#2C2018] font-semibold">{selectedDrink.pourOverGuide.poursCount} pours</span> ({selectedDrink.pourOverGuide.pouringTechnique || 'Gentle spiral'})
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Milk Steam Guide (Only for milk drinks) */}
             {selectedDrink.milkGuide && (
@@ -758,12 +857,40 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             </div>
 
             <p className="text-[11px] text-[#7A6E65] font-mono leading-relaxed">
-              <strong>Tap any drink</strong> to select and brew it immediately. Use the <strong>Pin</strong> button to customize which drinks appear on your top 1-tap quick bar.
+              <strong>Tap any drink</strong> to select and brew it immediately. Use the <strong>Pin</strong> button to customize which drinks appear on your top quick deck.
             </p>
+
+            {/* Modal Method Toggle */}
+            <div className="grid grid-cols-2 gap-1 p-0.5 bg-[#F0E8DC] rounded-xl border border-[#DECFC0] text-xs font-mono">
+              <button
+                type="button"
+                onClick={() => setMethodFilter('espresso')}
+                className={`py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  methodFilter === 'espresso'
+                    ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                    : 'text-[#7A6E65] hover:text-[#2C2018]'
+                }`}
+              >
+                <Coffee className="w-3.5 h-3.5" />
+                <span>Espresso ({DRINK_RECIPES.filter((d) => (d.method || 'espresso') === 'espresso').length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMethodFilter('pour_over')}
+                className={`py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  methodFilter === 'pour_over'
+                    ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                    : 'text-[#7A6E65] hover:text-[#2C2018]'
+                }`}
+              >
+                <span className="text-xs">🫗</span>
+                <span>Pour Over ({DRINK_RECIPES.filter((d) => d.method === 'pour_over').length})</span>
+              </button>
+            </div>
 
             {/* Drink Selection List */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
-              {DRINK_RECIPES.map((drink) => {
+              {DRINK_RECIPES.filter((d) => (d.method || 'espresso') === methodFilter).map((drink) => {
                 const isActive = activeDeckIds.includes(drink.id);
                 const isSelected = drink.id === selectedDrink.id;
                 return (

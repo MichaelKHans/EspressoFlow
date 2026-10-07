@@ -423,6 +423,9 @@ const DEFAULT_ACTIVE_BAR_DRINKS: string[] = [
   'cortado',
   'latte',
   'americano',
+  'v60-standard',
+  'chemex-classic',
+  'aeropress-inverted',
 ];
 
 export function loadActiveBarDrinkIds(): string[] {

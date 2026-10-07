@@ -44,11 +44,15 @@ export interface CoffeeBeanProfile {
   imageUrl?: string; // Optional bag photo thumbnail (data URL or cloud link)
   flavorNotes?: string[]; // Vivino-style sensory flavor tags (e.g. ['Dark Chocolate', 'Caramel'])
   originCountry?: string; // Origin region or country (e.g. 'Colombia', 'Vestjylland')
+  pourOverGrindSetting?: string; // Grind setting for filter / pour over
+  pourOverDoseGrams?: number;
+  pourOverTargetYieldGrams?: number;
 }
 
 export interface ShotRecord {
   id: string;
   timestamp: string;
+  method?: BrewMethod; // 'espresso' | 'pour_over'
   coffeeName: string;
   roaster?: string;
   roastDate?: string;
@@ -62,6 +66,7 @@ export interface ShotRecord {
   totalTimeSeconds: number;
   preInfusionSeconds: number; // Time from pump on to first drop (>= 0.1g)
   flowTimeSeconds: number; // Active liquid extraction time
+  bloomSeconds?: number; // Pour over bloom duration
   averageFlowGps: number;
   peakFlowGps: number;
   channeling: ChannelingEvent;
@@ -103,6 +108,22 @@ export interface UserAccessState {
   daysRemainingInTrial: number;
 }
 
+export type BrewMethod = 'espresso' | 'pour_over';
+
+export interface PourOverGuide {
+  bloomSeconds: number;       // e.g. 45
+  bloomWaterGrams: number;    // e.g. 50
+  targetFlowRateGps: number;  // e.g. 5.0
+  flowRateMinGps: number;     // e.g. 4.0
+  flowRateMaxGps: number;     // e.g. 6.0
+  poursCount: number;         // e.g. 1, 3, or 5
+  grindType: string;          // e.g. "Medium-Fine" or "Medium-Coarse"
+  waterTempC: number;         // e.g. 93
+  dripperType?: string;       // e.g. "V60 02"
+  filterPaper?: string;       // e.g. "Tabbed White Paper"
+  pouringTechnique?: string;  // e.g. "Concentric spirals from center out"
+}
+
 export type DrinkId =
   | 'cappuccino'
   | 'espresso'
@@ -122,7 +143,13 @@ export type DrinkId =
   | 'iced-latte'
   | 'shakerato'
   | 'allonge'
-  | 'piccolo';
+  | 'piccolo'
+  | 'v60'
+  | 'v60-kasuya'
+  | 'chemex'
+  | 'kalita-wave'
+  | 'aeropress'
+  | 'french-press';
 
 export interface DrinkLayer {
   name: string;
@@ -136,16 +163,18 @@ export interface DrinkRecipe {
   id: DrinkId;
   name: string;
   subtitle: string;
-  category: 'black' | 'milk' | 'dessert';
+  category: 'black' | 'milk' | 'dessert' | 'filter';
+  method?: BrewMethod; // 'espresso' (default) | 'pour_over'
   defaultDoseGrams: number;
   targetYieldGrams: number;
   targetRatio: number;
   ratioStyle: RatioStyle;
   expectedTimeSeconds: number;
   cupVolumeMl?: number;
-  glassStyle?: 'cup' | 'glass' | 'tall-glass' | 'demitasse';
+  glassStyle?: 'cup' | 'glass' | 'tall-glass' | 'demitasse' | 'server' | 'press';
   isDefaultActive?: boolean;
   idealRoastLevels?: RoastLevel[];
+  pourOverGuide?: PourOverGuide;
   milkGuide?: {
     volumeMl: number;
     tempCelsius: number;

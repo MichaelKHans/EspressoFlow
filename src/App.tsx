@@ -439,6 +439,8 @@ export function App() {
       brewTempC: currentBean.brewTempC || 93,
       dataPoints: points,
       tasteRating: 'balanced',
+      method: activeDrink?.method || 'espresso',
+      bloomSeconds: activeDrink?.pourOverGuide?.bloomSeconds,
     };
 
     saveShot(newShot);
@@ -558,7 +560,7 @@ export function App() {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as SupportedLanguage)}
-                className="text-[11px] font-mono px-2 py-1 rounded-xl border border-[#E8DFD5] bg-[#FFFDF9] text-[#2C2018] font-bold cursor-pointer hover:border-[#C26D52] transition shadow-2xs focus:outline-none"
+                className="hidden sm:block text-[11px] font-mono px-2 py-1 rounded-xl border border-[#E8DFD5] bg-[#FFFDF9] text-[#2C2018] font-bold cursor-pointer hover:border-[#C26D52] transition shadow-2xs focus:outline-none"
                 title="Select App Language"
               >
                 {supportedLanguages.map((lang) => (
@@ -746,10 +748,16 @@ export function App() {
                     <span className="font-bold text-[#2C2018]">{activeDrink.name}</span>
                     <span className="text-[#7A6E65]">•</span>
                     <span className="text-[#2C2018] truncate font-medium">{currentBean.name}</span>
+                    {activeDrink.method === 'pour_over' && (
+                      <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#C26D52]/15 text-[#C26D52] font-bold border border-[#C26D52]/30">
+                        🫗 POUR OVER
+                      </span>
+                    )}
                   </div>
                   <div className="text-[10px] text-[#7A6E65] flex items-center gap-1.5 flex-wrap mt-0.5">
                     <span>
-                      {doseGrams}g → <strong className="text-[#C26D52]">{targetYieldGrams}g</strong>
+                      {activeDrink.method === 'pour_over' ? 'Coffee: ' : ''}{doseGrams}g →{' '}
+                      <strong className="text-[#C26D52]">{targetYieldGrams}g{activeDrink.method === 'pour_over' ? ' water' : ''}</strong>
                     </span>
                     <span>•</span>
                     <span>
@@ -783,6 +791,11 @@ export function App() {
               targetDose={doseGrams}
               targetYield={targetYieldGrams}
               machinePreInfusionSetting={machinePreInfusion}
+              method={activeDrink.method || 'espresso'}
+              bloomSeconds={activeDrink.pourOverGuide?.bloomSeconds || 45}
+              bloomWaterGrams={activeDrink.pourOverGuide?.bloomWaterGrams || (doseGrams * 3)}
+              targetFlowRateMin={activeDrink.pourOverGuide?.flowRateMinGps || 4.0}
+              targetFlowRateMax={activeDrink.pourOverGuide?.flowRateMaxGps || 6.0}
             />
 
             <FlowChart
@@ -792,6 +805,7 @@ export function App() {
               channelingEvent={analyzeChanneling(currentPoints)}
               preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
               isLive={isBrewing}
+              method={activeDrink.method || 'espresso'}
             />
           </div>
         )}

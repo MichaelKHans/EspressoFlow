@@ -11,6 +11,7 @@ interface FlowChartProps {
   preInfusionSeconds?: number;
   doseGrams?: number;
   isLive?: boolean;
+  method?: 'espresso' | 'pour_over';
 }
 
 export const FlowChart: React.FC<FlowChartProps> = ({
@@ -20,6 +21,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   preInfusionSeconds,
   doseGrams = 18.0,
   isLive = false,
+  method = 'espresso',
 }) => {
   const { t } = useTranslation();
 
@@ -37,9 +39,10 @@ export const FlowChart: React.FC<FlowChartProps> = ({
     );
   }
 
-  const maxTime = Math.max(30, points[points.length - 1]?.timeSeconds || 30);
-  const maxWeight = Math.max(targetYield * 1.15, 42);
-  const maxFlow = 4.0; // max scale for g/s
+  const isPourOver = method === 'pour_over';
+  const maxTime = Math.max(isPourOver ? 180 : 30, points[points.length - 1]?.timeSeconds || (isPourOver ? 180 : 30));
+  const maxWeight = Math.max(targetYield * 1.15, isPourOver ? 300 : 42);
+  const maxFlow = isPourOver ? 8.0 : 4.0; // max scale for g/s
 
   const width = 600;
   const height = 200;
@@ -56,9 +59,11 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const getYWeight = (w: number) => padTop + chartH - (w / maxWeight) * chartH;
   const getYFlow = (f: number) => padTop + chartH - (Math.min(f, maxFlow) / maxFlow) * chartH;
 
-  // Golden Zone band coordinates
-  const yGoldenTop = getYFlow(THE_GOLDEN_ZONE.MAX_FLOW_GPS);
-  const yGoldenBottom = getYFlow(THE_GOLDEN_ZONE.MIN_FLOW_GPS);
+  // Flow Zone band coordinates (Pour over: 4-6 g/s pacing; Espresso: 1.2-1.8 g/s golden zone)
+  const goldenMinFlow = isPourOver ? 4.0 : THE_GOLDEN_ZONE.MIN_FLOW_GPS;
+  const goldenMaxFlow = isPourOver ? 6.0 : THE_GOLDEN_ZONE.MAX_FLOW_GPS;
+  const yGoldenTop = getYFlow(goldenMaxFlow);
+  const yGoldenBottom = getYFlow(goldenMinFlow);
 
   // Build SVG path strings
   const weightPath = points.reduce((acc, p, idx) => {
@@ -89,9 +94,9 @@ export const FlowChart: React.FC<FlowChartProps> = ({
         {isLive ? (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/15 text-[#C26D52] text-xs font-mono font-bold border border-[#C26D52]/30 animate-pulse">
             <span className="w-2 h-2 rounded-full bg-[#C26D52]" />
-            <span>LIVE FLOW CURVE</span>
+            <span>LIVE {isPourOver ? 'POUR OVER' : 'FLOW'} CURVE</span>
           </div>
-        ) : channelingEvent?.detected ? (
+        ) : !isPourOver && channelingEvent?.detected ? (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#B85B48]/10 text-[#B85B48] text-xs font-mono font-semibold border border-[#B85B48]/30">
             <AlertCircle className="w-3.5 h-3.5" />
             <span>
@@ -104,7 +109,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
         ) : (
           <div className="flex items-center gap-1 text-[11px] font-mono text-[#72806B] bg-[#72806B]/10 px-2 py-0.5 rounded border border-[#72806B]/20">
             <Sparkles className="w-3 h-3" />
-            <span>{t('chart.optimal_flow')}</span>
+            <span>{isPourOver ? 'Steady Extraction' : t('chart.optimal_flow')}</span>
           </div>
         )}
       </div>
@@ -112,7 +117,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
       {/* SVG Canvas */}
       <div className="w-full overflow-x-auto">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto select-none font-mono text-[10px]">
-          {/* Golden Zone Flow Band (1.2 to 1.6 g/s) */}
+          {/* Flow Zone Band (Pacing 4-6 g/s for pour over; Golden Zone 1.2-1.8 g/s for espresso) */}
           <rect
             x={padLeft}
             y={yGoldenTop}
@@ -130,48 +135,53 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             fontWeight="bold"
             opacity="0.8"
           >
-            {t('chart.golden_zone')}
+            {isPourOver ? 'PACING ZONE (4–6 g/s)' : t('chart.golden_zone')}
           </text>
 
           {/* Horizontal grid lines */}
-          {[0, 15, 30, 45].map((w) => {
-            const y = getYWeight(w);
-            return (
-              <g key={`w-grid-${w}`}>
-                <line
-                  x1={padLeft}
-                  y1={y}
-                  x2={width - padRight}
-                  y2={y}
-                  stroke="#E8DFD5"
-                  strokeDasharray="3 3"
-                />
-                <text x={padLeft - 6} y={y + 3} textAnchor="end" fill="#7A6E65">
-                  {w}g
-                </text>
-              </g>
-            );
-          })}
+          {(isPourOver ? [0, 100, 200, 300, 400] : [0, 15, 30, 45])
+            .filter((w) => w <= maxWeight)
+            .map((w) => {
+              const y = getYWeight(w);
+              return (
+                <g key={`w-grid-${w}`}>
+                  <line
+                    x1={padLeft}
+                    y1={y}
+                    x2={width - padRight}
+                    y2={y}
+                    stroke="#E8DFD5"
+                    strokeDasharray="3 3"
+                  />
+                  <text x={padLeft - 6} y={y + 3} textAnchor="end" fill="#7A6E65">
+                    {w}g
+                  </text>
+                </g>
+              );
+            })}
 
           {/* Time markings */}
-          {[0, 10, 20, 30].map((t) => {
-            const x = getX(t);
-            return (
-              <g key={`t-grid-${t}`}>
-                <line
-                  x1={x}
-                  y1={padTop}
-                  x2={x}
-                  y2={padTop + chartH}
-                  stroke="#E8DFD5"
-                  strokeOpacity={0.6}
-                />
-                <text x={x} y={height - 6} textAnchor="middle" fill="#7A6E65">
-                  {t}s
-                </text>
-              </g>
-            );
-          })}
+          {(isPourOver ? [0, 60, 120, 180, 240] : [0, 10, 20, 30])
+            .filter((t) => t <= maxTime)
+            .map((t) => {
+              const x = getX(t);
+              const label = isPourOver && t >= 60 ? `${Math.floor(t / 60)}m` : `${t}s`;
+              return (
+                <g key={`t-grid-${t}`}>
+                  <line
+                    x1={x}
+                    y1={padTop}
+                    x2={x}
+                    y2={padTop + chartH}
+                    stroke="#E8DFD5"
+                    strokeOpacity={0.6}
+                  />
+                  <text x={x} y={height - 6} textAnchor="middle" fill="#7A6E65">
+                    {label}
+                  </text>
+                </g>
+              );
+            })}
 
           {/* Pre-Infusion First Drip Vertical Divider */}
           {preInfusionSeconds && preInfusionSeconds > 0 && preInfusionSeconds < maxTime && (
@@ -197,8 +207,9 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             </g>
           )}
 
-          {/* Channeling Marker on Curve */}
-          {channelingEvent?.detected &&
+          {/* Channeling Marker on Curve (Only for espresso) */}
+          {!isPourOver &&
+            channelingEvent?.detected &&
             channelingEvent.timestampSeconds &&
             channelingEvent.flowSpikeGps && (
               <g>

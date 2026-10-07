@@ -27,6 +27,19 @@ export const en = {
   'active_bean.yield': 'YIELD',
   'active_bean.grind': 'GRIND',
 
+  // Method selection (Espresso vs. Pour Over)
+  'method.espresso': 'Espresso Drinks',
+  'method.pour_over': 'Pour Over Methods',
+  'method.espresso_short': 'Espresso',
+  'method.pour_over_short': 'Pour Over',
+  'deck.start_pourover': 'Start Brew on Scale Cam',
+  'scale.bloom_timer': 'Bloom Countdown',
+  'scale.bloom_status': 'Bloom: {time}s (Target ~{water}g)',
+  'scale.bloom_complete': 'Bloom complete! Pour steadily',
+  'scale.pacing_guide': 'Pour Rate: {flow} g/s (Target {min}–{max} g/s)',
+  'scale.target_water': 'Total Water',
+  'scale.tare_pourover_hint': 'Place brewer, filter & coffee on scale, then tare to 0.0g',
+
   // Coffee Bar / Drink Deck
   'deck.title': 'Barista Extraction Deck',
   'deck.subtitle': 'Select beverage profile or dial-in your target extraction curve',

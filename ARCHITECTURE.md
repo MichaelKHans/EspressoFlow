@@ -47,11 +47,13 @@ flowchart TD
     Dashboard --> NavTabs{Vælg Navigation / Handling}
     
     %% Kaffevalg & Dial-In
-    NavTabs -- Dial-In Guide --> DialIn[Dial-In Wizard Modal]
-    DialIn --> SelectDrink[Vælg Drik: Espresso / Cortado / Flat White...]
-    SelectDrink --> SelectBean[Vælg Kaffebønne fra Beandex]
+    NavTabs -- Coffee Bar --> MethodChoice{Vælg Metode i Coffee Bar}
+    MethodChoice -- ☕ Espresso Bar --> SelectEspresso[Espresso, Cortado, Flat White, Americano...]
+    MethodChoice -- 🫗 Pour Over Bar --> SelectPourOver[V60 Standard, Chemex, Kalita Wave, AeroPress...]
+    SelectEspresso --> SelectBean[Vælg Kaffebønne fra Beandex]
+    SelectPourOver --> SelectBean
     SelectBean --> CheckFreshness[Vis Ristedato & Afgasningsgrad]
-    CheckFreshness --> RecommendRatio[Beregn Dosis & Målyield ud fra Ristegrad]
+    CheckFreshness --> RecommendRatio[Beregn Dosis & Målyield / Vand ud fra Ristegrad & Metode]
     RecommendRatio --> SetTemp[Vælg Bryggetemperatur i °C el. °F]
     SetTemp --> ReadyToBrew[Klar til Brygning: Gå til Scale Cam]
 

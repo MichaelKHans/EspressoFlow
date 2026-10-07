@@ -36,6 +36,8 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
     demitasse: { yTop: 26, yBottom: 84 },
     glass: { yTop: 16, yBottom: 82 },
     'tall-glass': { yTop: 14, yBottom: 84 },
+    server: { yTop: 22, yBottom: 84 },
+    press: { yTop: 22, yBottom: 84 },
   };
 
   const { yTop, yBottom } = styleBounds[glassStyle] || styleBounds.cup;
@@ -94,6 +96,22 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
           <clipPath id={`${clipId}-demitasse`}>
             <path
               d="M 28 26 L 92 26 C 92 54 88 84 60 84 C 32 84 28 54 28 26 Z"
+              fill="#000"
+            />
+          </clipPath>
+
+          {/* Clip path for Glass Range Server (Pour Over V60 / Chemex / Kalita) */}
+          <clipPath id={`${clipId}-server`}>
+            <path
+              d="M 42 22 L 78 22 L 94 84 L 26 84 Z"
+              fill="#000"
+            />
+          </clipPath>
+
+          {/* Clip path for Immersion Press (AeroPress / French Press) */}
+          <clipPath id={`${clipId}-press`}>
+            <path
+              d="M 32 22 L 88 22 L 88 84 L 32 84 Z"
               fill="#000"
             />
           </clipPath>
@@ -265,6 +283,103 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
             {/* Heavy Bottom Glass Rim */}
             <path d="M 35 84 L 85 84 L 83 90 L 37 90 Z" fill="#2C2018" opacity="0.85" />
             <line x1="30" y1="14" x2="90" y2="14" stroke="#2C2018" strokeWidth="2" />
+          </g>
+        )}
+
+        {/* --- CASE 5: GLASS RANGE SERVER (Pour Over V60, Chemex, Kalita) --- */}
+        {glassStyle === 'server' && (
+          <g>
+            {/* Glass Handle */}
+            <path
+              d="M 86 36 C 114 36, 114 74, 91 74"
+              fill="none"
+              stroke="#2C2018"
+              strokeWidth="5"
+              strokeLinecap="round"
+            />
+            {/* Server Body Background */}
+            <path d="M 42 22 L 78 22 L 94 84 L 26 84 Z" fill="#FFFDF9" />
+
+            {/* Liquid Layers */}
+            <g clipPath={`url(#${clipId}-server)`}>
+              {renderedLayers.map((layer, idx) => (
+                <rect
+                  key={idx}
+                  x="20"
+                  y={layer.y}
+                  width="85"
+                  height={layer.height + 0.5}
+                  fill={layer.color}
+                />
+              ))}
+            </g>
+
+            {/* Spout on Top Left */}
+            <path d="M 42 22 L 35 18 L 38 25 Z" fill="#2C2018" />
+
+            {/* Server Outer Stroke */}
+            <path
+              d="M 42 22 L 78 22 L 94 84 L 26 84 Z"
+              fill="none"
+              stroke="#2C2018"
+              strokeWidth="3"
+              strokeLinejoin="round"
+            />
+            {/* Base */}
+            <path d="M 28 84 L 92 84 L 90 89 L 30 89 Z" fill="#2C2018" opacity="0.85" />
+            <line x1="42" y1="22" x2="78" y2="22" stroke="#2C2018" strokeWidth="2" />
+          </g>
+        )}
+
+        {/* --- CASE 6: IMMERSION PRESS (AeroPress / French Press) --- */}
+        {glassStyle === 'press' && (
+          <g>
+            {/* Plunger Knob & Stem */}
+            <line x1="60" y1="8" x2="60" y2="22" stroke="#2C2018" strokeWidth="3" />
+            <ellipse cx="60" cy="8" rx="14" ry="3" fill="#C26D52" stroke="#2C2018" strokeWidth="1.5" />
+
+            {/* Press Cylinder Background */}
+            <path d="M 32 22 L 88 22 L 88 84 L 32 84 Z" fill="#FFFDF9" />
+
+            {/* Liquid Layers */}
+            <g clipPath={`url(#${clipId}-press)`}>
+              {renderedLayers.map((layer, idx) => (
+                <rect
+                  key={idx}
+                  x="30"
+                  y={layer.y}
+                  width="60"
+                  height={layer.height + 0.5}
+                  fill={layer.color}
+                />
+              ))}
+            </g>
+
+            {/* Plunger Filter Mesh Line inside */}
+            <line x1="32" y1="25" x2="88" y2="25" stroke="#C26D52" strokeWidth="2" strokeDasharray="3 2" />
+
+            {/* Side Handle */}
+            <path
+              d="M 88 34 C 112 34, 112 70, 88 70"
+              fill="none"
+              stroke="#2C2018"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+            />
+
+            {/* Press Outer Stroke */}
+            <rect
+              x="32"
+              y="22"
+              width="56"
+              height="62"
+              fill="none"
+              stroke="#2C2018"
+              strokeWidth="3"
+              rx="2"
+            />
+            {/* Base */}
+            <path d="M 30 84 L 90 84 L 88 89 L 32 89 Z" fill="#2C2018" opacity="0.85" />
           </g>
         )}
 
