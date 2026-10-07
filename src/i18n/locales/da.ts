@@ -499,5 +499,24 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'freshness.opened_title': 'Iltning & Opbevaring af Åbnet Pose',
   'freshness.opened_desc': 'Når posens forsegling brydes, accellererer ilt (iltning) nedbrydningen af bønnernes æteriske olier. Nyd kaffen inden for 2–3 uger efter åbning. Pres overskydende luft ud, luk posen tæt, og opbevar den tørt og mørkt ved stuetemperatur (aldrig i køleskab).',
   'freshness.done_btn': 'Forstået, Barista',
+
+  // Drink Card & Overview Calibration Details
+  'drink.active_badge': 'Aktiv Kaffe',
+  'drink.calibrated_gear': 'Kalibreret Kværn & Bønne',
+  'drink.active_bean_label': 'Aktiv Kaffebønne',
+  'drink.grinder_setting_label': 'Kværn & Indstilling',
+  'drink.setting_label': 'Indstilling',
+  'drink.target_time_label': 'Måltid',
+  'drink.adjust_in_studio': 'Alle justeringer foretages samlet i Dial-In Studio.',
+  'drink.fine_tune_here': 'Finjustér her →',
+  'drink.switch_btn': 'Skift',
+  'scale.safety_label': 'Vægt-sikkerhed:',
+  'common.remove': 'Fjern',
+  'bean.bag_photo_added': 'Posefoto Tilføjet',
+  'bean.bag_photo': 'Kaffepose Foto',
+  'beandex.add_flavor_help': 'Tryk for at tilføje eller fjerne smagsnoter:',
+  'beandex.no_flavor_notes': 'Ingen smagsnoter registreret endnu',
+  'bean.future_date_title': 'Dato i fremtiden',
+  'bean.future_date_warning': 'Kaffe kan ikke være ristet ude i fremtiden. Tjek venligst datoen eller årstallet ovenfor.',
 };
 

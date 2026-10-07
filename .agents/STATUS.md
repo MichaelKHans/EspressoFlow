@@ -11,6 +11,15 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-07 -- Ægte Pour Over Svanehalskedel Ikon & Komplet Sprog-Rensning (100% Engelsk ved Aktivt Engelsk) (v1.7.6)
+- **Erstattet Forvirrende Vinglas-Ikon med Autentisk Pour Over Svanehalskedel (`PourOverKettleIcon`):**
+  - **Identificeret Rodårsag:** Tidligere tragt-vektor lignede et drink- eller martiniglas på små knapper.
+  - **Løsning:** Nyt, knivskarpt vektor-line-art ikon baseret på baristaernes klassiske svanehalskedel (gooseneck kettle) med konisk kedelkrop, svunget hældetud, ergonomisk modvægtshåndtag og låg med knop.
+  - `DripperIcon` opdateret til automatisk at bruge den nye svanehalskedel for perfekt kontrast mod espresso-koppen.
+- **Komplet Udrensning af Hårdkodede Danske Tekster i Engelsk Visning:**
+  - **Identificeret Rodårsag:** På trods af at appen kørte på engelsk, optrådte blandede eller rent danske tekster i baren og i modalerne (`Aktiv Kaffe / Selected Drink`, `Kalibreret Kværn & Bønne`, `Åbn Dial-In Studio`, `Kværn & Indstilling`, `Indstilling`, `Måltid`, `⚠️ Vægt-sikkerhed`, `Posefoto Tilføjet`, `Dato i fremtiden`, `Luk`).
+  - **Løsning (Single Source of Language):** Alle UI-strenge er nu flyttet til `t(...)` med rene engelske standardtekster. Når engelsk er aktivt, vises der 100% engelsk uden et eneste dansk ord.
+
 ### 2026-10-07 -- Fastforankret Flowbean Top-Banner & Sikring mod Top-Overlapning på Tværs af Modaler (v1.7.5)
 - **Permanent Synligt Flowbean Top-Banner (`z-[70]`):**
   - **Identificeret Rodårsag:** I v1.7.4 lå modal overlays med `z-[60]` og `items-center` / `max-h` dimensionering. Store indholdsrige modaler (såsom `DrinkSelector` og `SettingsModal`) strakte sig derfor helt op i toppen, dækkede Flowbean brand-banneret og stødte ind i mobilens statuslinje (`21.56 ... 15%`).

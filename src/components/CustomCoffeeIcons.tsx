@@ -36,10 +36,11 @@ export const CoffeeBeanIcon: React.FC<CustomIconProps> = ({
 };
 
 /**
- * Professional Pour Over Filter Cone / Dripper Vector Line Icon
- * Replaces pour-over emoji with clean barista line-art.
+ * Professional Gooseneck Pour Over Kettle Vector Line Icon (24x24)
+ * Authentic specialty coffee barista kettle: tapered boiler, precision gooseneck spout,
+ * balanced barista handle, and top lid with knob. Replaces the confusing triangular funnel.
  */
-export const DripperIcon: React.FC<CustomIconProps> = ({
+export const PourOverKettleIcon: React.FC<CustomIconProps> = ({
   size = 20,
   className = '',
   ...props
@@ -57,12 +58,55 @@ export const DripperIcon: React.FC<CustomIconProps> = ({
       className={className}
       {...props}
     >
-      {/* V60 / Cone Brewer body */}
-      <path d="M3.5 5h17l-5.5 11h-6L3.5 5z" />
-      {/* Base resting plate */}
-      <path d="M7 19h10" />
-      {/* Dripper exit extraction drop */}
-      <path d="M12 16v3" />
+      {/* Kettle Boiler Body */}
+      <path d="M7 19h10l-1.2-8H8.2L7 19z" />
+      {/* Lid & Knob */}
+      <path d="M8 11h8" />
+      <path d="M12 8v3" />
+      <path d="M10.5 8h3" />
+      {/* Precision Gooseneck Spout (Graceful sweeping curve from lower-left of boiler) */}
+      <path d="M7 16.5C4 16.5 2.5 13.5 2.5 9.5c0-1.8 1.2-2.5 2.2-2.5.8 0 1.2.6 1 1.8" />
+      {/* Barista Handle on the right */}
+      <path d="M15.8 11.5c2.5 0 4.2 1.5 4.2 3.5s-1.7 3.5-3.8 3.5" />
     </svg>
   );
 };
+
+/**
+ * Professional Pour Over Server / Carafe Container Vector Line Icon (24x24)
+ * Chemex / V60 decanter server container: cone brewer on top, glass decanter body below, and handle.
+ */
+export const PourOverCarafeIcon: React.FC<CustomIconProps> = ({
+  size = 20,
+  className = '',
+  ...props
+}) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      {/* Top Filter Cone */}
+      <path d="M5.5 3.5h13l-3.5 6.5h-6L5.5 3.5z" />
+      {/* Collar / Rest Rim */}
+      <path d="M8.5 10h7" />
+      {/* Glass Carafe / Decanter Body */}
+      <path d="M9 10c-2.5 1.5-3.5 3.5-3.5 6.5a2 2 0 0 0 2 2.5h9a2 2 0 0 0 2-2.5c0-3-1-5-3.5-6.5" />
+      {/* Carafe Ergonomic Handle */}
+      <path d="M16.5 12c1.8 0 3 1.2 3 3s-1.2 3-3 3" />
+    </svg>
+  );
+};
+
+/**
+ * DripperIcon defaults to the unmistakable PourOverKettleIcon for seamless backwards compatibility.
+ */
+export const DripperIcon: React.FC<CustomIconProps> = PourOverKettleIcon;

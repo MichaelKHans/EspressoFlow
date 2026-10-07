@@ -77,7 +77,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   onOpenFreshnessInfo,
   onCloseFreshnessInfo,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -1024,7 +1024,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                           }
                           className="text-[9px] font-bold text-[#C26D52] hover:underline cursor-pointer"
                         >
-                          {editingFlavorBeanId === bean.id ? 'Luk' : t('beandex.add_flavor_btn')}
+                          {editingFlavorBeanId === bean.id ? (t('common.close') || 'Close') : t('beandex.add_flavor_btn')}
                         </button>
                       </div>
 
@@ -1042,7 +1042,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                         </div>
                       ) : (
                         <p className="text-[9.5px] text-[#A6998E] italic font-sans">
-                          Ingen smagsnoter registreret endnu
+                          {t('beandex.no_flavor_notes') || 'No flavor notes logged yet'}
                         </p>
                       )}
 
@@ -1050,10 +1050,11 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       {editingFlavorBeanId === bean.id && (
                         <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#C26D52]/40 space-y-1.5 animate-fadeIn mt-1">
                           <span className="text-[9px] font-mono text-[#7A6E65] block">
-                            Tryk for at tilføje eller fjerne smagsnoter:
+                            {t('beandex.add_flavor_help') || 'Tap to add or remove flavor notes:'}
                           </span>
                           <div className="flex flex-wrap gap-1">
                             {POPULAR_FLAVOR_TAGS.map((tag) => {
+                              const tagLabel = language === 'da' ? tag.labelDa : tag.labelEn;
                               const isSelected =
                                 bean.flavorNotes?.includes(tag.labelDa) ||
                                 bean.flavorNotes?.includes(tag.labelEn);
@@ -1061,7 +1062,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                                 <button
                                   key={tag.id}
                                   type="button"
-                                  onClick={() => handleToggleCardFlavorNote(bean.id, tag.labelDa)}
+                                  onClick={() => handleToggleCardFlavorNote(bean.id, tagLabel)}
                                   className={`px-2 py-0.5 rounded-lg text-[10px] font-sans flex items-center gap-0.5 transition cursor-pointer ${
                                     isSelected
                                       ? 'bg-[#C26D52] text-white font-bold shadow-xs'
@@ -1069,7 +1070,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                                   }`}
                                 >
                                   <span>{tag.icon}</span>
-                                  <span>{tag.labelDa}</span>
+                                  <span>{tagLabel}</span>
                                 </button>
                               );
                             })}

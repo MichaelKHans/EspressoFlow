@@ -409,7 +409,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#C26D52]/10 text-[#C26D52] border border-[#C26D52]/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#C26D52] animate-pulse" />
-                <span>Aktiv Kaffe / Selected Drink</span>
+                <span>{t('drink.active_badge') || 'Active Coffee'}</span>
               </span>
 
               <span
@@ -450,7 +450,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                 className="text-[10px] sm:text-[11px] font-mono text-[#C26D52] hover:text-[#2C2018] flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5]/50 transition shrink-0"
                 title="Switch to another specialty drink"
               >
-                <span>Switch</span>
+                <span>{t('drink.switch_btn') || 'Switch'}</span>
                 <ChevronRight className="w-3 h-3" />
               </button>
             </div>
@@ -584,7 +584,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                 </div>
                 {selectedDrink.plungeWarning && (
                   <div className="mt-2 pt-2 border-t border-amber-200/60 flex items-start gap-1.5 text-[10px] sm:text-[11px] text-amber-900 bg-amber-50/80 p-2 rounded-lg font-mono">
-                    <span className="font-bold shrink-0 text-amber-700">⚠️ Vægt-sikkerhed:</span>
+                    <span className="font-bold shrink-0 text-amber-700">⚠️ {t('scale.safety_label') || 'Scale Safety:'}</span>
                     <span>{t('scale.plunge_warning')}</span>
                   </div>
                 )}
@@ -643,7 +643,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                     <div className="flex items-center gap-1.5">
                       <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
                       <span className="text-xs font-bold text-[#2C2018]">
-                        Kalibreret Kværn & Bønne
+                        {t('drink.calibrated_gear') || 'Calibrated Grinder & Bean'}
                       </span>
                     </div>
                     <button
@@ -652,7 +652,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                       className="text-[10px] sm:text-[11px] text-[#C26D52] hover:text-[#2C2018] font-bold flex items-center gap-1 transition cursor-pointer"
                       title="Open Dial-In Studio to adjust settings"
                     >
-                      <span>Åbn Dial-In Studio</span>
+                      <span>{t('gear.open_dial_in_studio') || 'Open Dial-In Studio'}</span>
                       <ChevronRight className="w-3 h-3" />
                     </button>
                   </div>
@@ -662,7 +662,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                     {/* Active Bean Info Card */}
                     <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5] space-y-1">
                       <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
-                        <span>Aktiv Kaffebønne</span>
+                        <span>{t('drink.active_bean_label') || 'Active Coffee Bean'}</span>
                         <span className="text-[#72806B] font-bold">{score}% match</span>
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -687,21 +687,21 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                     {/* Grinder & Dial Setting Card */}
                     <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5] space-y-1">
                       <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
-                        <span>Kværn & Indstilling</span>
+                        <span>{t('drink.grinder_setting_label') || 'Grinder & Setting'}</span>
                         <span className="text-[#C26D52] font-bold">
                           {currentGrinder.name.split(' ')[0]}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-base font-bold text-[#2C2018] font-mono">
-                          Indstilling {currentSettingInput}
+                          {t('drink.setting_label') || 'Setting'} {currentSettingInput}
                         </span>
                         <span className="text-[9px] text-[#7A6E65]">
                           ({grinderSpec.unitName})
                         </span>
                       </div>
                       <div className="text-[10px] text-[#7A6E65] truncate">
-                        Måltid: ~{targetTime}s ({targetYield}g)
+                        {t('drink.target_time_label') || 'Target Time'}: ~{targetTime}s ({targetYield}g)
                       </div>
                     </div>
                   </div>
@@ -709,14 +709,14 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   {/* Subtle guidance row */}
                   <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-[#7A6E65] pt-0.5">
                     <span className="truncate">
-                      Alle justeringer foretages samlet i Dial-In Studio.
+                      {t('drink.adjust_in_studio') || 'All adjustments are calibrated together in Dial-In Studio.'}
                     </span>
                     <button
                       type="button"
                       onClick={() => onOpenDialInWizard(selectedDrink)}
                       className="font-bold text-[#C26D52] hover:underline shrink-0 ml-1 cursor-pointer"
                     >
-                      Finjustér her →
+                      {t('drink.fine_tune_here') || 'Fine-tune here →'}
                     </button>
                   </div>
                 </div>

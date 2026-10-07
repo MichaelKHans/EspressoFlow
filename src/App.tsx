@@ -172,7 +172,7 @@ export function App() {
       { name: 'allDrinks', isOpen: isAllDrinksModalOpen, close: () => setIsAllDrinksModalOpen(false) },
       { name: 'freshnessInfo', isOpen: isFreshnessInfoOpen, close: () => setIsFreshnessInfoOpen(false) },
     ],
-    exitToastMessage: t('mobile.press_back_again') || 'Tryk tilbage igen for at afslutte',
+    exitToastMessage: t('mobile.press_back_again') || 'Press back again to exit Flowbean',
   });
 
   // Dynamic Flowbean Top Header Height: ensures modals are strictly bounded below the header
@@ -1692,7 +1692,7 @@ export function App() {
               <Sliders className="w-5 h-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
-              {t('nav.gear') || 'Udstyr'}
+              {t('nav.gear') || 'Gear'}
             </span>
           </button>
         </div>

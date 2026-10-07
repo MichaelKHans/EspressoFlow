@@ -2,6 +2,30 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.7.6] - 2026-10-07
+### Etape 21: Ægte Pour Over Svanehalskedel Ikon & Komplet Sprog-Rensning (100% Engelsk ved Aktivt Engelsk)
+- **Erstattet Forvirrende Vinglas-Ikon med Autentisk Pour Over Svanehalskedel (`PourOverKettleIcon`):**
+  - **Identificeret Problem:** Den tidligere tragt-vektor i `CustomCoffeeIcons.tsx` lignede et drink- eller martiniglas på små knapper (`w-3.5 h-3.5`).
+  - **Løsning:** Skabt et nyt, knivskarpt vektor-line-art ikon baseret på baristaernes klassiske svanehalskedel (gooseneck kettle) med konisk kedelkrop, svunget hældetud, ergonomisk modvægtshåndtag og låg med knop.
+  - Også tilføjet `PourOverCarafeIcon` (Chemex/V60 decanter karaffel med tragt og hank).
+  - `DripperIcon` opdateret til automatisk at bruge den nye svanehalskedel for perfekt kontrast mod espresso-koppen.
+- **Komplet Udrensning af Hårdkodede Danske Tekster i Engelsk Visning:**
+  - **Identificeret Problem:** På trods af at appen kørte på engelsk, optrådte blandede eller rent danske tekster i baren og i modalerne:
+    - `"Aktiv Kaffe / Selected Drink"` badge
+    - `"Kalibreret Kværn & Bønne"` boks-overskrift
+    - `"Åbn Dial-In Studio >"` link
+    - `"Aktiv Kaffebønne"` & `"Kværn & Indstilling"` kort
+    - `"Indstilling {nr}"` & `"Måltid: ~{tid}s"` telemetritekster
+    - `"Alle justeringer foretages samlet i Dial-In Studio"` & `"Finjustér her →"`
+    - `"⚠️ Vægt-sikkerhed:"` advarsel
+    - `"Posefoto Tilføjet"` & `"Fjern"` i BeanScannerModal
+    - `"Dato i fremtiden"` validering i BeanScannerModal
+    - `"Luk"` og danske smagsnoter i BeandexView
+  - **Løsning (Single Source of Language):**
+    - Alle UI-strenge i `DrinkSelector.tsx`, `BeanScannerModal.tsx`, `BeandexView.tsx` og `App.tsx` er nu flyttet til `t(...)` med rene engelske standardtekster.
+    - Når engelsk er aktivt, vises der **100% engelsk uden et eneste dansk ord**.
+    - Danske oversættelser er defineret i `da.ts` og aktiveres kun, hvis dansk sprog vælges.
+
 ## [1.7.5] - 2026-10-07
 ### Etape 20: Fastforankret Flowbean Top-Banner & Sikring mod Top-Overlapning på Tværs af Modaler
 - **Permanent Synligt Flowbean Top-Banner (`z-[70]`):**

@@ -888,7 +888,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       className="hidden"
                     />
                     <span className="text-[10px] font-bold uppercase text-[#7A6E65] block">
-                      {editImageUrl ? 'Posefoto Tilføjet' : 'Kaffepose Foto'}
+                      {editImageUrl ? (t('bean.bag_photo_added') || 'Bag Photo Added') : (t('bean.bag_photo') || 'Coffee Bag Photo')}
                     </span>
                     <button
                       type="button"
@@ -905,7 +905,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       onClick={() => setEditImageUrl(undefined)}
                       className="text-[10px] text-red-600 hover:underline px-2 py-1"
                     >
-                      Fjern
+                      {t('common.remove') || 'Remove'}
                     </button>
                   )}
                 </div>
@@ -1076,8 +1076,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                     <div className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 flex items-center gap-2.5 text-xs text-red-900">
                       <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                       <div className="flex-1 text-[11px] leading-tight">
-                        <span className="font-bold">Dato i fremtiden ({editRoastDate}):</span>{' '}
-                        <span>Kaffe kan ikke være ristet ude i fremtiden. Tjek venligst datoen eller årstallet ovenfor.</span>
+                        <span className="font-bold">{t('bean.future_date_title') || 'Future Date'} ({editRoastDate}):</span>{' '}
+                        <span>{t('bean.future_date_warning') || 'Roast date cannot be in the future. Please check the date or year above.'}</span>
                       </div>
                     </div>
                   ) : (

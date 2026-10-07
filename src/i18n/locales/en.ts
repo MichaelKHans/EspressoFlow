@@ -497,6 +497,25 @@ export const en = {
   'freshness.opened_title': 'Oxygen & Bag Storage Tips',
   'freshness.opened_desc': 'Breaking the bag seal exposes delicate coffee oils to atmospheric oxygen. For peak aromatics, consume within 2–3 weeks of opening. Always squeeze out excess air and store in a cool, dark cupboard (avoid the refrigerator).',
   'freshness.done_btn': 'Got It, Barista',
+
+  // Drink Card & Overview Calibration Details
+  'drink.active_badge': 'Active Coffee',
+  'drink.calibrated_gear': 'Calibrated Grinder & Bean',
+  'drink.active_bean_label': 'Active Coffee Bean',
+  'drink.grinder_setting_label': 'Grinder & Setting',
+  'drink.setting_label': 'Setting',
+  'drink.target_time_label': 'Target Time',
+  'drink.adjust_in_studio': 'All adjustments are calibrated together in Dial-In Studio.',
+  'drink.fine_tune_here': 'Fine-tune here →',
+  'drink.switch_btn': 'Switch',
+  'scale.safety_label': 'Scale Safety:',
+  'common.remove': 'Remove',
+  'bean.bag_photo_added': 'Bag Photo Added',
+  'bean.bag_photo': 'Coffee Bag Photo',
+  'beandex.add_flavor_help': 'Tap to add or remove flavor notes:',
+  'beandex.no_flavor_notes': 'No flavor notes logged yet',
+  'bean.future_date_title': 'Future Date',
+  'bean.future_date_warning': 'Roast date cannot be in the future. Please check the date or year above.',
 } as const;
 
 export type TranslationKeys = keyof typeof en;
