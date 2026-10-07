@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Coffee, Sliders, BookOpen, ShieldCheck, Plus, Check, Trash2, Layers, Camera, Globe, Settings, Thermometer } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
@@ -394,23 +394,23 @@ export function App() {
     }
   };
 
-  const handleBrewStart = () => {
+  const handleBrewStart = useCallback(() => {
     setIsBrewing(true);
     setCurrentPoints([]);
     setLastFinishedShot(null);
-  };
+  }, []);
 
-  const handleBrewCancel = () => {
+  const handleBrewCancel = useCallback(() => {
     setIsBrewing(false);
     setCurrentPoints([]);
     setLastFinishedShot(null);
-  };
+  }, []);
 
-  const handleLivePointsUpdate = (points: ShotDataPoint[]) => {
+  const handleLivePointsUpdate = useCallback((points: ShotDataPoint[]) => {
     setCurrentPoints(points);
-  };
+  }, []);
 
-  const handleBrewFinish = (
+  const handleBrewFinish = useCallback((
     finalWeight: number,
     timeSeconds: number,
     preInfusionSeconds: number,
@@ -450,7 +450,7 @@ export function App() {
       machineName: machineName,
       brewTempC: currentBean.brewTempC || 93,
       dataPoints: points,
-      tasteRating: 'balanced',
+      tasteRating: undefined, // Blank sensory profile by default, barista picks explicitly
       method: activeDrink?.method || 'espresso',
       bloomSeconds: activeDrink?.pourOverGuide?.bloomSeconds,
     };
@@ -459,7 +459,19 @@ export function App() {
     setShots((prev) => [newShot, ...prev]);
     setLastFinishedShot(newShot);
     setIsShotSummaryOpen(true);
-  };
+  }, [
+    activeDrinkId,
+    coffeeBeanName,
+    roastDate,
+    roastLevel,
+    ratioStyle,
+    doseGrams,
+    targetYieldGrams,
+    grinderName,
+    grindSetting,
+    machineName,
+    currentBean.brewTempC,
+  ]);
 
   const handleUpdateShot = (updatedShot: ShotRecord) => {
     saveShot(updatedShot);
@@ -827,7 +839,7 @@ export function App() {
 
         {/* Tab 2: Analog Logbook */}
         {activeTab === 'logbook' && (
-          <Logbook shots={shots} onDeleteShot={handleDeleteShot} />
+          <Logbook shots={shots} onDeleteShot={handleDeleteShot} initialExpandedShotId={lastFinishedShot?.id} />
         )}
 
         {/* Tab 3: Beans & Gear */}

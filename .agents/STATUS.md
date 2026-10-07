@@ -841,3 +841,25 @@
 - **Juridiske Sider & Paywall:** Bygget Privacy Policy, Terms of Service og Support modaler med URL deep-linking (`/privacy`, `/terms`, `/support`) klar til Vercel og App Store Connect godkendelse.
 - **Lokal Verifikation:** Bekræftet 100% fejlfri compilation med `npm run build` og valideret i browser via `browser_subagent`.
 - **GitHub Repository:** Oprettet og pushet til `https://github.com/MichaelKHans/EspressoFlow` på grenen `main`.
+
+### 2026-10-07 – Telemetri Stabilisering, Blå LED Flerciffer OCR (41.3g), Isotrop Retikel-Justering & Blank Smagsprofil (v1.7.1)
+- **Kritisk Telemetri & Kurve Reset Løst:**
+  - Timer-effekten i `ScaleMonitor.tsx` genstartede for hver 100ms, fordi `onLivePointsUpdate` ændrede reference ved hver tick-render.
+  - Løst ved at isolere callbacks og mutable værdier i synkroniserede `useRef`'er, begrænse timer-effektens dependencies til `[isBrewing]`, og memoize handlers med `useCallback` i `App.tsx`.
+  - Millisekund-præcis tidtagning beregnes direkte fra `startTimeRef.current`.
+- **Flerciffer OCR for Blå/Cyan LED Digitalvægte:**
+  - `maxGap` øget til `bandH * 1.15`, så `41.3` ikke splittes over decimalpunktummet.
+  - Sænket LED støjgulv fra 50 til 20 og optimeret lokal kontrast-faktor fra 1.16 til 1.10.
+  - Afslappet ciffer-validering for `4`, `1` og `0`.
+  - Top-række prioritet (+40) for dobbelt-række vægte med timer nederst.
+- **Tara 0.0g Lås-Fastholdelse:**
+  - 800ms / 15-frame hysterese på `isDigitLocked` forhindrer flimren og tab af fokus under tara-skift.
+- **Isotrop 2:1 Retikel & Ciffer-Boks Justering:**
+  - Optisk beskæring låst til rent 2:1 forhold (`cropH = cropW / 2`), hvilket fjerner enhver lodret strækning.
+  - Retikel i DOM'en skaleres dynamisk med `zoomLevel`, så ciffer-boksen sidder direkte over vægtens display.
+- **Nulstillet Smagsprofil:**
+  - Fjernet default `'balanced'`. Starter 100% blank i `ShotSummaryModal`.
+- **Logbog Kurve-Visning ved Genkaldelse:**
+  - Auto-ekspansion af seneste shot i `Logbook.tsx` viser straks den fulde ekstraktionskurve.
+- **Android Studio Synkroniseret:**
+  - Koden compileret 100% fejlfrit med `npm run build` og synkroniseret til native Android med `npx cap sync android`.

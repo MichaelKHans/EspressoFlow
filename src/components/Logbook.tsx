@@ -22,6 +22,7 @@ import { useTranslation } from '../i18n';
 interface LogbookProps {
   shots: ShotRecord[];
   onDeleteShot?: (shotId: string) => void;
+  initialExpandedShotId?: string | null;
 }
 
 interface DayGroup {
@@ -30,11 +31,19 @@ interface DayGroup {
   shots: ShotRecord[];
 }
 
-export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot }) => {
+export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialExpandedShotId }) => {
   const { t } = useTranslation();
   const [selectedDrinkFilter, setSelectedDrinkFilter] = useState<string>('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [expandedShotId, setExpandedShotId] = useState<string | null>(null);
+  const [expandedShotId, setExpandedShotId] = useState<string | null>(
+    initialExpandedShotId || (shots.length > 0 ? shots[0].id : null)
+  );
+
+  React.useEffect(() => {
+    if (initialExpandedShotId) {
+      setExpandedShotId(initialExpandedShotId);
+    }
+  }, [initialExpandedShotId]);
 
   if (shots.length === 0) {
     return (

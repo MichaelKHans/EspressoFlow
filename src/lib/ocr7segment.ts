@@ -48,14 +48,31 @@ export interface OCRResult {
 // Segments: [a, b, c, d, e, f, g]
 // Multiple variants accommodate manufacturer font differences (e.g. 6 with/without top bar, 7 with segment f)
 const PATTERN_VARIANTS: Record<string, number[][]> = {
-  '0': [[1, 1, 1, 1, 1, 1, 0]],
+  '0': [
+    [1, 1, 1, 1, 1, 1, 0], // standard 0
+    [1, 1, 1, 1, 1, 0, 0], // faint f
+    [1, 1, 1, 1, 0, 1, 0], // faint e
+    [0, 1, 1, 1, 1, 1, 0], // faint a
+    [1, 1, 1, 0, 1, 1, 0], // faint d
+  ],
   '1': [
     [0, 1, 1, 0, 0, 0, 0], // standard right side
     [0, 0, 0, 0, 1, 1, 0], // rare left side
+    [0, 1, 1, 0, 0, 0, 1], // faint g center bleed
   ],
-  '2': [[1, 1, 0, 1, 1, 0, 1]],
-  '3': [[1, 1, 1, 1, 0, 0, 1]],
-  '4': [[0, 1, 1, 0, 0, 1, 1]],
+  '2': [
+    [1, 1, 0, 1, 1, 0, 1], // standard 2
+    [1, 1, 0, 1, 1, 0, 0], // 2 with faint g
+  ],
+  '3': [
+    [1, 1, 1, 1, 0, 0, 1], // standard 3
+    [1, 1, 1, 1, 0, 0, 0], // 3 with faint g
+  ],
+  '4': [
+    [0, 1, 1, 0, 0, 1, 1], // standard 4
+    [0, 1, 1, 0, 0, 0, 1], // 4 with faint f
+    [1, 1, 1, 0, 0, 1, 1], // closed top 4
+  ],
   '5': [[1, 0, 1, 1, 0, 1, 1]],
   '6': [
     [1, 0, 1, 1, 1, 1, 1], // standard 6 (with top bar)
@@ -215,9 +232,9 @@ export function binarizeROI(
         binary[rowOffset + x] = isLocallyDark && isGloballyDark ? 1 : 0;
       } else {
         // Illuminated LED: active if locally brighter than background
-        // and above noise floor to reject specular glare halos
-        const isLocallyBright = pixelVal >= localAvg * 1.16;
-        const isAboveFloor = pixelVal >= Math.max(50, Math.floor(otsuThreshold * 0.65));
+        // Coffee scale blue/cyan LEDs have glass diffusion; use sensitive local contrast
+        const isLocallyBright = pixelVal >= localAvg * 1.10;
+        const isAboveFloor = pixelVal >= Math.max(20, Math.floor(otsuThreshold * 0.40));
         binary[rowOffset + x] = isLocallyBright && isAboveFloor ? 1 : 0;
       }
     }
@@ -302,8 +319,8 @@ function probeDigitSegments(
   // Special fast-path for digit '1':
   // In 7-segment digital displays, all digits (0, 2-9) require two vertical columns and an inner hollow space,
   // giving them an aspect ratio of width / height >= 0.50.
-  // The digit '1' is the unique single-column character with a narrow aspect ratio (width / height < 0.42).
-  if (box.width / box.height < 0.42 && box.height >= 12) {
+  // The digit '1' is the unique single-column character with a narrow aspect ratio (width / height < 0.48).
+  if (box.width / box.height < 0.48 && box.height >= 10) {
     return {
       segments: { a: false, b: true, c: true, d: false, e: false, f: false, g: false },
       matchChar: '1',
@@ -333,14 +350,13 @@ function probeDigitSegments(
   for (const [digit, variants] of Object.entries(PATTERN_VARIANTS)) {
     for (const pattern of variants) {
       // Disqualifications based on 7-segment topology & inner hollow cavities:
-      if (digit === '1' && (seg.g || seg.a || seg.d)) continue;
+      if (digit === '1' && (seg.a && seg.d)) continue;
       if (digit === '-' && (seg.b || seg.c || seg.e || seg.f || seg.a || seg.d)) continue;
-      if (digit === '0' && (centerHole && seg.g)) continue; // '0' center must be hollow
       if (digit === '2' && (seg.c && seg.f)) continue; // '2' has NO segment c (bottom-right) or f (top-left)
       if (digit === '6' && seg.b) continue; // '6' has NO segment b (top-right)
-      if (digit === '7' && (seg.d || seg.g)) continue;
-      if (digit === '4' && (seg.a || seg.d || upperHole)) continue; // '4' upper cavity must be hollow
-      if (digit === '3' && (seg.e || seg.f)) continue;
+      if (digit === '7' && (seg.d && seg.g)) continue;
+      if (digit === '4' && seg.d) continue; // '4' never has bottom bar d
+      if (digit === '3' && (seg.e && seg.f)) continue;
       if (digit === '8' && (upperHole && lowerHole)) continue; // Solid glare/blob filled in both loops is NOT an '8'!
       if (digit === '6' && lowerHole) continue; // '6' bottom loop must be hollow
       if (digit === '9' && upperHole) continue; // '9' top loop must be hollow
@@ -362,13 +378,13 @@ function probeDigitSegments(
   // 0 vs 8: Both share outer segments a,b,c,d,e,f.
   // The only difference is the horizontal center bar g.
   // On an espresso scale, 0 is far more common than 8 (e.g. 0.0g tare).
-  // Re-verify segment g with strict threshold: if center bar is not solid, it is a '0'.
-  if ((bestMatch === '8' || bestMatch === '0') && bestScore >= 0.70) {
-    if (seg.a && seg.b && seg.c && seg.d && seg.e && seg.f) {
-      const gStrict = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.38);
+  // Re-verify segment g: if center bar is not solid or center is hollow, it is a '0'.
+  if ((bestMatch === '8' || bestMatch === '0') && bestScore >= 0.65) {
+    const gStrict = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.40);
+    if (!gStrict || centerHole) {
       return {
         segments: seg,
-        matchChar: gStrict ? '8' : '0',
+        matchChar: '0',
         confidence: Math.max(0.92, bestScore),
       };
     }
@@ -520,7 +536,7 @@ function parseDigitsFromBinary(
     rowCounts[y] = count;
   }
 
-  const rowThreshold = Math.max(3, width * 0.025);
+  const rowThreshold = Math.max(2, Math.floor(width * 0.012));
   const rowBands: { start: number; end: number }[] = [];
   let inRow = false;
   let rowStart = 0;
@@ -564,7 +580,7 @@ function parseDigitsFromBinary(
       colCounts[x] = count;
     }
 
-    const colThreshold = Math.max(2, bandH * 0.05);
+    const colThreshold = Math.max(1, Math.floor(bandH * 0.03));
     const spans: { start: number; end: number }[] = [];
     let inSpan = false;
     let spanStart = 0;
@@ -606,15 +622,15 @@ function parseDigitsFromBinary(
         }
       }
 
-      if (activePixels < 4) continue; // Noise artifact
+      if (activePixels < 2) continue; // Noise artifact
 
       const spanW = span.end - span.start + 1;
       const spanH = spanMaxY - spanMinY + 1;
 
-      // Decimal Point check (small blob in bottom third)
-      const isNarrow = spanW <= Math.max(6, bandH * 0.35);
-      const isShort = spanH <= Math.max(8, bandH * 0.38);
-      const isBottom = spanMinY >= band.start + bandH * 0.48;
+      // Decimal Point check (small blob in bottom half of digit band)
+      const isNarrow = spanW <= Math.max(8, bandH * 0.40);
+      const isShort = spanH <= Math.max(10, bandH * 0.44);
+      const isBottom = spanMinY >= band.start + bandH * 0.42;
 
       if (isNarrow && isShort && isBottom) {
         elements.push({
@@ -718,7 +734,8 @@ function parseDigitsFromBinary(
       } else {
         const prev = currentCluster[currentCluster.length - 1];
         const gap = el.box.x - (prev.box.x + prev.box.width);
-        const maxGap = Math.max(12, bandH * 0.55);
+        // Generous gap threshold allows multi-digit numbers (like 41.3) with decimal spacing to form a single cluster
+        const maxGap = Math.max(22, Math.floor(bandH * 1.15));
 
         if (gap > maxGap || el.type === 'colon' || prev.type === 'colon') {
           clusters.push(currentCluster);
@@ -773,10 +790,10 @@ function parseDigitsFromBinary(
       const conf = digitsInCl.length > 0 ? digitsInCl.reduce((s, d) => s + d.confidence, 0) / digitsInCl.length : 0;
 
       let clScore = conf * 20;
-      if (clHasDecimal) clScore += 70; // Big bonus for 0.1g coffee scale decimal
-      if (valid) clScore += 30;
-      if (clHasColon) clScore -= 80; // Timer penalty
-      if (digitsInCl.length >= 2) clScore += 15; // Realistic multi-digit number
+      if (clHasDecimal) clScore += 75; // Big bonus for 0.1g coffee scale decimal (e.g. 0.0g or 41.3g)
+      if (valid) clScore += 35;
+      if (clHasColon) clScore -= 85; // Timer penalty
+      if (digitsInCl.length >= 2) clScore += 20; // Realistic multi-digit number (e.g. 41.3)
 
       // Double-zero timer penalty: digital coffee scale timers commonly format as "00.00" or "00:00"
       // Weight displays use single zero on tare ("0.0" or "0.00"), never double-zero "00.00".
@@ -786,7 +803,7 @@ function parseDigitsFromBinary(
 
       // Bonus for true coffee weight tare format (single zero e.g. "0.0" or valid single/double digit weight)
       if (clText.startsWith('0.') && !clText.startsWith('00.')) {
-        clScore += 45; // High confidence for tare zero
+        clScore += 50; // High confidence for tare zero
       }
 
       evaluatedClusters.push({
@@ -833,11 +850,14 @@ function parseDigitsFromBinary(
         : 0;
 
     let score = avgConfidence * 20;
-    if (hasDec) score += 60;
-    if (parsedWeight !== null) score += 30;
-    if (rowHasColon && layoutType !== 'side-by-side') score -= 60; // Penalize timer-only row
-    if (parsedText.startsWith('00.') || parsedText.startsWith('00:')) score -= 90; // Penalize timer row
-    if (rIdx === 0 && candidateBands.length > 1) score += 10; // Top row bonus for stacked
+    if (hasDec) score += 70;
+    if (parsedWeight !== null) score += 35;
+    if (rowHasColon && layoutType !== 'side-by-side') score -= 90; // Heavy penalty for timer-only row
+    if (parsedText.startsWith('00.') || parsedText.startsWith('00:')) score -= 95; // Heavy penalty for timer row
+    if (rIdx === 0 && candidateBands.length > 1) score += 40; // Top row bonus for stacked dual-row displays (coffee scales place weight on top row)
+    if (parsedText === '0.0' || parsedText === '0.00' || parsedText.startsWith('0.')) {
+      score += 45; // Special high-confidence bonus for tare 0.0g format
+    }
 
     let minBoxX = width;
     let maxBoxX = 0;
@@ -983,15 +1003,15 @@ export class ScaleReadingFilter {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
-    // Always accept tare lock (0.0g - 0.2g when starting)
-    if (this.lastValidWeight === 0 && newReading <= 0.2) {
+    // Always accept tare lock (0.0g - 0.3g when starting or taring)
+    if (this.lastValidWeight === 0 && newReading <= 0.3) {
       this.lastValidWeight = newReading;
       this.recentWindow = [newReading];
       return { weight: newReading, isOutlier: false };
     }
 
-    // Maximum physically possible flow rate from an espresso extraction is ~6.0 g/s
-    const maxDelta = Math.max(0.6, deltaTimeSeconds * 8.0);
+    // Maximum physically possible flow rate from an espresso extraction / pour-over stream
+    const maxDelta = Math.max(1.2, deltaTimeSeconds * 12.0);
     const delta = Math.abs(newReading - this.lastValidWeight);
 
     // Keep sliding 3-frame buffer

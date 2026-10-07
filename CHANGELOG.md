@@ -2,6 +2,27 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.7.1] - 2026-10-07
+### Etape 16: Telemetri Loop Stabilisering, Blå LED Flerciffer OCR (41.3g), Isotrop Retikel-Justering & Smagsprofil Reset
+- **Løst Kritisk Telemetri & Kurve Reset Bug:**
+  - **Identificeret Årsag:** Ekstraktions-timeren i `ScaleMonitor.tsx` genstartede og nulstillede `pointsRef.current = []` og `elapsedTime = 0.0s` for hver 100ms tick, fordi `onLivePointsUpdate` i `App.tsx` blev genoprettet ved hver re-render og lå i timer-effektens dependency array.
+  - **Løsning:** Alle dynamiske props og callbacks er nu isoleret i synkroniserede `useRef`'er, timer-effekten afhænger udelukkende af `[isBrewing]`, og `App.tsx` ekstraktions-handlers er memoizet med `useCallback`.
+  - **Millisekund-Præcis Tidtagning:** Ved stop af brygningen beregnes `finalTime` direkte fra `startTimeRef.current`, hvilket sikrer, at alle 200–300 telemetripunkter, yield, flow og tid gemmes og vises fejlfrit i både `Extraction Complete` og Logbogen.
+- **Optimeret Computer Vision for Blå/Cyan LED Digitalvægte (41.3g vs 3):**
+  - **Udvidet Klynge-Afstand (`maxGap`):** Øget klynge-afstanden til `bandH * 1.15`, så decimalpunktum og cifre i `41.3` ikke splittes op i isolerede fragmenter.
+  - **Følsom LED Binarisering:** Sænket støjgulvet for lysende LED'er fra 50 til 20 og optimeret lokal kontrast-faktor fra 1.16 til 1.10 for at opfange matte blå/cyan segmenter bag mørkt vægtglas.
+  - **Afslappet Ciffer-Validering:** Fjernet overstrenge diskvalifikationer for cifrene `4`, `1` og `0`, så ufuldstændige eller slørede segmenter genkendes korrekt.
+  - **Dobbelt-Række Vægt-Prioritet:** I stableskalaer (Vægt øverst, Timer nederst) tildeles øverste række automatisk +40 point, mens rækker med kolon eller `0:00` timer-format nedprioriteres.
+- **Tara 0.0g Lås-Fastholdelse (Temporal Lock Hysteresis):**
+  - Tilføjet 800ms / 15-frame hysterese på `isDigitLocked`, så midlertidige cifre-blink under tryk på tara ikke får fokus eller "TARE LOCKED" til at forsvinde.
+- **Isotrop 2:1 Retikel & Ciffer-Boks Justering i Kamera-Viewet:**
+  - Optisk beskæring på videostrømmen er nu matematisk låst til et rent 2:1 billedforhold (`cropH = cropW / 2`), hvilket eliminerer enhver lodret strækning.
+  - Retiklen i DOM'en skaleres nu dynamisk med `zoomLevel`, så den grønne ciffer-boks i søgeren sidder præcist oven på vægtens fysiske display ligesom i Vision Inspector.
+- **Nulstillet Smagsprofil (Ingen Auto-Valg af Sweet & Balanced):**
+  - Fjernet standardværdien `'balanced'`. Smagsprofil starter nu 100% blank i `ShotSummaryModal`, og alle 4 kort forbliver neutrale, indtil baristaen aktivt vælger sin smagsvurdering.
+- **Logbog Kurve-Visning ved Genkaldelse:**
+  - `Logbook.tsx` auto-ekspanderer nu seneste shot (eller `initialExpandedShotId`), så ekstraktionskurven med flow, vægt og tid vises øjeblikkeligt, når baristaen trykker *"View in Logbook"*.
+
 ## [1.7.0] - 2026-10-07
 ### Etape 15: Scale Cam 1:1 Billedforhold, Hardware Focus Lock & "Tryk på Vægten" Auto-Kalibrering (Android Synkroniseret)
 - **Matematisk 1:1 Billedforhold & UV-Projektion:**

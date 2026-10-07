@@ -123,6 +123,32 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   // Sub-pixel 50Hz anti-shake damping and tap calibration memory
   const smoothedBoundingBoxRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const calibrationHistoryRef = useRef<{ time: number; weight: number }[]>([]);
+  const lockHoldCountRef = useRef<number>(0);
+
+  // Dynamic prop synchronization refs (isolates extraction timer from re-renders)
+  const onLivePointsUpdateRef = useRef(onLivePointsUpdate);
+  useEffect(() => { onLivePointsUpdateRef.current = onLivePointsUpdate; }, [onLivePointsUpdate]);
+
+  const targetYieldRef = useRef(targetYield);
+  useEffect(() => { targetYieldRef.current = targetYield; }, [targetYield]);
+
+  const targetDoseRef = useRef(targetDose);
+  useEffect(() => { targetDoseRef.current = targetDose; }, [targetDose]);
+
+  const methodRef = useRef(method);
+  useEffect(() => { methodRef.current = method; }, [method]);
+
+  const cameraStateRef = useRef(cameraState);
+  useEffect(() => { cameraStateRef.current = cameraState; }, [cameraState]);
+
+  const bloomSecondsRef = useRef(bloomSeconds);
+  useEffect(() => { bloomSecondsRef.current = bloomSeconds; }, [bloomSeconds]);
+
+  const bloomWaterGramsRef = useRef(bloomWaterGrams);
+  useEffect(() => { bloomWaterGramsRef.current = bloomWaterGrams; }, [bloomWaterGrams]);
+
+  const machinePreInfusionRef = useRef(machinePreInfusionSetting);
+  useEffect(() => { machinePreInfusionRef.current = machinePreInfusionSetting; }, [machinePreInfusionSetting]);
 
   // Interactive Zoom, Torch & Recenter Handlers
   const handleSetZoom = async (newZoom: number) => {
@@ -437,15 +463,14 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       const vH = video.videoHeight || 720;
 
       // Dynamic optical crop based on size mode, zoom level, and interactive ROI center
+      // Maintain strictly ISOTROPIC 2:1 aspect ratio matching the 320x160 offscreen canvas
       const currentMode = roiSizeRef.current;
       const currentZoom = zoomLevelRef.current;
       const currentCenter = roiCenterRef.current;
 
-      const baseW = currentMode === 'compact' ? 0.48 : 0.64;
-      const baseH = currentMode === 'compact' ? 0.24 : 0.32;
-
-      const cropW = (vW * baseW) / currentZoom;
-      const cropH = (vH * baseH) / currentZoom;
+      const baseFractionW = currentMode === 'compact' ? 0.44 : 0.58;
+      const cropW = (vW * baseFractionW) / currentZoom;
+      const cropH = cropW / 2; // Strict 2:1 aspect ratio eliminates vertical stretching!
 
       const centerX = vW * currentCenter.x;
       const centerY = vH * currentCenter.y;
@@ -459,6 +484,12 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       // Perform 7-segment digit recognition with universal auto-polarity and glare rejection
       const result = recognizeScaleDigits(imgData, displayMode);
       setLastOcrResult(result);
+
+      if (result.weight !== null && result.confidence >= 0.65) {
+        lockHoldCountRef.current = 15; // Hold lock for ~800ms across transient scale blinks
+      } else if (lockHoldCountRef.current > 0) {
+        lockHoldCountRef.current--;
+      }
 
       // Sub-pixel 50Hz anti-shake damping: absorbs machine vibrations
       if (result.boundingBox) {
@@ -548,11 +579,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           currentWeightRef.current = w;
 
           // Zero / Tare detection with tactile haptic pulse
-          if (w === 0.0) {
-            if (!isZeroDetected) {
-              Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
-            }
+          if (w <= 0.2) {
             setIsZeroDetected(true);
+          } else if (w >= 0.5) {
+            setIsZeroDetected(false);
           }
         }
       }
@@ -561,9 +591,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     return () => {
       if (ocrIntervalRef.current) clearInterval(ocrIntervalRef.current);
     };
-  }, [cameraState, displayMode, isZeroDetected, isBrewing, onBrewStart]);
+  }, [cameraState, displayMode, isBrewing]);
 
-  // Handle Shot Timeline, Split-Timer & Simulation
+  // Handle Shot Timeline, Split-Timer & Simulation (isolated from prop re-triggers)
   useEffect(() => {
     if (!isBrewing) {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
@@ -592,25 +622,32 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
       let weight = currentWeightRef.current;
 
+      const activeCameraState = cameraStateRef.current;
+      const activeMethod = methodRef.current;
+      const activeTargetYield = targetYieldRef.current;
+      const activeTargetDose = targetDoseRef.current;
+      const activeBloomSeconds = bloomSecondsRef.current;
+      const activeBloomWater = bloomWaterGramsRef.current;
+
       // In simulation mode, generate a realistic curve
-      if (cameraState === 'demo') {
+      if (activeCameraState === 'demo') {
         let simulatedWeight = 0;
-        if (method === 'pour_over') {
+        if (activeMethod === 'pour_over') {
           // Pour Over demo curve (Bloom + 2 pulse pours)
-          const bloomW = bloomWaterGrams || Math.round(targetDose * 3);
-          const bloomT = bloomSeconds || 45;
+          const bloomW = activeBloomWater || Math.round(activeTargetDose * 3);
+          const bloomT = activeBloomSeconds || 45;
           if (seconds < 10) {
             simulatedWeight = (seconds / 10) * bloomW;
           } else if (seconds < bloomT) {
             simulatedWeight = bloomW;
           } else if (seconds < 75) {
             const p2Progress = (seconds - bloomT) / (75 - bloomT);
-            simulatedWeight = bloomW + p2Progress * (targetYield * 0.65 - bloomW);
+            simulatedWeight = bloomW + p2Progress * (activeTargetYield * 0.65 - bloomW);
           } else if (seconds < 90) {
-            simulatedWeight = targetYield * 0.65;
+            simulatedWeight = activeTargetYield * 0.65;
           } else {
             const p3Progress = Math.min(1, (seconds - 90) / 30);
-            simulatedWeight = targetYield * 0.65 + p3Progress * (targetYield * 0.35);
+            simulatedWeight = activeTargetYield * 0.65 + p3Progress * (activeTargetYield * 0.35);
           }
         } else {
           // Espresso: 0-6s pre-infusion, then steady pull
@@ -619,7 +656,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           } else if (seconds <= 26) {
             simulatedWeight = 0.1 + (seconds - 5.5) * 1.6;
           } else {
-            simulatedWeight = Math.min(targetYield + 0.4, 32.9 + (seconds - 26) * 0.8);
+            simulatedWeight = Math.min(activeTargetYield + 0.4, 32.9 + (seconds - 26) * 0.8);
           }
         }
         weight = Math.round(simulatedWeight * 10) / 10;
@@ -652,25 +689,25 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       const flow = calculateSmoothedFlowRate(pointsRef.current);
       newPoint.flowRateGps = flow;
       setCurrentFlow(flow);
-      if (onLivePointsUpdate) {
-        onLivePointsUpdate([...pointsRef.current]);
+      if (onLivePointsUpdateRef.current) {
+        onLivePointsUpdateRef.current([...pointsRef.current]);
       }
 
       // Tactile haptic notification on reaching target yield
-      if (weight >= targetYield && !hasVibratedTargetRef.current) {
+      if (weight >= activeTargetYield && !hasVibratedTargetRef.current) {
         hasVibratedTargetRef.current = true;
         Haptics.notification({ type: NotificationType.Success }).catch(() => {});
       }
 
       // Channeling detection haptic alert (ONLY for espresso! Pour over flow is naturally high)
-      if (method !== 'pour_over' && firstDropTimeRef.current !== null && flow > 4.2 && !hasVibratedChannelingRef.current) {
+      if (activeMethod !== 'pour_over' && firstDropTimeRef.current !== null && flow > 4.2 && !hasVibratedChannelingRef.current) {
         hasVibratedChannelingRef.current = true;
         Haptics.notification({ type: NotificationType.Warning }).catch(() => {});
       }
 
       // Auto-finish if target reached in demo mode
-      const minDemoSecs = method === 'pour_over' ? 120 : 25;
-      if (cameraState === 'demo' && weight >= targetYield && seconds > minDemoSecs) {
+      const minDemoSecs = activeMethod === 'pour_over' ? 120 : 25;
+      if (activeCameraState === 'demo' && weight >= activeTargetYield && seconds > minDemoSecs) {
         handleStopBrewing();
       }
     }, 100);
@@ -678,7 +715,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [isBrewing, targetYield, targetDose, cameraState, method, bloomSeconds, bloomWaterGrams, onLivePointsUpdate]);
+  }, [isBrewing]);
 
   const handleStartBrewing = () => {
     requestOrientationPermission();
@@ -730,8 +767,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const handleStopBrewing = () => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     const finalWeight = currentWeightRef.current;
-    const finalTime = elapsedTime;
-    const finalPre = firstDropTimeRef.current !== null ? firstDropTimeRef.current : (machinePreInfusionSetting || 5.0);
+    const finalTime = startTimeRef.current > 0 ? Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10 : elapsedTime;
+    const finalPre = firstDropTimeRef.current !== null ? firstDropTimeRef.current : (machinePreInfusionRef.current || 5.0);
     const finalFlow = Math.max(0, Math.round((finalTime - finalPre) * 10) / 10);
 
     onBrewFinish(finalWeight, finalTime, finalPre, finalFlow, [...pointsRef.current]);
@@ -942,19 +979,20 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
         {/* OCR Region-of-Interest Targeting Crosshair (Clean, uncluttered viewfinder) */}
         {(() => {
-          const isDigitLocked = (cameraState === 'live' && lastOcrResult !== null && lastOcrResult.weight !== null && lastOcrResult.confidence >= 0.70) || (cameraState === 'demo' && isBrewing);
+          const hasValidReading = lastOcrResult !== null && lastOcrResult.weight !== null && lastOcrResult.confidence >= 0.65;
+          const isDigitLocked = (cameraState === 'live' && (hasValidReading || lockHoldCountRef.current > 0)) || (cameraState === 'demo' && isBrewing);
+          // Reticle width in viewfinder perfectly mirrors isotropic optical crop width
+          const reticleWPercent = Math.max(22, Math.min(80, Math.round(((roiSize === 'compact' ? 0.44 : 0.58) / zoomLevel) * 100)));
+
           return (
             <div
               style={{
                 left: `${roiCenter.x * 100}%`,
                 top: `${roiCenter.y * 100}%`,
+                width: `${reticleWPercent}%`,
                 transform: 'translate(-50%, -50%)',
               }}
-              className={`absolute z-10 rounded-xl transition-all duration-200 pointer-events-none ${
-                roiSize === 'compact'
-                  ? 'w-[54%] max-w-[260px] aspect-2/1'
-                  : 'w-[72%] max-w-[340px] aspect-2/1'
-              } ${
+              className={`absolute z-10 rounded-xl transition-all duration-150 pointer-events-none aspect-2/1 ${
                 isBrewing
                   ? 'border-2 border-solid border-amber-400/90 bg-amber-400/5 shadow-[0_0_20px_rgba(251,191,36,0.25)]'
                   : isDigitLocked

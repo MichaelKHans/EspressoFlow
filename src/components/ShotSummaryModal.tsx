@@ -33,12 +33,12 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   onUpdateShot,
 }) => {
   const { t } = useTranslation();
-  const [selectedTaste, setSelectedTaste] = useState<TasteRating>('balanced');
+  const [selectedTaste, setSelectedTaste] = useState<TasteRating | null>(null);
   const [notes, setNotes] = useState<string>('');
 
   useEffect(() => {
     if (shot) {
-      setSelectedTaste(shot.tasteRating || 'balanced');
+      setSelectedTaste(shot.tasteRating || null);
       setNotes(shot.notes || '');
     }
   }, [shot]);
@@ -46,10 +46,11 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   if (!isOpen || !shot) return null;
 
   const handleTasteChange = (rating: TasteRating) => {
-    setSelectedTaste(rating);
+    const nextRating = selectedTaste === rating ? null : rating;
+    setSelectedTaste(nextRating);
     const updated: ShotRecord = {
       ...shot,
-      tasteRating: rating,
+      tasteRating: nextRating || undefined,
       notes: notes.trim() || undefined,
     };
     onUpdateShot(updated);
@@ -59,7 +60,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
     setNotes(newNotes);
     const updated: ShotRecord = {
       ...shot,
-      tasteRating: selectedTaste,
+      tasteRating: selectedTaste || undefined,
       notes: newNotes.trim() || undefined,
     };
     onUpdateShot(updated);
@@ -80,7 +81,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
     shot.doseGrams,
     shot.actualYieldGrams,
     shot.channeling || shot.channelingDetected,
-    selectedTaste,
+    selectedTaste || undefined,
     shot.preInfusionSeconds,
     shot.roastLevel,
     shot.grinderName,
