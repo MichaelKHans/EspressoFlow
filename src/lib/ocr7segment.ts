@@ -20,6 +20,16 @@ export interface DigitDetection {
   segments: SegmentProbeResult;
 }
 
+export interface CandidateInfo {
+  weight: number | null;
+  rawText: string;
+  confidence: number;
+  boundingBox: { x: number; y: number; width: number; height: number } | null;
+  hasDecimal: boolean;
+  hasColon: boolean;
+  score: number;
+}
+
 export interface OCRResult {
   weight: number | null;
   rawText: string;
@@ -31,6 +41,7 @@ export interface OCRResult {
   detectedPolarity?: 'led' | 'lcd';
   autoPolarityUsed?: 'led' | 'lcd';
   layoutType?: 'single' | 'stacked' | 'side-by-side';
+  allCandidates?: CandidateInfo[];
 }
 
 // 7-segment bit patterns for digits 0-9 and '-'
@@ -767,6 +778,17 @@ function parseDigitsFromBinary(
       if (clHasColon) clScore -= 80; // Timer penalty
       if (digitsInCl.length >= 2) clScore += 15; // Realistic multi-digit number
 
+      // Double-zero timer penalty: digital coffee scale timers commonly format as "00.00" or "00:00"
+      // Weight displays use single zero on tare ("0.0" or "0.00"), never double-zero "00.00".
+      if (clText.startsWith('00.') || clText.startsWith('00:') || (clText.length === 5 && clText.startsWith('00'))) {
+        clScore -= 95; // Strong penalty for timer format (00.00 / 00:00)
+      }
+
+      // Bonus for true coffee weight tare format (single zero e.g. "0.0" or valid single/double digit weight)
+      if (clText.startsWith('0.') && !clText.startsWith('00.')) {
+        clScore += 45; // High confidence for tare zero
+      }
+
       evaluatedClusters.push({
         cluster: cl,
         text: clText,
@@ -814,6 +836,7 @@ function parseDigitsFromBinary(
     if (hasDec) score += 60;
     if (parsedWeight !== null) score += 30;
     if (rowHasColon && layoutType !== 'side-by-side') score -= 60; // Penalize timer-only row
+    if (parsedText.startsWith('00.') || parsedText.startsWith('00:')) score -= 90; // Penalize timer row
     if (rIdx === 0 && candidateBands.length > 1) score += 10; // Top row bonus for stacked
 
     let minBoxX = width;
@@ -860,6 +883,16 @@ function parseDigitsFromBinary(
     layoutType: 'single' as const,
   };
 
+  const allCandidates: CandidateInfo[] = evaluatedRows.map((r) => ({
+    weight: r.weight,
+    rawText: r.rawText,
+    confidence: r.confidence,
+    boundingBox: r.boundingBox,
+    hasDecimal: r.hasDecimal,
+    hasColon: r.hasColon,
+    score: r.score,
+  }));
+
   return {
     weight: best.weight,
     rawText: best.rawText,
@@ -870,6 +903,7 @@ function parseDigitsFromBinary(
     boundingBox: best.boundingBox,
     detectedPolarity,
     layoutType: best.layoutType,
+    allCandidates,
   };
 }
 

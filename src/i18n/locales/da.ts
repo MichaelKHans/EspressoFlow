@@ -216,6 +216,12 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'scale.display_mode': 'Displaytilstand',
   'scale.layout': 'Layout',
   'scale.auto_timer_active': 'Aktiv (Starter ved ≥ 0.1g)',
+  'scale.calibrate_btn': 'Auto-Kalibrer',
+  'scale.calibrate_prompt': '👆 Tryk let på vægten for at låse...',
+  'scale.calibrated_success': 'Vægt Låst & Fokuseret! 🎯',
+  'scale.focus_lock': 'Fokus Lås',
+  'scale.focus_auto': 'Auto Fokus',
+  'scale.anti_shake': 'Anti-Ryst Pansring',
 
   // Roast Levels & Bean Chemistry
   'roast.light': 'Lys',

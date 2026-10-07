@@ -12,6 +12,9 @@ import {
   VideoOff,
   Crosshair,
   Zap,
+  Lock,
+  Unlock,
+  Sparkles,
 } from 'lucide-react';
 import { DripperIcon } from './CustomCoffeeIcons';
 import type { ShotDataPoint } from '../types/espresso';
@@ -82,6 +85,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
   const [tiltAngle, setTiltAngle] = useState<number | null>(null);
 
+  // Hardware Focus Lock & "Tryk på Vægten" Auto-Calibration state
+  const [isFocusLocked, setIsFocusLocked] = useState<boolean>(false);
+  const [isCalibrating, setIsCalibrating] = useState<boolean>(false);
+  const [calibratedSuccess, setCalibratedSuccess] = useState<boolean>(false);
+
   const zoomLevelRef = useRef<number>(1.8);
   const roiSizeRef = useRef<'compact' | 'standard'>('compact');
   const roiCenterRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
@@ -111,6 +119,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const lastFpsCalcTimeRef = useRef<number>(Date.now());
   const hasVibratedTargetRef = useRef<boolean>(false);
   const hasVibratedChannelingRef = useRef<boolean>(false);
+
+  // Sub-pixel 50Hz anti-shake damping and tap calibration memory
+  const smoothedBoundingBoxRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  const calibrationHistoryRef = useRef<{ time: number; weight: number }[]>([]);
 
   // Interactive Zoom, Torch & Recenter Handlers
   const handleSetZoom = async (newZoom: number) => {
@@ -144,6 +156,34 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       console.debug('Torch toggle error', e);
     }
   };
+
+  const handleToggleFocusLock = async (forceLock?: boolean) => {
+    if (!streamRef.current) return;
+    const track = streamRef.current.getVideoTracks()[0];
+    if (!track || !track.applyConstraints) return;
+    try {
+      const caps: any = track.getCapabilities ? track.getCapabilities() : {};
+      if ('focusMode' in caps && Array.isArray(caps.focusMode)) {
+        const next = forceLock !== undefined ? forceLock : !isFocusLocked;
+        const targetMode = next
+          ? (caps.focusMode.includes('single-shot') ? 'single-shot' : (caps.focusMode.includes('manual') ? 'manual' : null))
+          : (caps.focusMode.includes('continuous') ? 'continuous' : null);
+        if (targetMode) {
+          await track.applyConstraints({ advanced: [{ focusMode: targetMode } as any] });
+          setIsFocusLocked(next);
+        }
+      }
+    } catch (e) {
+      console.debug('Focus lock apply failed', e);
+    }
+  };
+
+  // Auto-lock focus during active brewing to prevent pump vibration focus hunting
+  useEffect(() => {
+    if (isBrewing && !isFocusLocked) {
+      handleToggleFocusLock(true);
+    }
+  }, [isBrewing]);
 
   const handleSetRoiSize = (mode: 'compact' | 'standard') => {
     roiSizeRef.current = mode;
@@ -194,13 +234,49 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       return;
     }
 
-    const relX = Math.max(0.18, Math.min(0.82, (clientX - container.left) / container.width));
-    const relY = Math.max(0.18, Math.min(0.82, (clientY - container.top) / container.height));
+    const clickX = clientX - container.left;
+    const clickY = clientY - container.top;
+    const cW = container.width;
+    const cH = container.height;
+    const video = videoRef.current;
+
+    let normX = clickX / cW;
+    let normY = clickY / cH;
+
+    // Exact 1:1 mathematical object-cover projection mapping:
+    // Aligns screen click coordinates with underlying video pixel coordinates
+    if (video && video.videoWidth && video.videoHeight && cW > 0 && cH > 0) {
+      const vW = video.videoWidth;
+      const vH = video.videoHeight;
+      const cRatio = cW / cH;
+      const vRatio = vW / vH;
+
+      let renderedW = cW;
+      let renderedH = cH;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (vRatio > cRatio) {
+        // Video is wider than container: vertical matches, horizontal overflows symmetrically
+        renderedW = cH * vRatio;
+        offsetX = (renderedW - cW) / 2;
+      } else {
+        // Video is taller than container: horizontal matches, vertical overflows symmetrically
+        renderedH = cW / vRatio;
+        offsetY = (renderedH - cH) / 2;
+      }
+
+      normX = (clickX + offsetX) / renderedW;
+      normY = (clickY + offsetY) / renderedH;
+    }
+
+    const relX = Math.max(0.18, Math.min(0.82, normX));
+    const relY = Math.max(0.18, Math.min(0.82, normY));
 
     const newCenter = { x: relX, y: relY };
     roiCenterRef.current = newCenter;
     setRoiCenter(newCenter);
-    setTapFeedback({ x: clientX - container.left, y: clientY - container.top });
+    setTapFeedback({ x: clickX, y: clickY });
     setTimeout(() => setTapFeedback(null), 1400);
 
     // Hardware focus with point-of-interest targeting for precise tap-to-focus
@@ -365,8 +441,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       const currentZoom = zoomLevelRef.current;
       const currentCenter = roiCenterRef.current;
 
-      const baseW = currentMode === 'compact' ? 0.44 : 0.60;
-      const baseH = currentMode === 'compact' ? 0.22 : 0.32;
+      const baseW = currentMode === 'compact' ? 0.48 : 0.64;
+      const baseH = currentMode === 'compact' ? 0.24 : 0.32;
 
       const cropW = (vW * baseW) / currentZoom;
       const cropH = (vH * baseH) / currentZoom;
@@ -384,20 +460,72 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       const result = recognizeScaleDigits(imgData, displayMode);
       setLastOcrResult(result);
 
+      // Sub-pixel 50Hz anti-shake damping: absorbs machine vibrations
+      if (result.boundingBox) {
+        const prev = smoothedBoundingBoxRef.current;
+        if (!prev) {
+          smoothedBoundingBoxRef.current = result.boundingBox;
+        } else {
+          const dx = Math.abs(result.boundingBox.x - prev.x);
+          const dy = Math.abs(result.boundingBox.y - prev.y);
+          const alpha = dx > 8 || dy > 8 ? 0.85 : 0.25;
+          smoothedBoundingBoxRef.current = {
+            x: prev.x + (result.boundingBox.x - prev.x) * alpha,
+            y: prev.y + (result.boundingBox.y - prev.y) * alpha,
+            width: prev.width + (result.boundingBox.width - prev.width) * alpha,
+            height: prev.height + (result.boundingBox.height - prev.height) * alpha,
+          };
+        }
+      }
+
+      // "Tryk på Vægten" Dynamic Delta Trigger: Auto-calibrates when barista presses scale
+      if (isCalibrating && result.weight !== null) {
+        const now = Date.now();
+        calibrationHistoryRef.current.push({ time: now, weight: result.weight });
+        calibrationHistoryRef.current = calibrationHistoryRef.current.filter((e) => now - e.time <= 1200);
+
+        if (calibrationHistoryRef.current.length >= 2) {
+          const minW = Math.min(...calibrationHistoryRef.current.map((e) => e.weight));
+          const maxW = Math.max(...calibrationHistoryRef.current.map((e) => e.weight));
+          const deltaW = maxW - minW;
+
+          // Finger tap on scale plate detected (weight jumps by ≥ 4.0g)
+          if (deltaW >= 4.0) {
+            const box = smoothedBoundingBoxRef.current || result.boundingBox;
+            if (box) {
+              const candCenterX = cropX + (box.x + box.width / 2) * (cropW / offscreen.width);
+              const candCenterY = cropY + (box.y + box.height / 2) * (cropH / offscreen.height);
+              const newNormX = Math.max(0.18, Math.min(0.82, candCenterX / vW));
+              const newNormY = Math.max(0.18, Math.min(0.82, candCenterY / vH));
+              roiCenterRef.current = { x: newNormX, y: newNormY };
+              setRoiCenter({ x: newNormX, y: newNormY });
+            }
+
+            Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
+            handleToggleFocusLock(true);
+            setIsCalibrating(false);
+            setCalibratedSuccess(true);
+            calibrationHistoryRef.current = [];
+            setTimeout(() => setCalibratedSuccess(false), 3500);
+          }
+        }
+      }
+
       if (inspectorCanvasRef.current) {
         const inspCtx = inspectorCanvasRef.current.getContext('2d');
         if (inspCtx) {
           inspCtx.drawImage(offscreen, 0, 0, inspectorCanvasRef.current.width, inspectorCanvasRef.current.height);
-          if (result.boundingBox) {
+          const box = smoothedBoundingBoxRef.current || result.boundingBox;
+          if (box) {
             const scaleX = inspectorCanvasRef.current.width / offscreen.width;
             const scaleY = inspectorCanvasRef.current.height / offscreen.height;
             inspCtx.strokeStyle = '#10B981';
             inspCtx.lineWidth = 2;
             inspCtx.strokeRect(
-              result.boundingBox.x * scaleX,
-              result.boundingBox.y * scaleY,
-              result.boundingBox.width * scaleX,
-              result.boundingBox.height * scaleY
+              box.x * scaleX,
+              box.y * scaleY,
+              box.width * scaleX,
+              box.height * scaleY
             );
           }
         }
@@ -792,6 +920,26 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
         )}
 
+        {/* Auto-Calibration Active Banner Overlay */}
+        {isCalibrating && (
+          <div className="absolute inset-x-3 top-3 z-30 flex items-center justify-center pointer-events-none animate-fadeIn">
+            <div className="bg-black/90 backdrop-blur-md border border-amber-400 text-amber-300 px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-2 font-mono text-xs font-bold animate-pulse">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>{t('scale.calibrate_prompt')}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Calibration Success Banner Overlay */}
+        {calibratedSuccess && (
+          <div className="absolute inset-x-3 top-3 z-30 flex items-center justify-center pointer-events-none animate-fadeIn">
+            <div className="bg-emerald-950/95 backdrop-blur-md border border-emerald-400 text-emerald-300 px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2 font-mono text-xs font-bold">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <span>{t('scale.calibrated_success')}</span>
+            </div>
+          </div>
+        )}
+
         {/* OCR Region-of-Interest Targeting Crosshair (Clean, uncluttered viewfinder) */}
         {(() => {
           const isDigitLocked = (cameraState === 'live' && lastOcrResult !== null && lastOcrResult.weight !== null && lastOcrResult.confidence >= 0.70) || (cameraState === 'demo' && isBrewing);
@@ -804,8 +952,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               }}
               className={`absolute z-10 rounded-xl transition-all duration-200 pointer-events-none ${
                 roiSize === 'compact'
-                  ? 'w-[52%] max-w-[250px] aspect-21/9'
-                  : 'w-[68%] max-w-[320px] aspect-2/1'
+                  ? 'w-[54%] max-w-[260px] aspect-2/1'
+                  : 'w-[72%] max-w-[340px] aspect-2/1'
               } ${
                 isBrewing
                   ? 'border-2 border-solid border-amber-400/90 bg-amber-400/5 shadow-[0_0_20px_rgba(251,191,36,0.25)]'
@@ -842,22 +990,26 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 )}
               </div>
 
-              {/* Precise Auto-Detected Digit Bounding Box (The exact green frame on the scale) */}
-              {lastOcrResult?.boundingBox && cameraState === 'live' && (
-                <div
-                  style={{
-                    left: `${Math.max(0, Math.min(95, (lastOcrResult.boundingBox.x / 320) * 100))}%`,
-                    top: `${Math.max(0, Math.min(95, (lastOcrResult.boundingBox.y / 160) * 100))}%`,
-                    width: `${Math.max(5, Math.min(100, (lastOcrResult.boundingBox.width / 320) * 100))}%`,
-                    height: `${Math.max(5, Math.min(100, (lastOcrResult.boundingBox.height / 160) * 100))}%`,
-                  }}
-                  className="absolute border-2 border-emerald-400 bg-emerald-400/15 rounded shadow-[0_0_12px_rgba(16,185,129,0.5)] pointer-events-none transition-all duration-75 flex items-start justify-end"
-                >
-                  <span className="text-[8px] sm:text-[9px] font-mono font-bold bg-emerald-500 text-black px-1 rounded -translate-y-full shadow-xs whitespace-nowrap">
-                    {lastOcrResult.rawText}
-                  </span>
-                </div>
-              )}
+              {/* Precise Auto-Detected Digit Bounding Box (Stabilized anti-shake frame on the scale) */}
+              {lastOcrResult && cameraState === 'live' && (() => {
+                const box = smoothedBoundingBoxRef.current || lastOcrResult.boundingBox;
+                if (!box) return null;
+                return (
+                  <div
+                    style={{
+                      left: `${Math.max(0, Math.min(95, (box.x / 320) * 100))}%`,
+                      top: `${Math.max(0, Math.min(95, (box.y / 160) * 100))}%`,
+                      width: `${Math.max(5, Math.min(100, (box.width / 320) * 100))}%`,
+                      height: `${Math.max(5, Math.min(100, (box.height / 160) * 100))}%`,
+                    }}
+                    className="absolute border-2 border-emerald-400 bg-emerald-400/15 rounded shadow-[0_0_12px_rgba(16,185,129,0.5)] pointer-events-none transition-all duration-75 flex items-start justify-end"
+                  >
+                    <span className="text-[8px] sm:text-[9px] font-mono font-bold bg-emerald-500 text-black px-1 rounded -translate-y-full shadow-xs whitespace-nowrap">
+                      {lastOcrResult.rawText}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
           );
         })()}
@@ -889,8 +1041,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             {tiltAngle >= 20 && tiltAngle <= 50 && <span className="ml-1 text-[9px]">✓</span>}
           </div>
         )}
-
-
       </div>
 
       {/* External Camera Controls Toolbar (All controls outside camera viewfinder) */}
@@ -917,8 +1067,46 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           ))}
         </div>
 
-        {/* Center: Recenter & Box Size */}
+        {/* Center: Recenter, Box Size, Auto-Calibrate & Focus Lock */}
         <div className="flex items-center gap-1.5">
+          {/* "Tryk på Vægten" Auto-Calibration Trigger */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCalibrating(!isCalibrating);
+            }}
+            className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold transition flex items-center gap-1 cursor-pointer ${
+              isCalibrating
+                ? 'bg-amber-400 text-black shadow-xs animate-pulse'
+                : calibratedSuccess
+                ? 'bg-emerald-500 text-white'
+                : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
+            }`}
+            title="Auto-detect scale by tapping it"
+          >
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            <span>{t('scale.calibrate_btn')}</span>
+          </button>
+
+          {/* Hardware Focus Lock Toggle (Vibration Armor) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleFocusLock();
+            }}
+            className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold transition flex items-center gap-1 cursor-pointer ${
+              isFocusLocked
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
+            }`}
+            title="Lock camera focus to prevent vibration hunting"
+          >
+            {isFocusLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+            <span>{isFocusLocked ? t('scale.focus_lock') : t('scale.focus_auto')}</span>
+          </button>
+
           {(roiCenter.x !== 0.5 || roiCenter.y !== 0.5) && (
             <button
               type="button"
@@ -926,7 +1114,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 e.stopPropagation();
                 handleRecenter();
               }}
-              className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition flex items-center gap-1"
+              className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition flex items-center gap-1 cursor-pointer"
               title="Reset focus box to center"
             >
               <Crosshair className="w-3 h-3" />
@@ -940,7 +1128,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               e.stopPropagation();
               handleSetRoiSize(roiSize === 'compact' ? 'standard' : 'compact');
             }}
-            className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20 transition"
+            className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20 transition cursor-pointer"
           >
             {roiSize === 'compact' ? 'Compact' : 'Standard'}
           </button>
@@ -954,7 +1142,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               e.stopPropagation();
               setDisplayMode(displayMode === 'led' ? 'lcd' : 'led');
             }}
-            className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20 transition flex items-center gap-1"
+            className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20 transition flex items-center gap-1 cursor-pointer"
             title="Toggle scale display type (LED bright digits or LCD dark digits)"
           >
             <span>{displayMode.toUpperCase()}</span>
@@ -967,12 +1155,12 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 e.stopPropagation();
                 handleToggleTorch();
               }}
-              className={`p-1.5 rounded-md text-xs transition ${
+              className={`p-1.5 rounded-md text-xs transition cursor-pointer ${
                 isTorchOn
                   ? 'bg-amber-400 text-black shadow-xs'
                   : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
               }`}
-              title="Toggle flashlight"
+              title="Toggle flashlight (high shutter speed kills vibration motion blur)"
             >
               <Zap className="w-3.5 h-3.5" />
             </button>
@@ -984,7 +1172,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               e.stopPropagation();
               setShowInspector(!showInspector);
             }}
-            className={`p-1.5 rounded-md text-xs transition ${
+            className={`p-1.5 rounded-md text-xs transition cursor-pointer ${
               showInspector
                 ? 'bg-[#C26D52] text-white shadow-xs'
                 : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
@@ -1012,14 +1200,14 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-            {/* Binary canvas preview */}
+            {/* Binary canvas preview (Exact 2:1 aspect ratio match) */}
             <div className="bg-black rounded-lg p-2 border border-[#E8DFD5]/20 flex flex-col items-center">
               <div className="text-[10px] text-[#E8DFD5]/60 mb-1">{t('scale.processed_projection')}</div>
               <canvas
                 ref={inspectorCanvasRef}
-                width={240}
-                height={80}
-                className="w-full max-w-[240px] h-auto border border-[#E8DFD5]/30 rounded bg-black"
+                width={320}
+                height={160}
+                className="w-full max-w-[280px] aspect-2/1 h-auto border border-[#E8DFD5]/30 rounded bg-black"
               />
             </div>
 

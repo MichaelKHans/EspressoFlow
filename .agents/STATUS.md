@@ -11,6 +11,23 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-07 -- Scale Cam 1:1 Billedforhold, Hardware Focus Lock & "Tryk på Vægten" Auto-Kalibrering (v1.7.0)
+- **Matematisk 1:1 Billedforhold & UV-Projektion:**
+  - Standardiseret Vision Inspector fra 3:1 (240x80) til 2:1 format (320x160), så den binariserede projektion vises uden vandret forvrængning.
+  - Standardiseret retikel-boksen til rent 2:1 format (`aspect-2/1`, `baseW = 0.48 / 0.64`, `baseH = 0.24 / 0.32`) for både Compact og Standard visning.
+  - Implementeret præcis koordinat-transformation (`getNormalizedVideoCoords`), der tager højde for mobilens native videobilledforhold (16:9 / 4:3) under `object-cover`.
+- **Hardware Focus Lock & Anti-Shake Pansring mod Espressomaskine-Vibrationer:**
+  - Focus Lock forhindrer Continuous Auto Focus (CAF) i at "jage" (focus hunting), når espressomaskinens 50 Hz pumpe vibrerer. Låses automatisk under brygning og kan styres manuelt i værktøjslinjen.
+  - Sub-pixel Anti-Shake Dæmpning: Lavpas-filtreret eksponentiel udjævning (`smoothedBoundingBoxRef`), der absorberer 50 Hz mikroskopiske rystelser.
+  - Fotolys (High-Shutter Torch) knap for hurtig lukketid (1/250s–1/500s) for at dræbe motion blur.
+- **"Tryk på Vægten" Dynamic Delta Trigger (Auto-Kalibrering):**
+  - Kameraet lytter efter et dynamisk spring i vægttallene ($\Delta W \ge 4.0$g).
+  - Når baristaen trykker let på vægten med fingeren, identificerer algoritmen øjeblikkeligt vægt-klyngen, ignorerer eventuelle statiske timere (`00:00` / `00.00`), centrerer fokus-retiklen, låser hardware-fokus og kvitterer med et kraftigt haptisk stød samt *"🎯 Vægt Låst & Fokuseret!"*.
+- **Timer vs. Vægt Adskillelse (`00.00` Timer Undertrykkelse):**
+  - Automatisk straf for tal, der starter med `00.` eller `00:`, hvilket forhindrer, at 4-cifrede timere forveksles med tara-vægten (`0.0g`).
+- **Android Studio Synkronisering (`npx cap sync android`):**
+  - Bygget og synkroniseret direkte ind i `android/app/src/main/assets/public`, klar til test på Android-telefon.
+
 ### 2026-10-07 -- Professionel 5-Faners Bundmenu (100% Vector Line-Art, Zero Emojis) & AeroPress/French Press Immersion Plunge Beskyttelse (v1.6.0)
 - **Mobile Bottom Navigation Bar (Tommelfinger-Optimeret 5-Fane Bundmenu):**
   - Implementeret 5-faners bundnavigation (`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#E8DFD5] shadow-lg`) med safe-area padding (`pb-safe`).

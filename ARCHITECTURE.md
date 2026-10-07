@@ -69,12 +69,17 @@ flowchart TD
     FuzzyCheck --> SaveLocalBean[Gem i LocalStorage: espresso_beans]
 
     %% Brygning & Telemetri
-    ReadyToBrew --> ScaleCam[Scale Cam Monitor<br/>Kamera-visning over vægtdisplay]
+    ReadyToBrew --> ScaleCam[Scale Cam Monitor<br/>1:1 Uforvrænget Kamera-visning over vægtdisplay]
     NavTabs -- Scale Cam --> ScaleCam
-    ScaleCam --> ModeSelect{Startmetode?}
+    ScaleCam --> PreCalib{Før-Bryg Forberedelse}
+    PreCalib -- Tryk på Vægten --> DynamicDelta[Dynamic Delta Auto-Kalibrering:<br/>Finger-tryk sporer vægt mod timer]
+    PreCalib -- Focus Armor --> HardwareFocus[Hardware Focus Lock mod 50Hz pumpevibration]
+    DynamicDelta --> FocusLocked[🎯 Vægt Låst & Fokuseret]
+    HardwareFocus --> FocusLocked
+    FocusLocked --> ModeSelect{Startmetode?}
     ModeSelect -- Manuel Start --> BaristaPress[Barista trykker Start Shot knap]
     ModeSelect -- Vægt-Trigger --> WeightDetect[Auto-start ved vægtstigning]
-    BaristaPress --> OCRStream[Live OCR Computer Vision<br/>20-30 FPS aflæsning af tal]
+    BaristaPress --> OCRStream[Live OCR Computer Vision<br/>20-30 FPS aflæsning af tal (med 50Hz sub-pixel dæmpning)]
     WeightDetect --> OCRStream
     OCRStream --> ExtractionEngine[Ekstraktionsmotor: Beregn Flow Rate,<br/>Tid, Ratio & Kanaliseringsspikes]
     ExtractionEngine --> StopBrew{Stop Kriterium nået?}

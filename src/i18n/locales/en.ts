@@ -214,6 +214,12 @@ export const en = {
   'scale.display_mode': 'Display Mode',
   'scale.layout': 'Layout',
   'scale.auto_timer_active': 'Active (Triggers at ≥ 0.1g)',
+  'scale.calibrate_btn': 'Calibrate Scale',
+  'scale.calibrate_prompt': '👆 Tap scale with finger to lock...',
+  'scale.calibrated_success': 'Weight Locked & Focused! 🎯',
+  'scale.focus_lock': 'Focus Lock',
+  'scale.focus_auto': 'Auto Focus',
+  'scale.anti_shake': 'Anti-Shake Armor',
 
   // Roast Levels & Bean Chemistry
   'roast.light': 'Light',

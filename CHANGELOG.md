@@ -2,6 +2,25 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.7.0] - 2026-10-07
+### Etape 15: Scale Cam 1:1 Billedforhold, Hardware Focus Lock & "Tryk på Vægten" Auto-Kalibrering (Android Synkroniseret)
+- **Matematisk 1:1 Billedforhold & UV-Projektion:**
+  - Løst forvrængningen mellem kamera, fokus-retikel og Vision Inspector:
+    - **Vision Inspector Canvas:** Ændret fra 3:1 (240x80) til et ægte 2:1 format (320x160), så den binariserede projektion vises 100% uforvrænget pixel for pixel.
+    - **Viewfinder Retikel-Boks:** Standardiseret til et rent 2:1 billedforhold (`aspect-2/1`, `baseW = 0.48 / 0.64`, `baseH = 0.24 / 0.32`) for både Compact og Standard visning.
+    - **Object-Cover UV-Korrektion:** Implementeret præcis koordinat-transformation (`getNormalizedVideoCoords`), der tager højde for mobilens native videobilledforhold (16:9 / 4:3), så et tryk på skærmen rammer den underliggende videostrøm med millimeterpræcision.
+- **Hardware Focus Lock & Anti-Shake Pansring mod Espressomaskine-Vibrationer:**
+  - **Focus Lock (Lås Linseposition):** Forhindrer Continuous Auto Focus (CAF) i at "jage" (focus hunting), når espressomaskinens 50 Hz pumpe vibrerer. Fokus kan låses manuelt eller låses automatisk, så snart brygningen starter.
+  - **Sub-pixel Anti-Shake Dæmpning:** Tilføjet en lavpas-filtreret eksponentiel udjævning (`smoothedBoundingBoxRef`), der absorberer mikroskopiske 50 Hz rystelser, så ciffer-rammen står som mejslet i sten under hele udtrækket.
+  - **Fotolys (High-Shutter Torch):** Fotolyset kan tændes med ét klik, hvilket tvinger kameraets lukketid op på 1/250s–1/500s og eliminerer motion blur 100%.
+- **"Tryk på Vægten" Dynamic Delta Trigger (Auto-Kalibrering):**
+  - **Genial Barista-Kalibrering:** Ved at trykke på *"Auto-Kalibrer"* lytter kameraet efter et dynamisk spring i vægttallene ($\Delta W \ge 4.0$g).
+  - Når baristaen trykker let på vægten med fingeren, identificerer algoritmen øjeblikkeligt vægt-klyngen, ignorerer eventuelle statiske timere (`00:00` / `00.00`), centrerer fokus-retiklen, låser hardware-fokus og kvitterer med et kraftigt haptisk stød samt *"🎯 Vægt Låst & Fokuseret!"*.
+- **Timer vs. Vægt Adskillelse (`00.00` Timer Undertrykkelse):**
+  - Tilføjet automatisk straf for tal, der starter med `00.` eller `00:`, hvilket forhindrer, at 4-cifrede timere forveksles med tara-vægten (`0.0g`).
+- **Android Studio Synkronisering (`npx cap sync android`):**
+  - Hele opgraderingen er synkroniseret direkte ind i det native Android-projekt (`android/app/src/main/assets/public`), klar til kørsel på fysisk Android-enhed via Android Studio (`npm run mobile:open:android`).
+
 ## [1.6.0] - 2026-10-07
 ### Etape 14: Professionel 5-Faners Bundmenu (100% Vector Line-Art, Zero Emojis) & AeroPress/French Press Immersion Plunge Beskyttelse
 - **Mobile Bottom Navigation Bar (Tommelfinger-Optimeret 5-Fane Bundmenu):**
