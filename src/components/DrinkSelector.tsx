@@ -24,6 +24,7 @@ import { GRINDER_CALIBRATIONS } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
 import { matchBeansForDrink, getOptimalBeanGuidanceForDrink } from '../lib/beanMatcher';
 import { useTranslation } from '../i18n';
+import { DripperIcon } from './CustomCoffeeIcons';
 
 export const getRoastBadgeStyles = (level: RoastLevel) => {
   switch (level) {
@@ -321,7 +322,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                 : 'text-[#E8DFD5]/70 hover:text-white hover:bg-white/5'
             }`}
           >
-            <span className="text-sm">🫗</span>
+            <DripperIcon className="w-4 h-4 shrink-0" />
             <span>{t('method.pour_over_short') || 'Pour Over'}</span>
           </button>
         </div>
@@ -548,7 +549,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FFFDF9] border border-[#E8DFD5] space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-bold text-[#2C2018] font-mono">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm">🫗</span>
+                    <DripperIcon className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
                     <span>Pour Over Guide</span>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 text-[11px] text-[#7A6E65]">
@@ -564,6 +565,12 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                     Pours: <span className="text-[#2C2018] font-semibold">{selectedDrink.pourOverGuide.poursCount} pours</span> ({selectedDrink.pourOverGuide.pouringTechnique || 'Gentle spiral'})
                   </p>
                 </div>
+                {selectedDrink.plungeWarning && (
+                  <div className="mt-2 pt-2 border-t border-amber-200/60 flex items-start gap-1.5 text-[10px] sm:text-[11px] text-amber-900 bg-amber-50/80 p-2 rounded-lg font-mono">
+                    <span className="font-bold shrink-0 text-amber-700">⚠️ Vægt-sikkerhed:</span>
+                    <span>{t('scale.plunge_warning')}</span>
+                  </div>
+                )}
               </div>
             )}
 

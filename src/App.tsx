@@ -16,6 +16,7 @@ import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
 import { BeandexView } from './components/BeandexView';
 import { ShotSummaryModal } from './components/ShotSummaryModal';
 import { SettingsModal } from './components/SettingsModal';
+import { CoffeeBeanIcon } from './components/CustomCoffeeIcons';
 import { useMobileBackHandler } from './lib/useMobileBackHandler';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
@@ -514,8 +515,8 @@ export function App() {
             </div>
           </div>
 
-          {/* Center: Dual-Mode Segmented Switcher */}
-          <div className="flex items-center p-0.5 sm:p-1 bg-[#EFE8DE] rounded-xl border border-[#DECFC0] text-xs font-mono shadow-inner shrink-0">
+          {/* Center: Dual-Mode Segmented Switcher (Visible on desktop/tablet, mobile uses bottom tab bar) */}
+          <div className="hidden md:flex items-center p-0.5 sm:p-1 bg-[#EFE8DE] rounded-xl border border-[#DECFC0] text-xs font-mono shadow-inner shrink-0">
             <button
               type="button"
               onClick={() => setActiveMode('flow')}
@@ -540,7 +541,7 @@ export function App() {
                   : 'text-[#7A6E65] hover:text-[#2C2018]'
               }`}
             >
-              <span className="text-xs">🫘</span>
+              <CoffeeBeanIcon className={`w-3.5 h-3.5 shrink-0 ${activeMode === 'beandex' ? 'text-[#C26D52]' : 'text-[#7A6E65]'}`} />
               <span className="font-semibold text-[10.5px] sm:text-xs">
                 <span className="sm:hidden">{t('mode.beandex_short')}</span>
                 <span className="hidden sm:inline">{t('mode.beandex')}</span>
@@ -597,9 +598,9 @@ export function App() {
           </div>
         </div>
 
-        {/* Tab Navigation (Segmented Tactile Bar - only visible in Espresso Flow mode) */}
+        {/* Tab Navigation (Segmented Tactile Bar - visible on desktop/tablet in Espresso Flow mode) */}
         {activeMode === 'flow' && (
-          <div className="max-w-4xl mx-auto px-2 sm:px-4 pb-2 pt-0.5">
+          <div className="hidden md:block max-w-4xl mx-auto px-2 sm:px-4 pb-2 pt-0.5">
             <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#E8DFD5] text-[11px] sm:text-xs font-mono shadow-inner">
               <button
                 onClick={() => setActiveTab('drinks')}
@@ -792,6 +793,9 @@ export function App() {
               targetYield={targetYieldGrams}
               machinePreInfusionSetting={machinePreInfusion}
               method={activeDrink.method || 'espresso'}
+              brewStyle={activeDrink.brewStyle || 'percolation'}
+              steepSeconds={activeDrink.steepSeconds}
+              plungeWarning={activeDrink.plungeWarning}
               bloomSeconds={activeDrink.pourOverGuide?.bloomSeconds || 45}
               bloomWaterGrams={activeDrink.pourOverGuide?.bloomWaterGrams || (doseGrams * 3)}
               targetFlowRateMin={activeDrink.pourOverGuide?.flowRateMinGps || 4.0}
@@ -1460,11 +1464,139 @@ export function App() {
         currentGrinderName={currentGrinder.name}
       />
 
+      {/* Mobile Bottom Navigation Bar (Thumb-First 5-Tab Bar - Exclusively Professional Vector Icons, Zero Emojis) */}
+      <nav
+        aria-label="Mobile Navigation Bar"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#E8DFD5] shadow-lg select-none"
+        style={{ paddingBottom: 'max(0.35rem, env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="grid grid-cols-5 w-full max-w-lg mx-auto px-1 pt-1.5 pb-1">
+          {/* Tab 1: Bar */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('flow');
+              setActiveTab('drinks');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer ${
+              activeMode === 'flow' && activeTab === 'drinks'
+                ? 'text-[#C26D52] font-bold'
+                : 'text-[#7A6E65] hover:text-[#2C2018]'
+            }`}
+          >
+            <div className={`p-1 rounded-lg transition-all ${
+              activeMode === 'flow' && activeTab === 'drinks' ? 'bg-[#F3EAE0]' : ''
+            }`}>
+              <Coffee className="w-5 h-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
+              {t('nav.bar') || 'Bar'}
+            </span>
+          </button>
+
+          {/* Tab 2: Vægt / Scale Cam */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('flow');
+              setActiveTab('monitor');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer ${
+              activeMode === 'flow' && activeTab === 'monitor'
+                ? 'text-[#C26D52] font-bold'
+                : 'text-[#7A6E65] hover:text-[#2C2018]'
+            }`}
+          >
+            <div className={`p-1 rounded-lg transition-all ${
+              activeMode === 'flow' && activeTab === 'monitor' ? 'bg-[#F3EAE0]' : ''
+            }`}>
+              <Camera className="w-5 h-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
+              {t('nav.scale') || 'Vægt'}
+            </span>
+          </button>
+
+          {/* Tab 3: Beandex */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('beandex');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+              activeMode === 'beandex'
+                ? 'text-[#C26D52] font-bold'
+                : 'text-[#7A6E65] hover:text-[#2C2018]'
+            }`}
+          >
+            <div className={`p-1 rounded-lg transition-all relative ${
+              activeMode === 'beandex' ? 'bg-[#F3EAE0]' : ''
+            }`}>
+              <CoffeeBeanIcon className="w-5 h-5 stroke-[2]" />
+              <span className={`absolute -top-0.5 -right-1 text-[8px] px-1 py-0.2 rounded-full font-bold font-mono ${
+                activeMode === 'beandex' ? 'bg-[#C26D52] text-white' : 'bg-[#E8DFD5] text-[#2C2018]'
+              }`}>
+                {beans.length}
+              </span>
+            </div>
+            <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
+              {t('nav.beandex') || 'Beandex'}
+            </span>
+          </button>
+
+          {/* Tab 4: Logbog */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('flow');
+              setActiveTab('logbook');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer ${
+              activeMode === 'flow' && activeTab === 'logbook'
+                ? 'text-[#C26D52] font-bold'
+                : 'text-[#7A6E65] hover:text-[#2C2018]'
+            }`}
+          >
+            <div className={`p-1 rounded-lg transition-all ${
+              activeMode === 'flow' && activeTab === 'logbook' ? 'bg-[#F3EAE0]' : ''
+            }`}>
+              <BookOpen className="w-5 h-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
+              {t('nav.logs') || 'Logbog'}
+            </span>
+          </button>
+
+          {/* Tab 5: Udstyr */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMode('flow');
+              setActiveTab('equipment');
+            }}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer ${
+              activeMode === 'flow' && activeTab === 'equipment'
+                ? 'text-[#C26D52] font-bold'
+                : 'text-[#7A6E65] hover:text-[#2C2018]'
+            }`}
+          >
+            <div className={`p-1 rounded-lg transition-all ${
+              activeMode === 'flow' && activeTab === 'equipment' ? 'bg-[#F3EAE0]' : ''
+            }`}>
+              <Sliders className="w-5 h-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
+              {t('nav.gear') || 'Udstyr'}
+            </span>
+          </button>
+        </div>
+      </nav>
+
       {/* Mobile Back Double-Press Exit Toast */}
       {showExitToast && (
         <div
           className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018]/95 text-[#FAF7F2] border border-[#C26D52]/40 text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2 pointer-events-none"
-          style={{ bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))' }}
+          style={{ bottom: 'max(4.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.25rem))' }}
         >
           <span className="w-2 h-2 rounded-full bg-[#C26D52] animate-ping" />
           <span>{exitToastMessage}</span>

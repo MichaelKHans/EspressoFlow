@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Camera,
+  Coffee,
   RefreshCw,
   Play,
   Square,
@@ -12,6 +13,7 @@ import {
   Crosshair,
   Zap,
 } from 'lucide-react';
+import { DripperIcon } from './CustomCoffeeIcons';
 import type { ShotDataPoint } from '../types/espresso';
 import { calculateSmoothedFlowRate } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
@@ -35,6 +37,9 @@ interface ScaleMonitorProps {
   targetYield: number;
   machinePreInfusionSetting?: number;
   method?: 'espresso' | 'pour_over';
+  brewStyle?: 'percolation' | 'immersion';
+  steepSeconds?: number;
+  plungeWarning?: boolean;
   bloomSeconds?: number;
   bloomWaterGrams?: number;
   targetFlowRateMin?: number;
@@ -51,6 +56,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   targetYield,
   machinePreInfusionSetting = 5.0,
   method = 'espresso',
+  brewStyle = 'percolation',
+  steepSeconds = 90,
+  plungeWarning = false,
   bloomSeconds = 45,
   bloomWaterGrams,
   targetFlowRateMin = 4.0,
@@ -1110,7 +1118,21 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         {/* Real-time Pre-infusion vs Active Flow split pill during active extraction */}
         {isBrewing && (
           <div className="flex items-center justify-between text-[11px] bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-xl text-amber-900 font-mono shadow-2xs">
-            {method === 'pour_over' ? (
+            {brewStyle === 'immersion' ? (
+              elapsedTime < steepSeconds ? (
+                <span className="animate-pulse flex items-center gap-1.5 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  {t('scale.steep_status', {
+                    time: Math.max(0, Math.round(steepSeconds - elapsedTime)),
+                  }) || `Steep: ${Math.max(0, Math.round(steepSeconds - elapsedTime))}s remaining`}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 font-bold text-amber-800 animate-bounce">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  {t('scale.steep_finished') || 'Steep complete! Lift off scale before plunging'}
+                </span>
+              )
+            ) : method === 'pour_over' ? (
               elapsedTime < bloomSeconds ? (
                 <span className="animate-pulse flex items-center gap-1.5 font-bold">
                   <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -1144,15 +1166,31 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
         )}
 
+        {/* Plunge Force Scale Protection Warning (AeroPress & French Press) */}
+        {plungeWarning && (
+          <div className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs font-mono text-amber-900 shadow-2xs">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span className="text-[10.5px] sm:text-xs leading-tight font-medium">
+              {t('scale.plunge_warning')}
+            </span>
+          </div>
+        )}
+
         {/* Status / Guidance Banner */}
         {!isBrewing ? (
           <div className="px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between gap-2 text-xs font-mono">
             <div className="flex items-center gap-2 text-[#7A6E65]">
-              <span className="text-[#C26D52] text-sm leading-none">
-                {method === 'pour_over' ? '🫗' : '☕'}
-              </span>
+              <div className="text-[#C26D52] shrink-0">
+                {method === 'pour_over' ? (
+                  <DripperIcon className="w-4 h-4" />
+                ) : (
+                  <Coffee className="w-4 h-4" />
+                )}
+              </div>
               <span className="text-[11px] sm:text-xs leading-tight">
-                {method === 'pour_over'
+                {brewStyle === 'immersion'
+                  ? (t('scale.tare_immersion_hint') || 'Place brewer on scale, tare, add water to target, steep & remove before plunging')
+                  : method === 'pour_over'
                   ? (t('scale.tare_pourover_hint') || 'Place brewer, filter & coffee on scale, then tare to 0.0g')
                   : t('scale.manual_start_hint')}
               </span>
@@ -1166,7 +1204,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             <div className="flex items-center gap-2 text-amber-900 font-bold">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
               <span className="text-[11px] sm:text-xs leading-tight">
-                {method === 'pour_over'
+                {brewStyle === 'immersion'
+                  ? elapsedTime < steepSeconds
+                    ? (t('scale.steep_status', { time: Math.max(0, Math.round(steepSeconds - elapsedTime)) }) || `Steeping in progress... (${Math.max(0, Math.round(steepSeconds - elapsedTime))}s remaining)`)
+                    : (t('scale.steep_finished') || 'Steep complete! Lift brewer off scale before plunging')
+                  : method === 'pour_over'
                   ? elapsedTime < bloomSeconds
                     ? 'Bloom Saturation in progress...'
                     : (t('scale.pacing_guide', {

@@ -165,6 +165,9 @@ export interface DrinkRecipe {
   subtitle: string;
   category: 'black' | 'milk' | 'dessert' | 'filter';
   method?: BrewMethod; // 'espresso' (default) | 'pour_over'
+  brewStyle?: 'percolation' | 'immersion'; // 'percolation' (V60, Chemex) vs 'immersion' (AeroPress, French Press)
+  steepSeconds?: number; // Total steep / infusion time before plunging
+  plungeWarning?: boolean; // Warn barista to lift off scale before downward plunging
   defaultDoseGrams: number;
   targetYieldGrams: number;
   targetRatio: number;

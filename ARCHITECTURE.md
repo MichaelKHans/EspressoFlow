@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.4.0 (Flowbean Rebranding & Full Native Icon Suite)  
+> **Gældende version:** v1.6.0 (Mobile Bottom Navigation Bar & Immersion Plunge Protection)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -268,12 +268,16 @@ Diagrammet nedenfor viser ejerskab af React state og fordeling af visninger:
 graph TD
     App[App.tsx<br/>Master State Controller]
     
-    %% Hovedvisninger
-    App --> MonitorTab[ScaleMonitor.tsx<br/>Live Scale Cam, OCR & Flowgraf]
+    %% Hovedvisninger (Styres af 5-faners Mobile Bottom Nav på mobil / Desktop Header Bar)
+    App --> DrinkTab[DrinkSelector.tsx<br/>Barista Deck & Espresso/Pour Over Toggle]
+    App --> MonitorTab[ScaleMonitor.tsx<br/>Live Scale Cam, OCR, Bloom/Steep & Flowgraf]
     App --> BeandexTab[BeandexView.tsx<br/>Bønnekartotek, Vivino Smagsnoter, Fotos]
     App --> LogbookTab[Logbook.tsx<br/>Dagsopdelt historik, kurver & smag]
     App --> GearTab[GrinderFleet / Gear Setup<br/>Kværn-flåde & baropsætning]
     App --> AdminTab[AdminPortal.tsx<br/>Curator Studio & Godkendelsespult]
+
+    %% Ikoner & UI Assets
+    App --> CustomIcons[CustomCoffeeIcons.tsx<br/>Professionelle Vector Line-Art Ikoner: CoffeeBean & Dripper]
 
     %% Modaler
     App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]

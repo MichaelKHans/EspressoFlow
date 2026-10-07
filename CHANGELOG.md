@@ -2,6 +2,18 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.6.0] - 2026-10-07
+### Etape 14: Professionel 5-Faners Bundmenu (100% Vector Line-Art, Zero Emojis) & AeroPress/French Press Immersion Plunge Beskyttelse
+- **Mobile Bottom Navigation Bar (Tommelfinger-Optimeret 5-Fane Bundmenu):**
+  - Flyttet appens 5 primære destinationer (`[ Bar ]`, `[ Vægt ]`, `[ Beandex ]`, `[ Logbog ]`, `[ Udstyr ]`) til en fast bundmenu på smartphones (`md:hidden`) med iOS safe-area support (`pb-safe`).
+  - **Streng Æstetisk Regel Håndhævet (Zero Emojis):** Alle ikoner i bundmenuen og decket er udskiftet med rene, professionelle 24x24 Lucide og SVG line-art vektorikoner (`Coffee`, `Camera`, skræddersyet `CoffeeBeanIcon`, `BookOpen`, `Sliders`, `DripperIcon`). Ingen emojis i kontrolfladen.
+  - Frigjort mobil-headeren: Topheaderen på mobil er nu reduceret til en ren, slank 44px statusbar (Logo + Brand + Settings/Trial status). Center-switcheren og det øverste 4-kolonne bånd er skjult på mobil og bevaret for desktop/tablet (`md:flex`/`md:block`).
+- **AeroPress & French Press Vægt-Beskyttelse & Immersion Flow Fysik:**
+  - Håndteret fysikken for nedsænkning og stempelpresning: At presse et stempel direkte på en kaffevægt udøver 10–20 kg nedadrettet kraft, hvilket forårsager vejecelle-overbelastning (`EEEE` sensorfejl).
+  - Indført `brewStyle: 'immersion'`, `steepSeconds`, og `plungeWarning: true` i `DrinkRecipe` og opskrifterne for AeroPress og French Press.
+  - Scale Cam viser under trækketid en dedikeret Steep Countdown Timer i stedet for falske flow spikes.
+  - Iøjnefaldende sikkerhedsadvarsel på både opskriftskort og live Scale Cam: *"⚠️ Løft bryggeren af vægten før du presser! Undgå overbelastning af vægtens vejecelle"*.
+
 ## [1.5.0] - 2026-10-07
 ### Etape 13: Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header
 - **Mobil-Optimeret Metode-Vælger i Coffee Bar (Model A):**

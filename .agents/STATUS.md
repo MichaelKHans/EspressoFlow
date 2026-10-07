@@ -11,6 +11,26 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-07 -- Professionel 5-Faners Bundmenu (100% Vector Line-Art, Zero Emojis) & AeroPress/French Press Immersion Plunge Beskyttelse (v1.6.0)
+- **Mobile Bottom Navigation Bar (Tommelfinger-Optimeret 5-Fane Bundmenu):**
+  - Implementeret 5-faners bundnavigation (`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#E8DFD5] shadow-lg`) med safe-area padding (`pb-safe`).
+  - **100% Professionelle Vektor Linje-Ikoner (Zero Emojis):** Brugerens instruks om ingen emojis i kontrolfladen overholdt til punkt og prikke.
+    - Tab 1: **Bar** (`Coffee` fra Lucide)
+    - Tab 2: **Vægt** (`Camera` fra Lucide)
+    - Tab 3: **Beandex** (Skræddersyet artisan `CoffeeBeanIcon` SVG-vektor med `beans.length` badge)
+    - Tab 4: **Logbog** (`BookOpen` fra Lucide)
+    - Tab 5: **Udstyr** (`Sliders` fra Lucide)
+  - Desuden udskiftet filter-emojis i deck og vejledninger med `DripperIcon` (SVG line-art).
+- **Slank Mobil-Header (44px Kompakt Højde):**
+  - Fjernet center-switcheren og top fanebåndet på mobilen (`hidden md:flex` og `hidden md:block`).
+  - Mobil-headeren viser nu udelukkende logo + brand til venstre, og Trial/Pro badge + Settings til højre, hvilket frigiver masser af skærmplads til kaffebaren og vægten.
+- **AeroPress & French Press Vægt-Beskyttelse & Immersion Fysik:**
+  - Håndteret fysikken for stempelpresning: Ved plunging presses 10-20 kg ned på vægten, hvilket forårsager sensorfejl (`EEEE`).
+  - Udbygget `DrinkRecipe` med `brewStyle: 'immersion'`, `steepSeconds`, og `plungeWarning: true`.
+  - Tilføjet Steep Countdown Timer i `ScaleMonitor.tsx` under trækketid for immersion kaffer.
+  - Iøjnefaldende sikkerhedsadvarsel på både opskriftskort og Scale Cam: *"⚠️ Løft bryggeren af vægten før du presser! Undgå overbelastning af vægtens vejecelle"*.
+- **Lokal Byggevalidering:** Testet med `npm run build` lokalt (100% succesfuld Vite + TS kompilering uden fejl).
+
 ### 2026-10-07 -- Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header (v1.5.0)
 - **Tommelfinger-Optimeret Metode-Vælger i Coffee Bar (Model A):**
   - Implementeret taktil, tommelfingervenlig 2-vejs omskifter (`[ ☕ Espresso Bar ]` | `[ 🫗 Pour Over Bar ]`) direkte under hero-hilsenen i Coffee Bar.

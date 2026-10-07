@@ -16,6 +16,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'nav.coffee_bar': 'Kaffebar',
   'nav.scale': 'Vægt',
   'nav.scale_cam': 'Scale Cam',
+  'nav.beandex': 'Beandex',
   'nav.logs': 'Logs',
   'nav.logbook': 'Logbog',
   'nav.gear': 'Udstyr',
@@ -41,6 +42,10 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'scale.pacing_guide': 'Hælderate: {flow} g/s (Mål {min}–{max} g/s)',
   'scale.target_water': 'Samlet Vand',
   'scale.tare_pourover_hint': 'Placer kande, tragt og kaffe på vægten, og nulstil til 0.0g',
+  'scale.steep_status': 'Trækker: {time}s tilbage',
+  'scale.steep_finished': 'Trækketid færdig! Løft af vægten før presning',
+  'scale.plunge_warning': '⚠️ Løft bryggeren af vægten før du presser! Nedadrettet tryk overbelaster vægtens vejecelle.',
+  'scale.tare_immersion_hint': 'Nulstil vægt, hæld mål-vand på, lad trække, og løft af vægten før presning',
 
   // Coffee Bar / Drink Deck
   'deck.title': 'Barista Ekstraktions-Deck',

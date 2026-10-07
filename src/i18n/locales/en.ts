@@ -14,6 +14,7 @@ export const en = {
   'nav.coffee_bar': 'Coffee Bar',
   'nav.scale': 'Scale',
   'nav.scale_cam': 'Scale Cam',
+  'nav.beandex': 'Beandex',
   'nav.logs': 'Logs',
   'nav.logbook': 'Logbook',
   'nav.gear': 'Gear',
@@ -39,6 +40,10 @@ export const en = {
   'scale.pacing_guide': 'Pour Rate: {flow} g/s (Target {min}–{max} g/s)',
   'scale.target_water': 'Total Water',
   'scale.tare_pourover_hint': 'Place brewer, filter & coffee on scale, then tare to 0.0g',
+  'scale.steep_status': 'Steeping: {time}s remaining',
+  'scale.steep_finished': 'Steep complete! Lift off scale before plunging',
+  'scale.plunge_warning': '⚠️ Remove brewer from scale before plunging! Downward force will overload or damage scale load cell.',
+  'scale.tare_immersion_hint': 'Place brewer on scale, tare, add water to target, steep & remove before plunging',
 
   // Coffee Bar / Drink Deck
   'deck.title': 'Barista Extraction Deck',
