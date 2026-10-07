@@ -5,8 +5,8 @@ export interface CustomIconProps extends React.SVGProps<SVGSVGElement> {
 }
 
 /**
- * Professional Coffee Bean Vector Line Icon (Lucide 24x24 stroke style)
- * Replaces informal bean emoji with clean artisan line-art.
+ * Official Flowbean Vector Line Icon (Lucide 24x24 stroke style)
+ * Directly matches the Flowbean master logo: artisan coffee bean with dynamic flow wave.
  */
 export const CoffeeBeanIcon: React.FC<CustomIconProps> = ({
   size = 20,
@@ -26,10 +26,12 @@ export const CoffeeBeanIcon: React.FC<CustomIconProps> = ({
       className={className}
       {...props}
     >
-      {/* Stylized oval bean contour */}
-      <path d="M18.5 5.5a8.2 8.2 0 0 0-11.6 0c-3.2 3.2-3.2 8.4 0 11.6 3.2 3.2 8.4 3.2 11.6 0 3.2-3.2 3.2-8.4 0-11.6z" />
-      {/* Characteristic curved Arabica center fissure */}
-      <path d="M6.9 17.1c2.4-0.8 3.8-3.2 5.1-5.1 1.3-1.9 2.7-4.3 5.1-5.1" />
+      {/* Tilted bean body matching the master logo angle */}
+      <path d="M4.5 14.5C3.2 10.5 5 6.5 9 4.8C12.5 3.3 15.5 5.5 15 9.5C14.5 13 11.5 15.8 8 16.2C6.5 16.3 5.2 15.8 4.5 14.5Z" />
+      {/* Characteristic logo curved center fissure */}
+      <path d="M9 4.8C7.8 8.5 7.2 11.8 4.5 14.5" />
+      {/* Signature aerodynamic flow wave trail swooping under the bean */}
+      <path d="M6.5 17C9 19.5 13.5 19.5 16.5 17C18.8 15 19.8 12.2 20.5 9" />
     </svg>
   );
 };

@@ -37,6 +37,9 @@
   - **Android & iOS Navigation Bar Buffer:** Bundmenuens padding udvidet (`max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))`), så den aldrig kommer i karambolage med 3-knaps systemmenuer eller gestusbjælker på Android og iPhones.
   - **High-Definition Kantskarphed i Hele Appen:** Opgraderet alle sektions- og kortkanter (`border-[#E8DFD5]`) fra bleg sand til en fyldig, taktil mokka-kant (`#D2C0AE`) med `1.5px` stregtykkelse.
   - **Tydeligt Beandex Antal-Badge:** Badget er forstørret (`min-w-[18px] h-[18px]`) med fed monospace tekst (`9.5px`), mørk espresso/terracotta baggrund og en 2px hvid afgrænsningsring (`ring-2 ring-[#FFFDF9]`).
+- **Logo-Tro Kaffebønne & Responsiv "Coffee Bar" Label:**
+  - **Beandex Bønne-Ikon Matcher Master Logoet:** Opdateret `CoffeeBeanIcon` med præcis samme vinkel (35° hældning), to-delte bønnehalvdele, svunget spalte og den aerodynamiske flow-bølge svøbt under bunden ligesom master logoet.
+  - **Responsiv "Coffee Bar" Label i Bunden:** På alle skærme fra 380px og op (iPhone 12/13/14/15/16, Plus, Pro, Pro Max og moderne Androids) vises det fulde, professionelle navn **Coffee Bar** (samt *Scale Cam* og *Logbook*), mens de smalleste telefoner (<380px) komprimerer til **Bar** uden risiko for linjebrud.
 - **Lokal Byggevalidering:** Testet med `npm run build` lokalt (100% succesfuld Vite + TS kompilering uden fejl).
 
 ### 2026-10-07 -- Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header (v1.5.0)

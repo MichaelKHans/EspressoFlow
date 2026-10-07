@@ -1490,7 +1490,8 @@ export function App() {
               <Coffee className="w-5 h-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
-              {t('nav.bar') || 'Bar'}
+              <span className="xs:hidden">{t('nav.bar') || 'Bar'}</span>
+              <span className="hidden xs:inline">{t('nav.coffee_bar') || 'Coffee Bar'}</span>
             </span>
           </button>
 
@@ -1513,7 +1514,8 @@ export function App() {
               <Camera className="w-5 h-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
-              {t('nav.scale') || 'Vægt'}
+              <span className="xs:hidden">{t('nav.scale') || 'Scale'}</span>
+              <span className="hidden xs:inline">{t('nav.scale_cam') || 'Scale Cam'}</span>
             </span>
           </button>
 
@@ -1567,7 +1569,8 @@ export function App() {
               <BookOpen className="w-5 h-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">
-              {t('nav.logs') || 'Logbog'}
+              <span className="xs:hidden">{t('nav.logs') || 'Logs'}</span>
+              <span className="hidden xs:inline">{t('nav.logbook') || 'Logbook'}</span>
             </span>
           </button>
 

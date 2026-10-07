@@ -21,6 +21,9 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
   - **Universel Android & iOS Tilpasning:** Bundmenuens padding er udvidet (`max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))`), så den altid holder minimum 12px frihøjde over Androids system-navigationsbjælke (3-knapsbar el. gestusbjælke) og iOS Home Indicator uden overlap.
   - **High-Definition Kantskarphed i Hele Appen:** Opgraderet alle sektions- og kortkanter (`border-[#E8DFD5]`) fra bleg sandfarve til en fyldig, taktil mokka-tone (`#D2C0AE` / `--color-line: #D0BDAA`) med `1.5px` stregtykkelse, så samtlige sektioner fremstår knivskarpt adskilte.
   - **Tydeligt Beandex Antal-Badge:** Badget er forstørret (`min-w-[18px] h-[18px]`) med fed monospace tekst (`9.5px`), dyb espresso/terracotta baggrund og en 2px ren hvid afgrænsningsring (`ring-2 ring-[#FFFDF9]`), så bønneantallet altid er øjeblikkeligt læsbart.
+- **Logo-Tro Kaffebønne & Responsiv "Coffee Bar" Label:**
+  - **Beandex Bønne-Ikon Matcher Master Logoet:** Opdateret `CoffeeBeanIcon` med præcis samme vinkel (35° hældning), to-delte asymmetriske bønnehalvdele, svunget spalte og den karakteristiske aerodynamiske flow-bølge svøbt under bunden, som pryder det officielle Flowbean logo.
+  - **Responsiv "Coffee Bar" Label i Bunden:** På alle skærme fra 380px og op (iPhone 12/13/14/15/16, Plus, Pro, Pro Max og moderne Androids) vises det fulde, professionelle navn **Coffee Bar** (samt *Scale Cam* og *Logbook*), mens de smalleste telefoner (<380px) elegant komprimerer til **Bar** uden risiko for linjebrud.
 
 ## [1.5.0] - 2026-10-07
 ### Etape 13: Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header
