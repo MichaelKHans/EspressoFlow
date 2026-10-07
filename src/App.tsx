@@ -499,12 +499,12 @@ export function App() {
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
           {/* Brand Logo & Title */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-            <div className="w-8 h-8 rounded-xl bg-[#2C2018] flex items-center justify-center text-[#C26D52] shadow-xs shrink-0">
-              <Coffee className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <div className="w-8 h-8 rounded-xl bg-[#2C2018] flex items-center justify-center shadow-xs shrink-0 overflow-hidden border border-[#C26D52]/20">
+              <img src="/flowbean-logo.png" alt="Flowbean Logo" className="w-full h-full object-cover" />
             </div>
             <div className="shrink-0">
               <h1 className="font-bold text-[11px] xs:text-xs sm:text-sm tracking-wider text-[#2C2018] font-mono whitespace-nowrap">
-                {activeMode === 'flow' ? 'ESPRESSO FLOW' : 'BEANDEX'}
+                {activeMode === 'flow' ? 'FLOWBEAN' : 'BEANDEX'}
               </h1>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono hidden sm:block truncate">
                 {activeMode === 'flow' ? t('app.subtitle') : t('beandex.subtitle')}

@@ -1,8 +1,8 @@
 {
-  "name": "espresso-flow",
+  "name": "flowbean",
   "private": true,
-  "version": "1.3.3",
-  "description": "Real-Time Scale OCR Computer Vision & Extraction Flow for Coffee Enthusiasts",
+  "version": "1.4.0",
+  "description": "Flowbean - Real-Time Scale OCR Computer Vision & Flow Dynamics for Coffee Enthusiasts",
   "type": "module",
   "scripts": {
     "dev": "vite",

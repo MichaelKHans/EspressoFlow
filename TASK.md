@@ -26,17 +26,21 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] Kværn-oversættelse for mikro-justeringer (f.eks. +/- 1 trin på Encore ESP = +/- 2.5s udtræk, Eureka delestreger)
 - [x] $CO_2$ afgasnings-alarm for friskristede bønner (< 4 dage fra ristning)
 
-## 📱 FASE 6: Nativ Mobil App & TestFlight (AFSLUTTET)
-- [x] Initialiser Capacitor v8 for iOS og Android (`ios/` og `android/`)
-- [x] Etabler TestFlight byggepipeline (`.github/workflows/ios-build.yml` og `Fastfile` :beta)
-- [x] Forbedr OCR hardware-robusthed (Screen WakeLock, taktil haptik, zoom mod makro-spring, 12.5 FPS $\rightarrow$ 30 FPS adaptiv frekvens)
-- [x] Opret `com.mh.espressoflow` App Identifier i Apple Developer Portal / App Store Connect (App ID: 6819161308)
-- [x] Konfigurer de 5 Apple Secrets i GitHub Repo Settings for `MichaelKHans/EspressoFlow`
-- [x] Løs Android real-world issues (OCR dato fremtidsspærre, 100% ren start uden testdata, topbar friplads og bundnavigation buffer - v1.3.3)
+## 🎨 FASE 7: Rebranding til Flowbean & Fuld Nativ Ikon-Suite (v1.4.0 - AFSLUTTET)
+- [x] Officielt navneskift til **Flowbean** (favner både Espresso, Pour Over og bønnerating)
+- [x] Nyt 1024x1024 master app-logo i `assets/flowbean-master-icon.png` (porcelænsbønne + terracotta flow-kurve på `#2C2018`)
+- [x] Løst manglende ikon på iOS / TestFlight (`ios-marketing` & fuld iPhone opløsningssuite i `Contents.json`)
+- [x] Løst manglende ikon på Android (slettet overstyrende vector-drawable, opdateret `#2C2018` baggrund, genereret adaptive mipmap ikoner)
+- [x] Mobil display-navn sat til 8 tegn (`Flowbean`) for nul prikker/afkortning under ikonet
+- [x] Opdateret `Info.plist`, Android `strings.xml`, `capacitor.config.ts`, `package.json`, `index.html` og in-app header logo
 
 ---
 
-## 📌 Næste Opgaver (Morgen / Næste session): Bønne-Arkivering, Genkøbs-Labels & Juridisk Ajourføring
+## 📌 Næste Opgaver: Pour Over Integration & Bønne-Arkivering (Beandex)
+- [ ] **Pour Over Mode & Profiler i Coffee Bar:**
+  - Tilføj top-toggle mellem `[ ☕ Espresso ]` og `[ 🫗 Pour Over ]`.
+  - Tilføj filterbryggemetoder: V60 (Standard & 4:6 Kasuya), Chemex, Kalita Wave, AeroPress, French Press.
+  - Dedikerede pour-over parametre: Bloom-timer (30-45s), target flow rate (4-6 g/s) og target ratios (1:15–1:17).
 - [ ] **Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags):**
   - Tilføj mulighed for at markere en kaffepose som "Opbrugt" / "Arkiveret" i stedet for bare at slette den.
   - Opret sektionering i Beandex: "Aktive kaffer" vs. "Arkiv / Kaffekirkegård" med fold-ud historik.

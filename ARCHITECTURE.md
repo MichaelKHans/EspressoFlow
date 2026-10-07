@@ -1,8 +1,8 @@
-# 🗺️ ESPRESSO FLOW – APPENS PROCESOVERBLIK & ARKITEKTURKORT
+# 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.3.3  
-> **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Espresso Flow. Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
+> **Gældende version:** v1.4.0 (Flowbean Rebranding & Full Native Icon Suite)  
+> **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
 
@@ -347,6 +347,7 @@ Espresso Flow er pakket som en cross-platform mobilapplikation via Capacitor v8 
 | **Adaptiv OCR Billedhastighed** | `ScaleMonitor.tsx` | 80 ms (~12.5 FPS) i standby/tare-søgning (forhindrer termisk throttling og batteridræn) $\rightarrow$ 33 ms (~30 FPS) under aktiv brygning for flydende væsketracking. |
 | **Database RLS Sikkerhed** | `supabase/schema.sql` | Alle offentlige DELETE-rettigheder er fjernet. Uautoriseret opgradering af bønners verificeringsstatus er blokeret. |
 | **Swift 6 & SPM Plugin Isolation** | `scripts/patch-capacitor-plugins.cjs` | Automatisk korrektion af `call.reject` $\rightarrow$ `call.errorHandler?(nil)` i Capacitor v8 Swift Package Manager moduler. |
+| **Native Ikon- & Navne-Suite (Flowbean)** | `scripts/generate-assets.py` | 8-tegns displaynavn `Flowbean` forhindrer afkortning med prikker. iOS indeholder `ios-marketing` og universal 1024x1024 + iPhone opløsninger. Android indeholder adaptive mipmaps + `#2C2018` baggrund uden overstyrende vector-drawables. |
 
 ### 9.2 iOS TestFlight Byggepipeline (`.github/workflows/ios-build.yml`)
 - **Byggemiljø:** `macos-15` (Apple Silicon M-series), Xcode `26.3`, Node `22.x LTS`, Ruby `3.3`.

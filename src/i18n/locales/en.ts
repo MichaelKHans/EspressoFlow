@@ -4,7 +4,7 @@
  */
 export const en = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': 'Precision Scale OCR & Flow Dynamics',
   'app.pro_lifetime': 'PRO LIFETIME',
   'app.trial_days': 'TRIAL: {days}D',

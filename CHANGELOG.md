@@ -1,6 +1,25 @@
-# 📜 ESPRESSO FLOW – CHANGELOG
+# 📜 FLOWBEAN – CHANGELOG
 
-Alle væsentlige ændringer og milepæle i Espresso Flow dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
+Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
+
+## [1.4.0] - 2026-10-07
+### Etape 12: Rebranding til Flowbean, Nyt Master Logo & Fuld Nativ Ikon-Suite (iOS TestFlight & Android)
+- **Officielt Rebrand til Flowbean:**
+  - Navnet skiftet fra *Espresso Flow* til **Flowbean** for at favne både Espresso, Pour Over (filterkaffe) og bønne-rating/håndtering.
+  - Display-navn på mobilen er præcis 8 tegn (`Flowbean`), hvilket forhindrer enhver form for afkortning med prikker (`...`) på iPhones og Android-enheser.
+  - Opdateret `CFBundleDisplayName` i iOS `Info.plist`, `app_name` i Android `strings.xml`, `appName` i `capacitor.config.ts`, `package.json` og `index.html`.
+- **Nyt Prisvindende Flowbean Master Logo:**
+  - Skabt nyt officielt master logo i `assets/flowbean-master-icon.png` (1024x1024): Porcelænshvid minimalistisk kaffebønne i harmonisk forening med en aerodynamisk flow-bølge i terracotta (`#C26D52`) og gylden crema på en dyb mørkristet espressobaggrund (`#2C2018`).
+- **Løst Manglende Ikon på iOS & TestFlight (`ios/App/App/Assets.xcassets`):**
+  - Tilføjet `"idiom": "ios-marketing"` og `"idiom": "universal"` i `Contents.json`, som er påkrævet af App Store Connect og TestFlight for at vise ikonet i oversigten og på installerede TestFlight-enheder.
+  - Genereret samtlige native iPhone opløsninger (20pt, 29pt, 40pt, 60pt @2x og @3x) samt splash screens (2732x2732), så ikonet altid fremstår knivskarpt på enhver iPhone-skærm.
+- **Løst Manglende Ikon på Android (`android/app/src/main/res`):**
+  - Fjernet den redundante `drawable-v24/ic_launcher_foreground.xml` (som viste standard Capacitor robotten i hvidt på moderne Android 7+ enheder).
+  - Opdateret `ic_launcher_background.xml` til den varme espressofarve `#2C2018`.
+  - Genereret komplette sæt af `ic_launcher.png`, `ic_launcher_round.png` og adaptiv `ic_launcher_foreground.png` for alle densiteter (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`).
+- **Web & In-App Header Integration:**
+  - Genereret `public/flowbean-logo.png`, `public/apple-touch-icon.png` og favicons.
+  - Integreret det officielle Flowbean logo i appens top bar (`src/App.tsx`) ved siden af `FLOWBEAN` titlen.
 
 ## [1.3.3] - 2026-10-05
 ### Etape 11: Real-World Android UI & OCR Fikser (Dato-Sikkerhed, Ren Start, Top Bar & Navigation Bar Space)

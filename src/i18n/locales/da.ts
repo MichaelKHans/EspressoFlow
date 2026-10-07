@@ -6,7 +6,7 @@ import type { TranslationKeys } from './en';
  */
 export const da: Partial<Record<TranslationKeys, string>> = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': 'Præcisions-Vægt OCR & Flow Dynamics',
   'app.pro_lifetime': 'PRO LIFETIME',
   'app.trial_days': 'PRØVEPERIODE: {days}D',

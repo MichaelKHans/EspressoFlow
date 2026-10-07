@@ -1,7 +1,7 @@
-# Espresso Flow Project Status & History
+# Flowbean Project Status & History
 
 ## Projekt Oversigt
-- **Navn:** Espresso Flow
+- **Navn:** Flowbean (tidligere Espresso Flow)
 - **Primært sprog:** 100% Engelsk (English US)
 - **Design System:** Espresso Warmth (`#FAF7F2`, `#FFFDF9`, `#2C2018`, `#C26D52`) + `Courier Prime`
 - **Forretningsmodel:** 7 dages in-app prøveperiode $\rightarrow$ $4.99 / 49,- DKK Lifetime Unlock (RevenueCat)
@@ -10,6 +10,23 @@
 ---
 
 ## 🕒 Historik & Gennemførte Opgaver
+
+### 2026-10-07 -- Rebranding til Flowbean, Nyt Master Logo & Fuld Nativ Ikon-Suite (v1.4.0)
+- **Officielt Rebrand til Flowbean:**
+  - Nyt navn fastlagt til `Flowbean` for at favne både Espresso, Pour Over og bønnehåndtering/rating.
+  - Displaynavn under mobilikoner er nu 8 tegn (`Flowbean`), hvilket eliminerer enhver afkortning med prikker på iOS og Android.
+  - Opdateret `CFBundleDisplayName` i `Info.plist`, `app_name` i Android `strings.xml`, `appName` i `capacitor.config.ts`, `package.json` og `index.html`.
+- **Nyt Master Logo (1024x1024):**
+  - Genereret og gemt i `assets/flowbean-master-icon.png`: Porcelænshvid kaffebønne med aerodynamisk flow-bølge i terracotta og crema på espressobaggrund (`#2C2018`).
+- **Løst Manglende Ikon på iOS & TestFlight:**
+  - Tilføjet `"idiom": "ios-marketing"` og fuld specifikation i `Contents.json`.
+  - Genereret samtlige iPhone opløsninger og splash screens.
+- **Løst Manglende Ikon på Android:**
+  - Fjernet `drawable-v24/ic_launcher_foreground.xml` (som viste standard Capacitor robotten i hvidt).
+  - Opdateret `ic_launcher_background.xml` til `#2C2018`.
+  - Genereret `ic_launcher.png`, `ic_launcher_round.png` og adaptiv `ic_launcher_foreground.png` på tværs af alle mipmaps.
+- **Web & Top Header:**
+  - Genereret `public/flowbean-logo.png` og opdateret top headeren i `App.tsx` til at vise det officielle logo og `FLOWBEAN` titlen.
 
 ### 2026-10-05 -- Real-World Android UI & OCR Fikser (v1.3.3)
 - **OCR Dato-Præcision & BBD Fremtids-Spærre:**
