@@ -18,6 +18,8 @@ import { ShotSummaryModal } from './components/ShotSummaryModal';
 import { SettingsModal } from './components/SettingsModal';
 import { CoffeeBeanIcon } from './components/CustomCoffeeIcons';
 import { useMobileBackHandler } from './lib/useMobileBackHandler';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 import type { OnboardingResult } from './components/OnboardingWizard';
 import { DRINK_RECIPES } from './data/drinkRecipes';
 import type {
@@ -160,6 +162,15 @@ export function App() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeMode, activeTab]);
+
+  // Configure Native Mobile Status Bar: ensure dark text/icons on parchment background
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+      StatusBar.setBackgroundColor({ color: '#FAF7F2' }).catch(() => {});
+      StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+    }
+  }, []);
 
   // Load persistence, handle legal deep links, and listen for route changes
   useEffect(() => {

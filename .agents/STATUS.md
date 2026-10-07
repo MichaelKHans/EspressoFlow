@@ -25,6 +25,9 @@
   - Når baristaen trykker let på vægten med fingeren, identificerer algoritmen øjeblikkeligt vægt-klyngen, ignorerer eventuelle statiske timere (`00:00` / `00.00`), centrerer fokus-retiklen, låser hardware-fokus og kvitterer med et kraftigt haptisk stød samt *"🎯 Vægt Låst & Fokuseret!"*.
 - **Timer vs. Vægt Adskillelse (`00.00` Timer Undertrykkelse):**
   - Automatisk straf for tal, der starter med `00.` eller `00:`, hvilket forhindrer, at 4-cifrede timere forveksles med tara-vægten (`0.0g`).
+- **Mobil Status Bar Farve & Tekst-Klarhed (Løst Hvid-på-Lys Fejl):**
+  - **Krystalklar Mørk Typografi på Alle Mobiler:** Rettet statusbaren fra `style: 'DARK'` (hvid tekst) til `style: 'LIGHT'` (`@capacitor/status-bar`), så ur (`12.17`), batteri, WiFi og notifikationsikoner vises i skarp, mørk espresso/sort farve på den lyse pergament-baggrund (`#FAF7F2`).
+  - **Native Android & iOS Support:** Tilføjet `android:windowLightStatusBar="true"` og `android:statusBarColor="#FAF7F2"` i Androids native `styles.xml`, samt runtime opstarts-initialisering via `StatusBar.setStyle({ style: Style.Light })`, så alle Android-telefoner og iPhones viser statusbaren 100% læseligt og harmonisk.
 - **Android Studio Synkronisering (`npx cap sync android`):**
   - Bygget og synkroniseret direkte ind i `android/app/src/main/assets/public`, klar til test på Android-telefon.
 
