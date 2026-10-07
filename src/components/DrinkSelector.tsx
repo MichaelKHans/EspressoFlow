@@ -295,7 +295,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               setMethodFilter('espresso');
               const firstEspresso = DRINK_RECIPES.find((d) => (d.method || 'espresso') === 'espresso');
               if (selectedDrink.method === 'pour_over' && firstEspresso) {
-                handleSelectDrinkWithScroll(firstEspresso);
+                onSelectDrink(firstEspresso);
               }
             }}
             className={`py-2 px-3 rounded-lg sm:rounded-xl font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
@@ -313,7 +313,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               setMethodFilter('pour_over');
               const firstFilter = DRINK_RECIPES.find((d) => d.method === 'pour_over');
               if (selectedDrink.method !== 'pour_over' && firstFilter) {
-                handleSelectDrinkWithScroll(firstFilter);
+                onSelectDrink(firstFilter);
               }
             }}
             className={`py-2 px-3 rounded-lg sm:rounded-xl font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${

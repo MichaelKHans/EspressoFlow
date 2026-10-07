@@ -13,6 +13,9 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
   - Indført `brewStyle: 'immersion'`, `steepSeconds`, og `plungeWarning: true` i `DrinkRecipe` og opskrifterne for AeroPress og French Press.
   - Scale Cam viser under trækketid en dedikeret Steep Countdown Timer i stedet for falske flow spikes.
   - Iøjnefaldende sikkerhedsadvarsel på både opskriftskort og live Scale Cam: *"⚠️ Løft bryggeren af vægten før du presser! Undgå overbelastning af vægtens vejecelle"*.
+- **Rolig Metode-Omskifter i Coffee Bar (Ingen Uønsket Scroll-Hop):**
+  - Rettet en uhensigtsmæssig scroll-adfærd: Når man skifter mellem `Espresso` og `Pour Over`, forbliver viewporten roligt i toppen af Barista Decket uden at hoppe ned til det store drikkekort.
+  - Appen scroller nu først ned til ekstraktions- og kalibreringskortet, når baristaen aktivt klikker på en specifik drik fra baren eller kataloget.
 
 ## [1.5.0] - 2026-10-07
 ### Etape 13: Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header

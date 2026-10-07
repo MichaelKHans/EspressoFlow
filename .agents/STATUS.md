@@ -29,6 +29,9 @@
   - Udbygget `DrinkRecipe` med `brewStyle: 'immersion'`, `steepSeconds`, og `plungeWarning: true`.
   - Tilføjet Steep Countdown Timer i `ScaleMonitor.tsx` under trækketid for immersion kaffer.
   - Iøjnefaldende sikkerhedsadvarsel på både opskriftskort og Scale Cam: *"⚠️ Løft bryggeren af vægten før du presser! Undgå overbelastning af vægtens vejecelle"*.
+- **Rolig Metode-Omskifter i Coffee Bar (Ingen Uønsket Scroll-Hop):**
+  - Rettet scroll-adfærd: Når man skifter mellem `Espresso` og `Pour Over`, forbliver viewporten roligt i toppen af Barista Decket uden at hoppe ned til det store drikkekort.
+  - Appen scroller nu først ned til ekstraktionskortet, når baristaen aktivt vælger en specifik kaffedrik fra baren.
 - **Lokal Byggevalidering:** Testet med `npm run build` lokalt (100% succesfuld Vite + TS kompilering uden fejl).
 
 ### 2026-10-07 -- Pour Over & Filterkaffe Integration, Tommelfinger-Optimeret Coffee Bar & Slank Mobil Header (v1.5.0)
