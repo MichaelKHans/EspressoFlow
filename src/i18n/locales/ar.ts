@@ -6,7 +6,7 @@ import type { TranslationKeys } from './en';
  */
 export const ar: Partial<Record<TranslationKeys, string>> = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': 'قراءة الميزان الفائقة عبر الكاميرا وديناميكا التدفق',
   'app.pro_lifetime': 'PRO مدى الحياة',
   'app.trial_days': 'الفترة التجريبية: متبقي {days} أيام',
@@ -70,7 +70,7 @@ export const ar: Partial<Record<TranslationKeys, string>> = {
   'bean.assigned_grinder': 'الطاحنة المخصصة',
 
   // Onboarding Wizard
-  'wizard.welcome_title': 'مرحباً بك في Espresso Flow',
+  'wizard.welcome_title': 'مرحباً بك في Flowbean',
   'wizard.welcome_subtitle': 'إعداد سريع لمحطتك -- 3 خطوات نحو فنجان إسبريسو مثالي',
   'wizard.skip': 'تخطي',
   'wizard.skip_title': 'تخطي الإعداد واستكشاف التطبيق',
@@ -100,7 +100,7 @@ export const ar: Partial<Record<TranslationKeys, string>> = {
 
   // PRO Paywall Modal
   'paywall.badge': 'امتلاك مدى الحياة • بدون أي اشتراك دوري',
-  'paywall.title': 'Espresso Flow PRO',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': 'حوّل أي ميزان مطبخ أو قهوة عادي إلى مختبر استخلاص فائق الدقة.',
   'paywall.price': '$4.99 / 49,- DKK',
   'paywall.pay_once': 'ادفع مرة واحدة، وعاير قهوتك للأبد',
@@ -117,7 +117,7 @@ export const ar: Partial<Record<TranslationKeys, string>> = {
   'paywall.secure_notice': 'دفع آمن داخل التطبيق',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • مجتمع القهوة المختصة العالمي',
+  'footer.rights': 'Flowbean • {year} • مجتمع القهوة المختصة العالمي',
   'footer.privacy': 'سياسة الخصوصية',
   'footer.terms': 'شروط الخدمة',
   'footer.support': 'الدعم والمساعدة',
@@ -127,10 +127,10 @@ export const ar: Partial<Record<TranslationKeys, string>> = {
   'legal.tab_privacy': 'سياسة الخصوصية',
   'legal.tab_terms': 'شروط الخدمة (EULA)',
   'legal.tab_support': 'الدعم والأسئلة الشائعة',
-  'legal.privacy_title': 'سياسة الخصوصية لتطبيق Espresso Flow',
+  'legal.privacy_title': 'سياسة الخصوصية لتطبيق Flowbean',
   'legal.privacy_updated': 'آخر تحديث: 26 سبتمبر 2026',
   'legal.privacy_camera_h': '1. بيانات الكاميرا والفيديو',
-  'legal.privacy_camera_p': 'يستخدم تطبيق Espresso Flow كاميرا جهازك حصرياً للتعرف على الأرقام الرقمية على شاشة ميزان القهوة. تتم جميع عمليات المعالجة البصرية والتعرف الضوئي (OCR) محلياً بنسبة 100% على جهازك دون إرسال أو تخزين أي لقطات أو بث فيديو على أي خوادم سحابية.',
+  'legal.privacy_camera_p': 'يستخدم تطبيق Flowbean كاميرا جهازك حصرياً للتعرف على الأرقام الرقمية على شاشة ميزان القهوة. تتم جميع عمليات المعالجة البصرية والتعرف الضوئي (OCR) محلياً بنسبة 100% على جهازك دون إرسال أو تخزين أي لقطات أو بث فيديو على أي خوادم سحابية.',
   'legal.privacy_data_h': '2. بيانات الاستخلاص وسجل التحضير',
   'legal.privacy_data_p': 'تُحفظ ملفات الاستخلاص، ودرجات الطحن، وملاحظات التذوق محلياً على هاتفك فقط. نحن لا نبيع ولا نؤجر ولا نستغل بيانات تحضيرك للقهوة إطلاقاً.',
   'legal.privacy_purchase_h': '3. المشتريات داخل التطبيق',
@@ -138,7 +138,7 @@ export const ar: Partial<Record<TranslationKeys, string>> = {
   'legal.terms_title': 'شروط الخدمة (اتفاقية ترخيص المستخدم النهائي القياسية / EULA)',
   'legal.terms_updated': 'آخر تحديث: 26 سبتمبر 2026',
   'legal.terms_acceptance_h': '1. قبول الشروط',
-  'legal.terms_acceptance_p': 'من خلال تنزيل Espresso Flow أو استخدامه، فإنك توافق على الالتزام بشروط الخدمة هذه. إذا لم تكن موافقاً، يرجى التوقف عن استخدام التطبيق فوراً.',
+  'legal.terms_acceptance_p': 'من خلال تنزيل Flowbean أو استخدامه، فإنك توافق على الالتزام بشروط الخدمة هذه. إذا لم تكن موافقاً، يرجى التوقف عن استخدام التطبيق فوراً.',
   'legal.terms_license_h': '2. ترخيص النسخة الاحترافية مدى الحياة',
   'legal.terms_license_p': 'يقدم التطبيق فترة تجريبية مجانية لمدة 7 أيام متبوعة بعملية شراء لمرة واحدة بقيمة 4.99 دولار أمريكي (49 كرونة دانمركية) للحصول على ترخيص دائم وشامل لميزات التعرف البصري وتحليل التدفق طوال دورة حياة هذا الإصدار.',
   'legal.terms_disclaimer_h': '3. إخلاء المسؤولية بشأن دقة القراءة البصرية',
@@ -149,7 +149,7 @@ export const ar: Partial<Record<TranslationKeys, string>> = {
   'legal.support_questions': 'هل لديك استفسار حول معايرة الميزان، أو إضافة طراز طاحنتك، أو استعادة الشراء؟ لا تتردد بالتواصل معنا في أي وقت.',
   'legal.faq_title': 'الأسئلة الأكثر شيوعاً (FAQ):',
   'legal.faq_q1': 'سؤال: هل يحتاج ميزاني إلى تقنية البلوتوث (Bluetooth)؟',
-  'legal.faq_a1': 'جواب: لا على الإطلاق! يقرأ تطبيق Espresso Flow الأرقام من شاشة أي ميزان مطبخ أو قهوة عادي عبر كاميرا هاتفك الذكي مباشرة.',
+  'legal.faq_a1': 'جواب: لا على الإطلاق! يقرأ تطبيق Flowbean الأرقام من شاشة أي ميزان مطبخ أو قهوة عادي عبر كاميرا هاتفك الذكي مباشرة.',
   'legal.faq_q2': 'سؤال: كيف أستعيد مشترياتي عند تغيير الهاتف؟',
   'legal.faq_a2': 'جواب: بكل بساطة، افتح قائمة PRO واضغط على "استعادة المشتريات السابقة" وأنت مسجل الدخول بنفس حساب Apple أو Google.',
 

@@ -6,7 +6,7 @@ import type { TranslationKeys } from './en';
  */
 export const de: Partial<Record<TranslationKeys, string>> = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': 'Präzisions-Waagen-OCR & Flow-Dynamik',
   'app.pro_lifetime': 'PRO LIFETIME',
   'app.trial_days': 'TESTPHASE: {days}T',
@@ -70,7 +70,7 @@ export const de: Partial<Record<TranslationKeys, string>> = {
   'bean.assigned_grinder': 'Zugeordnete Mühle',
 
   // Onboarding Wizard
-  'wizard.welcome_title': 'Willkommen bei Espresso Flow',
+  'wizard.welcome_title': 'Willkommen bei Flowbean',
   'wizard.welcome_subtitle': 'Schnelles Setup -- 3 Schritte zum ersten perfekten Shot',
   'wizard.skip': 'Überspringen',
   'wizard.skip_title': 'Setup überspringen und App erkunden',
@@ -100,7 +100,7 @@ export const de: Partial<Record<TranslationKeys, string>> = {
 
   // PRO Paywall Modal
   'paywall.badge': 'LEBENSLANGER ZUGANG • KEIN ABO',
-  'paywall.title': 'Espresso Flow PRO',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': 'Verwandle jede Küchenwaage in ein hochpräzises Extraktionslabor.',
   'paywall.price': '$4.99 / 49,- DKK',
   'paywall.pay_once': 'Einmal zahlen, für immer dial-in',
@@ -117,7 +117,7 @@ export const de: Partial<Record<TranslationKeys, string>> = {
   'paywall.secure_notice': 'Sichere In-App Zahlung',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • Global Specialty Coffee',
+  'footer.rights': 'Flowbean • {year} • Global Specialty Coffee',
   'footer.privacy': 'Datenschutz',
   'footer.terms': 'Nutzungsbedingungen',
   'footer.support': 'Support',
@@ -127,10 +127,10 @@ export const de: Partial<Record<TranslationKeys, string>> = {
   'legal.tab_privacy': 'Datenschutz',
   'legal.tab_terms': 'Nutzungsbedingungen (EULA)',
   'legal.tab_support': 'Support & FAQ',
-  'legal.privacy_title': 'Datenschutzerklärung für Espresso Flow',
+  'legal.privacy_title': 'Datenschutzerklärung für Flowbean',
   'legal.privacy_updated': 'Zuletzt aktualisiert: 26. September 2026',
   'legal.privacy_camera_h': '1. Kamera- & Videodaten',
-  'legal.privacy_camera_p': 'Espresso Flow greift ausschließlich auf die Gerätekamera zu, um die Ziffern auf deiner Kaffeewaage zu erkennen. Die gesamte OCR- und Bildverarbeitung erfolgt zu 100% lokal auf deinem Gerät. Videobilder oder Kamerastreams werden niemals aufgezeichnet, auf Server hochgeladen oder über das Internet übertragen.',
+  'legal.privacy_camera_p': 'Flowbean greift ausschließlich auf die Gerätekamera zu, um die Ziffern auf deiner Kaffeewaage zu erkennen. Die gesamte OCR- und Bildverarbeitung erfolgt zu 100% lokal auf deinem Gerät. Videobilder oder Kamerastreams werden niemals aufgezeichnet, auf Server hochgeladen oder über das Internet übertragen.',
   'legal.privacy_data_h': '2. Extraktions- & Logbuch-Daten',
   'legal.privacy_data_p': 'Deine Brühprofile, Mahlgradeinstellungen und Verkostungsnotizen verbleiben lokal auf deinem Smartphone. Wir verkaufen, vermieten oder monetarisieren deine persönlichen Kaffeenotizen nicht.',
   'legal.privacy_purchase_h': '3. In-App Käufe',
@@ -138,18 +138,18 @@ export const de: Partial<Record<TranslationKeys, string>> = {
   'legal.terms_title': 'Nutzungsbedingungen (Standard-EULA)',
   'legal.terms_updated': 'Zuletzt aktualisiert: 26. September 2026',
   'legal.terms_acceptance_h': '1. Annahme der Bedingungen',
-  'legal.terms_acceptance_p': 'Mit dem Download oder der Nutzung von Espresso Flow erklärst du dich mit diesen Bedingungen einverstanden. Wenn du nicht zustimmst, stelle die Nutzung bitte ein.',
+  'legal.terms_acceptance_p': 'Mit dem Download oder der Nutzung von Flowbean erklärst du dich mit diesen Bedingungen einverstanden. Wenn du nicht zustimmst, stelle die Nutzung bitte ein.',
   'legal.terms_license_h': '2. Lifetime Pro Lizenz',
-  'legal.terms_license_p': 'Espresso Flow bietet eine 7-tägige kostenlose Testphase, gefolgt von einem einmaligen Kauf von $4.99 USD (49 DKK) für lebenslangen PRO-Zugang. Dieser Zugang berechtigt zur unbegrenzten Nutzung von OCR-Vision, Flussratenanalyse und Bohnen-Logbuch für die Lebensdauer der Version.',
+  'legal.terms_license_p': 'Flowbean bietet eine 7-tägige kostenlose Testphase, gefolgt von einem einmaligen Kauf von $4.99 USD (49 DKK) für lebenslangen PRO-Zugang. Dieser Zugang berechtigt zur unbegrenzten Nutzung von OCR-Vision, Flussratenanalyse und Bohnen-Logbuch für die Lebensdauer der Version.',
   'legal.terms_disclaimer_h': '3. Haftungsausschluss Waagen-Erkennung',
-  'legal.terms_disclaimer_p': 'Espresso Flow liefert Flow-Schätzungen und Dial-In Empfehlungen auf Basis optischer Erkennung. Lichtreflexionen und Maschinenvibrationen können die Genauigkeit beeinflussen. Die Bereitstellung erfolgt ohne Mängelgewähr.',
+  'legal.terms_disclaimer_p': 'Flowbean liefert Flow-Schätzungen und Dial-In Empfehlungen auf Basis optischer Erkennung. Lichtreflexionen und Maschinenvibrationen können die Genauigkeit beeinflussen. Die Bereitstellung erfolgt ohne Mängelgewähr.',
   'legal.support_title': 'Kundensupport & Kontakt',
   'legal.support_subtitle': 'Wir sind leidenschaftliche Kaffee-Enthusiasten und helfen dir gern bei der perfekten Extraktion.',
   'legal.support_email': 'Direkter Support: michaelkhansen@gmail.com',
   'legal.support_questions': 'Fragen zur Waagen-Kalibrierung, Mühlenprofilen oder zum Wiederherstellen von Käufen? Schreib uns jederzeit.',
   'legal.faq_title': 'Häufig gestellte Fragen (FAQ):',
   'legal.faq_q1': 'Frage: Benötigt meine Waage Bluetooth?',
-  'legal.faq_a1': 'Antwort: Nein! Espresso Flow funktioniert mit jeder herkömmlichen Küchen- oder Kaffeewaage, indem das Display mit der Handykamera abgelesen wird.',
+  'legal.faq_a1': 'Antwort: Nein! Flowbean funktioniert mit jeder herkömmlichen Küchen- oder Kaffeewaage, indem das Display mit der Handykamera abgelesen wird.',
   'legal.faq_q2': 'Frage: Wie stelle ich meinen Kauf auf einem neuen Gerät wieder her?',
   'legal.faq_a2': 'Antwort: Tippe einfach im PRO-Menü auf "Käufe wiederherstellen", während du mit deiner Apple-ID oder deinem Google-Konto angemeldet bist.',
 

@@ -6,7 +6,7 @@ import type { TranslationKeys } from './en';
  */
 export const es: Partial<Record<TranslationKeys, string>> = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': 'Báscula OCR de Precisión & Dinámica de Flujo',
   'app.pro_lifetime': 'PRO DE POR VIDA',
   'app.trial_days': 'PRUEBA: {days}D',
@@ -70,7 +70,7 @@ export const es: Partial<Record<TranslationKeys, string>> = {
   'bean.assigned_grinder': 'Molino Asignado',
 
   // Onboarding Wizard
-  'wizard.welcome_title': 'Bienvenido a Espresso Flow',
+  'wizard.welcome_title': 'Bienvenido a Flowbean',
   'wizard.welcome_subtitle': 'Configuración rápida -- 3 pasos para tu primera extracción perfecta',
   'wizard.skip': 'Omitir',
   'wizard.skip_title': 'Omitir configuración y explorar la aplicación',
@@ -100,7 +100,7 @@ export const es: Partial<Record<TranslationKeys, string>> = {
 
   // PRO Paywall Modal
   'paywall.badge': 'ACCESO DE POR VIDA • SIN SUSCRIPCIÓN',
-  'paywall.title': 'Espresso Flow PRO',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': 'Transforma cualquier báscula de cocina en un laboratorio de extracción de precisión.',
   'paywall.price': '4,99 € / $4.99',
   'paywall.pay_once': 'Paga Una Vez, Calibra Para Siempre',
@@ -117,7 +117,7 @@ export const es: Partial<Record<TranslationKeys, string>> = {
   'paywall.secure_notice': 'Pago In-App Seguro',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • Global Specialty Coffee',
+  'footer.rights': 'Flowbean • {year} • Global Specialty Coffee',
   'footer.privacy': 'Política de Privacidad',
   'footer.terms': 'Términos de Servicio',
   'footer.support': 'Soporte',
@@ -127,10 +127,10 @@ export const es: Partial<Record<TranslationKeys, string>> = {
   'legal.tab_privacy': 'Privacidad',
   'legal.tab_terms': 'Términos de Servicio (EULA)',
   'legal.tab_support': 'Soporte & FAQ',
-  'legal.privacy_title': 'Política de Privacidad de Espresso Flow',
+  'legal.privacy_title': 'Política de Privacidad de Flowbean',
   'legal.privacy_updated': 'Última actualización: 26 de septiembre de 2026',
   'legal.privacy_camera_h': '1. Datos de Cámara & Video',
-  'legal.privacy_camera_p': 'Espresso Flow accede a la cámara exclusivamente para reconocer los dígitos digitales en la pantalla de tu báscula de café. Todo el procesamiento OCR y de canvas se realiza 100% localmente en tu dispositivo. Las imágenes de video nunca se graban ni se envían a servidores en la nube.',
+  'legal.privacy_camera_p': 'Flowbean accede a la cámara exclusivamente para reconocer los dígitos digitales en la pantalla de tu báscula de café. Todo el procesamiento OCR y de canvas se realiza 100% localmente en tu dispositivo. Las imágenes de video nunca se graban ni se envían a servidores en la nube.',
   'legal.privacy_data_h': '2. Datos de Extracción e Historial',
   'legal.privacy_data_p': 'Tus recetas, configuraciones de molino y notas de cata se almacenan localmente en tu dispositivo. No vendemos ni monetizamos tus datos personales ni tus hábitos.',
   'legal.privacy_purchase_h': '3. Compras In-App',
@@ -138,18 +138,18 @@ export const es: Partial<Record<TranslationKeys, string>> = {
   'legal.terms_title': 'Términos de Servicio (EULA Estándar)',
   'legal.terms_updated': 'Última actualización: 26 de septiembre de 2026',
   'legal.terms_acceptance_h': '1. Aceptación de los Términos',
-  'legal.terms_acceptance_p': 'Al descargar o usar Espresso Flow, aceptas estos Términos de Servicio. Si no estás de acuerdo, desinstala o discontinúa su uso inmediatamente.',
+  'legal.terms_acceptance_p': 'Al descargar o usar Flowbean, aceptas estos Términos de Servicio. Si no estás de acuerdo, desinstala o discontinúa su uso inmediatamente.',
   'legal.terms_license_h': '2. Licencia Lifetime Pro',
-  'legal.terms_license_p': 'Espresso Flow ofrece una prueba completa de 7 días seguida de una compra única opcional de 4,99 € ($4.99 USD) para acceso de por vida sin cuotas mensuales.',
+  'legal.terms_license_p': 'Flowbean ofrece una prueba completa de 7 días seguida de una compra única opcional de 4,99 € ($4.99 USD) para acceso de por vida sin cuotas mensuales.',
   'legal.terms_disclaimer_h': '3. Calibración de Báscula',
-  'legal.terms_disclaimer_p': 'Espresso Flow estima el flujo y recomienda ajustes basándose en lectura óptica. Reflejos, vibraciones o iluminación pueden influir. La app se proporciona "tal cual".',
+  'legal.terms_disclaimer_p': 'Flowbean estima el flujo y recomienda ajustes basándose en lectura óptica. Reflejos, vibraciones o iluminación pueden influir. La app se proporciona "tal cual".',
   'legal.support_title': 'Atención al Cliente & Contacto',
   'legal.support_subtitle': 'Somos apasionados del café de especialidad y estamos aquí para ayudarte.',
   'legal.support_email': 'Soporte Directo: michaelkhansen@gmail.com',
   'legal.support_questions': '¿Preguntas sobre calibración de báscula, molinos o restaurar compras? Escríbenos en cualquier momento.',
   'legal.faq_title': 'Preguntas Frecuentes (FAQ):',
   'legal.faq_q1': 'P: ¿Mi báscula necesita Bluetooth?',
-  'legal.faq_a1': 'R: ¡No! Espresso Flow funciona con cualquier báscula convencional leyendo la pantalla mediante la cámara de tu teléfono.',
+  'legal.faq_a1': 'R: ¡No! Flowbean funciona con cualquier báscula convencional leyendo la pantalla mediante la cámara de tu teléfono.',
   'legal.faq_q2': 'P: ¿Cómo restauro mi compra en un teléfono nuevo?',
   'legal.faq_a2': 'R: Simplemente pulsa "Restaurar Compras" en el menú PRO con tu cuenta de Apple o Google activa.',
 

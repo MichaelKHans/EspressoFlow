@@ -6,7 +6,7 @@ import type { TranslationKeys } from './en';
  */
 export const ja: Partial<Record<TranslationKeys, string>> = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': '高精度スケールOCR＆流速ダイナミクス',
   'app.pro_lifetime': 'PRO 永久ライセンス',
   'app.trial_days': 'トライアル期間: 残り{days}日',
@@ -70,7 +70,7 @@ export const ja: Partial<Record<TranslationKeys, string>> = {
   'bean.assigned_grinder': '使用グラインダー',
 
   // Onboarding Wizard
-  'wizard.welcome_title': 'Espresso Flowへようこそ',
+  'wizard.welcome_title': 'Flowbeanへようこそ',
   'wizard.welcome_subtitle': 'かんたん初期設定 -- 最高の一杯のための3ステップ',
   'wizard.skip': 'スキップ',
   'wizard.skip_title': '初期設定をスキップしてアプリを見る',
@@ -100,7 +100,7 @@ export const ja: Partial<Record<TranslationKeys, string>> = {
 
   // PRO Paywall Modal
   'paywall.badge': '買い切り永久ライセンス • サブスクリプションなし',
-  'paywall.title': 'Espresso Flow PRO',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': 'お手持ちのキッチンスケールを高精度な抽出ラボへと進化させます。',
   'paywall.price': '$4.99 / 49,- DKK',
   'paywall.pay_once': '一度の購入で、ずっとダイヤルイン',
@@ -117,7 +117,7 @@ export const ja: Partial<Record<TranslationKeys, string>> = {
   'paywall.secure_notice': '安心のアプリ内決済',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • Global Specialty Coffee',
+  'footer.rights': 'Flowbean • {year} • Global Specialty Coffee',
   'footer.privacy': 'プライバシーポリシー',
   'footer.terms': '利用規約',
   'footer.support': 'サポート',
@@ -127,10 +127,10 @@ export const ja: Partial<Record<TranslationKeys, string>> = {
   'legal.tab_privacy': 'プライバシーポリシー',
   'legal.tab_terms': '利用規約 (EULA)',
   'legal.tab_support': 'サポート＆FAQ',
-  'legal.privacy_title': 'Espresso Flow プライバシーポリシー',
+  'legal.privacy_title': 'Flowbean プライバシーポリシー',
   'legal.privacy_updated': '最終更新日: 2026年9月26日',
   'legal.privacy_camera_h': '1. カメラおよび映像データについて',
-  'legal.privacy_camera_p': 'Espresso Flowは、コーヒースケールのデジタル数値を読み取る目的のみに端末のカメラを使用します。すべての光学文字認識（OCR）および画像処理は端末内で100%ローカルに完結します。映像やカメラストリームが外部サーバーに送信または保存されることは一切ありません。',
+  'legal.privacy_camera_p': 'Flowbeanは、コーヒースケールのデジタル数値を読み取る目的のみに端末のカメラを使用します。すべての光学文字認識（OCR）および画像処理は端末内で100%ローカルに完結します。映像やカメラストリームが外部サーバーに送信または保存されることは一切ありません。',
   'legal.privacy_data_h': '2. 抽出記録およびログブックデータ',
   'legal.privacy_data_p': '抽出プロファイル、グラインダー設定、テイスティング記録はすべて端末内に保存されます。個人のコーヒーメモや抽出習慣データを第三者に販売・提供することは決してありません。',
   'legal.privacy_purchase_h': '3. アプリ内購入について',
@@ -138,11 +138,11 @@ export const ja: Partial<Record<TranslationKeys, string>> = {
   'legal.terms_title': '利用規約 (標準エンドユーザー使用許諾契約 / EULA)',
   'legal.terms_updated': '最終更新日: 2026年9月26日',
   'legal.terms_acceptance_h': '1. 規約への同意',
-  'legal.terms_acceptance_p': 'Espresso Flowをダウンロードまたは利用することにより、本利用規約に同意したものとみなされます。同意されない場合は利用をお控えください。',
+  'legal.terms_acceptance_p': 'Flowbeanをダウンロードまたは利用することにより、本利用規約に同意したものとみなされます。同意されない場合は利用をお控えください。',
   'legal.terms_license_h': '2. Lifetime Pro ライセンス',
   'legal.terms_license_p': '本アプリは7日間の無料体験後、米ドル4.99（49デンマーククローネ）の1回払いでLifetime Proをご利用いただけます。本ライセンスにより、該当アプリバージョンの提供期間中、OCRビジョンや流速分析、ログブックのすべての機能を無制限にご利用いただけます。',
   'legal.terms_disclaimer_h': '3. スケール数値認識に関する免責事項',
-  'legal.terms_disclaimer_p': 'Espresso Flowはカメラによる光学読み取りに基づいて流速と調整の目安を提供します。照明環境、画面への映り込み、マシンの振動などにより誤差が生じる場合があります。本アプリは現状有姿（As-Is）で提供されます。',
+  'legal.terms_disclaimer_p': 'Flowbeanはカメラによる光学読み取りに基づいて流速と調整の目安を提供します。照明環境、画面への映り込み、マシンの振動などにより誤差が生じる場合があります。本アプリは現状有姿（As-Is）で提供されます。',
   'legal.support_title': 'カスタマーサポート＆お問い合わせ',
   'legal.support_subtitle': '私たちは情熱的なコーヒー愛好家であり、理想のエスプレッソ抽出をお手伝いします。',
   'legal.support_email': '直接お問い合わせ: michaelkhansen@gmail.com',

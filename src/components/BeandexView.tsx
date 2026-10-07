@@ -822,7 +822,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                               onSwitchToFlow();
                             }}
                             className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] transition flex items-center gap-1"
-                            title="Set as active bean and go to Espresso Flow"
+                            title="Set as active bean and go to Coffee Bar"
                           >
                             <span>{t('beandex.set_active_btn')}</span>
                             <ArrowRight className="w-2.5 h-2.5 text-[#C26D52]" />

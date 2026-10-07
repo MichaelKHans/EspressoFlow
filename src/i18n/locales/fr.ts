@@ -6,7 +6,7 @@ import type { TranslationKeys } from './en';
  */
 export const fr: Partial<Record<TranslationKeys, string>> = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': 'Balance OCR de Précision & Dynamique de Débit',
   'app.pro_lifetime': 'PRO À VIE',
   'app.trial_days': 'ESSAI : {days}J',
@@ -70,7 +70,7 @@ export const fr: Partial<Record<TranslationKeys, string>> = {
   'bean.assigned_grinder': 'Moulin Associé',
 
   // Onboarding Wizard
-  'wizard.welcome_title': 'Bienvenue sur Espresso Flow',
+  'wizard.welcome_title': 'Bienvenue sur Flowbean',
   'wizard.welcome_subtitle': 'Configuration express -- 3 étapes vers votre premier espresso parfait',
   'wizard.skip': 'Passer',
   'wizard.skip_title': 'Passer la configuration et explorer l\'application',
@@ -100,7 +100,7 @@ export const fr: Partial<Record<TranslationKeys, string>> = {
 
   // PRO Paywall Modal
   'paywall.badge': 'ACCÈS À VIE • SANS ABONNEMENT',
-  'paywall.title': 'Espresso Flow PRO',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': 'Transformez toute balance de cuisine en laboratoire d\'extraction de précision.',
   'paywall.price': '4,99 € / $4.99',
   'paywall.pay_once': 'Payez Une Fois, Calibrez Pour Toujours',
@@ -117,7 +117,7 @@ export const fr: Partial<Record<TranslationKeys, string>> = {
   'paywall.secure_notice': 'Paiement In-App Sécurisé',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • Global Specialty Coffee',
+  'footer.rights': 'Flowbean • {year} • Global Specialty Coffee',
   'footer.privacy': 'Politique de Confidentialité',
   'footer.terms': 'Conditions d\'Utilisation',
   'footer.support': 'Support',
@@ -127,10 +127,10 @@ export const fr: Partial<Record<TranslationKeys, string>> = {
   'legal.tab_privacy': 'Confidentialité',
   'legal.tab_terms': 'Conditions d\'Utilisation (EULA)',
   'legal.tab_support': 'Support & FAQ',
-  'legal.privacy_title': 'Politique de Confidentialité d\'Espresso Flow',
+  'legal.privacy_title': 'Politique de Confidentialité d\'Flowbean',
   'legal.privacy_updated': 'Dernière mise à jour : 26 septembre 2026',
   'legal.privacy_camera_h': '1. Données Caméra & Vidéo',
-  'legal.privacy_camera_p': 'Espresso Flow utilise la caméra de votre appareil exclusivement pour lire les chiffres numériques de votre balance de café. Tous les traitements OCR et d\'analyse canvas sont effectués à 100% localement sur votre téléphone. Les flux vidéo ne sont jamais enregistrés ni transférés sur des serveurs distants.',
+  'legal.privacy_camera_p': 'Flowbean utilise la caméra de votre appareil exclusivement pour lire les chiffres numériques de votre balance de café. Tous les traitements OCR et d\'analyse canvas sont effectués à 100% localement sur votre téléphone. Les flux vidéo ne sont jamais enregistrés ni transférés sur des serveurs distants.',
   'legal.privacy_data_h': '2. Données d\'Extraction et de Journal',
   'legal.privacy_data_p': 'Vos réglages de moulin, profils d\'extraction et notes de dégustation sont stockés localement sur votre appareil. Nous ne vendons ni ne monétisons vos données.',
   'legal.privacy_purchase_h': '3. Achats In-App',
@@ -138,18 +138,18 @@ export const fr: Partial<Record<TranslationKeys, string>> = {
   'legal.terms_title': 'Conditions d\'Utilisation (EULA Standard)',
   'legal.terms_updated': 'Dernière mise à jour : 26 septembre 2026',
   'legal.terms_acceptance_h': '1. Acceptation des Conditions',
-  'legal.terms_acceptance_p': 'En téléchargeant ou utilisant Espresso Flow, vous acceptez d\'être lié par les présentes conditions. Si vous n\'acceptez pas, veuillez cesser l\'utilisation.',
+  'legal.terms_acceptance_p': 'En téléchargeant ou utilisant Flowbean, vous acceptez d\'être lié par les présentes conditions. Si vous n\'acceptez pas, veuillez cesser l\'utilisation.',
   'legal.terms_license_h': '2. Licence Lifetime Pro',
-  'legal.terms_license_p': 'Espresso Flow inclut un essai complet de 7 jours suivi d\'un achat unique de 4,99 € ($4.99 USD) pour un déblocage permanent sans abonnement mensuel.',
+  'legal.terms_license_p': 'Flowbean inclut un essai complet de 7 jours suivi d\'un achat unique de 4,99 € ($4.99 USD) pour un déblocage permanent sans abonnement mensuel.',
   'legal.terms_disclaimer_h': '3. Précision de la Mesure',
-  'legal.terms_disclaimer_p': 'Espresso Flow estime le débit d\'extraction par lecture optique. Les reflets, les vibrations ou l\'éclairage peuvent influencer la détection. L\'application est fournie "en l\'état".',
+  'legal.terms_disclaimer_p': 'Flowbean estime le débit d\'extraction par lecture optique. Les reflets, les vibrations ou l\'éclairage peuvent influencer la détection. L\'application est fournie "en l\'état".',
   'legal.support_title': 'Support Client & Contact',
   'legal.support_subtitle': 'Nous sommes des passionnés de café de spécialité, disponibles pour vous assister.',
   'legal.support_email': 'Support Direct : michaelkhansen@gmail.com',
   'legal.support_questions': 'Une question sur le calibrage, un profil de moulin ou la restauration d\'achat ? Contactez-nous à tout moment.',
   'legal.faq_title': 'Foire Aux Questions :',
   'legal.faq_q1': 'Q : Ma balance a-t-elle besoin du Bluetooth ?',
-  'legal.faq_a1': 'R : Non ! Espresso Flow fonctionne avec n\'importe quelle balance classique en analysant l\'écran via la caméra de votre téléphone.',
+  'legal.faq_a1': 'R : Non ! Flowbean fonctionne avec n\'importe quelle balance classique en analysant l\'écran via la caméra de votre téléphone.',
   'legal.faq_q2': 'Q : Comment restaurer mon achat sur un nouveau téléphone ?',
   'legal.faq_a2': 'R : Appuyez simplement sur "Restaurer les Achats" dans le menu PRO avec votre compte Apple ou Google connecté.',
 

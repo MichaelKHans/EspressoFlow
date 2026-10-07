@@ -522,14 +522,14 @@ export function App() {
     <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] flex flex-col font-sans">
       {/* Top Header */}
       <header className="border-b-2 border-[#CBB8A3] bg-[#FAF7F2]/95 backdrop-blur-md sticky top-0 z-40 pt-safe shadow-[0_4px_20px_rgba(44,32,24,0.06)]">
-        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between gap-2">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-2">
           {/* Brand Logo & Title */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-            <div className="w-8 h-8 rounded-xl bg-[#2C2018] flex items-center justify-center shadow-xs shrink-0 overflow-hidden border border-[#C26D52]/20">
-              <img src="/flowbean-logo.png" alt="Flowbean Logo" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#2C2018] flex items-center justify-center shadow-xs shrink-0 overflow-hidden border border-[#C26D52]/25">
+              <img src="/flowbean-logo.png" alt="Flowbean Logo" className="w-full h-full object-cover scale-135" />
             </div>
             <div className="shrink-0">
-              <h1 className="font-bold text-[11px] xs:text-xs sm:text-sm tracking-wider text-[#2C2018] font-mono whitespace-nowrap">
+              <h1 className="font-bold text-xs sm:text-sm tracking-wider text-[#2C2018] font-mono whitespace-nowrap">
                 {activeMode === 'flow' ? 'FLOWBEAN' : 'BEANDEX'}
               </h1>
               <p className="text-[10px] sm:text-[11px] text-[#7A6E65] font-mono hidden sm:block truncate">

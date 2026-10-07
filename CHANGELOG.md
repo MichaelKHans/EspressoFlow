@@ -2,6 +2,18 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.7.3] - 2026-10-07
+### Etape 18: Global Flowbean Brand Konsistens, Rent Minimalistisk Footer-Format & Forstørret Mobil-Logo
+- **100% Brand-Opdatering fra "Espresso Flow" til "Flowbean":**
+  - Gennemført systematisk opdatering af alle udestående brandreferencer i Privacy Policy, Terms of Service (EULA), Support & FAQ, Onboarding Wizard, Lifetime Paywall og Settings på tværs af samtlige 11 sprogpakker (`en`, `da`, `de`, `es`, `fr`, `it`, `ja`, `ko`, `zh-CN`, `zh-TW`, `ar`).
+  - Standardiseret `app.title` til `FLOWBEAN` i alle sprog.
+- **Rent Minimalistisk Footer-Format (Fjernet © Ophavsretssymbol):**
+  - Opdateret footeren fra det forældede `Espresso Flow © {year}` til et rent, moderne format: `Flowbean • {year} • Global Specialty Coffee`.
+  - Fjerner enhver juridisk tvivl eller bekymring og giver et mere tidløst og internationalt udtryk.
+- **Forstørret Logo Centreret i Mobil-Header (Uden at Udbygge Topbaren Ned):**
+  - Forstørret logo-emblemet (`w-10 h-10 sm:w-11 sm:h-11`) med `object-cover scale-135`, så kaffebønnen og terracotta flow-kurven vokser markant ud til alle sider centreret fra midten.
+  - Justeret containerens lodrette padding (`py-1.5 sm:py-2`), så topbarens samlede højde forbliver præcis 48-52px uden at skubbe indholdet nedad.
+
 ## [1.7.2] - 2026-10-07
 ### Etape 17: Mobil Navigation Sikring – Flydende Vinduer & Popups Løftet over Mobilmenu & Android Systemlinje
 - **Elimineret Kollision med Mobil Navigation & Systemknapper (`三` Recents / Hjem / Tilbage):**

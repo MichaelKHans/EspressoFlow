@@ -224,7 +224,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Section 4: Version & Legal Compliance Links */}
         <div className="p-3 sm:p-3.5 rounded-xl bg-white border border-[#E8DFD5] flex items-center justify-between text-[11px] font-mono text-[#7A6E65] flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-[#2C2018]">Espresso Flow</span> v1.2.29
+            <span className="font-bold text-[#2C2018]">Flowbean</span> v1.7.3
             <button
               type="button"
               onClick={() => {

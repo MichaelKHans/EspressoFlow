@@ -6,7 +6,7 @@ import type { TranslationKeys } from './en';
  */
 export const ko: Partial<Record<TranslationKeys, string>> = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': '정밀 저울 OCR & 플로우 역학 분석',
   'app.pro_lifetime': 'PRO 평생 라이선스',
   'app.trial_days': '체험 기간: {days}일 남음',
@@ -70,7 +70,7 @@ export const ko: Partial<Record<TranslationKeys, string>> = {
   'bean.assigned_grinder': '지정 그라인더',
 
   // Onboarding Wizard
-  'wizard.welcome_title': 'Espresso Flow에 오신 것을 환영합니다',
+  'wizard.welcome_title': 'Flowbean에 오신 것을 환영합니다',
   'wizard.welcome_subtitle': '스테이션 빠른 설정 -- 완벽한 첫 샷을 위한 3단계',
   'wizard.skip': '건너뛰기',
   'wizard.skip_title': '설정을 건너뛰고 앱 둘러보기',
@@ -100,7 +100,7 @@ export const ko: Partial<Record<TranslationKeys, string>> = {
 
   // PRO Paywall Modal
   'paywall.badge': '평생 소장 라이선스 • 정기 구독 없음',
-  'paywall.title': 'Espresso Flow PRO',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': '모든 주방용/커피 저울을 초정밀 에스프레소 추출 연구소로 혁신하세요.',
   'paywall.price': '$4.99 / 49,- DKK',
   'paywall.pay_once': '한 번 구매로 영구 다이얼인 지원',
@@ -117,7 +117,7 @@ export const ko: Partial<Record<TranslationKeys, string>> = {
   'paywall.secure_notice': '안전한 인앱 결제',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • Global Specialty Coffee',
+  'footer.rights': 'Flowbean • {year} • Global Specialty Coffee',
   'footer.privacy': '개인정보 처리방침',
   'footer.terms': '이용약관',
   'footer.support': '고객지원',
@@ -127,10 +127,10 @@ export const ko: Partial<Record<TranslationKeys, string>> = {
   'legal.tab_privacy': '개인정보 처리방침',
   'legal.tab_terms': '이용약관 (EULA)',
   'legal.tab_support': '고객지원 & FAQ',
-  'legal.privacy_title': 'Espresso Flow 개인정보 처리방침',
+  'legal.privacy_title': 'Flowbean 개인정보 처리방침',
   'legal.privacy_updated': '최종 수정일: 2026년 9월 26일',
   'legal.privacy_camera_h': '1. 카메라 및 비디오 데이터',
-  'legal.privacy_camera_p': 'Espresso Flow는 커피 저울의 디지털 숫자를 인식하기 위한 목적으로만 카메라에 접근합니다. 모든 광학 문자 인식(OCR)과 이미지 프로세싱은 기기 내부(Local)에서 100% 온디바이스로 처리됩니다. 비디오 프레임이나 영상 스트림은 절대 외부 서버로 전송되거나 저장되지 않습니다.',
+  'legal.privacy_camera_p': 'Flowbean는 커피 저울의 디지털 숫자를 인식하기 위한 목적으로만 카메라에 접근합니다. 모든 광학 문자 인식(OCR)과 이미지 프로세싱은 기기 내부(Local)에서 100% 온디바이스로 처리됩니다. 비디오 프레임이나 영상 스트림은 절대 외부 서버로 전송되거나 저장되지 않습니다.',
   'legal.privacy_data_h': '2. 추출 기록 및 로그북 데이터',
   'legal.privacy_data_p': '사용자의 추출 프로필, 그라인더 설정, 테이스팅 노트는 기기 내부에만 로컬 저장됩니다. 개인의 커피 노트나 브루잉 습관 데이터를 판매, 대여 또는 상업적으로 활용하지 않습니다.',
   'legal.privacy_purchase_h': '3. 인앱 결제',
@@ -138,11 +138,11 @@ export const ko: Partial<Record<TranslationKeys, string>> = {
   'legal.terms_title': '이용약관 (표준 최종사용자 라이선스 계약 / EULA)',
   'legal.terms_updated': '최종 수정일: 2026년 9월 26일',
   'legal.terms_acceptance_h': '1. 약관의 효력 및 동의',
-  'legal.terms_acceptance_p': 'Espresso Flow 앱을 다운로드하거나 이용함으로써 본 약관에 동의하게 됩니다. 본 약관에 동의하지 않을 경우 앱 사용을 즉시 중단해 주십시오.',
+  'legal.terms_acceptance_p': 'Flowbean 앱을 다운로드하거나 이용함으로써 본 약관에 동의하게 됩니다. 본 약관에 동의하지 않을 경우 앱 사용을 즉시 중단해 주십시오.',
   'legal.terms_license_h': '2. 평생 Pro 라이선스',
-  'legal.terms_license_p': 'Espresso Flow는 7일간의 무료 체험 후 미화 $4.99 (49 DKK)의 1회성 결제로 Lifetime Pro를 제공합니다. 평생 라이선스는 해당 앱 버전의 수명 주기 동안 OCR 비전, 유속 역학, 원두 로그북의 무제한 이용을 보장합니다.',
+  'legal.terms_license_p': 'Flowbean는 7일간의 무료 체험 후 미화 $4.99 (49 DKK)의 1회성 결제로 Lifetime Pro를 제공합니다. 평생 라이선스는 해당 앱 버전의 수명 주기 동안 OCR 비전, 유속 역학, 원두 로그북의 무제한 이용을 보장합니다.',
   'legal.terms_disclaimer_h': '3. 저울 인식 측정에 관한 면책 조항',
-  'legal.terms_disclaimer_p': 'Espresso Flow는 광학 카메라 인식을 바탕으로 유속 추정치와 다이얼인 제안을 계산합니다. 조명 상태, 디스플레이 반사광, 머신 진동 등에 의해 오차가 발생할 수 있으며 앱은 "있는 그대로(As-Is)" 제공됩니다.',
+  'legal.terms_disclaimer_p': 'Flowbean는 광학 카메라 인식을 바탕으로 유속 추정치와 다이얼인 제안을 계산합니다. 조명 상태, 디스플레이 반사광, 머신 진동 등에 의해 오차가 발생할 수 있으며 앱은 "있는 그대로(As-Is)" 제공됩니다.',
   'legal.support_title': '고객지원 및 문의',
   'legal.support_subtitle': '우리는 열정적인 커피 애호가이며, 완벽한 샷 추출을 돕기 위해 항상 대기하고 있습니다.',
   'legal.support_email': '직접 문의: michaelkhansen@gmail.com',

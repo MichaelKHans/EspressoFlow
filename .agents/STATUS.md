@@ -11,6 +11,17 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-07 -- Global Flowbean Brand Konsistens, Rent Minimalistisk Footer-Format & Forstørret Mobil-Logo (v1.7.3)
+- **100% Brand-Opdatering fra "Espresso Flow" til "Flowbean":**
+  - Gennemført systematisk opdatering af alle udestående brandreferencer i Privacy Policy, Terms of Service (EULA), Support & FAQ, Onboarding Wizard, Lifetime Paywall og Settings på tværs af samtlige 11 sprogpakker (`en`, `da`, `de`, `es`, `fr`, `it`, `ja`, `ko`, `zh-CN`, `zh-TW`, `ar`).
+  - Standardiseret `app.title` til `FLOWBEAN` i alle sprog.
+- **Rent Minimalistisk Footer-Format (Fjernet © Ophavsretssymbol):**
+  - Opdateret footeren fra det forældede `Espresso Flow © {year}` til et rent, moderne format: `Flowbean • {year} • Global Specialty Coffee`.
+  - Fjerner enhver juridisk tvivl eller bekymring og giver et mere tidløst og internationalt udtryk.
+- **Forstørret Logo Centreret i Mobil-Header (Uden at Udbygge Topbaren Ned):**
+  - Forstørret logo-emblemet (`w-10 h-10 sm:w-11 sm:h-11`) med `object-cover scale-135`, så kaffebønnen og terracotta flow-kurven vokser markant ud til alle sider centreret fra midten.
+  - Justeret containerens lodrette padding (`py-1.5 sm:py-2`), så topbarens samlede højde forbliver præcis 48-52px uden at skubbe indholdet nedad.
+
 ### 2026-10-07 -- Scale Cam 1:1 Billedforhold, Hardware Focus Lock & "Tryk på Vægten" Auto-Kalibrering (v1.7.0)
 - **Matematisk 1:1 Billedforhold & UV-Projektion:**
   - Standardiseret Vision Inspector fra 3:1 (240x80) til 2:1 format (320x160), så den binariserede projektion vises uden vandret forvrængning.

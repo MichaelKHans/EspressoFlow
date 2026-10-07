@@ -688,7 +688,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <Lock className="w-6 h-6" />
             </div>
             <h1 className="text-lg font-bold font-serif text-[#2C2018]">
-              Espresso Flow Admin
+              Flowbean Admin
             </h1>
             <p className="text-xs text-[#7A6E65] leading-relaxed">
               Enter your master passcode to access telemetry, trial metrics, and bean star ratings.

@@ -6,7 +6,7 @@ import type { TranslationKeys } from './en';
  */
 export const zhTW: Partial<Record<TranslationKeys, string>> = {
   // App Header
-  'app.title': 'ESPRESSO FLOW',
+  'app.title': 'FLOWBEAN',
   'app.subtitle': '高精度電子秤 OCR 辨識與萃取流速動力學',
   'app.pro_lifetime': 'PRO 終身專業版',
   'app.trial_days': '免費試用：剩餘 {days} 天',
@@ -70,7 +70,7 @@ export const zhTW: Partial<Record<TranslationKeys, string>> = {
   'bean.assigned_grinder': '指定磨豆機',
 
   // Onboarding Wizard
-  'wizard.welcome_title': '歡迎使用 Espresso Flow',
+  'wizard.welcome_title': '歡迎使用 Flowbean',
   'wizard.welcome_subtitle': '快速配置您的工作吧台 -- 3 步驟開啟完美濃縮',
   'wizard.skip': '略過',
   'wizard.skip_title': '略過設定並探索應用程式',
@@ -100,7 +100,7 @@ export const zhTW: Partial<Record<TranslationKeys, string>> = {
 
   // PRO Paywall Modal
   'paywall.badge': '終身買斷 • 絕無每月訂閱負擔',
-  'paywall.title': 'Espresso Flow PRO',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': '將普通電子秤升級為高精度義式萃取實驗室。',
   'paywall.price': '$4.99 / 49,- DKK',
   'paywall.pay_once': '一次付費，終身享受專業校準',
@@ -117,7 +117,7 @@ export const zhTW: Partial<Record<TranslationKeys, string>> = {
   'paywall.secure_notice': '安全應用程式內購買',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • 全球精品咖啡社群',
+  'footer.rights': 'Flowbean • {year} • 全球精品咖啡社群',
   'footer.privacy': '隱私權政策',
   'footer.terms': '服務條款',
   'footer.support': '客戶支援',
@@ -127,10 +127,10 @@ export const zhTW: Partial<Record<TranslationKeys, string>> = {
   'legal.tab_privacy': '隱私權政策',
   'legal.tab_terms': '服務條款 (EULA)',
   'legal.tab_support': '支援與常見問答',
-  'legal.privacy_title': 'Espresso Flow 隱私權政策',
+  'legal.privacy_title': 'Flowbean 隱私權政策',
   'legal.privacy_updated': '最後更新日期：2026年9月26日',
   'legal.privacy_camera_h': '1. 相機與影像資料',
-  'legal.privacy_camera_p': 'Espresso Flow 僅使用裝置相機辨識咖啡秤螢幕上的數字。所有光學字元辨識 (OCR) 與影像運算均 100% 於裝置本地離線執行。任何視訊畫面與影像串流絕不會被錄影、儲存或傳輸至外部伺服器。',
+  'legal.privacy_camera_p': 'Flowbean 僅使用裝置相機辨識咖啡秤螢幕上的數字。所有光學字元辨識 (OCR) 與影像運算均 100% 於裝置本地離線執行。任何視訊畫面與影像串流絕不會被錄影、儲存或傳輸至外部伺服器。',
   'legal.privacy_data_h': '2. 萃取與日誌資料',
   'legal.privacy_data_p': '您的沖煮設定、研磨刻度與品飲筆記皆儲存於裝置本機。我們絕不會販售、出租或商業化您的個人咖啡筆記或沖煮習慣。',
   'legal.privacy_purchase_h': '3. 應用程式內購買',
@@ -138,18 +138,18 @@ export const zhTW: Partial<Record<TranslationKeys, string>> = {
   'legal.terms_title': '服務條款 (標準使用者授權協議 / EULA)',
   'legal.terms_updated': '最後更新日期：2026年9月26日',
   'legal.terms_acceptance_h': '1. 同意條款',
-  'legal.terms_acceptance_p': '下載或使用 Espresso Flow 即表示您同意遵守本服務條款。若您不同意，請立即停止使用本應用程式。',
+  'legal.terms_acceptance_p': '下載或使用 Flowbean 即表示您同意遵守本服務條款。若您不同意，請立即停止使用本應用程式。',
   'legal.terms_license_h': '2. 終身專業版授權',
-  'legal.terms_license_p': 'Espresso Flow 提供 7 天全功能免費試用，其後可透過一次性支付 4.99 美元（或 49 丹麥克朗）購買 Lifetime Pro 終身授權。該授權賦予在該軟體版本生命週期內無限制使用視覺辨識、流速分析與咖啡豆日誌。',
+  'legal.terms_license_p': 'Flowbean 提供 7 天全功能免費試用，其後可透過一次性支付 4.99 美元（或 49 丹麥克朗）購買 Lifetime Pro 終身授權。該授權賦予在該軟體版本生命週期內無限制使用視覺辨識、流速分析與咖啡豆日誌。',
   'legal.terms_disclaimer_h': '3. 磅秤光學讀取免責聲明',
-  'legal.terms_disclaimer_p': 'Espresso Flow 依據光學辨識演算法估算流速並提供校準建議。環境光線、螢幕反光及機器震動可能影響讀取準確度。本軟體以「現狀」提供服務。',
+  'legal.terms_disclaimer_p': 'Flowbean 依據光學辨識演算法估算流速並提供校準建議。環境光線、螢幕反光及機器震動可能影響讀取準確度。本軟體以「現狀」提供服務。',
   'legal.support_title': '客戶支援與聯絡我們',
   'legal.support_subtitle': '我們是一群熱愛義式濃縮的極客，隨時準備協助您校準出絕佳風味。',
   'legal.support_email': '直接支援信箱：michaelkhansen@gmail.com',
   'legal.support_questions': '關於磅秤校準、磨豆機檔案新增或恢復購買有任何問題？歡迎隨時與我們聯繫。',
   'legal.faq_title': '常見問答 (FAQ)：',
   'legal.faq_q1': '問：我的咖啡秤需要支援藍牙嗎？',
-  'legal.faq_a1': '答：完全不需要！Espresso Flow 透過手機鏡頭直接辨識螢幕數值，適用於任何一般廚房秤或市售咖啡秤。',
+  'legal.faq_a1': '答：完全不需要！Flowbean 透過手機鏡頭直接辨識螢幕數值，適用於任何一般廚房秤或市售咖啡秤。',
   'legal.faq_q2': '問：更換新手機時如何恢復購買？',
   'legal.faq_a2': '答：只需在登入相同 Apple ID 或 Google 帳號的狀態下，於 PRO 選單中點擊「恢復購買紀錄」即可立即重新啟用。',
 

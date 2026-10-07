@@ -650,7 +650,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                 <span>Multi-Format Date Recognition Engine</span>
               </div>
               <p className="text-[11px] leading-relaxed">
-                Coffee roasters use diverse date stamps. Espresso Flow's optical parser decodes:
+                Coffee roasters use diverse date stamps. Flowbean's optical parser decodes:
               </p>
               <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
                 <div className="p-2 rounded bg-[#FAF7F2] border border-[#E8DFD5]">

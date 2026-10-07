@@ -105,7 +105,7 @@ export const en = {
   'bean.scanning_date': 'Reading date stamp with Vision OCR...',
 
   // Onboarding Wizard
-  'wizard.welcome_title': 'Welcome to Espresso Flow',
+  'wizard.welcome_title': 'Welcome to Flowbean',
   'wizard.welcome_subtitle': 'Quick station setup -- 3 steps to your first perfect shot',
   'wizard.skip': 'Skip',
   'wizard.skip_title': 'Skip station setup and explore app',
@@ -135,7 +135,7 @@ export const en = {
 
   // Lifetime Access Modal
   'paywall.badge': 'LIFETIME ACCESS • NO SUBSCRIPTION',
-  'paywall.title': 'Espresso Flow',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': 'Transform any kitchen scale into a precision extraction lab.',
   'paywall.price': '$4.99 / 49,- DKK',
   'paywall.pay_once': 'Pay Once, Dial In Forever',
@@ -152,7 +152,7 @@ export const en = {
   'paywall.secure_notice': 'Secure In-App',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • Global Specialty Coffee',
+  'footer.rights': 'Flowbean • {year} • Global Specialty Coffee',
   'footer.privacy': 'Privacy Policy',
   'footer.terms': 'Terms of Service',
   'footer.support': 'Support',
@@ -162,10 +162,10 @@ export const en = {
   'legal.tab_privacy': 'Privacy Policy',
   'legal.tab_terms': 'Terms of Service (EULA)',
   'legal.tab_support': 'Support & FAQ',
-  'legal.privacy_title': 'Privacy Policy for Espresso Flow',
+  'legal.privacy_title': 'Privacy Policy for Flowbean',
   'legal.privacy_updated': 'Last updated: September 26, 2026',
   'legal.privacy_camera_h': '1. Camera & Video Data',
-  'legal.privacy_camera_p': 'Espresso Flow accesses your device\'s camera exclusively to recognize digital numbers on your coffee scale. All optical character recognition (OCR) and canvas processing are performed 100% locally on your device. Video frames and camera streams are never recorded, saved to cloud servers, or transmitted over the internet.',
+  'legal.privacy_camera_p': 'Flowbean accesses your device\'s camera exclusively to recognize digital numbers on your coffee scale. All optical character recognition (OCR) and canvas processing are performed 100% locally on your device. Video frames and camera streams are never recorded, saved to cloud servers, or transmitted over the internet.',
   'legal.privacy_data_h': '2. Extraction & Logbook Data',
   'legal.privacy_data_p': 'Your brew profiles, grinder settings, and tasting logs are stored locally on your device. We do not sell, rent, or monetize your personal coffee notes or brewing habits.',
   'legal.privacy_purchase_h': '3. In-App Purchases',
@@ -173,18 +173,18 @@ export const en = {
   'legal.terms_title': 'Terms of Service (Standard EULA)',
   'legal.terms_updated': 'Last updated: September 26, 2026',
   'legal.terms_acceptance_h': '1. Acceptance of Terms',
-  'legal.terms_acceptance_p': 'By downloading, accessing, or using Espresso Flow, you agree to be bound by these Terms of Service. If you do not agree, please discontinue use immediately.',
+  'legal.terms_acceptance_p': 'By downloading, accessing, or using Flowbean, you agree to be bound by these Terms of Service. If you do not agree, please discontinue use immediately.',
   'legal.terms_license_h': '2. Lifetime Pro License',
-  'legal.terms_license_p': 'Espresso Flow offers a 7-day full in-app trial followed by an optional one-time purchase of $4.99 USD (49 DKK) for Lifetime Pro access. Lifetime access grants unrestricted use of scale OCR vision, flow rate analysis, and bean logbooks for the lifetime of the application version.',
+  'legal.terms_license_p': 'Flowbean offers a 7-day full in-app trial followed by an optional one-time purchase of $4.99 USD (49 DKK) for Lifetime Pro access. Lifetime access grants unrestricted use of scale OCR vision, flow rate analysis, and bean logbooks for the lifetime of the application version.',
   'legal.terms_disclaimer_h': '3. Disclaimer of Scale Calibration',
-  'legal.terms_disclaimer_p': 'Espresso Flow provides flow rate estimates and dial-in recommendations based on optical reading. Lighting conditions, display reflection, and physical vibrations may affect readings. The app is provided on an "as is" and "as available" basis.',
+  'legal.terms_disclaimer_p': 'Flowbean provides flow rate estimates and dial-in recommendations based on optical reading. Lighting conditions, display reflection, and physical vibrations may affect readings. The app is provided on an "as is" and "as available" basis.',
   'legal.support_title': 'Customer Support & Contact',
   'legal.support_subtitle': 'We are passionate coffee nerds and here to help you dial in.',
   'legal.support_email': 'Direct Support: michaelkhansen@gmail.com',
   'legal.support_questions': 'Questions regarding scale calibration, grinder profiles, or restore purchases? Feel free to reach out anytime.',
   'legal.faq_title': 'Frequently Asked Questions:',
   'legal.faq_q1': 'Q: Does my scale need Bluetooth?',
-  'legal.faq_a1': 'A: No! Espresso Flow works with any standard kitchen or coffee scale by reading the display with your phone\'s camera.',
+  'legal.faq_a1': 'A: No! Flowbean works with any standard kitchen or coffee scale by reading the display with your phone\'s camera.',
   'legal.faq_q2': 'Q: How do I restore my purchase on a new phone?',
   'legal.faq_a2': 'A: Simply tap "Restore Purchases" in the settings menu while signed in with your Apple ID or Google account.',
 
@@ -359,10 +359,10 @@ export const en = {
   'recipe.status_needs_dialin': 'NEEDS DIAL-IN',
 
   // Mobile Back Navigation
-  'mobile.press_back_again': 'Press back again to exit Espresso Flow',
+  'mobile.press_back_again': 'Press back again to exit Flowbean',
 
   // Mode Switcher
-  'mode.flow': 'Espresso Flow',
+  'mode.flow': 'Flowbean',
   'mode.beandex': 'Beandex',
   'mode.flow_short': 'Flow',
   'mode.beandex_short': 'Beandex',

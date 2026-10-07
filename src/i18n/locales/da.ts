@@ -107,7 +107,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'bean.scanning_date': 'Læser datostempel med optisk OCR...',
 
   // Onboarding Wizard
-  'wizard.welcome_title': 'Velkommen til Espresso Flow',
+  'wizard.welcome_title': 'Velkommen til Flowbean',
   'wizard.welcome_subtitle': 'Hurtig opsætning -- 3 trin til dit første perfekte shot',
   'wizard.skip': 'Spring over',
   'wizard.skip_title': 'Spring opsætning over og udforsk appen',
@@ -137,7 +137,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
 
   // Lifetime Access Modal
   'paywall.badge': 'LIVSTIDSADGANG • INGEN ABONNEMENT',
-  'paywall.title': 'Espresso Flow',
+  'paywall.title': 'Flowbean PRO',
   'paywall.subtitle': 'Forvandl enhver kaffevægt til et ultra-præcist ekstraktionslaboratorium.',
   'paywall.price': '$4.99 / 49,- DKK',
   'paywall.pay_once': 'Betal én gang, bryg for altid',
@@ -154,7 +154,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'paywall.secure_notice': 'Sikker Betaling',
 
   // Footer & Legal Links
-  'footer.rights': 'Espresso Flow © {year} • Global Specialty Coffee',
+  'footer.rights': 'Flowbean • {year} • Global Specialty Coffee',
   'footer.privacy': 'Privatlivspolitik',
   'footer.terms': 'Brugervilkår',
   'footer.support': 'Support',
@@ -164,10 +164,10 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'legal.tab_privacy': 'Privatlivspolitik',
   'legal.tab_terms': 'Brugervilkår (EULA)',
   'legal.tab_support': 'Support & FAQ',
-  'legal.privacy_title': 'Privatlivspolitik for Espresso Flow',
+  'legal.privacy_title': 'Privatlivspolitik for Flowbean',
   'legal.privacy_updated': 'Sidst opdateret: 26. september 2026',
   'legal.privacy_camera_h': '1. Kamera & Videodata',
-  'legal.privacy_camera_p': 'Espresso Flow anvender udelukkende enhedens kamera til at aflæse de digitale cifre på din kaffevægt. Al optisk tegngenkendelse (OCR) og billedbehandling foregår 100% lokalt på din telefon. Videobilleder og kamerastrømme optages, gemmes eller transmitteres aldrig til eksterne servere.',
+  'legal.privacy_camera_p': 'Flowbean anvender udelukkende enhedens kamera til at aflæse de digitale cifre på din kaffevægt. Al optisk tegngenkendelse (OCR) og billedbehandling foregår 100% lokalt på din telefon. Videobilleder og kamerastrømme optages, gemmes eller transmitteres aldrig til eksterne servere.',
   'legal.privacy_data_h': '2. Ekstraktions- & Logbogsdata',
   'legal.privacy_data_p': 'Dine bryggeprofiler, kværnindstillinger og smagsnoter gemmes lokalt på enheden. Vi videresælger, udlejer eller monetiserer aldrig dine personlige kaffenoter eller brygvaner.',
   'legal.privacy_purchase_h': '3. In-App Køb',
@@ -175,18 +175,18 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'legal.terms_title': 'Brugervilkår (Standard Slutbrugeraftale / EULA)',
   'legal.terms_updated': 'Sidst opdateret: 26. september 2026',
   'legal.terms_acceptance_h': '1. Accept af Vilkår',
-  'legal.terms_acceptance_p': 'Ved download eller brug af Espresso Flow accepterer du disse vilkår. Hvis du ikke kan acceptere vilkårene, bedes du ophøre med brugen af appen.',
+  'legal.terms_acceptance_p': 'Ved download eller brug af Flowbean accepterer du disse vilkår. Hvis du ikke kan acceptere vilkårene, bedes du ophøre med brugen af appen.',
   'legal.terms_license_h': '2. Lifetime Pro Licens',
-  'legal.terms_license_p': 'Espresso Flow tilbyder en 7-dages fuld in-app prøveperiode efterfulgt af et valgfrit engangskøb på 49,- DKK ($4.99 USD) for Lifetime Pro adgang. Adgangen giver ubegrænset brug af OCR-vision, flow-dynamik og bønnelogbog for appens levetid.',
+  'legal.terms_license_p': 'Flowbean tilbyder en 7-dages fuld in-app prøveperiode efterfulgt af et valgfrit engangskøb på 49,- DKK ($4.99 USD) for Lifetime Pro adgang. Adgangen giver ubegrænset brug af OCR-vision, flow-dynamik og bønnelogbog for appens levetid.',
   'legal.terms_disclaimer_h': '3. Ansvarsfraskrivelse ved Vægtaflæsning',
-  'legal.terms_disclaimer_p': 'Espresso Flow leverer flow-estimater og dial-in forslag baseret på optisk aflæsning. Belysningsforhold, spejlinger i displayet og vibrationer kan påvirke målingen. Appen leveres "som den er og forefindes".',
+  'legal.terms_disclaimer_p': 'Flowbean leverer flow-estimater og dial-in forslag baseret på optisk aflæsning. Belysningsforhold, spejlinger i displayet og vibrationer kan påvirke målingen. Appen leveres "som den er og forefindes".',
   'legal.support_title': 'Kundesupport & Kontakt',
   'legal.support_subtitle': 'Vi er passionerede kaffenørder og klar til at hjælpe dig med din dial-in.',
   'legal.support_email': 'Direkte Support: michaelkhansen@gmail.com',
   'legal.support_questions': 'Spørgsmål til vægtkalibrering, kværnprofiler eller genoprettelse af køb? Skriv endelig til os.',
   'legal.faq_title': 'Ofte Stillede Spørgsmål:',
   'legal.faq_q1': 'Spørgsmål: Kræver min vægt Bluetooth?',
-  'legal.faq_a1': 'Svar: Nej! Espresso Flow virker med enhver standard køkken- eller kaffevægt ved at aflæse tallene direkte med kameraet.',
+  'legal.faq_a1': 'Svar: Nej! Flowbean virker med enhver standard køkken- eller kaffevægt ved at aflæse tallene direkte med kameraet.',
   'legal.faq_q2': 'Spørgsmål: Hvordan gendanner jeg mit køb på en ny telefon?',
   'legal.faq_a2': 'Svar: Tryk blot på "Gendan Tidligere Køb" i PRO-menuen, mens du er logget ind med dit Apple ID eller Google-konto.',
 
@@ -361,10 +361,10 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'recipe.status_needs_dialin': 'KRÆVER DIAL-IN',
 
   // Mobile Back Navigation
-  'mobile.press_back_again': 'Tryk tilbage igen for at afslutte Espresso Flow',
+  'mobile.press_back_again': 'Tryk tilbage igen for at afslutte Flowbean',
 
   // Mode Switcher
-  'mode.flow': 'Espresso Flow',
+  'mode.flow': 'Flowbean',
   'mode.beandex': 'Beandex',
   'mode.flow_short': 'Flow',
   'mode.beandex_short': 'Beandex',
