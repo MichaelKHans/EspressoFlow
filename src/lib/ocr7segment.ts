@@ -355,7 +355,6 @@ function probeDigitSegments(
       if (digit === '2' && (seg.c && seg.f)) continue; // '2' has NO segment c (bottom-right) or f (top-left)
       if (digit === '6' && seg.b) continue; // '6' has NO segment b (top-right)
       if (digit === '7' && (seg.d && seg.g)) continue;
-      if (digit === '4' && seg.d) continue; // '4' never has bottom bar d
       if (digit === '3' && (seg.e && seg.f)) continue;
       if (digit === '8' && (upperHole && lowerHole)) continue; // Solid glare/blob filled in both loops is NOT an '8'!
       if (digit === '6' && lowerHole) continue; // '6' bottom loop must be hollow
