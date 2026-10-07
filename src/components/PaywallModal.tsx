@@ -32,13 +32,20 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-fadeIn overflow-hidden"
       style={{
-        paddingBottom: 'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
+        paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
         paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
       }}
     >
-      <div className="relative w-full max-w-md bg-[#FFFDF9] rounded-2xl border border-[#DECFC0] p-6 shadow-2xl overflow-y-auto font-sans max-h-[calc(100dvh-4.5rem)] animate-modal-pop-in">
+      <div className="relative w-full max-w-md bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#DECFC0] p-5 sm:p-6 shadow-2xl overflow-y-auto font-sans max-h-[calc(100dvh-3rem)] animate-modal-pop-in">
         {/* Close Button */}
         <button
           onClick={onClose}

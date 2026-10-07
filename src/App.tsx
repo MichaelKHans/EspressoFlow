@@ -127,6 +127,21 @@ export function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [tempUnit, setTempUnit] = useState<TempUnit>(() => loadTempUnit());
   const [legalModalTab, setLegalModalTab] = useState<'privacy' | 'terms' | 'support' | null>(null);
+  const [isAllDrinksModalOpen, setIsAllDrinksModalOpen] = useState<boolean>(false);
+  const [isFreshnessInfoOpen, setIsFreshnessInfoOpen] = useState<boolean>(false);
+  const [freshnessInfoRoast, setFreshnessInfoRoast] = useState<RoastLevel>('medium');
+
+  const closeAllActiveModals = useCallback(() => {
+    setIsAllDrinksModalOpen(false);
+    setIsFreshnessInfoOpen(false);
+    setIsSettingsOpen(false);
+    setIsDialInWizardOpen(false);
+    setIsBeanScannerOpen(false);
+    setIsCentralVaultOpen(false);
+    setIsPaywallOpen(false);
+    setLegalModalTab(null);
+    setIsShotSummaryOpen(false);
+  }, []);
 
   const handleTempUnitChange = (unit: TempUnit) => {
     setTempUnit(unit);
@@ -154,6 +169,8 @@ export function App() {
       { name: 'vault', isOpen: isCentralVaultOpen, close: () => setIsCentralVaultOpen(false) },
       { name: 'paywall', isOpen: isPaywallOpen, close: () => setIsPaywallOpen(false) },
       { name: 'legal', isOpen: legalModalTab !== null, close: () => setLegalModalTab(null) },
+      { name: 'allDrinks', isOpen: isAllDrinksModalOpen, close: () => setIsAllDrinksModalOpen(false) },
+      { name: 'freshnessInfo', isOpen: isFreshnessInfoOpen, close: () => setIsFreshnessInfoOpen(false) },
     ],
     exitToastMessage: t('mobile.press_back_again') || 'Tryk tilbage igen for at afslutte',
   });
@@ -738,6 +755,13 @@ export function App() {
             onSwitchToFlow={() => setActiveMode('flow')}
             grinders={grinders}
             activeGrinderName={grinderName}
+            isFreshnessInfoOpen={isFreshnessInfoOpen}
+            selectedFreshnessRoast={freshnessInfoRoast}
+            onOpenFreshnessInfo={(roast) => {
+              setFreshnessInfoRoast(roast);
+              setIsFreshnessInfoOpen(true);
+            }}
+            onCloseFreshnessInfo={() => setIsFreshnessInfoOpen(false)}
           />
         ) : (
           <>
@@ -757,6 +781,9 @@ export function App() {
                 onSwitchBean={handleSelectBean}
                 onScanBean={() => setIsBeanScannerOpen(true)}
                 onUpdateBeanDialIn={handleUpdateBeanField}
+                isAllDrinksModalOpen={isAllDrinksModalOpen}
+                onOpenAllDrinksModal={() => setIsAllDrinksModalOpen(true)}
+                onCloseAllDrinksModal={() => setIsAllDrinksModalOpen(false)}
               />
             )}
 
@@ -1498,6 +1525,7 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              closeAllActiveModals();
               setActiveMode('flow');
               setActiveTab('drinks');
             }}
@@ -1522,6 +1550,7 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              closeAllActiveModals();
               setActiveMode('flow');
               setActiveTab('monitor');
             }}
@@ -1546,6 +1575,7 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              closeAllActiveModals();
               setActiveMode('beandex');
             }}
             className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
@@ -1577,6 +1607,7 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              closeAllActiveModals();
               setActiveMode('flow');
               setActiveTab('logbook');
             }}
@@ -1601,6 +1632,7 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              closeAllActiveModals();
               setActiveMode('flow');
               setActiveTab('equipment');
             }}

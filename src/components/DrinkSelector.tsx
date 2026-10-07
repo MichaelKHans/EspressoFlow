@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, ShotRecord, RoastLevel } from '../types/espresso';
 import { DRINK_RECIPES } from '../data/drinkRecipes';
 import {
@@ -55,6 +56,9 @@ interface DrinkSelectorProps {
   onSwitchBean?: (beanId: string) => void;
   onScanBean?: () => void;
   onUpdateBeanDialIn?: (patch: Partial<CoffeeBeanProfile>) => void;
+  isAllDrinksModalOpen?: boolean;
+  onOpenAllDrinksModal?: () => void;
+  onCloseAllDrinksModal?: () => void;
 }
 
 export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
@@ -71,9 +75,22 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onSwitchBean: _onSwitchBean,
   onScanBean: _onScanBean,
   onUpdateBeanDialIn: _onUpdateBeanDialIn,
+  isAllDrinksModalOpen,
+  onOpenAllDrinksModal,
+  onCloseAllDrinksModal,
 }) => {
   const [activeDeckIds, setActiveDeckIds] = useState<string[]>(() => loadActiveBarDrinkIds());
-  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState<boolean>(false);
+  const [internalModalOpen, setInternalModalOpen] = useState<boolean>(false);
+  const isCustomizeModalOpen = isAllDrinksModalOpen !== undefined ? isAllDrinksModalOpen : internalModalOpen;
+  const setIsCustomizeModalOpen = (open: boolean) => {
+    if (open) {
+      if (onOpenAllDrinksModal) onOpenAllDrinksModal();
+      else setInternalModalOpen(true);
+    } else {
+      if (onCloseAllDrinksModal) onCloseAllDrinksModal();
+      else setInternalModalOpen(false);
+    }
+  };
   const [isLibraryExpanded, setIsLibraryExpanded] = useState<boolean>(false); // Collapsed by default per user request!
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'milk' | 'black' | 'dessert'>('all');
   const [drinkGrinds] = useState<Record<string, string>>(() => loadDrinkGrindSettings());
@@ -844,65 +861,84 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
       </div>
 
       {/* 6. All Drinks & Deck Customizer Modal */}
-      {isCustomizeModalOpen && (
+      {isCustomizeModalOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsCustomizeModalOpen(false);
+            }
+          }}
+          className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-fadeIn"
           style={{
-            paddingBottom: 'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
+            paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
             paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
           }}
         >
-          <div className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#DECFC0] max-w-md w-full p-4 sm:p-6 shadow-xl space-y-4 max-h-[calc(100dvh-4.5rem)] flex flex-col animate-modal-pop-in">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E8DFD5]">
-              <div className="flex items-center gap-2">
-                <Coffee className="w-4 h-4 text-[#C26D52]" />
-                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-                  Specialty Drink Deck & Menu
-                </h3>
+          <div className="bg-[#FFFDF9] rounded-2xl sm:rounded-3xl border border-[#DECFC0] max-w-md w-full shadow-2xl flex flex-col max-h-[calc(100dvh-3rem)] overflow-hidden animate-modal-pop-in">
+            {/* STICKY HEADER - NEVER SCROLLS AWAY */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#E8DFD5] bg-[#FAF7F2] shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0 shadow-xs">
+                  <Coffee className="w-4 h-4 text-[#C26D52]" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#2C2018] font-mono">
+                    Specialty Drink Deck & Menu
+                  </h3>
+                  <p className="text-[10px] sm:text-[10.5px] text-[#7A6E65] font-mono">
+                    Tap a drink to brew • Pin to top deck
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsCustomizeModalOpen(false)}
-                className="p-1 rounded-lg text-[#7A6E65] hover:text-[#2C2018] hover:bg-[#E8DFD5]/50 transition"
+                className="w-8 h-8 rounded-full bg-white border border-[#DECFC0] flex items-center justify-center text-[#7A6E65] hover:text-[#2C2018] hover:bg-[#FAF7F2] transition shrink-0 cursor-pointer shadow-xs active:scale-95"
+                title="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4.5 h-4.5" />
               </button>
             </div>
 
-            <p className="text-[11px] text-[#7A6E65] font-mono leading-relaxed">
-              <strong>Tap any drink</strong> to select and brew it immediately. Use the <strong>Pin</strong> button to customize which drinks appear on your top quick deck.
-            </p>
+            {/* STICKY FILTER ROW & INSTRUCTION - NEVER SCROLLS AWAY */}
+            <div className="px-4 pt-3 pb-2 shrink-0 bg-[#FFFDF9] space-y-2 border-b border-[#F0E8DC]">
+              <p className="text-[11px] text-[#7A6E65] font-mono leading-relaxed">
+                <strong>Tap any drink</strong> to select and brew it immediately. Use the <strong>Pin</strong> button to customize which drinks appear on your top quick deck.
+              </p>
 
-            {/* Modal Method Toggle */}
-            <div className="grid grid-cols-2 gap-1 p-0.5 bg-[#F0E8DC] rounded-xl border border-[#DECFC0] text-xs font-mono">
-              <button
-                type="button"
-                onClick={() => setMethodFilter('espresso')}
-                className={`py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  methodFilter === 'espresso'
-                    ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
-                    : 'text-[#7A6E65] hover:text-[#2C2018]'
-                }`}
-              >
-                <Coffee className="w-3.5 h-3.5" />
-                <span>Espresso ({DRINK_RECIPES.filter((d) => (d.method || 'espresso') === 'espresso').length})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMethodFilter('pour_over')}
-                className={`py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  methodFilter === 'pour_over'
-                    ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
-                    : 'text-[#7A6E65] hover:text-[#2C2018]'
-                }`}
-              >
-                <span className="text-xs">🫗</span>
-                <span>Pour Over ({DRINK_RECIPES.filter((d) => d.method === 'pour_over').length})</span>
-              </button>
+              {/* Modal Method Toggle */}
+              <div className="grid grid-cols-2 gap-1 p-0.5 bg-[#F0E8DC] rounded-xl border border-[#DECFC0] text-xs font-mono">
+                <button
+                  type="button"
+                  onClick={() => setMethodFilter('espresso')}
+                  className={`py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    methodFilter === 'espresso'
+                      ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                      : 'text-[#7A6E65] hover:text-[#2C2018]'
+                  }`}
+                >
+                  <Coffee className="w-3.5 h-3.5" />
+                  <span>Espresso ({DRINK_RECIPES.filter((d) => (d.method || 'espresso') === 'espresso').length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMethodFilter('pour_over')}
+                  className={`py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    methodFilter === 'pour_over'
+                      ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                      : 'text-[#7A6E65] hover:text-[#2C2018]'
+                  }`}
+                >
+                  <DripperIcon className="w-3.5 h-3.5" />
+                  <span>Pour Over ({DRINK_RECIPES.filter((d) => d.method === 'pour_over').length})</span>
+                </button>
+              </div>
             </div>
 
-            {/* Drink Selection List */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
+            {/* SCROLLABLE DRINK SELECTION LIST - ONLY THIS REGION SCROLLS */}
+            <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2 overscroll-contain no-scrollbar">
               {DRINK_RECIPES.filter((d) => (d.method || 'espresso') === methodFilter).map((drink) => {
                 const isActive = activeDeckIds.includes(drink.id);
                 const isSelected = drink.id === selectedDrink.id;
@@ -950,7 +986,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                         e.stopPropagation();
                         toggleDeckDrink(drink.id);
                       }}
-                      className={`text-[10px] font-mono px-2 py-1 rounded-lg border flex items-center gap-1 transition shrink-0 ${
+                      className={`text-[10px] font-mono px-2 py-1 rounded-lg border flex items-center gap-1 transition shrink-0 cursor-pointer ${
                         isActive
                           ? 'bg-[#C26D52]/10 border-[#C26D52] text-[#C26D52] font-semibold'
                           : 'bg-[#FAF7F2] border-[#E8DFD5] text-[#7A6E65] hover:text-[#2C2018]'
@@ -974,20 +1010,22 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               })}
             </div>
 
-            <div className="pt-3 border-t border-[#E8DFD5] flex items-center justify-between">
+            {/* STICKY FOOTER - NEVER SCROLLS AWAY & ALWAYS VISIBLE */}
+            <div className="p-3.5 sm:p-4 border-t border-[#E8DFD5] bg-[#FAF7F2] flex items-center justify-between shrink-0">
               <span className="text-[10px] sm:text-[11px] font-mono text-[#7A6E65]">
                 {activeDeckIds.length} of {DRINK_RECIPES.length} active
               </span>
               <button
                 type="button"
                 onClick={() => setIsCustomizeModalOpen(false)}
-                className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] text-xs font-mono font-bold hover:bg-[#3D2D22] transition"
+                className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] text-xs font-mono font-bold hover:bg-[#3D2D22] transition shadow-xs cursor-pointer active:scale-95"
               >
                 Save & Close
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

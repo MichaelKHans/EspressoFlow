@@ -278,18 +278,25 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-fadeIn overflow-hidden"
       style={{
-        paddingBottom: 'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
+        paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
         paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
       }}
     >
-      <div className="bg-[#FFFDF9] border border-[#DECFC0] rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 relative overflow-hidden my-auto max-h-[calc(100dvh-4.5rem)] overflow-y-auto animate-modal-pop-in">
+      <div className="bg-[#FFFDF9] border border-[#DECFC0] rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[calc(100dvh-3rem)] animate-modal-pop-in">
         {/* Ambient Top Glow */}
         <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-[#C26D52]/15 blur-2xl pointer-events-none" />
 
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-3 sm:pb-4">
+        {/* Modal Header - STICKY */}
+        <div className="flex items-center justify-between border-b border-[#E8DFD5] p-4 sm:p-5 bg-[#FAF7F2] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0 shadow-xs">
               <Sliders className="w-4 h-4 text-[#C26D52]" />
@@ -320,12 +327,15 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-center text-[#7A6E65] hover:text-[#2C2018] transition shrink-0 cursor-pointer"
+            className="w-8 h-8 rounded-full bg-white border border-[#DECFC0] flex items-center justify-center text-[#7A6E65] hover:text-[#2C2018] hover:bg-[#FAF7F2] transition shrink-0 cursor-pointer shadow-xs active:scale-95"
             title="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Modal Body - SCROLLABLE */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
 
         {/* STEP 1: Select Coffee Bean & Review Roast Matching */}
         <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3">
@@ -753,50 +763,51 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             Calibration will be locked for <strong>{activeBean.name}</strong> at <strong>{formatTemperature(brewTempC, tempUnit)}</strong> using <strong>{activeGrinder.name.split(' ')[0]}</strong> on setting <strong>{grindSetting}</strong> ({doseGrams.toFixed(1)}g in → {targetYieldGrams.toFixed(1)}g out).
           </p>
         </div>
+      </div>
 
-        {/* Modal Action Buttons */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3">
+      {/* Modal Action Buttons - STICKY FOOTER */}
+      <div className="p-3.5 sm:p-4 border-t border-[#E8DFD5] bg-[#FAF7F2] shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono font-medium text-[#7A6E65] hover:text-[#2C2018] transition text-center cursor-pointer shadow-xs active:scale-98"
+        >
+          Cancel
+        </button>
+
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+          {/* Save Calibration Only Button */}
           <button
             type="button"
-            onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#E8DFD5] text-xs font-mono font-medium text-[#7A6E65] hover:text-[#2C2018] transition text-center cursor-pointer"
+            onClick={handleSaveOnly}
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#C26D52] bg-[#FAF7F2] hover:bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-98 shadow-xs"
+            title="Save settings to bean without opening camera"
           >
-            Cancel
+            <Check className="w-3.5 h-3.5" />
+            <span>Save Calibration</span>
           </button>
 
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            {/* Save Calibration Only Button */}
-            <button
-              type="button"
-              onClick={handleSaveOnly}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#C26D52] bg-[#FAF7F2] hover:bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
-              title="Save settings to bean without opening camera"
-            >
-              <Check className="w-3.5 h-3.5" />
-              <span>Save Calibration</span>
-            </button>
-
-            {/* Lock & Launch Scale Cam Primary Button */}
-            <button
-              type="button"
-              onClick={handleSaveAndProceed}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition shadow-md group cursor-pointer"
-            >
-              {isSavedFeedback ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-[#72806B]" />
-                  <span>Calibration Locked!</span>
-                </>
-              ) : (
-                <>
-                  <span>Lock & Launch Scale Cam</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
-                </>
-              )}
-            </button>
-          </div>
+          {/* Lock & Launch Scale Cam Primary Button */}
+          <button
+            type="button"
+            onClick={handleSaveAndProceed}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition shadow-md group cursor-pointer active:scale-98"
+          >
+            {isSavedFeedback ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-[#72806B]" />
+                <span>Calibration Locked!</span>
+              </>
+            ) : (
+              <>
+                <span>Lock & Launch Scale Cam</span>
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition" />
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };

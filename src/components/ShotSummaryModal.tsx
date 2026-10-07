@@ -117,15 +117,21 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-[#2C2018]/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-[60] bg-[#2C2018]/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden"
       style={{
         paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+        paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
       }}
     >
       <div
         className="bg-[#FFFDF9] w-full max-w-xl rounded-t-3xl sm:rounded-3xl border border-[#DECFC0] shadow-2xl overflow-hidden flex flex-col max-h-[calc(100dvh-2.5rem)] sm:max-h-[90vh] font-mono animate-modal-slide-up"
-        role="dialog"
-        aria-modal="true"
       >
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-[#E8DFD5] bg-gradient-to-r from-[#FAF7F2] via-[#FFFDF9] to-[#FAF7F2] flex items-center justify-between shrink-0">

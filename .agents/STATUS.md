@@ -11,6 +11,27 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-07 -- Modal Arkitektur & U-fangbarhedssikring (Fix af "Kan ikke komme ud af Bar") (v1.7.4)
+- **Total Løsning på Fastlåsning i Bar / Drink Deck Tilpasning:**
+  - **Identificeret Rodårsag:**
+    1. *Stacking Context Fælde:* `DrinkSelector` modalen ("Specialty Drink Deck & Menu") lå indlejret i `DrinkSelector.tsx` under et element med `.animate-fadeIn`. I CSS danner animationer en isoleret stacking context, hvilket fik mobilens bundnavigationsbar (`z-40`) til at tegne sig *ovenpå* bunden af modalen og blokere "Save & Close"-knappen.
+    2. *Forsvunden Lukke-knap (`[X]`):* Modalen havde `overflow-y-auto` på den ydre baggrund, så når brugeren scrollede ned gennem drikkevarelisten, scrollede hele modal-kortet opad, og toppen med `[X]`-knappen røg helt ud af skærmen foroven.
+    3. *Mangler i Lukke-Håndtering:* Modalen manglede backdrop tap-to-close, var ikke registreret i `useMobileBackHandler` til Android Tilbage-knap, og tryk på bundmenuens "Bar"-ikon nulstillede ikke visningen.
+- **Implementeret Løsning på Tværs af Appen:**
+  - **1. Teleportering via `createPortal(..., document.body)` med `z-[60]`:**
+    `DrinkSelector` modalen og `FreshnessInfoModal` i `BeandexView` renderes nu direkte i roden af `document.body` med `z-[60]`. De svæver 100% uafhængigt over både topbar (`z-40`) og bundnavigation (`z-40`) uden risiko for afskæring.
+  - **2. Fastlåst Header & Footer med Indre Rulning (`flex flex-col`):**
+    Modalens baggrund er nu `overflow-hidden`. Modalkortet har en fast header (`shrink-0`) med en prominent `[X]` knap, en fast filterrække (`shrink-0`), en scrollbar drikkevareliste (`flex-1 overflow-y-auto`), og en fast footer (`shrink-0`) med "Save & Close". Hverken toppen eller bunden kan scrolle væk.
+  - **3. 4 Uafhængige Veje Ud (Zero-Trap Garanti):**
+    - Android Tilbage-knap / swipe-back gesture via `useMobileBackHandler`.
+    - Tryk hvor som helst uden for kortet på den mørke baggrund (`backdrop click`).
+    - Det faste `[X]` lukke-ikon i toppen.
+    - Den faste "Save & Close" knap i bunden.
+  - **4. Automatisk Nulstilling ved Tryk i Bundmenuen:**
+    Tryk på en hvilken som helst fane i bundmenuen (`Bar`, `Scale`, `Beandex`, `Logs`, `Gear`) udløser `closeAllActiveModals()`, så eventuelle åbne dialoger ryddes med det samme.
+  - **5. Fuld Sikring af Samtlige Øvrige Modaler:**
+    `SettingsModal`, `LegalModal`, `PaywallModal`, `DialInWizardModal`, `CentralBeanVaultModal`, `BeanScannerModal`, `ShotSummaryModal` og `OnboardingWizard` er alle opdateret til `z-[60]`, backdrop click dismiss, `overflow-hidden` baggrund og sticky headers/footers med safe-area frihøjde.
+
 ### 2026-10-07 -- Global Flowbean Brand Konsistens, Rent Minimalistisk Footer-Format & Forstørret Mobil-Logo (v1.7.3)
 - **100% Brand-Opdatering fra "Espresso Flow" til "Flowbean":**
   - Gennemført systematisk opdatering af alle udestående brandreferencer i Privacy Policy, Terms of Service (EULA), Support & FAQ, Onboarding Wizard, Lifetime Paywall og Settings på tværs af samtlige 11 sprogpakker (`en`, `da`, `de`, `es`, `fr`, `it`, `ja`, `ko`, `zh-CN`, `zh-TW`, `ar`).

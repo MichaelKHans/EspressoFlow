@@ -53,6 +53,10 @@ export interface BeandexViewProps {
   onSwitchToFlow: () => void;
   grinders: GrinderProfile[];
   activeGrinderName: string;
+  isFreshnessInfoOpen?: boolean;
+  selectedFreshnessRoast?: RoastLevel;
+  onOpenFreshnessInfo?: (roast: RoastLevel) => void;
+  onCloseFreshnessInfo?: () => void;
 }
 
 export const BeandexView: React.FC<BeandexViewProps> = ({
@@ -68,6 +72,10 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   onSwitchToFlow,
   grinders,
   activeGrinderName,
+  isFreshnessInfoOpen: isFreshnessInfoOpenProp,
+  selectedFreshnessRoast: selectedFreshnessRoastProp,
+  onOpenFreshnessInfo,
+  onCloseFreshnessInfo,
 }) => {
   const { t } = useTranslation();
 
@@ -99,8 +107,27 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   const [activeCardPhotoBeanId, setActiveCardPhotoBeanId] = useState<string | null>(null);
 
   // Freshness & Degas Info Modal state
-  const [isFreshnessInfoOpen, setIsFreshnessInfoOpen] = useState<boolean>(false);
-  const [selectedFreshnessRoast, setSelectedFreshnessRoast] = useState<RoastLevel>('medium');
+  const [internalFreshnessOpen, setInternalFreshnessOpen] = useState<boolean>(false);
+  const [internalFreshnessRoast, setInternalFreshnessRoast] = useState<RoastLevel>('medium');
+  const isFreshnessInfoOpen = isFreshnessInfoOpenProp !== undefined ? isFreshnessInfoOpenProp : internalFreshnessOpen;
+  const activeFreshnessRoast = selectedFreshnessRoastProp !== undefined ? selectedFreshnessRoastProp : internalFreshnessRoast;
+
+  const handleOpenFreshness = (roast: RoastLevel) => {
+    if (onOpenFreshnessInfo) {
+      onOpenFreshnessInfo(roast);
+    } else {
+      setInternalFreshnessRoast(roast);
+      setInternalFreshnessOpen(true);
+    }
+  };
+
+  const handleCloseFreshness = () => {
+    if (onCloseFreshnessInfo) {
+      onCloseFreshnessInfo();
+    } else {
+      setInternalFreshnessOpen(false);
+    }
+  };
 
   // Inline notes editor state
   const [editingNotesBeanId, setEditingNotesBeanId] = useState<string | null>(null);
@@ -921,10 +948,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
 
                       <button
                         type="button"
-                        onClick={() => {
-                          setSelectedFreshnessRoast(bean.roastLevel);
-                          setIsFreshnessInfoOpen(true);
-                        }}
+                        onClick={() => handleOpenFreshness(bean.roastLevel)}
                         className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] text-[#7A6E65] hover:text-[#C26D52] flex items-center justify-center transition cursor-pointer"
                         title={t('beandex.info_degas_button')}
                       >
@@ -1310,8 +1334,8 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
       {/* Freshness & Degas Info Modal */}
       <FreshnessInfoModal
         isOpen={isFreshnessInfoOpen}
-        onClose={() => setIsFreshnessInfoOpen(false)}
-        activeRoastLevel={selectedFreshnessRoast}
+        onClose={handleCloseFreshness}
+        activeRoastLevel={activeFreshnessRoast}
       />
     </div>
   );

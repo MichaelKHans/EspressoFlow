@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.7.2 (Mobile Safe-Area Elevation, Spring Roll-Up Modals & Navigation Clearance)  
+> **Gældende version:** v1.7.4 (Modal Arkitektur, createPortal Isolering & Zero-Trap Sikring)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -284,7 +284,7 @@ graph TD
     %% Ikoner & UI Assets
     App --> CustomIcons[CustomCoffeeIcons.tsx<br/>Professionelle Vector Line-Art Ikoner: CoffeeBean & Dripper]
 
-    %% Modaler
+    %% Modaler & Overlays (Teleporteret til document.body med z-[60] - 4 uafhængige exit-veje)
     App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]
     App --> ScannerModal[BeanScannerModal.tsx<br/>Stregkode + Etiket OCR Scanner]
     App --> VaultModal[CentralBeanVaultModal.tsx<br/>Fællesskabs-katalog fra Supabase]
@@ -292,6 +292,15 @@ graph TD
     App --> SettingsModal[SettingsModal.tsx<br/>Sprog, Enhed °C/°F, Pro & Kurator link]
     App --> PaywallModal[PaywallModal.tsx<br/>RevenueCat $4.99 Lifetime Unlock]
     App --> LegalModal[LegalModal.tsx<br/>Privacy Policy, Terms of Service, Support]
+    DrinkTab --> AllDrinksModal[DrinkSelector: All Drinks & Deck Modal<br/>createPortal z-[60], sticky top/bottom, back dismiss]
+    BeandexTab --> FreshnessModal[FreshnessInfoModal.tsx<br/>createPortal z-[60], sticky top/bottom, back dismiss]
+
+    %% Mobil Back Button Hub
+    App --> BackHandler[useMobileBackHandler.ts<br/>Android Hardware/Gesture Back prioritetskø]
+    BackHandler -. Lukker i prioritetsrækkefølge .-> AllDrinksModal
+    BackHandler -. Lukker i prioritetsrækkefølge .-> FreshnessModal
+    BackHandler -. Lukker i prioritetsrækkefølge .-> SettingsModal
+    BackHandler -. Lukker i prioritetsrækkefølge .-> SummaryModal
 
     %% Under-moduler
     MonitorTab --> OCR7Segment[ocr7segment.ts<br/>Computer Vision Core]

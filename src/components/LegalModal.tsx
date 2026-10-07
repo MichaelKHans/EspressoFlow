@@ -20,13 +20,20 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-fadeIn overflow-hidden"
       style={{
-        paddingBottom: 'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
+        paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
         paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
       }}
     >
-      <div className="relative w-full max-w-2xl max-h-[calc(100dvh-4.5rem)] bg-[#FFFDF9] rounded-2xl border border-[#DECFC0] shadow-2xl flex flex-col overflow-hidden font-sans animate-modal-pop-in">
+      <div className="relative w-full max-w-2xl max-h-[calc(100dvh-3rem)] bg-[#FFFDF9] rounded-2xl border border-[#DECFC0] shadow-2xl flex flex-col overflow-hidden font-sans animate-modal-pop-in">
         {/* Header */}
         <div className="px-6 py-4 border-b border-[#E8DFD5] flex items-center justify-between bg-[#FAF7F2]">
           <div className="flex items-center gap-2">
@@ -154,6 +161,17 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               </div>
             </div>
           )}
+        </div>
+
+        {/* Sticky Footer */}
+        <div className="p-3.5 sm:p-4 border-t border-[#E8DFD5] bg-[#FAF7F2] shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold transition shadow-xs cursor-pointer text-center active:scale-98"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>

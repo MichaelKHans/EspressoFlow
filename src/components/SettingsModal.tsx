@@ -41,18 +41,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-xs animate-fadeIn overflow-hidden"
       style={{
-        paddingBottom: 'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))',
+        paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
         paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
       }}
     >
-      <div className="bg-[#FFFDF9] border border-[#DECFC0] rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 relative overflow-hidden my-auto max-h-[calc(100dvh-4.5rem)] overflow-y-auto font-sans animate-modal-pop-in">
+      <div className="bg-[#FFFDF9] border border-[#DECFC0] rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[calc(100dvh-3rem)] font-sans animate-modal-pop-in">
         {/* Ambient Top Glow */}
         <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-[#C26D52]/15 blur-2xl pointer-events-none" />
 
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-3 sm:pb-4">
+        {/* Modal Header - STICKY */}
+        <div className="flex items-center justify-between border-b border-[#E8DFD5] p-4 sm:p-5 bg-[#FAF7F2] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0 shadow-xs">
               <Settings className="w-4 h-4 text-[#C26D52]" />
@@ -69,12 +76,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-center text-[#7A6E65] hover:text-[#2C2018] transition shrink-0 cursor-pointer"
+            className="w-8 h-8 rounded-full bg-white border border-[#DECFC0] flex items-center justify-center text-[#7A6E65] hover:text-[#2C2018] hover:bg-[#FAF7F2] transition shrink-0 cursor-pointer shadow-xs active:scale-95"
             title="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Modal Body - SCROLLABLE */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
 
         {/* Section 1: Temperature Unit Preference (°C / °F) */}
         <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3">
@@ -274,18 +284,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Footer Close Button */}
-        <div className="pt-1">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full py-2.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold transition shadow-xs cursor-pointer text-center"
-          >
-            Done
-          </button>
-        </div>
+      {/* Footer Close Button - STICKY */}
+      <div className="p-3.5 sm:p-4 border-t border-[#E8DFD5] bg-[#FAF7F2] shrink-0">
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full py-2.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold transition shadow-xs cursor-pointer text-center active:scale-98"
+        >
+          Done
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
 };
