@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.8.2 (Hardware-in-the-Loop Optisk Testbænk, Antigravity Autonom Skærmsimulator & Ground Truth Telemetri)  
+> **Gældende version:** v1.8.3 (Ciffer-Fusion & Inverteret 0 vs 8 Detektion Løst, 18.4g Stabiliseret)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---

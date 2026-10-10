@@ -11,6 +11,16 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Løsning af Ciffer-Fusion & Inverteret 0 vs 8 Detektion (18.4g Stabilisering) (v1.8.3)
+- **Kritisk Fejlrettelse af 0 vs 8 Forveksling (`ocr7segment.ts`):**
+  - Rettet inverteringsfejl (`if (!gStrict || centerHole) return '0'`), som forårsagede at *alle* 8-taller blev tvunget til at returnere '0'. Nu anvendes `gStrict` (segment `g` midterbjælke) med glans-hulrumsvalidering.
+- **Fast-Path Reparation for Ciffer '1':**
+  - Ciffer '1' er en smal lodret streg (`width / height <= 0.42`). Den forrige kode testede segmenter `a` og `d` mod den smalle bounding box og ramte selve den lodrette streg, hvilket fejlagtigt diskvalificerede tallet 1. Nu returneres '1' entydigt ved smalt aspekt og valid højde.
+- **Multi-Digit Valley Splitter:**
+  - Automatisk opdeling af bredere spans ($\ge 0.82 \times \text{højde}$) ved søjleprojektionens lokale minima for at forhindre at glød eller antialiasing sammensmelter nabocifre.
+- **Støj- og Glans-Beskyttelse:**
+  - Bortfiltreret smalle støjsplinter ($< 5\text{px}$) og begrænset solid glare tæthedstjek til 2-kolonne cifre, så den kompakte streg for '1' aldrig forkastes som glans.
+
 ### 2026-10-10 -- Hardware-in-the-Loop (HIL) Optisk Testbænk & Antigravity Autonom Skærmsimulator (v1.8.2)
 - **Syntetisk Skala Simulator (`public/scale-simulator.html`):**
   - Ultra-realistisk 7-segment digital display rendering for PC-skærm. Understøtter Muvna (Dual-Row), Timemore (Side-by-side), Acaia og klassisk LCD.

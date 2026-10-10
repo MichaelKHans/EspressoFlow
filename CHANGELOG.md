@@ -2,6 +2,20 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.3] - 2026-10-10
+### Etape 28: Løsning af Ciffer-Fusion & Inverteret 0 vs 8 Detektion (18.4g Stabilisering)
+- **Kritisk Fejlrettelse af 0 vs 8 Forveksling (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** `sampleSegment(..., 'c')` returnerer `true` når der er *aktive pixels*. På tallet `8` er den midterste vandrette bjælke (`g`) tændt, så center-prøven returnerede `true`. På grund af en logisk inverteringsfejl (`if (!gStrict || centerHole) return '0'`) blev *alle* 8-taller tvunget til at blive genkendt som et `0` med 95-100% konfidens!
+  - **Løsning:** Korrigeret så `gStrict` (segment `g` midterbjælke) entydigt afgør forskellen: Hvis centerbjælken er tændt og hulrummene ikke er blændet af lysglimt, er det et `8`. Hvis centerbjælken er slukket, er det et `0`.
+- **Fast-Path Reparation for Ciffer '1':**
+  - **Identificeret Root Cause:** Cifferet '1' er en smal lodret streg med bredde/højde $\le 0.42$. Den stramme bounding box indeholder kun selve stregen. Når koden testede vandrette segmenter `a` (top) og `d` (bund), ramte prøvepunkterne selve den gennemgående lodrette streg og returnerede `true`. Dette diskvalificerede '1' fra fast-path, hvorefter '1' blev klassificeret som `0` eller `?`.
+  - **Løsning:** Strømlinet '1' fast-path: Hvis `width / height <= 0.42` og `height >= 14`, er tegnet matematisk garanteret at være et '1'.
+- **Rekursiv Multi-Digit Valley Splitter:**
+  - Hvis optisk glød, overeksponering eller antialiasing på skærmen danner en bro mellem to nabotal (fx `18` eller `84`), opdeles spændet ved det dybeste lodrette minimum i søjleprojektionen.
+- **Beskyttelse mod Glare-Forkastelse af '1' & Støj-Slivere:**
+  - Fjernet uhensigtsmæssig solid glare rejection på smalle tal: 2-kolonne tal (0, 2-9) skal have hulrum ($\le 68\%$ udfyldning), men en 1-tals lodret streg er naturligt kompakt.
+  - Smalle støjsplinter ($< 5\text{px}$) bortfiltreres tidligt før cifferprobing, så kantrefleksioner ikke fejlagtigt parses som '2'.
+
 ## [1.8.2] - 2026-10-10
 ### Etape 27: Hardware-in-the-Loop (HIL) Optisk Testbænk & Antigravity Autonom Skærmsimulator
 - **Syntetisk Skala Simulator (`public/scale-simulator.html`):**

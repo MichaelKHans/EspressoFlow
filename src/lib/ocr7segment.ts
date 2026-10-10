@@ -331,10 +331,11 @@ function probeDigitSegments(
 
   // Special fast-path for digit '1':
   // In 7-segment digital displays, all digits (0, 2-9) require two vertical columns and an inner hollow space,
-  // giving them an aspect ratio of width / height >= 0.50.
-  // The digit '1' is the unique single-column character with a narrow aspect ratio (width / height < 0.44).
-  // CRITICAL: Must be a true vertical segment stroke (seg.b or seg.c active) and not excessively tall
-  if (box.width / box.height < 0.44 && box.height >= 12 && (seg.b || seg.c) && !seg.a && !seg.d) {
+  // giving them an aspect ratio of width / height >= 0.48.
+  // The digit '1' is the unique single-column character with a narrow aspect ratio (width / height <= 0.42).
+  // Because the tight bounding box wraps the vertical stroke itself, sampling a/d probes the vertical stroke.
+  const digitAspect = box.width / box.height;
+  if (digitAspect <= 0.42 && box.height >= 14) {
     return {
       segments: { a: false, b: true, c: true, d: false, e: false, f: false, g: false },
       matchChar: '1',
@@ -346,7 +347,6 @@ function probeDigitSegments(
   // In true 7-segment digital characters, loops have empty dark cavities between strokes
   const upperHole = sampleSegment(binary, canvasW, box, 0.50, 0.30, 'c');
   const lowerHole = sampleSegment(binary, canvasW, box, 0.50, 0.70, 'c');
-  const centerHole = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'c');
 
   const sampleArray = [
     seg.a ? 1 : 0,
@@ -390,15 +390,28 @@ function probeDigitSegments(
 
   // 0 vs 8: Both share outer segments a,b,c,d,e,f.
   // The only difference is the horizontal center bar g.
-  // On an espresso scale, 0 is far more common than 8 (e.g. 0.0g tare).
-  // Re-verify segment g: if center bar is not solid or center is hollow, it is a '0'.
+  // Re-verify segment g: if center bar is solid (gStrict is true), it is an '8'. If absent, it is a '0'.
   if ((bestMatch === '8' || bestMatch === '0') && bestScore >= 0.65) {
-    const gStrict = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.40);
-    if (!gStrict || centerHole) {
+    const gStrict = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.32);
+    // Reject solid glare blobs where both upper and lower cavities are completely filled
+    if (upperHole && lowerHole) {
+      return {
+        segments: seg,
+        matchChar: '?',
+        confidence: 0,
+      };
+    }
+    if (!gStrict) {
       return {
         segments: seg,
         matchChar: '0',
         confidence: Math.max(0.92, bestScore),
+      };
+    } else {
+      return {
+        segments: seg,
+        matchChar: '8',
+        confidence: Math.max(0.95, bestScore),
       };
     }
   }
@@ -543,6 +556,7 @@ function parseDigitsFromBinary(
   // Concentrates on central 88% of display width to eliminate any remaining side reflections
   const centralX1 = Math.floor(width * 0.06);
   const centralX2 = Math.floor(width * 0.94);
+  const centralW = centralX2 - centralX1;
   const rowCounts = new Array(height).fill(0);
   let maxRowCount = 0;
   for (let y = 0; y < height; y++) {
@@ -551,8 +565,9 @@ function parseDigitsFromBinary(
       if (binary[y * width + x] === 1) count++;
     }
     rowCounts[y] = count;
-    if (count > maxRowCount) maxRowCount = count;
+    if (count > maxRowCount && count < centralW * 0.65) maxRowCount = count;
   }
+  if (maxRowCount === 0) maxRowCount = Math.max(...rowCounts);
 
   // Smooth rowCounts with a 5-point moving average to eliminate single-line noise spikes
   const smoothedRows = new Array(height).fill(0);
@@ -668,7 +683,7 @@ function parseDigitsFromBinary(
     // On digital espresso scales (Muvna, King Arthur, Timemore), the decimal point is placed
     // immediately adjacent to the preceding digit (e.g. "4."). If the span is wide (aspect >= 0.65)
     // and has a valley in the right 25-45%, split off the trailing decimal dot!
-    const spans: { start: number; end: number }[] = [];
+    const decimalSplitSpans: { start: number; end: number }[] = [];
     for (const span of rawSpans) {
       const spanW = span.end - span.start + 1;
       if (spanW >= Math.floor(bandH * 0.65)) {
@@ -683,13 +698,54 @@ function parseDigitsFromBinary(
           }
         }
         if (valleyX !== -1 && minCol <= Math.max(colThreshold * 1.5, Math.floor(bandH * 0.18))) {
-          spans.push({ start: span.start, end: valleyX });
-          spans.push({ start: valleyX + 1, end: span.end });
+          decimalSplitSpans.push({ start: span.start, end: valleyX });
+          decimalSplitSpans.push({ start: valleyX + 1, end: span.end });
           continue;
         }
       }
-      spans.push(span);
+      decimalSplitSpans.push(span);
     }
+
+    // Multi-Digit Valley Splitter:
+    // If a span is overly wide (width >= 0.82 * bandH), it contains multiple fused digits
+    // (e.g. slight optical blur or glow bridging adjacent digits). Split at column projection valleys!
+    function splitFusedSpans(
+      inputSpans: { start: number; end: number }[],
+      counts: number[],
+      bH: number,
+      colThresh: number
+    ): { start: number; end: number }[] {
+      const result: { start: number; end: number }[] = [];
+      for (const s of inputSpans) {
+        const w = s.end - s.start + 1;
+        if (w >= Math.floor(bH * 0.82)) {
+          const sX1 = s.start + Math.floor(w * 0.25);
+          const sX2 = s.start + Math.floor(w * 0.75);
+          let minVal = Infinity;
+          let valleyX = -1;
+          let peakVal = 0;
+          for (let x = s.start; x <= s.end; x++) {
+            if (counts[x] > peakVal) peakVal = counts[x];
+          }
+          for (let x = sX1; x <= sX2; x++) {
+            if (counts[x] < minVal) {
+              minVal = counts[x];
+              valleyX = x;
+            }
+          }
+          if (valleyX !== -1 && minVal <= Math.max(colThresh * 2, Math.floor(peakVal * 0.35), Math.floor(bH * 0.20))) {
+            const left = { start: s.start, end: valleyX };
+            const right = { start: valleyX + 1, end: s.end };
+            result.push(...splitFusedSpans([left, right], counts, bH, colThresh));
+            continue;
+          }
+        }
+        result.push(s);
+      }
+      return result;
+    }
+
+    const spans = splitFusedSpans(decimalSplitSpans, colCounts, bandH, colThreshold);
 
     // Anti-Sentence / Text-Entropy Gate:
     // Coffee scale displays have at most 4-8 elements across a single band (e.g. "0:15  18.4g").
@@ -780,12 +836,18 @@ function parseDigitsFromBinary(
         continue;
       }
 
-      // Reject solid glares and specular reflections:
-      // True 7-segment digits consist of thin strokes with hollow loops (fill density ~20-55%).
+      // Reject narrow noise slivers (not wide enough for a digital digit stroke)
+      if (spanW < Math.max(5, Math.floor(bandH * 0.10))) {
+        continue;
+      }
+
+      // Reject solid glares and specular reflections for 2-column digits (aspect >= 0.40):
+      // True 2-column 7-segment digits consist of thin strokes with hollow loops (fill density ~20-55%).
       // Solid glare spots, metal reflections, and light flares typically exceed 68% density.
+      // (Single-column digit '1' with aspect < 0.40 is naturally a solid vertical stroke).
       const boxArea = spanW * spanH;
       const fillDensity = activePixels / boxArea;
-      if (fillDensity > 0.68 && spanW >= 8 && spanH >= 12) {
+      if (spanW >= spanH * 0.40 && fillDensity > 0.68 && spanW >= 8 && spanH >= 12) {
         continue;
       }
 

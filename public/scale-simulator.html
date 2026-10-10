@@ -80,6 +80,11 @@
       --led-glow: rgba(253, 186, 116, 0.45);
       --led-inactive: rgba(253, 186, 116, 0.04);
     }
+    .theme-pure_weight {
+      --led-active: #22d3ee;
+      --led-glow: rgba(34, 211, 238, 0.45);
+      --led-inactive: rgba(34, 211, 238, 0.04);
+    }
     .theme-lcd {
       background: #8b9bb4 !important;
       border-color: #64748b !important;
@@ -335,7 +340,8 @@
       <!-- Scale Model Selector -->
       <div style="display: flex; gap: 6px; align-items: center; border-right: 1px solid #3f3f46; padding-right: 14px;">
         <span style="font-size: 12px; color: #a1a1aa; font-weight: bold;">SCALE:</span>
-        <button class="btn-ctrl active" data-model="muvna">Muvna Dual</button>
+        <button class="btn-ctrl active" data-model="pure_weight">Pure Weight (No Timer)</button>
+        <button class="btn-ctrl" data-model="muvna">Muvna Dual</button>
         <button class="btn-ctrl" data-model="timemore">Timemore</button>
         <button class="btn-ctrl" data-model="acaia">Acaia</button>
         <button class="btn-ctrl" data-model="lcd">Classic LCD</button>
@@ -519,7 +525,12 @@
       const weightStr = formatWeight(currentWeight);
       const timerStr = formatTimer(currentTimerSec);
 
-      if (currentModel === 'muvna') {
+      if (currentModel === 'pure_weight') {
+        // Pure Single-Row LED Weight (Cyan/White, NO timer, NO colon, NO unit)
+        rowBottomEl.style.display = 'none';
+        renderString(topDigitsEl, weightStr, false);
+        document.getElementById('topUnit').style.display = 'none';
+      } else if (currentModel === 'muvna') {
         // Muvna: Top row = Weight (big), Bottom row = Timer (small)
         rowBottomEl.style.display = 'flex';
         renderString(topDigitsEl, weightStr, false);
@@ -541,7 +552,7 @@
         // Classic LCD: Single weight
         rowBottomEl.style.display = 'none';
         renderString(topDigitsEl, weightStr, false);
-        document.getElementById('topUnit').style.display = 'block';
+        document.getElementById('topUnit').style.display = 'none';
       }
 
       // Update Telemetry readouts
