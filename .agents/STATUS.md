@@ -11,6 +11,17 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Robust Bezel-Afvisning, Decimal-Glans Tolerance & Testbed Pure Weight Automatik (v1.8.6)
+- **Afvisning af Ydre Ramme-Artefakter (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** En lodret streg ved kanten af afgrænsningen ($x \le 3\text{px}$) forveksledes med tallet '1'. Fordi `maxGap` var helt oppe på $1.15 \times \text{højde}$, blev kanten koblet på nabotallet (`0.0g` blev `10.0g`, `7.7g` blev `17.7g`).
+  - **Løsning:** Strøg der berører afgrænsningens kant ($x \le 3\text{px}$ eller $x \ge \text{width} - 3\text{px}$) frasorteres. `maxGap` strammet til $0.52 \times \text{højde}$.
+- **Glans-Tolerance for Decimalpunkt (`ocr7segment.ts`):**
+  - Justeret decimal-detektion til at acceptere let opblussede/glødende decimalpunkter på lysstærke skærme uden at forkaste dem.
+- **Outlier Loft ved Nul-Tare (`ocr7segment.ts`):**
+  - Spring $> 65.0\text{g}$ når vægten er taret filtreres øjeblikkeligt fra som optiske outliers.
+- **Autonom Testbed Pure Weight Automatik (`run-autonomous-suite.cjs`):**
+  - Skifter automatisk simulatoren til `pure_weight` ved testopstart og synkroniserer mobilen.
+
 ### 2026-10-10 -- Fuld Eliminering af Vægtspring & Ciffer-Kløvning (Pure Weight & 7-Segment Harmoni) (v1.8.5)
 - **Fjernelse af Destruktiv `decimalSplitSpans` (`ocr7segment.ts`):**
   - **Identificeret Årsag:** En decimal-splitter skar spænd med bredde $\ge 0.65 \times \text{højde}$ i intervallet 58%-88%. I tallet `0` har det indre hulrum lave søjletællinger (kun top/bund segment). Kløveren opfattede hulrummet som en adskillelse og skar `0` midt over i to smalle '1'-taller! Dette forårsagede de voldsomme firkantbølge-spring mellem `0.0g` og `10.0g`/`11.0g` på ekstraktionskurven.

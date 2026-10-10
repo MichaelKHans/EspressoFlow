@@ -780,10 +780,10 @@ function parseDigitsFromBinary(
       const spanW = span.end - span.start + 1;
       const spanH = spanMaxY - spanMinY + 1;
 
-      // Decimal Point check (small blob in bottom half of digit band)
-      const isNarrow = spanW <= Math.max(8, bandH * 0.40);
-      const isShort = spanH <= Math.max(10, bandH * 0.44);
-      const isBottom = spanMinY >= band.start + bandH * 0.42;
+      // Decimal Point check (small blob in bottom half of digit band, accommodates blooming/LED glow)
+      const isNarrow = spanW <= Math.max(12, Math.floor(bandH * 0.42));
+      const isShort = spanH <= Math.max(14, Math.floor(bandH * 0.48));
+      const isBottom = spanMinY >= band.start + Math.floor(bandH * 0.38);
 
       if (isNarrow && isShort && isBottom) {
         elements.push({
@@ -835,6 +835,11 @@ function parseDigitsFromBinary(
       // Unit letter filtering ('g', 'oz', 'ml' on far right with non-digit bit pattern)
       if (spanW <= bandH * 0.45 && spanH <= bandH * 0.45 && span.start > width * 0.65) {
         // Skip isolated unit markers
+        continue;
+      }
+
+      // Reject border-touching artifacts (screen bezel frame, camera crop boundary)
+      if (span.start <= 3 || span.end >= width - 3) {
         continue;
       }
 
@@ -900,8 +905,8 @@ function parseDigitsFromBinary(
       } else {
         const prev = currentCluster[currentCluster.length - 1];
         const gap = el.box.x - (prev.box.x + prev.box.width);
-        // Generous gap threshold allows multi-digit numbers (like 41.3) with decimal spacing to form a single cluster
-        const maxGap = Math.max(22, Math.floor(bandH * 1.15));
+        // Tightly bounded gap threshold prevents distant screen bezels or glare from merging into digits
+        const maxGap = Math.max(18, Math.floor(bandH * 0.52));
 
         if (gap > maxGap || el.type === 'colon' || prev.type === 'colon') {
           clusters.push(currentCluster);
@@ -1221,10 +1226,10 @@ export class ScaleReadingFilter {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
-    // Absolute Physical Ceiling for Espresso Extraction:
+    // Absolute Physical Ceiling for Espresso Extraction / Digital Scale:
     // A standard espresso pull yield is 15-60g. Readings > 65g during brewing
-    // are decimal-dropped optical artifacts (e.g. 113.3 or 100.1 instead of 11.3 or 10.0).
-    if (isBrewing && newReading > 65.0) {
+    // or when tared at <= 0.5g are decimal-dropped optical artifacts (e.g. 113.3 or 100.1 instead of 11.3 or 10.0).
+    if (newReading > 65.0 && (isBrewing || this.lastValidWeight <= 0.5)) {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 

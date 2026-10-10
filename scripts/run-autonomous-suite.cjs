@@ -119,9 +119,11 @@ async function main() {
     digitAccuracy: [],
   };
 
-  // Clean filming: Hide HUD controls so phone camera reticle sees only clean digits
+  // Clean filming: Ensure scale simulator is in pure_weight mode and hide HUD
+  await sendLocalCommand({ action: 'set_model', model: 'pure_weight' });
   await sendLocalCommand({ action: 'set_hud', visible: false });
-  await sleep(600);
+  await sendRemoteMobileCommand('reload_app');
+  await sleep(1500);
 
   // -----------------------------------------------------------------
   // TEST CASE 1: Standard Extraction (0.0g -> 36.0g @ 2.2 g/s)

@@ -2,6 +2,18 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.6] - 2026-10-10
+### Etape 31: Robust Bezel-Afvisning, Decimal-Glans Tolerance & Testbed Pure Weight Automatik
+- **Afvisning af Ydre Ramme-Artefakter (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** Kanten af skærmens bezel/chassis eller kanten af kameraets afgrænsning (crop) danner en lodret streg tæt på kanten ($x \le 3\text{px}$). Fordi ciffer '1' er en smal lodret streg, og `maxGap` var helt oppe på $1.15 \times \text{bandH}$ (op til 70px), blev denne ramme-kant suget ind i cifferklyngen og parset som et foranstillet '1'. Derved blev `0.0g` parset som `10.0g`, `7.7g` som `17.7g`, og `4.4g` som `114.4g`.
+  - **Løsning:** Strøg der berører afgrænsningens kant ($x \le 3\text{px}$ eller $x \ge \text{width} - 3\text{px}$) frasorteres øjeblikkeligt. `maxGap` er strammet til $0.52 \times \text{bandH}$, så fjerne rammekanter og glans ikke kan hæftes på tallet.
+- **Forbedret Decimal-Glans Tolerance (`ocr7segment.ts`):**
+  - Hævet tolerance for decimalpunktets højde og bredde på lysstærke skærme og telefoner for at forhindre, at optisk glans/blooming diskvalificerer decimalpunktet.
+- **Outlier Loft ved Nul-Tare (`ocr7segment.ts`):**
+  - Instantane spring $> 65.0\text{g}$ når vægten er taret ($\le 0.5\text{g}$) markeres som optiske outliers og filtreres fra.
+- **Autonom Testbed Pure Weight Styring (`run-autonomous-suite.cjs`):**
+  - Testsuiten sender nu eksplicit `set_model: 'pure_weight'` og `reload_app` før teststart for at sikre en ren skærm uden bund-timer under ciffertest.
+
 ## [1.8.5] - 2026-10-10
 ### Etape 30: Fuld Eliminering af Vægtspring & Ciffer-Kløvning (Pure Weight & 7-Segment Harmoni)
 - **Fjernelse af Destruktiv `decimalSplitSpans` (`ocr7segment.ts`):**
