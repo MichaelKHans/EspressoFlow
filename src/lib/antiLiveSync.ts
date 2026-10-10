@@ -94,6 +94,15 @@ export function broadcastLiveFrame(payload: LiveFramePayload): void {
   }).catch(() => {});
 }
 
+export type RemoteAction = 'start_shot' | 'stop_shot' | 'tare' | 'calibrate' | 'run_scenario' | 'stop';
+
+export interface RemoteCommandPayload {
+  action: RemoteAction;
+  name?: string;
+  source?: string;
+  timestamp?: number;
+}
+
 /**
  * Sends a command from Mobile to PC Simulator to start a specific test scenario
  */
@@ -115,4 +124,24 @@ export function triggerRemoteScenario(scenarioName: 'standard' | 'spike' | 'digi
   }).catch((err) => {
     console.warn('[AntiLiveSync] Failed to send remote command:', err);
   });
+}
+
+/**
+ * Subscribes to incoming remote control commands from Antigravity PC agent
+ */
+export function subscribeToRemoteCommands(callback: (cmd: RemoteCommandPayload) => void): () => void {
+  const channel = getAntiLiveChannel();
+  if (!channel) return () => {};
+
+  const handler = (payload: { payload: RemoteCommandPayload }) => {
+    if (payload && payload.payload) {
+      callback(payload.payload);
+    }
+  };
+
+  channel.on('broadcast', { event: 'remote_cmd' }, handler);
+
+  return () => {
+    // Channel remains open for telemetry streaming
+  };
 }

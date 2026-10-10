@@ -24,7 +24,7 @@ import type { ShotDataPoint } from '../types/espresso';
 import { calculateSmoothedFlowRate } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
 import { ScaleTelemetryCollector, isTelemetryEnabled } from '../lib/scaleTelemetry';
-import { broadcastLiveFrame, isAntiLiveSyncEnabled, setAntiLiveSyncEnabled, triggerRemoteScenario } from '../lib/antiLiveSync';
+import { broadcastLiveFrame, isAntiLiveSyncEnabled, setAntiLiveSyncEnabled, triggerRemoteScenario, subscribeToRemoteCommands } from '../lib/antiLiveSync';
 import { useTranslation } from '../i18n';
 import { wakeLock } from '../lib/wakeLock';
 
@@ -861,6 +861,28 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setIsZeroDetected(true);
     filterRef.current.reset(0);
   };
+
+  // Remote Command Listener: Allows Antigravity test runner to trigger Start Shot, Stop Shot, Tare
+  useEffect(() => {
+    const unsub = subscribeToRemoteCommands((cmd) => {
+      console.log('[ScaleMonitor] Remote command received from Antigravity:', cmd);
+      if (cmd.action === 'start_shot') {
+        if (!isBrewing) {
+          handleStartBrewing();
+        }
+      } else if (cmd.action === 'stop_shot') {
+        if (isBrewing) {
+          handleStopBrewing();
+        }
+      } else if (cmd.action === 'tare') {
+        handleCalibrateTare();
+      }
+    });
+
+    return () => {
+      unsub();
+    };
+  }, [isBrewing]);
 
   return (
     <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] shadow-xs overflow-hidden">
