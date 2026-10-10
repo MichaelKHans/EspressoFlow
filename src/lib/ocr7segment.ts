@@ -859,31 +859,6 @@ function parseDigitsFromBinary(
         continue;
       }
 
-      // Bezel / Frame Edge Rejection (Margin Piercing Check):
-      // Real scale digits are strictly isolated within the active digit band [band.start, band.end].
-      // Above and below the digit row band, the background is dark.
-      // A physical bezel edge, casing rim, screen divider, or camera crop boundary continues into the margins.
-      let marginActiveAbove = 0;
-      const checkYAbove = Math.max(0, band.start - Math.min(16, Math.floor(bandH * 0.25)));
-      for (let y = checkYAbove; y < band.start; y++) {
-        for (let x = span.start; x <= span.end; x++) {
-          if (binary[y * width + x] === 1) marginActiveAbove++;
-        }
-      }
-
-      let marginActiveBelow = 0;
-      const checkYBelow = Math.min(height, band.end + Math.min(16, Math.floor(bandH * 0.25)));
-      for (let y = band.end; y < checkYBelow; y++) {
-        for (let x = span.start; x <= span.end; x++) {
-          if (binary[y * width + x] === 1) marginActiveBelow++;
-        }
-      }
-
-      // If active pixels continue vertically above or below the digit band, reject as edge artifact
-      if (marginActiveAbove >= 3 || marginActiveBelow >= 3) {
-        continue;
-      }
-
       // Reject border-touching artifacts (screen bezel frame, camera crop boundary, edge glares)
       const edgeMargin = Math.max(16, Math.floor(width * 0.045));
       if (span.start <= edgeMargin || span.end >= width - edgeMargin) {
@@ -891,7 +866,7 @@ function parseDigitsFromBinary(
       }
 
       // Reject narrow noise slivers (not wide enough for a digital digit stroke)
-      if (spanW < Math.max(6, Math.floor(bandH * 0.12))) {
+      if (spanW < Math.max(5, Math.floor(bandH * 0.10))) {
         continue;
       }
 
@@ -1004,16 +979,16 @@ function parseDigitsFromBinary(
 
         const nextEl = result[1];
         const gapToNext = nextEl.box.x - (firstBox.x + firstBox.width);
-        const isDistantEdge = gapToNext > Math.max(22, Math.floor(medH * 0.55));
+        const isDistantEdge = gapToNext > Math.max(24, Math.floor(medH * 0.60));
 
+        // Spurious edge before zero tare (e.g. "1" + "0.0")
         const isImpossibleTare =
           result.length >= 3 &&
           result[1].type === 'digit' &&
           result[1].char === '0' &&
-          result[2].type === 'dot' &&
-          (isMisaligned || isDistantEdge);
+          result[2].type === 'dot';
 
-        if (isMisaligned || isDistantEdge || isImpossibleTare) {
+        if (isMisaligned || (isDistantEdge && isImpossibleTare)) {
           result.shift();
         }
       }
@@ -1029,11 +1004,8 @@ function parseDigitsFromBinary(
             Math.abs(lastBox.y - medTop) > maxTopDiff ||
             Math.abs(lastBox.y + lastBox.height - medBot) > maxBotDiff;
 
-          const prevEl = result[lastIdx - 1];
-          const gapFromPrev = lastBox.x - (prevEl.box.x + prevEl.box.width);
-          const isDistantEdge = gapFromPrev > Math.max(22, Math.floor(medH * 0.55));
-
-          if (isMisaligned || isDistantEdge) {
+          // Prune trailing '1' only if physically misaligned with the digit baseline/top
+          if (isMisaligned) {
             result.pop();
           }
         }
