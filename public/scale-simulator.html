@@ -12,6 +12,7 @@
       --led-glow: rgba(34, 211, 238, 0.45);
       --led-inactive: rgba(34, 211, 238, 0.04);
       --font-mono: 'Courier Prime', monospace;
+      --scale-zoom: 0.60;
     }
 
     * {
@@ -46,7 +47,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s ease;
+      transform-origin: center center;
+      transform: scale(var(--scale-zoom));
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       max-width: 90vw;
     }
 
@@ -278,10 +281,44 @@
       to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
 
-    /* Help text */
-    .hint-text {
-      font-size: 12px;
-      color: #71717a;
+    /* Zoom Controller */
+    .zoom-ctrl-group {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      border-right: 1px solid #3f3f46;
+      padding-right: 12px;
+    }
+
+    button.btn-zoom {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 5px 8px;
+    }
+
+    /* Compact Responsive Layout for Small / Split Windows */
+    @media (max-width: 1080px), (max-height: 650px) {
+      .hud-overlay {
+        padding: 8px 12px;
+      }
+      .hud-panel {
+        padding: 8px 12px;
+        gap: 8px;
+        flex-wrap: wrap;
+        max-width: 98vw;
+      }
+      button.btn-ctrl {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .telemetry-readout {
+        font-size: 11px;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .hint-text {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -345,6 +382,17 @@
         <button class="btn-ctrl" data-model="timemore">Timemore</button>
         <button class="btn-ctrl" data-model="acaia">Acaia</button>
         <button class="btn-ctrl" data-model="lcd">Classic LCD</button>
+      </div>
+
+      <!-- Scale Size Zoom Controller -->
+      <div class="zoom-ctrl-group">
+        <span style="font-size: 11px; color: #a1a1aa; font-weight: bold;">SIZE:</span>
+        <button class="btn-ctrl btn-zoom" data-zoom="0.35">35%</button>
+        <button class="btn-ctrl btn-zoom" data-zoom="0.50">50%</button>
+        <button class="btn-ctrl btn-zoom" data-zoom="0.70">70%</button>
+        <button class="btn-ctrl btn-zoom" data-zoom="1.00">100%</button>
+        <input id="sliderZoom" type="range" min="0.25" max="1.50" step="0.05" value="0.60" style="width: 75px; cursor: pointer;" title="Adjust digital scale size without making buttons smaller">
+        <span id="zoomVal" style="font-family: var(--font-mono); font-size: 11px; color: #22d3ee; min-width: 30px;">60%</span>
       </div>
 
       <!-- Scenario Runner -->
@@ -875,6 +923,55 @@
         hudOverlayEl.classList.remove('hidden');
       }
     });
+
+    // Scale Size Zoom Controller
+    const sliderZoomEl = document.getElementById('sliderZoom');
+    const zoomValEl = document.getElementById('zoomVal');
+    let currentScaleZoom = parseFloat(localStorage.getItem('scale_sim_zoom') || '0.60');
+
+    function setScaleZoom(zoom) {
+      currentScaleZoom = Math.max(0.20, Math.min(1.80, zoom));
+      document.documentElement.style.setProperty('--scale-zoom', currentScaleZoom.toFixed(2));
+      localStorage.setItem('scale_sim_zoom', currentScaleZoom.toFixed(2));
+      const pct = Math.round(currentScaleZoom * 100);
+      if (zoomValEl) zoomValEl.textContent = `${pct}%`;
+      if (sliderZoomEl) sliderZoomEl.value = currentScaleZoom.toFixed(2);
+
+      document.querySelectorAll('.btn-zoom').forEach((btn) => {
+        const bZoom = parseFloat(btn.dataset.zoom);
+        btn.classList.toggle('active', Math.abs(bZoom - currentScaleZoom) < 0.06);
+      });
+    }
+
+    document.querySelectorAll('.btn-zoom').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setScaleZoom(parseFloat(btn.dataset.zoom));
+      });
+    });
+
+    if (sliderZoomEl) {
+      sliderZoomEl.addEventListener('input', (e) => {
+        setScaleZoom(parseFloat(e.target.value));
+      });
+    }
+
+    // Scroll wheel on scale chassis to zoom scale size without affecting HUD
+    scaleChassisEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      setScaleZoom(currentScaleZoom + delta);
+    }, { passive: false });
+
+    // Keyboard shortcuts: '+' and '-' to resize scale, '0' to reset to 100%
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '+' || e.key === '=') {
+        setScaleZoom(currentScaleZoom + 0.05);
+      } else if (e.key === '-' || e.key === '_') {
+        setScaleZoom(currentScaleZoom - 0.05);
+      }
+    });
+
+    setScaleZoom(currentScaleZoom);
 
     // Start
     updateDisplay();
