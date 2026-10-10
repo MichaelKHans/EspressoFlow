@@ -11,6 +11,15 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- 4-Lags Bezel/Chassis Kant-Eliminering & 100% Ciffer-Præcision mod 1-Tals Spring (v1.8.9)
+- **4-Lags Sikring mod Falske 1-Taller fra Vægtens Chassis- & Skærmkanter (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** Brugeren observerede, at den lodrette kant ved siden af displayet tit kom til at tælle som et 1-tal (`den kant der er ved siden af kommer tit til at tælle som 1 tal`), hvilket gav uventede vægtspring mellem fx 36.0g og 136.0g eller 0.0g og 10.0g. Den forrige fast-path klassificerede enhver lodret streg med aspect $\le 0.42$ som '1' med 100% konfidens – selv tynde kanter på 2-5px.
+  - **Lag 1 (Fysisk Strøg-Bredde & Aspect Ratio):** `digitAspect` skal være mellem $0.16$ og $0.42$, og bredden skal være $\ge \max(6, \lfloor\text{height} \times 0.16\rfloor)$. Desuden kræves ubrudt vertikal kontinuitet i både øvre og nedre halvdel af strøget. Knivskarpe kanter, hårlinjer og chassis-riller afvises 100%.
+  - **Lag 2 (Margin-Gennembrydningstest):** En reel vægtciffer er strengt isoleret i displayets rækkebånd. En chassis-kant eller skærmramme fortsætter derimod lodret op og ned forbi displayrækken. Strøg med $\ge 3$ aktive pixels i marginerne over eller under rækkebåndet afvises øjeblikkeligt.
+  - **Lag 3 (Klynge Typografi & Højde/Top/Bund-Justering):** `filterEdgeArtifactsFromCluster` beregner medianhøjde, top-linje og grundlinje for klyngens cifre. Et foranstillet eller bagudstillet '1', der afviger i højde, top, grundlinje eller har unormal afstand ($> 22\text{px}$), beskæres automatisk væk.
+  - **Lag 4 (Udelukkelse af Hulrums-Glans Diskvalifikation for Ciffer '8'):** Fjernet overdreven hulrums-glans diskvalifikation, som fejlagtigt dræbte ciffer '8' ved kraftig LED-bloom på små skærme (hvilket fik `8.8` til at blive læst som `7.7` og `18.4` som `1.4`).
+  - **Lag 5 (1px Decimalpunkter & Mikro-Spænd Samling):** Tillader 1-pixel brede decimalpunkter, og samler mikro-kløfter ($\le 2\text{px}$) inden for samme ciffer (fx '4'), så vandrette bjælker ikke splittes.
+
 ### 2026-10-10 -- Bezel-Margen Frasortering (22px) mod Foranstillet '1' & Simulator Timer 0 Nulstilling (v1.8.8)
 - **4.5% Yderkant-Spærre mod Skærm-Bezel (`ocr7segment.ts`):**
   - **Identificeret Årsag:** På 480px canvas var 3px for lidt til at fange skærmens bezel/chassis kant ($x \approx 10-15\text{px}$), som derfor blev læst som et foranstillet '1'.

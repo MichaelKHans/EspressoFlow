@@ -1,11 +1,11 @@
 {
   "standardShot": {
     "totalFrames": 122,
-    "validFrames": 48,
-    "outliers": 74,
+    "validFrames": 77,
+    "outliers": 45,
     "avgConfidence": "99.9",
-    "finalYield": "36.4",
-    "maxWeight": "37.6",
+    "finalYield": "36.6",
+    "maxWeight": "38.0",
     "pass": true
   },
   "channelingSpike": {
@@ -22,7 +22,7 @@
     },
     {
       "expected": 1.1,
-      "detected": 11.1,
+      "detected": 11,
       "accurate": false,
       "confidence": 1
     },
@@ -40,14 +40,14 @@
     },
     {
       "expected": 4.4,
-      "detected": 14.5,
+      "detected": 51.5,
       "accurate": false,
-      "confidence": 0.9714285714285715
+      "confidence": 0.9523809523809524
     },
     {
       "expected": 5.5,
-      "detected": 15.5,
-      "accurate": false,
+      "detected": 5.5,
+      "accurate": true,
       "confidence": 1
     },
     {
@@ -58,13 +58,13 @@
     },
     {
       "expected": 7.7,
-      "detected": 1177,
-      "accurate": false,
+      "detected": 7.7,
+      "accurate": true,
       "confidence": 1
     },
     {
       "expected": 8.8,
-      "detected": 1,
+      "detected": 7.7,
       "accurate": false,
       "confidence": 1
     },
@@ -76,9 +76,9 @@
     },
     {
       "expected": 18.4,
-      "detected": 1.5,
+      "detected": 1.4,
       "accurate": false,
-      "confidence": 0.9523809523809524
+      "confidence": 1
     },
     {
       "expected": 36,

@@ -342,15 +342,20 @@ function probeDigitSegments(
   // Special fast-path for digit '1':
   // In 7-segment digital displays, all digits (0, 2-9) require two vertical columns and an inner hollow space,
   // giving them an aspect ratio of width / height >= 0.48.
-  // The digit '1' is the unique single-column character with a narrow aspect ratio (width / height <= 0.42).
-  // Because the tight bounding box wraps the vertical stroke itself, sampling a/d probes the vertical stroke.
+  // The digit '1' is the unique single-column character with a narrow aspect ratio (0.16 <= width / height <= 0.42).
+  // Enforce minimum stroke thickness and vertical continuity to reject razor-thin bezel lines, casing seams and scratches.
   const digitAspect = box.width / box.height;
-  if (digitAspect <= 0.42 && box.height >= 14) {
-    return {
-      segments: { a: false, b: true, c: true, d: false, e: false, f: false, g: false },
-      matchChar: '1',
-      confidence: 1.0,
-    };
+  const minStrokeW = Math.max(6, Math.floor(box.height * 0.16));
+  if (digitAspect >= 0.16 && digitAspect <= 0.42 && box.width >= minStrokeW && box.height >= 16) {
+    const upperStroke = sampleSegment(binary, canvasW, box, 0.50, 0.30, 'v', 0.20);
+    const lowerStroke = sampleSegment(binary, canvasW, box, 0.50, 0.70, 'v', 0.20);
+    if (upperStroke && lowerStroke) {
+      return {
+        segments: { a: false, b: true, c: true, d: false, e: false, f: false, g: false },
+        matchChar: '1',
+        confidence: 0.98,
+      };
+    }
   }
 
   // Probe inner hollow cavities to reject solid glares, reflections, and filled spots
@@ -380,7 +385,6 @@ function probeDigitSegments(
       if (digit === '6' && seg.b) continue; // '6' has NO segment b (top-right)
       if (digit === '7' && (seg.d || seg.g)) continue; // '7' has NO bottom bar d or center bar g!
       if (digit === '3' && (seg.e && seg.f)) continue;
-      if (digit === '8' && (upperHole && lowerHole)) continue; // Solid glare/blob filled in both loops is NOT an '8'!
       if (digit === '6' && lowerHole) continue; // '6' bottom loop must be hollow
       if (digit === '9' && upperHole) continue; // '9' top loop must be hollow
 
@@ -403,14 +407,6 @@ function probeDigitSegments(
   // Re-verify segment g: if center bar is solid (gStrict is true), it is an '8'. If absent, it is a '0'.
   if ((bestMatch === '8' || bestMatch === '0') && bestScore >= 0.65) {
     const gStrict = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.32);
-    // Reject solid glare blobs where both upper and lower cavities are completely filled
-    if (upperHole && lowerHole) {
-      return {
-        segments: seg,
-        matchChar: '?',
-        confidence: 0,
-      };
-    }
     if (!gStrict) {
       return {
         segments: seg,
@@ -708,14 +704,29 @@ function parseDigitsFromBinary(
       } else {
         if (inSpan) {
           inSpan = false;
-          if (x - spanStart >= 2) {
+          if (x - spanStart >= 1) {
             rawSpans.push({ start: spanStart, end: x });
           }
         }
       }
     }
-    if (inSpan && width - spanStart >= 2) {
+    if (inSpan && width - spanStart >= 1) {
       rawSpans.push({ start: spanStart, end: width });
+    }
+
+    // Merge intra-digit micro-gaps (<= 2px) to prevent thin horizontal bar dips (like in '4') from splitting a digit
+    const mergedRawSpans: { start: number; end: number }[] = [];
+    for (const s of rawSpans) {
+      if (mergedRawSpans.length === 0) {
+        mergedRawSpans.push({ ...s });
+      } else {
+        const prev = mergedRawSpans[mergedRawSpans.length - 1];
+        if (s.start - prev.end <= 2) {
+          prev.end = s.end;
+        } else {
+          mergedRawSpans.push({ ...s });
+        }
+      }
     }
 
     // Multi-Digit Valley Splitter:
@@ -757,7 +768,7 @@ function parseDigitsFromBinary(
       return result;
     }
 
-    const spans = splitFusedSpans(rawSpans, colCounts, bandH, colThreshold);
+    const spans = splitFusedSpans(mergedRawSpans, colCounts, bandH, colThreshold);
 
     // Anti-Sentence / Text-Entropy Gate:
     // Coffee scale displays have at most 4-8 elements across a single band (e.g. "0:15  18.4g").
@@ -848,6 +859,31 @@ function parseDigitsFromBinary(
         continue;
       }
 
+      // Bezel / Frame Edge Rejection (Margin Piercing Check):
+      // Real scale digits are strictly isolated within the active digit band [band.start, band.end].
+      // Above and below the digit row band, the background is dark.
+      // A physical bezel edge, casing rim, screen divider, or camera crop boundary continues into the margins.
+      let marginActiveAbove = 0;
+      const checkYAbove = Math.max(0, band.start - Math.min(16, Math.floor(bandH * 0.25)));
+      for (let y = checkYAbove; y < band.start; y++) {
+        for (let x = span.start; x <= span.end; x++) {
+          if (binary[y * width + x] === 1) marginActiveAbove++;
+        }
+      }
+
+      let marginActiveBelow = 0;
+      const checkYBelow = Math.min(height, band.end + Math.min(16, Math.floor(bandH * 0.25)));
+      for (let y = band.end; y < checkYBelow; y++) {
+        for (let x = span.start; x <= span.end; x++) {
+          if (binary[y * width + x] === 1) marginActiveBelow++;
+        }
+      }
+
+      // If active pixels continue vertically above or below the digit band, reject as edge artifact
+      if (marginActiveAbove >= 3 || marginActiveBelow >= 3) {
+        continue;
+      }
+
       // Reject border-touching artifacts (screen bezel frame, camera crop boundary, edge glares)
       const edgeMargin = Math.max(16, Math.floor(width * 0.045));
       if (span.start <= edgeMargin || span.end >= width - edgeMargin) {
@@ -855,7 +891,7 @@ function parseDigitsFromBinary(
       }
 
       // Reject narrow noise slivers (not wide enough for a digital digit stroke)
-      if (spanW < Math.max(5, Math.floor(bandH * 0.10))) {
+      if (spanW < Math.max(6, Math.floor(bandH * 0.12))) {
         continue;
       }
 
@@ -916,8 +952,8 @@ function parseDigitsFromBinary(
       } else {
         const prev = currentCluster[currentCluster.length - 1];
         const gap = el.box.x - (prev.box.x + prev.box.width);
-        // Tightly bounded gap threshold prevents distant screen bezels or glare from merging into digits
-        const maxGap = Math.max(18, Math.floor(bandH * 0.52));
+        // Bounded gap threshold: accommodates digit '1' right-side alignment (~0.65 * bandH)
+        const maxGap = Math.max(22, Math.floor(bandH * 0.70));
 
         if (gap > maxGap || el.type === 'colon' || prev.type === 'colon') {
           clusters.push(currentCluster);
@@ -929,6 +965,81 @@ function parseDigitsFromBinary(
     }
     if (currentCluster.length > 0) {
       clusters.push(currentCluster);
+    }
+
+    /**
+     * Filters out chassis edge artifacts, bezel borders, and casing lines from a token cluster.
+     * On 7-segment digital displays, all digits in a numeric sequence share the exact same
+     * height, top line, bottom baseline, and regular inter-digit pitch.
+     * Vertical edges that mistakenly pass single-stroke checks have abnormal heights,
+     * piercing margins, shifted baselines, or excessive gaps.
+     */
+    function filterEdgeArtifactsFromCluster(elements: ParsedElement[]): ParsedElement[] {
+      if (elements.length < 2) return elements;
+
+      const digits = elements.filter((e) => e.type === 'digit');
+      if (digits.length < 2) return elements;
+
+      const heights = digits.map((d) => d.box.height).sort((a, b) => a - b);
+      const tops = digits.map((d) => d.box.y).sort((a, b) => a - b);
+      const bottoms = digits.map((d) => d.box.y + d.box.height).sort((a, b) => a - b);
+
+      const medH = heights[Math.floor(heights.length / 2)];
+      const medTop = tops[Math.floor(tops.length / 2)];
+      const medBot = bottoms[Math.floor(bottoms.length / 2)];
+
+      const maxHDiff = Math.max(7, Math.floor(medH * 0.25));
+      const maxTopDiff = Math.max(6, Math.floor(medH * 0.20));
+      const maxBotDiff = Math.max(6, Math.floor(medH * 0.20));
+
+      let result = [...elements];
+
+      // 1. Inspect first element if it's a digit '1'
+      if (result.length >= 2 && result[0].type === 'digit' && result[0].char === '1') {
+        const firstBox = result[0].box;
+        const isMisaligned =
+          Math.abs(firstBox.height - medH) > maxHDiff ||
+          Math.abs(firstBox.y - medTop) > maxTopDiff ||
+          Math.abs(firstBox.y + firstBox.height - medBot) > maxBotDiff;
+
+        const nextEl = result[1];
+        const gapToNext = nextEl.box.x - (firstBox.x + firstBox.width);
+        const isDistantEdge = gapToNext > Math.max(22, Math.floor(medH * 0.55));
+
+        const isImpossibleTare =
+          result.length >= 3 &&
+          result[1].type === 'digit' &&
+          result[1].char === '0' &&
+          result[2].type === 'dot' &&
+          (isMisaligned || isDistantEdge);
+
+        if (isMisaligned || isDistantEdge || isImpossibleTare) {
+          result.shift();
+        }
+      }
+
+      // 2. Inspect last element if it's a digit '1'
+      if (result.length >= 2) {
+        const lastIdx = result.length - 1;
+        const lastEl = result[lastIdx];
+        if (lastEl.type === 'digit' && lastEl.char === '1') {
+          const lastBox = lastEl.box;
+          const isMisaligned =
+            Math.abs(lastBox.height - medH) > maxHDiff ||
+            Math.abs(lastBox.y - medTop) > maxTopDiff ||
+            Math.abs(lastBox.y + lastBox.height - medBot) > maxBotDiff;
+
+          const prevEl = result[lastIdx - 1];
+          const gapFromPrev = lastBox.x - (prevEl.box.x + prevEl.box.width);
+          const isDistantEdge = gapFromPrev > Math.max(22, Math.floor(medH * 0.55));
+
+          if (isMisaligned || isDistantEdge) {
+            result.pop();
+          }
+        }
+      }
+
+      return result;
     }
 
     // Evaluate each cluster in the row band
@@ -946,7 +1057,8 @@ function parseDigitsFromBinary(
 
     const evaluatedClusters: ClusterEval[] = [];
 
-    for (const cl of clusters) {
+    for (const rawCl of clusters) {
+      const cl = filterEdgeArtifactsFromCluster(rawCl);
       let clText = '';
       let clHasDecimal = false;
       let clHasColon = false;

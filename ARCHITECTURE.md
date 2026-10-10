@@ -124,16 +124,18 @@ flowchart LR
         PolarityGate -- Ja (Papir/Bog afvises) --> DropNoise[Kasser: Returner Null]
         PolarityGate -- Nej --> MarginMask[4% Margin Mask mod kabinetstøj]
         MarginMask --> AdaptiveThresh[Adaptiv Bradley-Roth Kontrast]
-        AdaptiveThresh --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]
+        AdaptiveThresh --> MarginPiercingCheck{Gennembryder Margin over/under?}
+        MarginPiercingCheck -- Ja (Bezel/Ramme afvises) --> DropNoise
+        MarginPiercingCheck -- Nej --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]
         DualRowValley --> RowScoring[Række 0 Bonus +150 / Række 1 Timer Straf -250]
         RowScoring --> TimerPenalty[Kolon / 0:00 Straf -300]
         TimerPenalty --> TextEntropyGate{Spans > 8 el. Elementer > 7?}
         TextEntropyGate -- Ja (Bogsætning afvises) --> DropNoise
-        TextEntropyGate -- Nej --> IntegratedDotSplit[Integreret Decimalpunktum Dal-Splitter]
-        IntegratedDotSplit --> MinHeightCheck{Cifferhøjde >= 18px & >= 42%?}
+        TextEntropyGate -- Nej --> MinHeightCheck{Cifferhøjde >= 18px & >= 42%?}
         MinHeightCheck -- Nej (Mikrotekst afvises) --> DropNoise
-        MinHeightCheck -- Ja --> SegmentAnalysis[7-Segment Segmentering A-G]
-        SegmentAnalysis --> DigitRecognition[Digit Recognition + Decimalkomma]
+        MinHeightCheck -- Ja --> SegmentAnalysis[7-Segment Segmentering A-G & 1-Tals Strøgcheck]
+        SegmentAnalysis --> ClusterAlign[Klynge Typografi & Højde/Top/Bund Afvisning af Rammekant]
+        ClusterAlign --> DigitRecognition[Digit Recognition + Decimalkomma]
         DigitRecognition --> ConfidenceFilter{Confidence > 65%?}
         ConfidenceFilter -- Ja --> ValidWeight[Rå Vægt i gram: Y_i]
         ConfidenceFilter -- Nej --> DropNoise
