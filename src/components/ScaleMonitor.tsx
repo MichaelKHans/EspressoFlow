@@ -15,12 +15,16 @@ import {
   Lock,
   Unlock,
   Sparkles,
+  FlaskConical,
+  Radio,
+  X,
 } from 'lucide-react';
 import { DripperIcon } from './CustomCoffeeIcons';
 import type { ShotDataPoint } from '../types/espresso';
 import { calculateSmoothedFlowRate } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
 import { ScaleTelemetryCollector, isTelemetryEnabled } from '../lib/scaleTelemetry';
+import { broadcastLiveFrame, isAntiLiveSyncEnabled, setAntiLiveSyncEnabled, triggerRemoteScenario } from '../lib/antiLiveSync';
 import { useTranslation } from '../i18n';
 import { wakeLock } from '../lib/wakeLock';
 
@@ -112,6 +116,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   // Vision Inspector state
   const [showInspector, setShowInspector] = useState<boolean>(false);
+  const [showTestLabModal, setShowTestLabModal] = useState<boolean>(false);
+  const [isLiveSyncActive, setIsLiveSyncActive] = useState<boolean>(() => isAntiLiveSyncEnabled());
   const [lastOcrResult, setLastOcrResult] = useState<OCRResult | null>(null);
   const [ocrFps, setOcrFps] = useState<number>(0);
 
@@ -625,6 +631,19 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             }
           }
         }
+
+        // Live Stream Telemetry to Antigravity Test Lab
+        broadcastLiveFrame({
+          timestamp: Date.now(),
+          weight: currentWeightRef.current,
+          rawText: result.rawText,
+          confidence: result.confidence,
+          flow: currentFlow,
+          isOutlier: sanitized.isOutlier,
+          polarity: result.detectedPolarity || displayMode,
+          isBrewing,
+          fps: ocrFps,
+        });
       }
     }, ocrIntervalMs);
 
@@ -1264,6 +1283,24 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             >
               <Scan className="w-3.5 h-3.5" />
             </button>
+
+            {/* Anti Optical Test Lab & Live Stream */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowTestLabModal(true);
+              }}
+              className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold transition flex items-center gap-1 cursor-pointer ${
+                isLiveSyncActive
+                  ? 'bg-purple-900/60 text-purple-300 border border-purple-400/50'
+                  : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
+              }`}
+              title="Anti Optical Test Lab & Live Stream"
+            >
+              <FlaskConical className="w-3 h-3 text-purple-400" />
+              <span>Lab</span>
+            </button>
           </div>
         </div>
       )}
@@ -1550,6 +1587,126 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           )}
         </div>
       </div>
+
+      {/* Anti Optical Test Lab & Live Remote Control Modal */}
+      {showTestLabModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#1C1512] border border-[#C26D52]/40 rounded-2xl w-full max-w-sm p-5 shadow-2xl text-[#FAF7F2] font-mono flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <FlaskConical className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-300">Anti Optical Test Lab</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTestLabModal(false)}
+                className="p-1 text-[#E8DFD5]/60 hover:text-white rounded-lg hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Live Streaming Toggle */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold flex items-center gap-1.5 text-purple-300">
+                  <Radio className={`w-3.5 h-3.5 ${isLiveSyncActive ? 'text-emerald-400 animate-pulse' : 'text-gray-400'}`} />
+                  <span>Live Stream til Anti</span>
+                </div>
+                <div className="text-[10px] text-[#E8DFD5]/60 mt-0.5">Streamer OCR frames live til PC</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !isLiveSyncActive;
+                  setIsLiveSyncActive(next);
+                  setAntiLiveSyncEnabled(next);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                  isLiveSyncActive ? 'bg-emerald-500 text-black' : 'bg-white/10 text-gray-400'
+                }`}
+              >
+                {isLiveSyncActive ? 'AKTIV' : 'FRA'}
+              </button>
+            </div>
+
+            {/* Remote Trigger Scenarios on PC */}
+            <div className="flex flex-col gap-2">
+              <div className="text-[10px] uppercase font-bold text-[#E8DFD5]/50 tracking-wider">
+                Fjernstyr PC-Skærmen direkte:
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerRemoteScenario('standard');
+                    setShowTestLabModal(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#C26D52]/50 text-left transition flex flex-col gap-1 active:scale-95 cursor-pointer"
+                >
+                  <span className="font-bold text-amber-200">☕ 30s Standard</span>
+                  <span className="text-[9px] text-[#E8DFD5]/60">0g → 36g jævnt</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerRemoteScenario('spike');
+                    setShowTestLabModal(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-500/50 text-left transition flex flex-col gap-1 active:scale-95 cursor-pointer"
+                >
+                  <span className="font-bold text-red-300">⚡ Channeling</span>
+                  <span className="text-[9px] text-[#E8DFD5]/60">Flow spike test</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerRemoteScenario('digits');
+                    setShowTestLabModal(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/50 text-left transition flex flex-col gap-1 active:scale-95 cursor-pointer"
+                >
+                  <span className="font-bold text-blue-300">🔢 Cifre 0–9</span>
+                  <span className="text-[9px] text-[#E8DFD5]/60">Stress-test 10 tal</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerRemoteScenario('timer');
+                    setShowTestLabModal(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-400/50 text-left transition flex flex-col gap-1 active:scale-95 cursor-pointer"
+                >
+                  <span className="font-bold text-emerald-300">⏱️ Timer Stress</span>
+                  <span className="text-[9px] text-[#E8DFD5]/60">Hurtig optælling</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerRemoteScenario('stop');
+                }}
+                className="mt-1 p-2 rounded-xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs font-bold hover:bg-red-900/50 transition cursor-pointer"
+              >
+                ⏹️ Stop PC Simulator
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowTestLabModal(false)}
+              className="mt-2 w-full py-2 rounded-xl bg-[#FAF7F2] text-[#2C2018] text-xs font-bold transition active:scale-95 hover:bg-white"
+            >
+              Tilbage til Kamera
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

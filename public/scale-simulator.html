@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flowbean Scale Optical Simulator (HIL Bench)</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg-color: #0d0d0d;
@@ -319,6 +320,7 @@
           <span>GROUND TRUTH: <span id="gtWeight" class="telemetry-val">0.0g</span></span>
           <span>TIMER: <span id="gtTimer" class="telemetry-val">0:00</span></span>
           <span>FLOW: <span id="gtFlow" class="telemetry-val">0.0 g/s</span></span>
+          <span>📱 PHONE FEED: <span id="phoneLiveVal" class="telemetry-val" style="color: #22c55e;">Awaiting phone...</span></span>
         </div>
       </div>
 
@@ -755,6 +757,43 @@
         };
       } catch (e) {
         // Standalone mode
+      }
+
+      // Also connect to Supabase Realtime Channel for Cross-Device Mobile Control
+      initSupabaseLiveChannel();
+    }
+
+    // Connect to Supabase Realtime Broadcast Channel: anti-testbed-live
+    function initSupabaseLiveChannel() {
+      try {
+        if (!window.supabase) return;
+        const SUPABASE_URL = 'https://vdxfmvzdmcqfixbegumb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkeGZtdnpkbWNxZml4YmVndW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTY3NzYsImV4cCI6MjEwNjA5Mjc3Nn0.8MlspGgPxNuIiRWH819Z59MKgVWzAQdqKPE3cqFv9P4';
+        const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const channel = sbClient.channel('anti-testbed-live');
+
+        channel.on('broadcast', { event: 'remote_cmd' }, (payload) => {
+          console.log('[Supabase Realtime] 📱 Remote command from mobile:', payload.payload);
+          handleAgentCommand(payload.payload);
+        });
+
+        channel.on('broadcast', { event: 'live_frame' }, (payload) => {
+          const f = payload.payload;
+          const phoneLiveValEl = document.getElementById('phoneLiveVal');
+          if (phoneLiveValEl && f) {
+            phoneLiveValEl.textContent = `${f.weight.toFixed(1)}g (raw: "${f.rawText}", ${(f.confidence * 100).toFixed(0)}%)`;
+          }
+        });
+
+        channel.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[Supabase Realtime] ✅ Connected to anti-testbed-live channel');
+            liveDotEl.classList.add('online');
+            agentStatusTextEl.textContent = 'Antigravity & Phone Live Sync';
+          }
+        });
+      } catch (err) {
+        console.warn('Supabase realtime init error:', err);
       }
     }
 

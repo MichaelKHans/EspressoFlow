@@ -14,6 +14,7 @@
     "sim:server": "node scripts/scale-sim-server.cjs",
     "sim:ctl": "node scripts/sim-ctl.cjs",
     "sim:eval": "node scripts/evaluate-test.cjs",
+    "sim:live": "node scripts/sim-live-monitor.cjs",
     "mobile:sync": "npx cap sync",
     "mobile:open:ios": "npx cap open ios",
     "mobile:open:android": "npx cap open android"
