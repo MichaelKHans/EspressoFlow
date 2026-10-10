@@ -94,7 +94,16 @@ export function broadcastLiveFrame(payload: LiveFramePayload): void {
   }).catch(() => {});
 }
 
-export type RemoteAction = 'start_shot' | 'stop_shot' | 'tare' | 'calibrate' | 'run_scenario' | 'stop';
+export type RemoteAction =
+  | 'start_shot'
+  | 'stop_shot'
+  | 'tare'
+  | 'calibrate'
+  | 'run_scenario'
+  | 'stop'
+  | 'close_modal'
+  | 'switch_tab'
+  | 'set_method';
 
 export interface RemoteCommandPayload {
   action: RemoteAction;

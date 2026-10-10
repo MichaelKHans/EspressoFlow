@@ -57,6 +57,7 @@ import {
   getMachineTempProfile,
 } from './lib/storage';
 import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
+import { subscribeToRemoteCommands } from './lib/antiLiveSync';
 
 export function App() {
   const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
@@ -144,6 +145,20 @@ export function App() {
     setLegalModalTab(null);
     setIsShotSummaryOpen(false);
   }, []);
+
+  // Remote Command Listener for Antigravity Autonomous Test Suite
+  useEffect(() => {
+    const unsub = subscribeToRemoteCommands((cmd) => {
+      console.log('[App] Remote command received from Antigravity:', cmd);
+      if (cmd.action === 'close_modal' || cmd.action === 'start_shot' || cmd.action === 'tare') {
+        closeAllActiveModals();
+      }
+      if (cmd.action === 'switch_tab' && cmd.name) {
+        setActiveTab(cmd.name as any);
+      }
+    });
+    return () => unsub();
+  }, [closeAllActiveModals]);
 
   const handleTempUnitChange = (unit: TempUnit) => {
     setTempUnit(unit);

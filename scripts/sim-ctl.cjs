@@ -149,12 +149,19 @@ Simulator Controls:
       sendLocalCommand({ action: 'run_scenario', name: 'standard' });
       setTimeout(() => process.exit(0), 1500);
       return;
+    } else if (arg === '--auto-suite') {
+      require('./run-autonomous-suite.cjs');
+      return;
     } else if (arg === '--start-shot') {
       await sendRemoteMobileCommand('start_shot');
       setTimeout(() => process.exit(0), 1000);
       return;
     } else if (arg === '--stop-shot') {
       await sendRemoteMobileCommand('stop_shot');
+      setTimeout(() => process.exit(0), 1000);
+      return;
+    } else if (arg === '--close-modal') {
+      await sendRemoteMobileCommand('close_modal');
       setTimeout(() => process.exit(0), 1000);
       return;
     } else if (arg === '--tare') {
