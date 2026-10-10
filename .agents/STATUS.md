@@ -11,6 +11,11 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Reparation af Hypersensitiv Hulrums-Glans & Fuld Genopretning af Cifre ('0', '8', '6', '9') (v1.8.7)
+- **Hulrums-Tærskel Rettelse (`sampleSegment('c')`):**
+  - **Identificeret Årsag:** En tærskel på kun 20% og `minActive = 3` for indre hulrum fik almindelig kamerasensor-støj og antialiasing til at blive stemplet som "solid glans". Dette eliminerede konsekvent `8`, `6`, `9` og afviste `0`, så motoren kun kunne vælge mellem `1` og `7`.
+  - **Løsning:** Tærsklen for 'c' er sat til 60% (`minActive = 6`), så kun ægte blændende glans diskvalificerer.
+
 ### 2026-10-10 -- Robust Bezel-Afvisning, Decimal-Glans Tolerance & Testbed Pure Weight Automatik (v1.8.6)
 - **Afvisning af Ydre Ramme-Artefakter (`ocr7segment.ts`):**
   - **Identificeret Årsag:** En lodret streg ved kanten af afgrænsningen ($x \le 3\text{px}$) forveksledes med tallet '1'. Fordi `maxGap` var helt oppe på $1.15 \times \text{højde}$, blev kanten koblet på nabotallet (`0.0g` blev `10.0g`, `7.7g` blev `17.7g`).

@@ -302,10 +302,20 @@ function sampleSegment(
   // Orientation-aware thresholds:
   // - vertical segments (b,c,e,f) require 0.27
   // - center horizontal bar 'g' requires 0.32 to ensure it is a real center bar, not bleed from '0'
+  // - cavity holes ('c') require 0.60 (solid glare detection), preventing sensor noise from killing '0','8','6','9'
   // - outer horizontal bars (a,d) require 0.20
   // CRITICAL: Must satisfy BOTH minimum count AND minimum fill ratio so stray noise pixels never bypass threshold!
-  const threshold = overrideThreshold ?? (orientation === 'v' ? 0.27 : orientation === 'g' ? 0.32 : 0.20);
-  const minActive = Math.min(orientation === 'v' || orientation === 'g' ? 4 : 3, totalCount);
+  const threshold = overrideThreshold ?? (
+    orientation === 'c' ? 0.60 :
+    orientation === 'v' ? 0.27 :
+    orientation === 'g' ? 0.32 :
+    0.20
+  );
+  const minActive = Math.min(
+    orientation === 'c' ? 6 :
+    (orientation === 'v' || orientation === 'g' ? 4 : 3),
+    totalCount
+  );
   return totalCount > 0 && activeCount >= minActive && (activeCount / totalCount >= threshold);
 }
 

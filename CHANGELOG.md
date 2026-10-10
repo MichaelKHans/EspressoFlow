@@ -2,6 +2,12 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.7] - 2026-10-10
+### Etape 32: Reparation af Hypersensitiv Hulrums-Glans & Fuld Genopretning af Cifre ('0', '8', '6', '9')
+- **Korrigering af Hulrums-Tærskel (`sampleSegment('c')` i `ocr7segment.ts`):**
+  - **Identificeret Root Cause:** `sampleSegment` for indre hulrum (`orientation = 'c'`) faldt tilbage på en generisk tærskel på kun 20% og `minActive = 3`. Når et telefonkamera filmer en skærm, opstår der naturlig antialiasing og komprimeringsstøj i hulrummene. Blot 3 støj-pixels fik `upperHole` og `lowerHole` til at slå ud som "solid glans/refleksion", hvilket automatisk diskvalificerede `8`, `6`, `9` og afviste `0` som '?'. Derved blev *alle* tal tvunget til at returnere `1` eller `7` (de eneste tal uden hulrumstjek)!
+  - **Løsning:** `orientation = 'c'` er nu dedikeret med en tærskel på 60% (`minActive = 6`). Ægte 7-segment hulrum med let kamerastøj overlever, og kun reelle massive lysglimt diskvalificeres.
+
 ## [1.8.6] - 2026-10-10
 ### Etape 31: Robust Bezel-Afvisning, Decimal-Glans Tolerance & Testbed Pure Weight Automatik
 - **Afvisning af Ydre Ramme-Artefakter (`ocr7segment.ts`):**
