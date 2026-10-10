@@ -787,6 +787,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     if (cameraState === 'standby') {
       setCameraState('live');
     }
+    // Hard tare reset for new shot initialization
+    filterRef.current.reset(0);
+    currentWeightRef.current = 0.0;
+    setCurrentWeight(0.0);
+    setCurrentFlow(0.0);
     onBrewStart();
   };
 

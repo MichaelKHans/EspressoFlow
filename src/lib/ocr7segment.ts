@@ -1221,18 +1221,20 @@ export class ScaleReadingFilter {
 
     // Monotonic Floor Clamping under Active Brewing:
     // Liquid espresso drops into the cup and CANNOT physically disappear.
-    // If extraction is active and reading drops significantly below current weight (> 0.5g),
-    // it is an optical glitch (e.g. steam, transient flicker, or timer leak) and MUST be rejected!
-    if (isBrewing && this.lastValidWeight >= 0.5) {
+    // Once an extraction is actively flowing (>= 2.5g), readings that drop significantly (> 0.5g)
+    // are optical glitches (e.g. steam, transient flicker) and MUST be rejected!
+    if (isBrewing && this.lastValidWeight >= 2.5) {
       if (newReading < this.lastValidWeight - 0.5) {
         return { weight: this.lastValidWeight, isOutlier: true };
       }
     }
 
-    // Always accept tare lock (0.0g - 0.3g when starting or taring, unless actively brewing above 0.5g)
-    if (this.lastValidWeight === 0 && newReading <= 0.3 && !isBrewing) {
+    // Always accept tare lock (0.0g - 0.3g) when starting or taring,
+    // as long as the shot hasn't already flowed deep into extraction (lastValidWeight < 2.5g)
+    if (newReading <= 0.3 && (!isBrewing || this.lastValidWeight < 2.5)) {
       this.lastValidWeight = newReading;
       this.recentWindow = [newReading];
+      this.consecutiveSameCount = 0;
       return { weight: newReading, isOutlier: false };
     }
 

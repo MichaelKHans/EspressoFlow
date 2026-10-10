@@ -136,7 +136,15 @@ Simulator Controls:
     const arg = args[i];
 
     if (arg === '--full-brew') {
-      console.log(`\n☕ STARTING AUTONOMOUS E2E ESPRESSO EXTRACTION TEST...`);
+      console.log(`\n☕ PREPARING AUTONOMOUS E2E EXTRACTION...`);
+      // 1. Reset simulator display to 0.0g and send tare to mobile
+      sendLocalCommand({ action: 'set_weight', weight: 0, timer: 0 });
+      await sendRemoteMobileCommand('tare');
+      console.log(`⏳ Tare locked on mobile (0.0g). Starting extraction in 1.2s...`);
+      await new Promise((r) => setTimeout(r, 1200));
+
+      // 2. Start shot on mobile & start espresso flow on simulator
+      console.log(`🚀 STARTING SHOT RECORDING & FLOW!`);
       await sendRemoteMobileCommand('start_shot');
       sendLocalCommand({ action: 'run_scenario', name: 'standard' });
       setTimeout(() => process.exit(0), 1500);
