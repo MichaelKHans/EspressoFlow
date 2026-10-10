@@ -494,4 +494,52 @@ export function calculateBeanFreshness(
   };
 }
 
+/**
+ * Calculates dynamically scaled target extraction time based on method, dose, yield, and ratio.
+ * 
+ * Espresso Fluid Mechanics:
+ * - Baseline: 18.0g dose with 1:2.0 ratio (36.0g yield) = 28s (approx 5.5s pre-infusion + 22.5s flow).
+ * - Puck resistance scales with puck height / dose (D / D_0)^0.30.
+ * - Flow time scales proportionally with target liquid yield (Y / Y_0).
+ * - Single baskets (7-10g dose) target ~18-22s.
+ * - User 17g basket with 34g yield targets ~26s.
+ * - Ristretto profiles (ratio < 1.8) target ~20-24s.
+ * - Lungo / Allongé profiles (ratio > 2.4) target ~32-38s.
+ */
+export function calculateTargetExtractionTime(
+  doseGrams: number,
+  targetYieldGrams: number,
+  method: 'espresso' | 'pour_over' = 'espresso',
+  baseExpectedSeconds: number = 28
+): number {
+  if (method === 'pour_over') {
+    const bloomSecs = 45;
+    const brewWater = targetYieldGrams || (doseGrams * 16.6);
+    const flowSecs = Math.max(30, (brewWater - (doseGrams * 3)) / 2.2);
+    return Math.round(bloomSecs + flowSecs);
+  }
+
+  // Espresso fluid mechanics
+  const baselineDose = 18.0;
+  const baselineYield = 36.0;
+  const baselineFlowSecs = Math.max(15, baseExpectedSeconds - 5.5);
+  const preInfusionSecs = 5.5;
+
+  const dose = Math.max(6.0, doseGrams || baselineDose);
+  const yieldGrams = Math.max(10.0, targetYieldGrams || (dose * 2.0));
+  
+  // Hydraulic resistance exponent for coffee bed height
+  const resistanceFactor = Math.pow(dose / baselineDose, 0.30);
+  
+  // Target flow rate for standard extraction
+  const targetFlowRate = baselineYield / baselineFlowSecs;
+  
+  // Flow time needed to accumulate target yield through puck
+  const flowTime = (yieldGrams / targetFlowRate) * resistanceFactor;
+  
+  const totalTarget = Math.round(preInfusionSecs + flowTime);
+  return Math.max(16, Math.min(55, totalTarget));
+}
+
+
 

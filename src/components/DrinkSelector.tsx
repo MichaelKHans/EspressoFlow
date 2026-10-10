@@ -19,9 +19,10 @@ import {
   loadActiveBarDrinkIds,
   saveActiveBarDrinkIds,
   loadDrinkGrindSettings,
+  loadDrinkCalibrations,
   loadShots,
 } from '../lib/storage';
-import { GRINDER_CALIBRATIONS } from '../lib/espressoMath';
+import { GRINDER_CALIBRATIONS, calculateTargetExtractionTime } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
 import { matchBeansForDrink, getOptimalBeanGuidanceForDrink } from '../lib/beanMatcher';
 import { useTranslation } from '../i18n';
@@ -30,15 +31,15 @@ import { DripperIcon } from './CustomCoffeeIcons';
 export const getRoastBadgeStyles = (level: RoastLevel) => {
   switch (level) {
     case 'light':
-      return 'bg-amber-400/20 text-amber-300 border-amber-400/40';
+      return 'bg-amber-100 text-amber-900 border-amber-300 font-bold';
     case 'medium':
-      return 'bg-[#C26D52]/25 text-[#FFB6A0] border-[#C26D52]/45';
+      return 'bg-[#C26D52]/15 text-[#8C3F27] border-[#C26D52]/40 font-bold';
     case 'medium-dark':
-      return 'bg-[#A3684A]/30 text-[#E8C2B0] border-[#A3684A]/50';
+      return 'bg-[#6E3B27]/15 text-[#542918] border-[#6E3B27]/40 font-bold';
     case 'dark':
-      return 'bg-black/60 text-[#FAF7F2] border-white/25';
+      return 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] font-bold';
     default:
-      return 'bg-white/10 text-white/90 border-white/20';
+      return 'bg-stone-200 text-stone-800 border-stone-300 font-bold';
   }
 };
 
@@ -46,6 +47,8 @@ interface DrinkSelectorProps {
   currentBean: CoffeeBeanProfile;
   currentGrinder: GrinderProfile;
   activeDrinkId: string;
+  doseGrams?: number;
+  targetYieldGrams?: number;
   shots?: ShotRecord[];
   allBeans?: CoffeeBeanProfile[];
   onSelectDrink: (drink: DrinkRecipe) => void;
@@ -65,6 +68,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   currentBean,
   currentGrinder,
   activeDrinkId,
+  doseGrams,
+  targetYieldGrams,
   shots,
   allBeans,
   onSelectDrink,
@@ -143,13 +148,28 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
   // Specific calibration key for this exact bean + drink combination
   const calibrationKey = `${currentBean.id}_${selectedDrink.id}`;
-  const savedDrinkSetting = drinkGrinds[calibrationKey] || currentBean.grindSetting || currentGrinder.defaultSetting;
+  const drinkCalibrations = loadDrinkCalibrations();
+  const savedCalibration = drinkCalibrations[calibrationKey];
+
+  const effectiveDose = doseGrams ?? savedCalibration?.doseGrams ?? currentBean.doseGrams ?? selectedDrink.defaultDoseGrams;
+  const effectiveYield = targetYieldGrams ?? savedCalibration?.targetYieldGrams ?? (currentBean.doseGrams ? Math.round(currentBean.doseGrams * selectedDrink.targetRatio * 10) / 10 : selectedDrink.targetYieldGrams);
+  const effectiveRatio = effectiveDose > 0 ? (effectiveYield / effectiveDose) : selectedDrink.targetRatio;
+  const effectiveTargetTime = calculateTargetExtractionTime(
+    effectiveDose,
+    effectiveYield,
+    selectedDrink.method === 'pour_over' ? 'pour_over' : 'espresso',
+    selectedDrink.expectedTimeSeconds
+  );
+
+  const savedDrinkSetting = savedCalibration?.grindSetting || drinkGrinds[calibrationKey] || currentBean.grindSetting || currentGrinder.defaultSetting;
 
   const [currentSettingInput, setCurrentSettingInput] = useState<string>(savedDrinkSetting);
 
   useEffect(() => {
     const key = `${currentBean.id}_${selectedDrink.id}`;
-    const setting = drinkGrinds[key] || currentBean.grindSetting || currentGrinder.defaultSetting;
+    const calibs = loadDrinkCalibrations();
+    const cal = calibs[key];
+    const setting = cal?.grindSetting || drinkGrinds[key] || currentBean.grindSetting || currentGrinder.defaultSetting;
     setCurrentSettingInput(setting);
   }, [currentBean.id, selectedDrink.id, drinkGrinds, currentBean.grindSetting, currentGrinder.defaultSetting]);
 
@@ -163,8 +183,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     (s) => s.drinkId === selectedDrink.id || s.drinkName?.toLowerCase() === selectedDrink.name.toLowerCase()
   );
 
-  const targetTime = selectedDrink.expectedTimeSeconds;
-  const targetYield = selectedDrink.targetYieldGrams;
+  const targetTime = effectiveTargetTime;
+  const targetYield = effectiveYield;
 
   // Grinder step specification
   const grinderSpec = GRINDER_CALIBRATIONS[currentGrinder.name] || {
@@ -521,7 +541,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
             <div className="text-[10px] text-[#7A6E65] font-mono mt-2 text-center">
               {selectedDrink.method === 'pour_over' ? 'Target Brew Water' : 'Target Output'}:{' '}
-              <strong className="text-[#2C2018]">{selectedDrink.targetYieldGrams.toFixed(1)}g</strong>
+              <strong className="text-[#2C2018]">{effectiveYield.toFixed(1)}g</strong>
             </div>
           </div>
 
@@ -534,7 +554,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   {selectedDrink.method === 'pour_over' ? 'Coffee Dose' : 'Dry Dose'}
                 </div>
                 <div className="text-sm sm:text-base font-bold font-mono text-[#2C2018] mt-0.5">
-                  {selectedDrink.defaultDoseGrams.toFixed(1)}g
+                  {effectiveDose.toFixed(1)}g
                 </div>
               </div>
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
@@ -542,21 +562,21 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   {selectedDrink.method === 'pour_over' ? 'Total Water' : 'Target Yield'}
                 </div>
                 <div className="text-sm sm:text-base font-bold font-mono text-[#C26D52] mt-0.5">
-                  {selectedDrink.targetYieldGrams.toFixed(1)}g
+                  {effectiveYield.toFixed(1)}g
                 </div>
               </div>
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
                 <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">Ratio</div>
                 <div className="text-sm sm:text-base font-bold font-mono text-[#2C2018] mt-0.5">
-                  1:{selectedDrink.targetRatio.toFixed(1)}
+                  1:{effectiveRatio.toFixed(1)}
                 </div>
               </div>
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
                 <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">Target Time</div>
                 <div className="text-sm sm:text-base font-bold font-mono text-[#2C2018] mt-0.5">
                   {selectedDrink.method === 'pour_over'
-                    ? `~${Math.floor(selectedDrink.expectedTimeSeconds / 60)}:${String(selectedDrink.expectedTimeSeconds % 60).padStart(2, '0')}m`
-                    : `~${selectedDrink.expectedTimeSeconds}s`}
+                    ? `~${Math.floor(effectiveTargetTime / 60)}:${String(effectiveTargetTime % 60).padStart(2, '0')}m`
+                    : `~${effectiveTargetTime}s`}
                 </div>
               </div>
             </div>

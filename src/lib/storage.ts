@@ -602,3 +602,29 @@ export function getMachineTempProfile(machineName: string): Partial<EspressoMach
   };
 }
 
+export interface DrinkCalibration {
+  doseGrams: number;
+  targetYieldGrams: number;
+  grindSetting: string;
+  brewTempC?: number;
+  grinderName?: string;
+}
+
+export function loadDrinkCalibrations(): Record<string, DrinkCalibration> {
+  try {
+    const raw = localStorage.getItem('flowbean_drink_calibrations_v1');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveDrinkCalibration(key: string, calibration: DrinkCalibration): void {
+  try {
+    const current = loadDrinkCalibrations();
+    current[key] = calibration;
+    localStorage.setItem('flowbean_drink_calibrations_v1', JSON.stringify(current));
+  } catch (err) {
+    console.error('Failed to save drink calibration', err);
+  }
+}

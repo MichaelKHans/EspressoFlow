@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, RoastLevel, TempUnit } from '../types/espresso';
-import { resolveGrinder } from '../lib/storage';
-import { formatTemperature, getRecommendedBrewTemp } from '../lib/espressoMath';
+import { resolveGrinder, loadDrinkCalibrations } from '../lib/storage';
+import { formatTemperature, getRecommendedBrewTemp, calculateTargetExtractionTime } from '../lib/espressoMath';
 import {
   X,
   Sliders,
@@ -23,15 +23,15 @@ import { getOptimalBeanGuidanceForDrink, matchBeansForDrink } from '../lib/beanM
 export const getRoastBadgeStyles = (level: RoastLevel) => {
   switch (level) {
     case 'light':
-      return 'bg-amber-50 text-amber-800 border-amber-300';
+      return 'bg-amber-100 text-amber-900 border-amber-300 font-bold';
     case 'medium':
-      return 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30';
+      return 'bg-[#C26D52]/15 text-[#8C3F27] border-[#C26D52]/40 font-bold';
     case 'medium-dark':
-      return 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30';
+      return 'bg-[#6E3B27]/15 text-[#542918] border-[#6E3B27]/40 font-bold';
     case 'dark':
-      return 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]';
+      return 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] font-bold';
     default:
-      return 'bg-neutral-100 text-neutral-800 border-neutral-300';
+      return 'bg-stone-200 text-stone-800 border-stone-300 font-bold';
   }
 };
 
@@ -113,11 +113,14 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         : [activeGrinder, ...setupGrinders])
     : pool.slice(0, 4);
 
-  // Initialize state with active bean & drink targets
-  const initialDose = activeBean.doseGrams || drink.defaultDoseGrams || 18.0;
-  const initialYield = drink.targetYieldGrams || activeBean.targetYieldGrams || 36.0;
-  const initialGrind = activeBean.grindSetting || activeGrinder.defaultSetting || '15';
-  const initialTemp = activeBean.brewTempC || getRecommendedBrewTemp(activeBean.roastLevel);
+  // Initialize state with calibrated bean & drink targets
+  const drinkCalibrations = loadDrinkCalibrations();
+  const savedCalibration = drinkCalibrations[`${activeBean.id}_${drink.id}`];
+
+  const initialDose = savedCalibration?.doseGrams || activeBean.doseGrams || drink.defaultDoseGrams || 18.0;
+  const initialYield = savedCalibration?.targetYieldGrams || (activeBean.doseGrams ? Math.round(activeBean.doseGrams * drink.targetRatio * 10) / 10 : drink.targetYieldGrams) || 36.0;
+  const initialGrind = savedCalibration?.grindSetting || activeBean.grindSetting || activeGrinder.defaultSetting || '15';
+  const initialTemp = savedCalibration?.brewTempC || activeBean.brewTempC || getRecommendedBrewTemp(activeBean.roastLevel);
 
   const [doseGrams, setDoseGrams] = useState<number>(initialDose);
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(initialYield);
@@ -132,10 +135,19 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
       const raw = currentBean.grinderName || currentGrinder.name;
       const res = resolveGrinder(raw, pool);
       setSelectedGrinderName(res?.name || raw);
-      setDoseGrams(drink.defaultDoseGrams || currentBean.doseGrams || 18.0);
-      setTargetYieldGrams(drink.targetYieldGrams || currentBean.targetYieldGrams || 36.0);
-      setGrindSetting(currentBean.grindSetting || currentGrinder.defaultSetting || '15');
-      setBrewTempC(currentBean.brewTempC || getRecommendedBrewTemp(currentBean.roastLevel));
+
+      const calibs = loadDrinkCalibrations();
+      const cal = calibs[`${currentBean.id}_${drink.id}`];
+
+      const effDose = cal?.doseGrams || currentBean.doseGrams || drink.defaultDoseGrams || 18.0;
+      const effYield = cal?.targetYieldGrams || (currentBean.doseGrams ? Math.round(currentBean.doseGrams * drink.targetRatio * 10) / 10 : drink.targetYieldGrams) || 36.0;
+      const effGrind = cal?.grindSetting || currentBean.grindSetting || currentGrinder.defaultSetting || '15';
+      const effTemp = cal?.brewTempC || currentBean.brewTempC || getRecommendedBrewTemp(currentBean.roastLevel);
+
+      setDoseGrams(effDose);
+      setTargetYieldGrams(effYield);
+      setGrindSetting(effGrind);
+      setBrewTempC(effTemp);
       setIsSavedFeedback(false);
     }
   }, [
@@ -169,21 +181,32 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     if (onSelectBean) {
       onSelectBean(bean.id);
     }
-    // Update grinder and grind settings associated with newly selected bean
+    const calibs = loadDrinkCalibrations();
+    const cal = calibs[`${bean.id}_${drink.id}`];
+
+    if (cal) {
+      setDoseGrams(cal.doseGrams);
+      setTargetYieldGrams(cal.targetYieldGrams);
+      if (cal.grindSetting) setGrindSetting(cal.grindSetting);
+      if (cal.brewTempC) setBrewTempC(cal.brewTempC);
+    } else {
+      if (bean.doseGrams) {
+        setDoseGrams(bean.doseGrams);
+        setTargetYieldGrams(Math.round(bean.doseGrams * drink.targetRatio * 10) / 10);
+      } else {
+        setDoseGrams(drink.defaultDoseGrams || 18.0);
+        setTargetYieldGrams(drink.targetYieldGrams || 36.0);
+      }
+      if (bean.grindSetting) {
+        setGrindSetting(bean.grindSetting);
+      }
+      setBrewTempC(bean.brewTempC || getRecommendedBrewTemp(bean.roastLevel));
+    }
+
     if (bean.grinderName) {
       const res = resolveGrinder(bean.grinderName, pool);
       if (res) setSelectedGrinderName(res.name);
     }
-    if (bean.grindSetting) {
-      setGrindSetting(bean.grindSetting);
-    }
-    if (bean.doseGrams) {
-      setDoseGrams(bean.doseGrams);
-    }
-    if (bean.targetYieldGrams) {
-      setTargetYieldGrams(bean.targetYieldGrams);
-    }
-    setBrewTempC(bean.brewTempC || getRecommendedBrewTemp(bean.roastLevel));
   };
 
   // Handle switching grinder in Dial-In Studio
@@ -209,11 +232,14 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     }
   };
 
-  // Dose adjustment handlers
+  // Dose adjustment handlers: automatically scales target yield to preserve ratio
   const handleAdjustDose = (delta: number) => {
-    setDoseGrams((prev) => {
-      const next = Math.max(7.0, Math.min(26.0, Math.round((prev + delta) * 10) / 10));
-      return next;
+    setDoseGrams((prevDose) => {
+      const nextDose = Math.max(7.0, Math.min(26.0, Math.round((prevDose + delta) * 10) / 10));
+      const currentRatio = prevDose > 0 ? (targetYieldGrams / prevDose) : (drink.targetRatio || 2.0);
+      const nextYield = Math.max(10.0, Math.min(120.0, Math.round(nextDose * currentRatio * 10) / 10));
+      setTargetYieldGrams(nextYield);
+      return nextDose;
     });
   };
 
@@ -696,15 +722,27 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             </div>
 
             {/* Window & Style Summary */}
-            <div className="col-span-2 sm:col-span-1 bg-white p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-between text-center">
-              <div className="text-[9px] text-[#7A6E65] uppercase font-bold">Time Window</div>
-              <div className="text-sm font-bold text-[#2C2018] my-1">
-                ~{drink.expectedTimeSeconds || 26}s
-              </div>
-              <div className="text-[9px] text-[#72806B] font-semibold truncate">
-                {parseFloat(ratio) < 1.8 ? 'Ristretto Profile' : parseFloat(ratio) > 2.3 ? 'Lungo Profile' : 'Standard Normale'}
-              </div>
-            </div>
+            {(() => {
+              const targetTime = calculateTargetExtractionTime(
+                doseGrams,
+                targetYieldGrams,
+                drink.method === 'pour_over' ? 'pour_over' : 'espresso',
+                drink.expectedTimeSeconds
+              );
+              return (
+                <div className="col-span-2 sm:col-span-1 bg-white p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-between text-center">
+                  <div className="text-[9px] text-[#7A6E65] uppercase font-bold">Time Window</div>
+                  <div className="text-sm font-bold text-[#2C2018] my-1">
+                    {drink.method === 'pour_over'
+                      ? `~${Math.floor(targetTime / 60)}:${String(targetTime % 60).padStart(2, '0')}m`
+                      : `~${targetTime}s`}
+                  </div>
+                  <div className="text-[9px] text-[#72806B] font-semibold truncate">
+                    {parseFloat(ratio) < 1.8 ? 'Ristretto Profile' : parseFloat(ratio) > 2.3 ? 'Lungo Profile' : 'Standard Normale'}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Target Brew Temperature Stepper */}

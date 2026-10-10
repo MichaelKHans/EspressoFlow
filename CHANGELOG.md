@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.7.9] - 2026-10-10
+### Etape 24: Knivskarp Roast Badge Kontrast, Persistent Basket Dose Hukommelse (17g) & Væskemekanisk Tids-Skalering
+- **Knivskarp Roast Badge Kontrast (`MEDIUM-DARK` & Alle Ristningsgrader):**
+  - **Identificeret Problem:** Badget under `ACTIVE COFFEE BEAN` og i Dial-In Studio anvendte en lyserød baggrund og bleg tekst (`text-[#E8C2B0]`), hvilket gjorde teksten ulæselig på den lyse pergament/latte-baggrund.
+  - **Løsning:** Opdateret `getRoastBadgeStyles` i samtlige komponenter (`DrinkSelector.tsx`, `DialInWizardModal.tsx`, `App.tsx`) til en dyb, varm espressobrun palette (`bg-[#6E3B27]/15 text-[#542918] border-[#6E3B27]/40 font-bold` for medium-dark). Giver 100% krystalklar læsbarhed og overholder Espresso Warmth designmanualen.
+- **Persistent Portafilter Kurv-Hukommelse (17g Basket & Custom Doser):**
+  - **Identificeret Problem:** Når en barista med f.eks. en 17g portafilterkurv justerede Dry Dose til 17.0g i Dial-In Studio og trykkede "Save Calibration", nulstillede appen til opskriftens standard (18.0g / 36.0g) ved næste åbning eller på Bar-skærmen.
+  - **Løsning:**
+    - Udbygget `storage.ts` med `DrinkCalibration` og `loadDrinkCalibrations()` / `saveDrinkCalibration()`.
+    - `DialInWizardModal.tsx` og `App.tsx` respekterer nu brugerens bønnekalibrering og gemte drikkekalibrering frem for statisk at overskrive med `drink.defaultDoseGrams`.
+    - Når Dry Dose justeres i Dial-In Studio, auto-skalerer Target Yield proportionalt (f.eks. 17.0g in → 34.0g out ved ratio 1:2.0), så ekstraktionsforholdet bevares.
+    - `DrinkSelector.tsx` modtager og viser nu `effectiveDose` (17.0g), `effectiveYield` (34.0g) og opdateret Target Output under koppen.
+- **Dynamisk Væskemekanisk Tids-Skalering (`calculateTargetExtractionTime`):**
+  - **Identificeret Problem:** "TIME WINDOW" i Dial-In Studio og på Bar-skærmen viste en statisk tid (~28s), uanset om dosis var reduceret til 17g, eller om der blev valgt en Ristretto eller Lungo ratio.
+  - **Løsning:** Implementeret matematisk model for hydraulisk modstand i kaffepucken i `espressoMath.ts` ($R = (D/D_0)^{0.30}$). Tiden skalerer nu dynamisk med flow rate og væskemængde, så 17g/34g resulterer i ~26s, Ristretto i ~20-22s, og Lungo i ~34-38s.
+
 ## [1.7.8] - 2026-10-10
 ### Etape 23: Zoom-Hukommelse, Total Udrensning af Haptisk Forstyrrelse & Cross-Scale Benchmark Test-Suite
 - **Persistent Zoom-Hukommelse (`flowbean_scale_zoom`):**

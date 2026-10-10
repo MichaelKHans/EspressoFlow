@@ -45,6 +45,8 @@ import {
   saveGrinders,
   loadDrinkGrindSettings,
   saveDrinkGrindSetting,
+  loadDrinkCalibrations,
+  saveDrinkCalibration,
   loadOnboardingComplete,
   saveOnboardingComplete,
   loadMachineName,
@@ -252,16 +254,31 @@ export function App() {
 
   const handleSelectDrink = (drink: DrinkRecipe) => {
     setActiveDrinkId(drink.id);
-    setDoseGrams(drink.defaultDoseGrams);
-    setTargetYieldGrams(drink.targetYieldGrams);
-    setRatioStyle(drink.ratioStyle);
-
-    // Sync active grind setting to this drink's saved calibration if present
-    const drinkGrinds = loadDrinkGrindSettings();
+    const calibrations = loadDrinkCalibrations();
     const key = `${activeBeanId}_${drink.id}`;
-    if (drinkGrinds[key]) {
-      setGrindSetting(drinkGrinds[key]);
+    const savedCal = calibrations[key];
+
+    if (savedCal) {
+      setDoseGrams(savedCal.doseGrams);
+      setTargetYieldGrams(savedCal.targetYieldGrams);
+      if (savedCal.grindSetting) setGrindSetting(savedCal.grindSetting);
+    } else {
+      const beanDose = currentBean.doseGrams;
+      const effectiveDose = beanDose || drink.defaultDoseGrams;
+      const effectiveYield = beanDose
+        ? Math.round(beanDose * drink.targetRatio * 10) / 10
+        : drink.targetYieldGrams;
+      setDoseGrams(effectiveDose);
+      setTargetYieldGrams(effectiveYield);
+
+      const drinkGrinds = loadDrinkGrindSettings();
+      if (drinkGrinds[key]) {
+        setGrindSetting(drinkGrinds[key]);
+      } else if (currentBean.grindSetting) {
+        setGrindSetting(currentBean.grindSetting);
+      }
     }
+    setRatioStyle(drink.ratioStyle);
   };
 
   const handleLaunchScaleCam = (drink: DrinkRecipe) => {
@@ -326,9 +343,16 @@ export function App() {
     setBeans(updated);
     saveBeans(updated);
 
-    // 4. Save drink-specific grind setting mapping
+    // 4. Save drink-specific grind setting and full calibration mapping
     const calibrationKey = `${targetBeanId}_${activeDrinkId}`;
     saveDrinkGrindSetting(calibrationKey, dialInData.grindSetting);
+    saveDrinkCalibration(calibrationKey, {
+      doseGrams: dialInData.doseGrams,
+      targetYieldGrams: dialInData.targetYieldGrams,
+      grindSetting: dialInData.grindSetting,
+      brewTempC: dialInData.brewTempC,
+      grinderName: dialInData.grinderName,
+    });
 
     // 5. Close wizard and conditionally launch scale monitor
     setIsDialInWizardOpen(false);
@@ -815,6 +839,8 @@ export function App() {
                 currentBean={currentBean}
                 currentGrinder={currentGrinder}
                 activeDrinkId={activeDrinkId}
+                doseGrams={doseGrams}
+                targetYieldGrams={targetYieldGrams}
                 shots={shots}
                 allBeans={beans}
                 onSelectDrink={handleSelectDrink}
@@ -945,13 +971,13 @@ export function App() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${
+                      className={`text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded-full border ${
                         currentBean.roastLevel === 'light'
-                          ? 'bg-amber-50 text-amber-800 border-amber-300'
+                          ? 'bg-amber-100 text-amber-900 border-amber-300'
                           : currentBean.roastLevel === 'medium'
-                          ? 'bg-[#C26D52]/10 text-[#C26D52] border-[#C26D52]/30'
+                          ? 'bg-[#C26D52]/15 text-[#8C3F27] border-[#C26D52]/40'
                           : currentBean.roastLevel === 'medium-dark'
-                          ? 'bg-[#8C6046]/10 text-[#8C6046] border-[#8C6046]/30'
+                          ? 'bg-[#6E3B27]/15 text-[#542918] border-[#6E3B27]/40'
                           : 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018]'
                       }`}
                     >

@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.7.8 (Zoom-Hukommelse, Nul Haptik & Cross-Scale Side-by-Side Arkitektur)  
+> **Gældende version:** v1.7.9 (Knivskarp Roast Kontrast, 17g Basket Hukommelse & Væskemekanisk Tids-Skalering)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -263,6 +263,7 @@ flowchart TD
 | `espresso_user_access` | `UserAccessState` | Status for 7 dages prøveperiode eller Lifetime Pro oplåsning. |
 | `espresso_temp_unit` | `'C' \| 'F'` | Valgt måleenhed for temperatur (Celsius / Fahrenheit). |
 | `espresso_drink_grinds` | `Record<string, string>` | Husket kværnindstilling pr. kaffebønne og drikketype (`beanId_drinkId`). |
+| `flowbean_drink_calibrations_v1` | `Record<string, DrinkCalibration>` | Komplet kalibreringshukommelse for basket dose, target yield, kværn og temp pr. drik og bønne. |
 | `espresso_curator_checklist` | `Record<string, boolean>` | Kuratorens afkrydsede periodiske kvalitetstjek. |
 | `espresso_last_curator_audit` | `string (YYYY-MM-DD)` | Dato for senest gennemførte officielle kurator-revision. |
 

@@ -11,6 +11,17 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Knivskarp Roast Badge Kontrast, Persistent Basket Dose Hukommelse (17g) & Væskemekanisk Tids-Skalering (v1.7.9)
+- **Knivskarp Roast Badge Kontrast (`MEDIUM-DARK` & Alle Ristningsgrader):**
+  - **Identificeret Rodårsag:** Badget under `ACTIVE COFFEE BEAN` og i Dial-In Studio brugte `text-[#E8C2B0]`, som var for blegt på lys baggrund.
+  - **Løsning:** Opdateret `getRoastBadgeStyles` i samtlige komponenter (`DrinkSelector.tsx`, `DialInWizardModal.tsx`, `App.tsx`) til varm espressobrun palette (`bg-[#6E3B27]/15 text-[#542918] border-[#6E3B27]/40 font-bold`).
+- **Persistent Portafilter Kurv-Hukommelse (17g Basket & Custom Doser):**
+  - **Identificeret Rodårsag:** Dial-In modallens `useEffect` overskrev altid `doseGrams` med `drink.defaultDoseGrams` (18.0g). Desuden manglede der vedvarende lagring af drikkekalibrering, og `DrinkSelector` modtog ikke aktive dosisværdier som props.
+  - **Løsning:** Implementeret `DrinkCalibration` og `loadDrinkCalibrations()` / `saveDrinkCalibration()` i `storage.ts`. Bønnekalibrering og gemte kurvdoser prioriteres nu konsekvent. Yield skaleres automatisk ved dosisjustering, og Bar-skærmen viser de brugerdefinerede værdier.
+- **Dynamisk Væskemekanisk Tids-Skalering (`calculateTargetExtractionTime`):**
+  - **Identificeret Rodårsag:** "TIME WINDOW" i Dial-In Studio og på Bar-skærmen viste en statisk tid (~28s) uden hensyn til dosis eller ratio.
+  - **Løsning:** Implementeret hydraulisk modstandsmodel i `espressoMath.ts` ($R = (D/D_0)^{0.30}$). Tiden skalerer nu dynamisk med flow rate og væskemængde (~26s for 17g/34g, kortere for Ristretto, længere for Lungo).
+
 ### 2026-10-10 -- Zoom-Hukommelse, Total Udrensning af Haptisk Forstyrrelse & Cross-Scale Benchmark Test-Suite (v1.7.8)
 - **Persistent Zoom-Hukommelse (`flowbean_scale_zoom`):**
   - Kamera-zoomniveauet gemmes nu automatisk i `localStorage` og indlæses ved åbning af Scale Cam, så brugerens foretrukne forstørrelse bevares permanent.
