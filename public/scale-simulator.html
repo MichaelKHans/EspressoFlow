@@ -53,7 +53,7 @@
     /* Screen Glass Bezel */
     .screen-bezel {
       background: #000000;
-      border: 2px solid #18181b;
+      border: none;
       border-radius: 16px;
       padding: 32px 48px;
       position: relative;
@@ -295,7 +295,7 @@
       <div id="rowTop" class="display-row">
         <!-- Rendered Digits dynamically -->
         <div id="topDigits" style="display: flex; gap: 8px;"></div>
-        <div id="topUnit" class="row-label">g</div>
+        <div id="topUnit" class="row-label" style="display: none;"></div>
       </div>
 
       <!-- BOTTOM ROW (for dual-display like Muvna): Timer -->
@@ -524,7 +524,7 @@
         rowBottomEl.style.display = 'flex';
         renderString(topDigitsEl, weightStr, false);
         renderString(bottomDigitsEl, timerStr, true);
-        document.getElementById('topUnit').style.display = 'block';
+        document.getElementById('topUnit').style.display = 'none';
       } else if (currentModel === 'timemore') {
         // Timemore: Single line side-by-side: Timer | Weight
         rowBottomEl.style.display = 'none';

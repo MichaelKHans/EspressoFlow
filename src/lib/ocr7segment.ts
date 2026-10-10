@@ -886,6 +886,14 @@ function parseDigitsFromBinary(
         }
       }
 
+      // Sanity Gate: A digital scale NEVER has more than one decimal point.
+      // If multiple dots are detected (e.g. "126.0.4" or "136.0.1"), strip trailing noisy dots
+      const dotCount = (clText.match(/\./g) || []).length;
+      if (dotCount > 1) {
+        const parts = clText.split('.');
+        clText = `${parts[0]}.${parts[1].slice(0, 1)}`;
+      }
+
       const cleanNum = clText.replace(/[^0-9.-]/g, '');
       const parsed = parseFloat(cleanNum);
       const valid = !isNaN(parsed) && parsed >= -20 && parsed <= 2000;
