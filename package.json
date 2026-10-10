@@ -1,7 +1,7 @@
 {
   "name": "flowbean",
   "private": true,
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Flowbean - Real-Time Scale OCR Computer Vision & Flow Dynamics for Coffee Enthusiasts",
   "type": "module",
   "scripts": {
@@ -11,6 +11,9 @@
     "preview": "vite preview",
     "postinstall": "node scripts/patch-capacitor-plugins.cjs",
     "sync:diag": "node scripts/sync-telemetry.cjs",
+    "sim:server": "node scripts/scale-sim-server.cjs",
+    "sim:ctl": "node scripts/sim-ctl.cjs",
+    "sim:eval": "node scripts/evaluate-test.cjs",
     "mobile:sync": "npx cap sync",
     "mobile:open:ios": "npx cap open ios",
     "mobile:open:android": "npx cap open android"

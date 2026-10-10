@@ -11,6 +11,16 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Hardware-in-the-Loop (HIL) Optisk Testbænk & Antigravity Autonom Skærmsimulator (v1.8.2)
+- **Syntetisk Skala Simulator (`public/scale-simulator.html`):**
+  - Ultra-realistisk 7-segment digital display rendering for PC-skærm. Understøtter Muvna (Dual-Row), Timemore (Side-by-side), Acaia og klassisk LCD.
+  - 4 prækonfigurerede scenarier: 30s Standard Shot, Channeling Spike, Ciffer Stress (0-9) og Timer Stress.
+- **Antigravity Fjernstyring & Test-Controller (`scripts/scale-sim-server.cjs` & `sim-ctl.cjs`):**
+  - Zero-dependency Node.js HTTP & SSE server på port 4321. Antigravity kan fjernstyre simulatoren direkte fra terminalen (`node scripts/sim-ctl.cjs --scenario standard`).
+  - Simulatoren rapporterer præcis Ground Truth telemetri til serveren.
+- **Optisk Evaluerings- og Benchmark-Værktøj (`scripts/evaluate-test.cjs`):**
+  - Sammenligner PC'ens Ground Truth facitliste med telefonens faktiske OCR-målinger (hentet via `npm run sync:diag`).
+
 ### 2026-10-10 -- Anti-Book & Text Entropy Sanity Gates, Polaritetsvalidering & AI-Økonomi Arkitektur (v1.8.1)
 - **Anti-Tekst & Sætningsfilter (Anti-Sentence Gate i `ocr7segment.ts`):**
   - **Identificeret Årsag:** En bogside med dansk brødtekst blev læst som tal (`2.0g`, `0.7g`, `5.5g`), fordi adaptiv tærskling dannede 7-segment fragmenter af almindelige bogstaver (`o`, `s`, `e`, `-`, `.`).

@@ -2,6 +2,27 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.2] - 2026-10-10
+### Etape 27: Hardware-in-the-Loop (HIL) Optisk Testbænk & Antigravity Autonom Skærmsimulator
+- **Syntetisk Skala Simulator (`public/scale-simulator.html`):**
+  - Ultra-realistisk 7-segment digital display rendering for PC-skærm med ægte SVG segment-geometri (`a` til `g`), lysende LED-glød og inaktiv segment-dæmpning.
+  - Understøtter 4 populære kaffevægt-arkitekturer:
+    - **Muvna Dual-Row:** Cyan/blå LED med Vægt øverst (`0.0g` -> `36.0g`) og Timer nederst (`0:00` -> `0:28`).
+    - **Timemore Black Mirror:** Side-by-side Timer (`00:00`) og Vægt (`0.0`).
+    - **Acaia Lunar:** Barista dot/bar layout.
+    - **Classic LCD:** Mørke segmenter på grå/blålig reflekterende baggrund.
+  - 4 prækonfigurerede E2E test-scenarier:
+    1. *30s Standard Espresso Shot:* Pre-infusion -> dryp -> jævnt 2.2 g/s flow -> 36.0g mål.
+    2. *Channeling Spike Test:* Pludseligt voldsomt flow-hop til 4.8 g/s.
+    3. *Digit Stress-Test:* Automatisk cyklus gennem alle tal 0–9 for at afsløre eventuelle cifferforvekslinger.
+    4. *Timer Stress-Test:* 3x hastighed timer-optælling med låst 0.0g vægt.
+- **Antigravity Fjernstyring & Test-Controller (`scripts/scale-sim-server.cjs` & `sim-ctl.cjs`):**
+  - Zero-dependency Node.js HTTP & SSE (Server-Sent Events) server på port 4321.
+  - Antigravity kan nu autonomt starte, skifte vægtmodel og afvikle testscenarier direkte fra terminalen via `node scripts/sim-ctl.cjs --scenario standard` eller `--model muvna`.
+  - Simulatoren rapporterer millisekund-præcis "Ground Truth" telemetri tilbage til serveren.
+- **Optisk Evaluerings- og Benchmark-Værktøj (`scripts/evaluate-test.cjs`):**
+  - Sammenligner PC'ens Ground Truth facitliste med telefonens faktiske OCR-målinger (hentet via `npm run sync:diag`), og beregner automatisk præcisionsprocent, outlier-frekvens og tidsforsinkelse.
+
 ## [1.8.1] - 2026-10-10
 ### Etape 26: Anti-Book & Text Entropy Sanity Gates, Polaritetsvalidering & AI-Økonomi Arkitektur
 - **Anti-Tekst & Sætningsfilter (Anti-Sentence Gate i `ocr7segment.ts`):**

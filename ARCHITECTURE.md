@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.8.1 (Anti-Book & Text Entropy Sanity Gates, Polaritetsvalidering & AI-Økonomi Arkitektur)  
+> **Gældende version:** v1.8.2 (Hardware-in-the-Loop Optisk Testbænk, Antigravity Autonom Skærmsimulator & Ground Truth Telemetri)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -156,10 +156,15 @@ flowchart LR
         SmoothCurve --> DataPoint
     end
 
-    subgraph Black Box Telemetry (Sort Boks)
+    subgraph Black Box Telemetry & HIL Testbed
         DataPoint --> TelemetryEngine[ScaleTelemetryCollector: optager frame, raw, conf, thumbs]
         TelemetryEngine --> CloudSync[Upload til Supabase: scale_diagnostic_sessions]
         CloudSync --> LocalSync[PC Tool: npm run sync:diag -> diagnostics/ mappe]
+        HILSimulator[PC Skala Simulator: public/scale-simulator.html] --> DisplayScreen[PC Monitor Display]
+        DisplayScreen -.-> Video
+        AntigravityAgent[Antigravity CLI: sim-ctl.cjs] --> LocalSync
+        AntigravityAgent --> HILSimulator
+        LocalSync --> ScoreCard[Evalueringsværktøj: evaluate-test.cjs]
     end
 
     subgraph Live UI Render (Active Brew Cockpit)
