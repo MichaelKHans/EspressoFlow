@@ -1251,9 +1251,9 @@ export class ScaleReadingFilter {
       }
     }
 
-    // Always accept tare lock (0.0g - 0.3g) when starting or taring,
-    // as long as the shot hasn't already flowed deep into extraction (lastValidWeight < 2.5g)
-    if (newReading <= 0.3 && (!isBrewing || this.lastValidWeight < 2.5)) {
+    // Always accept tare lock (0.0g - 0.3g) ONLY before extraction has started (lastValidWeight <= 0.3g)
+    // Once liquid espresso starts flowing, stray zeroes from reflections cannot drag the weight down!
+    if (newReading <= 0.3 && (!isBrewing || this.lastValidWeight <= 0.3)) {
       this.lastValidWeight = newReading;
       this.recentWindow = [newReading];
       this.consecutiveLowCount = 0;
@@ -1261,9 +1261,9 @@ export class ScaleReadingFilter {
     }
 
     // Maximum physically possible flow rate from an espresso extraction / pour-over stream
-    // During active espresso flow, max real flow is ~4-5 g/s. Allow up to 8 g/s headroom.
+    // During active espresso flow, max real flow is ~4-5 g/s. Allow up to 10 g/s headroom.
     const maxDelta = isBrewing
-      ? Math.max(0.6, deltaTimeSeconds * 8.0)
+      ? Math.max(0.8, deltaTimeSeconds * 10.0)
       : Math.max(1.5, deltaTimeSeconds * 15.0);
     const delta = Math.abs(newReading - this.lastValidWeight);
 
@@ -1274,24 +1274,19 @@ export class ScaleReadingFilter {
     }
 
     if (delta > maxDelta) {
-      // Possible optical glitch or legitimate cup placement / weight step:
+      // Possible optical glitch or legitimate step change:
       // Check whether at least 2 consecutive frames in window agree on the new reading
       if (this.recentWindow.length >= 2) {
         const lastTwoDiff = Math.abs(
           this.recentWindow[this.recentWindow.length - 1] - this.recentWindow[this.recentWindow.length - 2]
         );
-        if (lastTwoDiff <= 0.25) {
-          // If brewing, never allow sudden drops even if 2 frames agree
+        if (lastTwoDiff <= 0.3) {
+          // If brewing, liquid cannot disappear (prevent sudden downward drops)
           if (isBrewing && newReading < this.lastValidWeight - 0.5) {
             return { weight: this.lastValidWeight, isOutlier: true };
           }
 
-          // If brewing, also never allow sudden giant jumps (> 3.5g in a single step)
-          if (isBrewing && delta > 3.5) {
-            return { weight: this.lastValidWeight, isOutlier: true };
-          }
-
-          // Legitimate step change confirmed by consensus!
+          // Legitimate step change or channeling surge confirmed by consecutive frame agreement!
           this.lastValidWeight = newReading;
           this.consecutiveLowCount = 0;
           return { weight: newReading, isOutlier: false };

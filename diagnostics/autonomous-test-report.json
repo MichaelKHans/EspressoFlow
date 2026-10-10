@@ -1,15 +1,15 @@
 {
   "standardShot": {
-    "totalFrames": 112,
-    "validFrames": 31,
-    "outliers": 81,
-    "avgConfidence": "95.2",
-    "finalYield": "35.6",
-    "maxWeight": "37.8",
+    "totalFrames": 108,
+    "validFrames": 36,
+    "outliers": 72,
+    "avgConfidence": "99.5",
+    "finalYield": "18.4",
+    "maxWeight": "36.0",
     "pass": true
   },
   "channelingSpike": {
-    "peakFlowGps": "0.0",
+    "peakFlowGps": "1.2",
     "channelingDetected": false,
     "pass": false
   },
@@ -22,9 +22,9 @@
     },
     {
       "expected": 1.1,
-      "detected": 77,
-      "accurate": false,
-      "confidence": 0.7857142857142857
+      "detected": 1,
+      "accurate": true,
+      "confidence": 1
     },
     {
       "expected": 2.2,
@@ -36,23 +36,23 @@
       "expected": 3.3,
       "detected": 0,
       "accurate": false,
-      "confidence": 0.8571428571428572
+      "confidence": 1
     },
     {
       "expected": 4.4,
-      "detected": 1,
+      "detected": 11,
       "accurate": false,
       "confidence": 1
     },
     {
       "expected": 5.5,
-      "detected": 7,
+      "detected": 11,
       "accurate": false,
       "confidence": 0.8571428571428571
     },
     {
       "expected": 6.6,
-      "detected": 0,
+      "detected": 7,
       "accurate": false,
       "confidence": 1
     },
@@ -64,8 +64,8 @@
     },
     {
       "expected": 8.8,
-      "detected": 8.8,
-      "accurate": true,
+      "detected": 8,
+      "accurate": false,
       "confidence": 1
     },
     {
@@ -76,8 +76,8 @@
     },
     {
       "expected": 18.4,
-      "detected": 18.4,
-      "accurate": true,
+      "detected": 18.1,
+      "accurate": false,
       "confidence": 1
     },
     {
