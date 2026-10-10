@@ -37,3 +37,9 @@ ios/App/Pods
 *.njsproj
 *.sln
 *.sw?
+
+# Media & Screen Recordings
+*.mp4
+*.mov
+*.m4v
+

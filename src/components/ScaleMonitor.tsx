@@ -447,8 +447,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     }
 
     const offscreen = canvasRef.current || document.createElement('canvas');
-    offscreen.width = 320;
-    offscreen.height = 160;
+    offscreen.width = 480;
+    offscreen.height = 240;
     canvasRef.current = offscreen;
     const ctx = offscreen.getContext('2d', { willReadFrequently: true });
 
@@ -1006,8 +1006,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
               <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
 
-              {/* Status Header Badge (Compact pill on top edge) */}
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] tracking-widest uppercase font-mono px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-xs flex items-center gap-1.5 shadow-sm border border-white/10 whitespace-nowrap">
+              {/* Status Header Badge (Compact, non-intrusive pill on top edge) */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] tracking-widest uppercase font-mono px-2 py-0.5 rounded-full bg-black/85 backdrop-blur-xs flex items-center gap-1.5 shadow-sm border border-white/10 whitespace-nowrap">
                 {isBrewing ? (
                   <>
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -1023,46 +1023,40 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 ) : (
                   <>
                     <Scan className="w-2.5 h-2.5 text-[#C26D52]" />
-                    <span className="text-amber-300 font-bold">TAP DIGITS TO TARGET</span>
+                    <span className="text-amber-300 font-bold">ALIGN DISPLAY</span>
                   </>
                 )}
               </div>
 
-              {/* Precise Auto-Detected Digit Bounding Box (Stabilized anti-shake frame on the scale) */}
+              {/* Precise Auto-Detected Digit Bounding Box (Subtle, non-obscuring outline without text blocking the view) */}
               {lastOcrResult && cameraState === 'live' && (() => {
                 const box = smoothedBoundingBoxRef.current || lastOcrResult.boundingBox;
                 if (!box) return null;
                 return (
                   <div
                     style={{
-                      left: `${Math.max(0, Math.min(95, (box.x / 320) * 100))}%`,
-                      top: `${Math.max(0, Math.min(95, (box.y / 160) * 100))}%`,
-                      width: `${Math.max(5, Math.min(100, (box.width / 320) * 100))}%`,
-                      height: `${Math.max(5, Math.min(100, (box.height / 160) * 100))}%`,
+                      left: `${Math.max(0, Math.min(95, (box.x / 480) * 100))}%`,
+                      top: `${Math.max(0, Math.min(95, (box.y / 240) * 100))}%`,
+                      width: `${Math.max(4, Math.min(100, (box.width / 480) * 100))}%`,
+                      height: `${Math.max(4, Math.min(100, (box.height / 240) * 100))}%`,
                     }}
-                    className="absolute border-2 border-emerald-400 bg-emerald-400/15 rounded shadow-[0_0_12px_rgba(16,185,129,0.5)] pointer-events-none transition-all duration-75 flex items-start justify-end"
-                  >
-                    <span className="text-[8px] sm:text-[9px] font-mono font-bold bg-emerald-500 text-black px-1 rounded -translate-y-full shadow-xs whitespace-nowrap">
-                      {lastOcrResult.rawText}
-                    </span>
-                  </div>
+                    className="absolute border border-emerald-400/80 rounded pointer-events-none transition-all duration-75 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                  />
                 );
               })()}
             </div>
           );
         })()}
 
-        {/* Tap-to-Focus Pulsing Ring Feedback */}
+        {/* Tap-to-Focus Clean Lens Reticle (Minimalist, unobtrusive viewfinder ring - NO obscuring text) */}
         {tapFeedback && (
           <div
             className="absolute z-30 pointer-events-none -translate-x-1/2 -translate-y-1/2"
             style={{ left: tapFeedback.x, top: tapFeedback.y }}
           >
-            <div className="w-12 h-12 rounded-full border-2 border-emerald-400 animate-ping opacity-75" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-emerald-400 bg-emerald-400/30" />
-            <div className="absolute top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 text-emerald-300 font-mono text-[9px] font-bold border border-emerald-400/50 shadow-md whitespace-nowrap">
-              🎯 Aligned & Focused
-            </div>
+            <div className="w-10 h-10 rounded-lg border border-amber-400/70 animate-ping opacity-60" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-md border-2 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-300" />
           </div>
         )}
 

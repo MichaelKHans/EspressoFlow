@@ -1,7 +1,7 @@
 {
   "name": "flowbean",
   "private": true,
-  "version": "1.7.6",
+  "version": "1.7.7",
   "description": "Flowbean - Real-Time Scale OCR Computer Vision & Flow Dynamics for Coffee Enthusiasts",
   "type": "module",
   "scripts": {

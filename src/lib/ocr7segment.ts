@@ -232,11 +232,24 @@ export function binarizeROI(
         binary[rowOffset + x] = isLocallyDark && isGloballyDark ? 1 : 0;
       } else {
         // Illuminated LED: active if locally brighter than background
-        // Coffee scale blue/cyan LEDs have glass diffusion; use sensitive local contrast
-        const isLocallyBright = pixelVal >= localAvg * 1.10;
-        const isAboveFloor = pixelVal >= Math.max(20, Math.floor(otsuThreshold * 0.40));
+        // Coffee scale blue/cyan LEDs have glass diffusion; use sensitive local contrast with high noise floor
+        const isLocallyBright = pixelVal >= localAvg * 1.12;
+        const isAboveFloor = pixelVal >= Math.max(30, Math.floor(otsuThreshold * 0.60));
         binary[rowOffset + x] = isLocallyBright && isAboveFloor ? 1 : 0;
       }
+    }
+  }
+
+  // Outer margin mask (4% on each side) to reject metallic bevels, scale casing, and rim flare
+  const marginX = Math.max(3, Math.floor(width * 0.04));
+  const marginY = Math.max(3, Math.floor(height * 0.04));
+  for (let y = 0; y < height; y++) {
+    const rowOffset = y * width;
+    if (y < marginY || y >= height - marginY) {
+      for (let x = 0; x < width; x++) binary[rowOffset + x] = 0;
+    } else {
+      for (let x = 0; x < marginX; x++) binary[rowOffset + x] = 0;
+      for (let x = width - marginX; x < width; x++) binary[rowOffset + x] = 0;
     }
   }
 
@@ -319,8 +332,9 @@ function probeDigitSegments(
   // Special fast-path for digit '1':
   // In 7-segment digital displays, all digits (0, 2-9) require two vertical columns and an inner hollow space,
   // giving them an aspect ratio of width / height >= 0.50.
-  // The digit '1' is the unique single-column character with a narrow aspect ratio (width / height < 0.48).
-  if (box.width / box.height < 0.48 && box.height >= 10) {
+  // The digit '1' is the unique single-column character with a narrow aspect ratio (width / height < 0.44).
+  // CRITICAL: Must be a true vertical segment stroke (seg.b or seg.c active) and not excessively tall
+  if (box.width / box.height < 0.44 && box.height >= 12 && (seg.b || seg.c) && !seg.a && !seg.d) {
     return {
       segments: { a: false, b: true, c: true, d: false, e: false, f: false, g: false },
       matchChar: '1',
@@ -354,7 +368,7 @@ function probeDigitSegments(
       if (digit === '-' && (seg.b || seg.c || seg.e || seg.f || seg.a || seg.d)) continue;
       if (digit === '2' && (seg.c && seg.f)) continue; // '2' has NO segment c (bottom-right) or f (top-left)
       if (digit === '6' && seg.b) continue; // '6' has NO segment b (top-right)
-      if (digit === '7' && (seg.d && seg.g)) continue;
+      if (digit === '7' && (seg.d || seg.g)) continue; // '7' has NO bottom bar d or center bar g!
       if (digit === '3' && (seg.e && seg.f)) continue;
       if (digit === '8' && (upperHole && lowerHole)) continue; // Solid glare/blob filled in both loops is NOT an '8'!
       if (digit === '6' && lowerHole) continue; // '6' bottom loop must be hollow
@@ -525,23 +539,44 @@ function parseDigitsFromBinary(
   threshold: number,
   detectedPolarity: 'led' | 'lcd'
 ): OCRResult {
-  // 1. Horizontal Row Projection: Find vertical row bands
+  // 1. Central-Focused Horizontal Row Projection: Find vertical row bands
+  // Concentrates on central 88% of display width to eliminate any remaining side reflections
+  const centralX1 = Math.floor(width * 0.06);
+  const centralX2 = Math.floor(width * 0.94);
   const rowCounts = new Array(height).fill(0);
+  let maxRowCount = 0;
   for (let y = 0; y < height; y++) {
     let count = 0;
-    for (let x = 0; x < width; x++) {
+    for (let x = centralX1; x < centralX2; x++) {
       if (binary[y * width + x] === 1) count++;
     }
     rowCounts[y] = count;
+    if (count > maxRowCount) maxRowCount = count;
   }
 
-  const rowThreshold = Math.max(2, Math.floor(width * 0.012));
-  const rowBands: { start: number; end: number }[] = [];
+  // Smooth rowCounts with a 5-point moving average to eliminate single-line noise spikes
+  const smoothedRows = new Array(height).fill(0);
+  for (let y = 0; y < height; y++) {
+    let sum = 0;
+    let n = 0;
+    for (let dy = -2; dy <= 2; dy++) {
+      const py = y + dy;
+      if (py >= 0 && py < height) {
+        sum += rowCounts[py];
+        n++;
+      }
+    }
+    smoothedRows[y] = sum / n;
+  }
+
+  // Dynamic row threshold: adapts to actual digit stroke intensity
+  const rowThreshold = Math.max(3, Math.floor(maxRowCount * 0.16));
+  const rawRowBands: { start: number; end: number }[] = [];
   let inRow = false;
   let rowStart = 0;
 
   for (let y = 0; y < height; y++) {
-    if (rowCounts[y] >= rowThreshold) {
+    if (smoothedRows[y] >= rowThreshold) {
       if (!inRow) {
         inRow = true;
         rowStart = y;
@@ -549,14 +584,39 @@ function parseDigitsFromBinary(
     } else {
       if (inRow) {
         inRow = false;
-        if (y - rowStart >= 10) {
-          rowBands.push({ start: rowStart, end: y });
+        if (y - rowStart >= 12) {
+          rawRowBands.push({ start: rowStart, end: y });
         }
       }
     }
   }
-  if (inRow && height - rowStart >= 10) {
-    rowBands.push({ start: rowStart, end: height });
+  if (inRow && height - rowStart >= 12) {
+    rawRowBands.push({ start: rowStart, end: height });
+  }
+
+  // Dual-Row Valley Splitter: If row is overly tall (H >= height * 0.50) and contains both Weight + Timer,
+  // split at the most prominent horizontal valley between the two rows
+  const rowBands: { start: number; end: number }[] = [];
+  for (const b of rawRowBands) {
+    const bH = b.end - b.start;
+    if (bH >= Math.floor(height * 0.48)) {
+      const searchY1 = b.start + Math.floor(bH * 0.25);
+      const searchY2 = b.start + Math.floor(bH * 0.75);
+      let minVal = Infinity;
+      let splitY = -1;
+      for (let y = searchY1; y <= searchY2; y++) {
+        if (smoothedRows[y] < minVal) {
+          minVal = smoothedRows[y];
+          splitY = y;
+        }
+      }
+      if (splitY !== -1 && minVal <= maxRowCount * 0.35 && splitY - b.start >= 12 && b.end - splitY >= 12) {
+        rowBands.push({ start: b.start, end: splitY });
+        rowBands.push({ start: splitY, end: b.end });
+        continue;
+      }
+    }
+    rowBands.push(b);
   }
 
   const candidateBands = rowBands.length > 0 ? rowBands : [{ start: 0, end: height }];
@@ -579,8 +639,8 @@ function parseDigitsFromBinary(
       colCounts[x] = count;
     }
 
-    const colThreshold = Math.max(1, Math.floor(bandH * 0.03));
-    const spans: { start: number; end: number }[] = [];
+    const colThreshold = Math.max(2, Math.floor(bandH * 0.04));
+    const rawSpans: { start: number; end: number }[] = [];
     let inSpan = false;
     let spanStart = 0;
 
@@ -594,13 +654,40 @@ function parseDigitsFromBinary(
         if (inSpan) {
           inSpan = false;
           if (x - spanStart >= 2) {
-            spans.push({ start: spanStart, end: x });
+            rawSpans.push({ start: spanStart, end: x });
           }
         }
       }
     }
     if (inSpan && width - spanStart >= 2) {
-      spans.push({ start: spanStart, end: width });
+      rawSpans.push({ start: spanStart, end: width });
+    }
+
+    // Integrated Decimal Point Splitter:
+    // On digital espresso scales (Muvna, King Arthur, Timemore), the decimal point is placed
+    // immediately adjacent to the preceding digit (e.g. "4."). If the span is wide (aspect >= 0.65)
+    // and has a valley in the right 25-45%, split off the trailing decimal dot!
+    const spans: { start: number; end: number }[] = [];
+    for (const span of rawSpans) {
+      const spanW = span.end - span.start + 1;
+      if (spanW >= Math.floor(bandH * 0.65)) {
+        const vStart = span.start + Math.floor(spanW * 0.58);
+        const vEnd = span.start + Math.floor(spanW * 0.88);
+        let minCol = Infinity;
+        let valleyX = -1;
+        for (let x = vStart; x <= vEnd; x++) {
+          if (colCounts[x] < minCol) {
+            minCol = colCounts[x];
+            valleyX = x;
+          }
+        }
+        if (valleyX !== -1 && minCol <= Math.max(colThreshold * 1.5, Math.floor(bandH * 0.18))) {
+          spans.push({ start: span.start, end: valleyX });
+          spans.push({ start: valleyX + 1, end: span.end });
+          continue;
+        }
+      }
+      spans.push(span);
     }
 
     const elements: ParsedElement[] = [];

@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.7.6 (Pour Over Svanehalskedel Ikon & Komplet Sprog-Rensning)  
+> **Gældende version:** v1.7.7 (Skala-OCR Præcision & Dobbelt-Række Parsing & Ren Viewfinder UX)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -117,13 +117,16 @@ Kernen i Espresso Flow er den canvas-baserede computer vision motor, der aflæse
 
 ```mermaid
 flowchart LR
-    subgraph Vision Pipeline (Client-Side Canvas)
-        Video[HTML5 Camera Stream] --> FrameGrab[Offscreen Canvas DrawFrame]
+    subgraph Vision Pipeline (Client-Side Canvas 480x240)
+        Video[HTML5 Camera Stream] --> FrameGrab[Offscreen Canvas 480x240]
         FrameGrab --> CropROI[Crop til Region-of-Interest]
-        CropROI --> AdaptiveThresh[Adaptiv Kontrast-Thresholding]
-        AdaptiveThresh --> SegmentAnalysis[7-Segment Segmentering A-G]
+        CropROI --> MarginMask[4% Margin Mask mod kabinetstøj]
+        MarginMask --> AdaptiveThresh[Adaptiv Bradley-Roth Kontrast]
+        AdaptiveThresh --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]
+        DualRowValley --> IntegratedDotSplit[Integreret Decimalpunktum Dal-Splitter]
+        IntegratedDotSplit --> SegmentAnalysis[7-Segment Segmentering A-G]
         SegmentAnalysis --> DigitRecognition[Digit Recognition + Decimalkomma]
-        DigitRecognition --> ConfidenceFilter{Confidence > 85%?}
+        DigitRecognition --> ConfidenceFilter{Confidence > 65%?}
         ConfidenceFilter -- Ja --> ValidWeight[Rå Vægt i gram: Y_i]
         ConfidenceFilter -- Nej --> DropNoise[Kasser fejlaflæsning]
     end

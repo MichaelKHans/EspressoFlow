@@ -11,6 +11,24 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Skala-OCR Præcision & Robust Dobbelt-Række Parsing (Muvna/Acaia/Timemore) & Ren Viewfinder UX (v1.7.7)
+- **Robust Dobbelt-Række Detektion (Vægt øverst vs. Timer nederst):**
+  - **Identificeret Rodårsag:** Refleksioner fra vægtens facetkanter skabte 5-7 støjpixels på tværs af rækker, hvilket forhindrede 1D-projektionen i at falde under tærsklen. Vægt og Timer smeltede sammen til én 141px høj række.
+  - **Løsning:** Central-fokuseret horisontal rækkeprojektion (centrale 88%), 5-punkts moving average, adaptiv tærskel (`Math.floor(maxRowCount * 0.16)`) og automatisk horisontal dal-splitter, der klipper rækkerne rent ved dalen mellem vægt og timer.
+- **Eliminering af Blind '1'-Fast-Path:**
+  - **Identificeret Rodårsag:** Sammenvoksede kolonner med aspect ratio $< 0.48$ blev tvangsmatchet som "1", hvilket forvandlede displayet til falske "1 1 1"-aflæsninger.
+  - **Løsning:** Erstattet med streng geometrisk validering (`seg.b` eller `seg.c` aktive, afviser uforholdsmæssigt høje bokse).
+- **LED Bradley-Roth Kontrast & Integreret Decimalpunktum Splitter:**
+  - Hævet LED-bundstærsklen til `otsuThreshold * 0.60` mod lysdiffusion i acrylglas.
+  - Tilføjet automatisk dal-splitter for integrerede 7-segment decimalpunkter (`refinedSpans`).
+  - Tilføjet 4% ydre kantmaske mod kabinet-refleksioner.
+- **Forøget Offscreen Canvas Opløsning (480x240):**
+  - Hævet fra 320x160 til 480x240 for 2.25x skarpere detaljer på dot-matrix og perforerede LED-segmenter.
+- **Ren, Uforstyrret Viewfinder UX & Fokusramme:**
+  - **Identificeret Rodårsag:** Ved tryk for fokus poppede en stor tekst-badge op (`🎯 Aligned & Focused`) lige under fingeren oven på vægttallene sammen med en blokerende grøn tekstboks.
+  - **Løsning:** Fjernet alle dækkende tekst-badges fra fokuspunktet. Ved tap vises nu udelukkende en elegant, minimalistisk fokus-ring og krydssigte.
+  - Erstattet den tunge grønne bounding box-tekst med en diskret, ultra-tynd smaragdgrøn ramme, så baristaen til enhver tid har 100% frit udsyn til vægtens cifre.
+
 ### 2026-10-07 -- Ægte Pour Over Svanehalskedel Ikon & Komplet Sprog-Rensning (100% Engelsk ved Aktivt Engelsk) (v1.7.6)
 - **Erstattet Forvirrende Vinglas-Ikon med Autentisk Pour Over Svanehalskedel (`PourOverKettleIcon`):**
   - **Identificeret Rodårsag:** Tidligere tragt-vektor lignede et drink- eller martiniglas på små knapper.

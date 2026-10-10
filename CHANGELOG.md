@@ -2,6 +2,25 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.7.7] - 2026-10-10
+### Etape 22: Skala-OCR Præcision & Robust Dobbelt-Række Parsing (Muvna/Acaia/Timemore) & Ren Viewfinder UX
+- **Robust Dobbelt-Række Detektion (Vægt øverst vs. Timer nederst):**
+  - **Identificeret Problem:** Refleksioner fra vægtkabinettets facetkanter skabte 5-7 støjpixels på tværs af rækker, hvilket fik 1D-projektionen til aldrig at falde under den naive tærskel på 3 pixels. Vægt og Timer smeltede dermed sammen til én 141px høj række.
+  - **Løsning:** Implementeret central-fokuseret horisontal rækkeprojektion (centrale 88% af skærmbredden), 5-punkts moving average udjævning, adaptiv dynamisk rækketærskel (`Math.floor(maxRowCount * 0.16)`) og automatisk horisontal dal-splitter (valley detector), der klipper rækkerne 100% rent ved dalen mellem vægt og timer.
+- **Eliminering af Blind '1'-Fast-Path:**
+  - **Identificeret Problem:** Sammenvoksede kolonner med aspect ratio $< 0.48$ blev tvangsmatchet som "1", hvilket forvandlede hele displayet til falske "1 1 1"-aflæsninger.
+  - **Løsning:** Erstattet med streng geometrisk validering, der kræver reelle lodrette segmentstrøg (`seg.b` eller `seg.c`) og afviser uforholdsmæssigt høje bokse.
+- **LED Bradley-Roth Kontrast & Integreret Decimalpunktum Splitter:**
+  - Hævet LED-bundstærsklen til `otsuThreshold * 0.60` for at eliminere lysdiffusion i acrylglas, der forbandt 4-tallet med decimalpunktummet.
+  - Tilføjet automatisk dal-splitter for integrerede 7-segment decimalpunkter (`refinedSpans`), så punktummet adskilles rent fra det forudgående ciffer.
+  - Tilføjet 4% ydre kantmaske for at afvise kabinet-refleksioner.
+- **Forøget Offscreen Canvas Opløsning (480x240):**
+  - Hævet fra 320x160 til 480x240 for skarpere detaljer på dot-matrix og perforerede LED-segmenter.
+- **Ren, Uforstyrret Viewfinder UX & Fokusramme:**
+  - **Identificeret Problem:** Ved tryk for fokus poppede en stor tekst-badge op (`🎯 Aligned & Focused`) lige under fingeren oven på vægttallene sammen med en blokerende grøn tekstboks.
+  - **Løsning:** Fjernet alle dækkende tekst-badges fra fokuspunktet. Ved tap vises nu udelukkende en elegant, minimalistisk fokus-ring og krydssigte.
+  - Erstattet den tunge grønne bounding box-tekst med en diskret, ultra-tynd smaragdgrøn ramme, så baristaen til enhver tid har 100% frit udsyn til vægtens cifre.
+
 ## [1.7.6] - 2026-10-07
 ### Etape 21: Ægte Pour Over Svanehalskedel Ikon & Komplet Sprog-Rensning (100% Engelsk ved Aktivt Engelsk)
 - **Erstattet Forvirrende Vinglas-Ikon med Autentisk Pour Over Svanehalskedel (`PourOverKettleIcon`):**
