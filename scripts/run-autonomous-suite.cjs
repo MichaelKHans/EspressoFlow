@@ -127,13 +127,13 @@ async function main() {
   console.log(`---------------------------------------------------------------`);
 
   console.log(`1. Taring simulator display to 0.0g...`);
+  await sendLocalCommand({ action: 'stop' });
   await sendLocalCommand({ action: 'set_weight', weight: 0, timer: 0 });
-  await sendLocalCommand({ action: 'set_model', model: 'pure_weight' });
   await sleep(500);
 
   console.log(`2. Sending Tare to mobile phone...`);
-  await sendRemoteMobileCommand('tare');
   await sendRemoteMobileCommand('close_modal');
+  await sendRemoteMobileCommand('tare');
   await sleep(1500);
 
   console.log(`3. Remotely triggering "Start Shot" on mobile...`);
@@ -156,7 +156,8 @@ async function main() {
   }
   console.log('');
 
-  console.log(`5. Remotely stopping shot on mobile phone...`);
+  console.log(`5. Remotely stopping shot on mobile phone & simulator...`);
+  await sendLocalCommand({ action: 'stop' });
   await sendRemoteMobileCommand('stop_shot');
   await sleep(1500);
   isRecording = false;
@@ -178,9 +179,11 @@ async function main() {
 
   console.log(`📊 Test 1 Results: Total Frames: ${recordedFrames.length} | Max Weight: ${maxWeight.toFixed(1)}g | Avg Conf: ${avgConf.toFixed(1)}% | Status: ${results.standardShot.pass ? '✅ PASS' : '⚠️ CHECK'}`);
 
-  console.log(`6. Dismissing shot summary modal on mobile...`);
+  console.log(`6. Dismissing shot summary modal on mobile & resetting scale...`);
   await sendRemoteMobileCommand('close_modal');
-  await sleep(1500);
+  await sendLocalCommand({ action: 'set_weight', weight: 0, timer: 0 });
+  await sendRemoteMobileCommand('tare');
+  await sleep(1800);
 
   // -----------------------------------------------------------------
   // TEST CASE 2: Violent Channeling Spike Test
@@ -190,9 +193,10 @@ async function main() {
   console.log(`---------------------------------------------------------------`);
 
   console.log(`1. Taring scale and mobile...`);
+  await sendLocalCommand({ action: 'stop' });
   await sendLocalCommand({ action: 'set_weight', weight: 0, timer: 0 });
   await sendRemoteMobileCommand('tare');
-  await sleep(1200);
+  await sleep(1500);
 
   console.log(`2. Starting shot on mobile & starting spike scenario on PC...`);
   await sendRemoteMobileCommand('start_shot');
@@ -214,7 +218,8 @@ async function main() {
   }
   console.log('');
 
-  console.log(`3. Stopping shot on mobile...`);
+  console.log(`3. Stopping shot on mobile & simulator...`);
+  await sendLocalCommand({ action: 'stop' });
   await sendRemoteMobileCommand('stop_shot');
   await sleep(1500);
   isRecording = false;
@@ -227,9 +232,11 @@ async function main() {
 
   console.log(`📊 Test 2 Results: Peak Flow: ${peakFlow.toFixed(1)} g/s | Channeling Detected: ${results.channelingSpike.channelingDetected ? 'YES' : 'NO'} | Status: ${results.channelingSpike.pass ? '✅ PASS' : '⚠️ CHECK'}`);
 
-  console.log(`4. Dismissing summary modal...`);
+  console.log(`4. Dismissing summary modal & taring for digit benchmark...`);
   await sendRemoteMobileCommand('close_modal');
-  await sleep(1500);
+  await sendLocalCommand({ action: 'set_weight', weight: 0, timer: 0 });
+  await sendRemoteMobileCommand('tare');
+  await sleep(1800);
 
   // -----------------------------------------------------------------
   // TEST CASE 3: Digit Precision Benchmark (0.0 -> 9.9 -> 18.4 -> 36.0)
@@ -244,7 +251,7 @@ async function main() {
     process.stdout.write(`   Testing ${targetVal.toFixed(1)}g... `);
     await sendLocalCommand({ action: 'set_weight', weight: targetVal, timer: 0 });
     // Wait for display update and camera frame
-    await sleep(1400);
+    await sleep(2000);
 
     const detected = latestMobileFrame ? latestMobileFrame.weight : null;
     const diff = detected !== null ? Math.abs(detected - targetVal) : 999;
