@@ -73,11 +73,12 @@ export const ROAST_PRESETS: Record<RoastLevel, { label: string; defaultRatio: Ra
 };
 
 /**
- * Calculates smoothed flow rate using moving average over recent samples
+ * Calculates smoothed flow rate using moving average and robust physical clamping over recent samples
  */
 export function calculateSmoothedFlowRate(
   points: ShotDataPoint[],
-  windowSizeSeconds: number = 0.8
+  windowSizeSeconds: number = 0.9,
+  maxAllowedRateGps: number = 6.0
 ): number {
   if (points.length < 2) return 0;
   
@@ -91,9 +92,14 @@ export function calculateSmoothedFlowRate(
   const deltaWeight = lastPoint.weightGrams - firstRecent.weightGrams;
   const deltaTime = lastPoint.timeSeconds - firstRecent.timeSeconds;
 
-  if (deltaTime <= 0) return 0;
+  // Protect against division by micro-time step
+  if (deltaTime <= 0.08) return 0;
+  if (deltaWeight < 0) return 0; // Liquid does not flow backwards
+
   const rate = deltaWeight / deltaTime;
-  return Math.max(0, Math.round(rate * 10) / 10);
+  // Physical maximum clamp: Even catastrophic channeling in espresso cannot exceed 6.0 g/s
+  const clamped = Math.min(maxAllowedRateGps, Math.max(0, rate));
+  return Math.round(clamped * 10) / 10;
 }
 
 /**

@@ -875,29 +875,34 @@ function parseDigitsFromBinary(
       const valid = !isNaN(parsed) && parsed >= -20 && parsed <= 2000;
       const conf = digitsInCl.length > 0 ? digitsInCl.reduce((s, d) => s + d.confidence, 0) / digitsInCl.length : 0;
 
+      // Check for Timer format vs Weight format
+      // Digital coffee scale timers commonly format as "0:00", "00:00", "00.00", or single digit plus colon "0:15"
+      const isTimerPattern =
+        clHasColon ||
+        clText.includes(':') ||
+        clText.startsWith('0:') ||
+        clText.startsWith('00:') ||
+        clText === '0:00' ||
+        clText === '00:00' ||
+        (clText.startsWith('00.') && clText.length >= 4);
+
       let clScore = conf * 20;
-      if (clHasDecimal) clScore += 75; // Big bonus for 0.1g coffee scale decimal (e.g. 0.0g or 41.3g)
-      if (valid) clScore += 35;
-      if (clHasColon) clScore -= 85; // Timer penalty
-      if (digitsInCl.length >= 2) clScore += 20; // Realistic multi-digit number (e.g. 41.3)
+      if (clHasDecimal && !isTimerPattern) clScore += 75; // Big bonus for 0.1g coffee scale decimal (e.g. 0.0g or 41.3g)
+      if (valid && !isTimerPattern) clScore += 35;
+      if (digitsInCl.length >= 2 && !isTimerPattern) clScore += 20; // Realistic multi-digit number (e.g. 41.3)
 
-      // Double-zero timer penalty: digital coffee scale timers commonly format as "00.00" or "00:00"
-      // Weight displays use single zero on tare ("0.0" or "0.00"), never double-zero "00.00".
-      if (clText.startsWith('00.') || clText.startsWith('00:') || (clText.length === 5 && clText.startsWith('00'))) {
-        clScore -= 95; // Strong penalty for timer format (00.00 / 00:00)
-      }
-
-      // Bonus for true coffee weight tare format (single zero e.g. "0.0" or valid single/double digit weight)
-      if (clText.startsWith('0.') && !clText.startsWith('00.')) {
+      if (isTimerPattern) {
+        clScore -= 300; // Strong elimination penalty for timer format (0:00 / 00:00 / colon)
+      } else if (clText.startsWith('0.') && !clText.startsWith('00.')) {
         clScore += 50; // High confidence for tare zero
       }
 
       evaluatedClusters.push({
         cluster: cl,
         text: clText,
-        weight: valid ? parsed : null,
+        weight: valid && !isTimerPattern ? parsed : null,
         hasDecimal: clHasDecimal,
-        hasColon: clHasColon,
+        hasColon: clHasColon || isTimerPattern,
         confidence: conf,
         score: clScore,
       });
@@ -935,14 +940,34 @@ function parseDigitsFromBinary(
         ? selectedDigits.reduce((sum, d) => sum + d.confidence, 0) / selectedDigits.length
         : 0;
 
+    const rowIsTimer =
+      rowHasColon ||
+      parsedText.includes(':') ||
+      parsedText.startsWith('0:') ||
+      parsedText.startsWith('00:') ||
+      parsedText === '0:00' ||
+      parsedText === '00:00' ||
+      (parsedText.startsWith('00.') && parsedText.length >= 4);
+
     let score = avgConfidence * 20;
-    if (hasDec) score += 70;
-    if (parsedWeight !== null) score += 35;
-    if (rowHasColon && layoutType !== 'side-by-side') score -= 90; // Heavy penalty for timer-only row
-    if (parsedText.startsWith('00.') || parsedText.startsWith('00:')) score -= 95; // Heavy penalty for timer row
-    if (rIdx === 0 && candidateBands.length > 1) score += 40; // Top row bonus for stacked dual-row displays (coffee scales place weight on top row)
-    if (parsedText === '0.0' || parsedText === '0.00' || parsedText.startsWith('0.')) {
-      score += 45; // Special high-confidence bonus for tare 0.0g format
+    if (hasDec && !rowIsTimer) score += 70;
+    if (parsedWeight !== null && !rowIsTimer) score += 35;
+
+    // Dual-Row Stacking Architecture:
+    // On espresso scales (Muvna, Timemore, Acaia Lunar, MHW-3BOMBER), the WEIGHT is placed on Row 0 (TOP),
+    // while the TIMER is placed on Row 1 (BOTTOM).
+    if (candidateBands.length > 1) {
+      if (rIdx === 0) {
+        score += 150; // Strong top row priority for weight on stacked dual-row displays
+      } else {
+        score -= 250; // Bottom row heavily penalized (it is the timer!)
+      }
+    }
+
+    if (rowIsTimer) {
+      score -= 350; // Heavy elimination penalty for timer row
+    } else if (rIdx === 0 && (parsedText === '0.0' || parsedText === '0.00' || parsedText.startsWith('0.'))) {
+      score += 45; // Special high-confidence bonus for tare 0.0g format ONLY on top row
     }
 
     let minBoxX = width;
@@ -1083,21 +1108,35 @@ export class ScaleReadingFilter {
 
   public sanitize(
     newReading: number | null,
-    deltaTimeSeconds: number
+    deltaTimeSeconds: number,
+    isBrewing: boolean = false
   ): { weight: number; isOutlier: boolean } {
     if (newReading === null) {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
-    // Always accept tare lock (0.0g - 0.3g when starting or taring)
-    if (this.lastValidWeight === 0 && newReading <= 0.3) {
+    // Monotonic Floor Clamping under Active Brewing:
+    // Liquid espresso drops into the cup and CANNOT physically disappear.
+    // If extraction is active and reading drops significantly below current weight (> 0.5g),
+    // it is an optical glitch (e.g. steam, transient flicker, or timer leak) and MUST be rejected!
+    if (isBrewing && this.lastValidWeight >= 0.5) {
+      if (newReading < this.lastValidWeight - 0.5) {
+        return { weight: this.lastValidWeight, isOutlier: true };
+      }
+    }
+
+    // Always accept tare lock (0.0g - 0.3g when starting or taring, unless actively brewing above 0.5g)
+    if (this.lastValidWeight === 0 && newReading <= 0.3 && !isBrewing) {
       this.lastValidWeight = newReading;
       this.recentWindow = [newReading];
       return { weight: newReading, isOutlier: false };
     }
 
     // Maximum physically possible flow rate from an espresso extraction / pour-over stream
-    const maxDelta = Math.max(1.2, deltaTimeSeconds * 12.0);
+    // During active espresso flow, max real flow is ~4-5 g/s. Allow up to 8 g/s headroom.
+    const maxDelta = isBrewing
+      ? Math.max(0.6, deltaTimeSeconds * 8.0)
+      : Math.max(1.2, deltaTimeSeconds * 12.0);
     const delta = Math.abs(newReading - this.lastValidWeight);
 
     // Keep sliding 3-frame buffer
@@ -1114,6 +1153,11 @@ export class ScaleReadingFilter {
           this.recentWindow[this.recentWindow.length - 1] - this.recentWindow[this.recentWindow.length - 2]
         );
         if (lastTwoDiff <= 0.2) {
+          // If brewing, never allow sudden drops even if 2 frames agree
+          if (isBrewing && newReading < this.lastValidWeight - 0.5) {
+            return { weight: this.lastValidWeight, isOutlier: true };
+          }
+
           // Agreement confirmed on legitimate step change!
           this.lastValidWeight = newReading;
           this.consecutiveSameCount = 0;

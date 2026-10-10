@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.7.9 (Knivskarp Roast Kontrast, 17g Basket Hukommelse & Væskemekanisk Tids-Skalering)  
+> **Gældende version:** v1.8.0 (Fuldstændig Udryddelse af OCR-Flimren & Spikes, Active Brew Focus UX & "Sort Boks" Telemetri med Supabase PC-Sync)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -24,7 +24,7 @@
 Espresso Flow er bygget til at fungere fejlfrit i et krævende, virkeligt barmiljø:
 - **Local-First & Offline-Autonom:** Alt fungerer 100% uden internetforbindelse. Skala-OCR, flow-beregninger, shot-logning og kværnkalibrering sker udelukkende på enheden.
 - **Nul Bryg-Latens (< 5 ms):** Under et espresso-shot må der aldrig forekomme netværkskald, tunge re-renders eller UI-blokeringer. Computer vision-pipelinen kører direkte på canvas med fast 20–30 FPS uden memory leaks.
-- **Matematisk Sandhed:** Flow rate beregnes som $F = \Delta Y / \Delta t$ med glidende 5-punkts moving average støjfiltrering. Kanalisering identificeres deterministisk ved pludselige flowspikes ($> 1.2 \text{ g/s}$).
+- **Matematisk Sandhed & Monotonic Floor Clamping:** Flow rate beregnes som $F = \Delta Y / \Delta t$ med glidende median-/moving average støjfiltrering og clampes til teoretisk espresso-maksimum ($6.0\text{ g/s}$). Kaffe kan ikke forsvinde fra koppen under brygning; målinger der falder $> 0.5\text{g}$ under aktuel vægt afvises ubetinget som optiske outliers.
 - **Espresso Warmth Æstetik:** Varm Claude UI farvepalette (`#FAF7F2`, `#FFFDF9`, `#2C2018`, `#C26D52`) med `Courier Prime` monospace typografi, så realtids-vægttal aldrig "hopper" visuelt.
 - **Forretningsmodel:** 7 dages fuld in-app prøveperiode efterfulgt af en engangsoplåsning på **$4.99 / 49,- DKK Lifetime Unlock** via RevenueCat.
 
@@ -123,7 +123,9 @@ flowchart LR
         CropROI --> MarginMask[4% Margin Mask mod kabinetstøj]
         MarginMask --> AdaptiveThresh[Adaptiv Bradley-Roth Kontrast]
         AdaptiveThresh --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]
-        DualRowValley --> IntegratedDotSplit[Integreret Decimalpunktum Dal-Splitter]
+        DualRowValley --> RowScoring[Række 0 Bonus +150 / Række 1 Timer Straf -250]
+        RowScoring --> TimerPenalty[Kolon / 0:00 Straf -300]
+        TimerPenalty --> IntegratedDotSplit[Integreret Decimalpunktum Dal-Splitter]
         IntegratedDotSplit --> SegmentAnalysis[7-Segment Segmentering A-G]
         SegmentAnalysis --> DigitRecognition[Digit Recognition + Decimalkomma]
         DigitRecognition --> ConfidenceFilter{Confidence > 65%?}
@@ -131,17 +133,30 @@ flowchart LR
         ConfidenceFilter -- Nej --> DropNoise[Kasser fejlaflæsning]
     end
 
-    subgraph Dynamics & Telemetri Engine
-        ValidWeight --> NoiseFilter[Glidende Gennemsnit Moving Average N=5]
-        NoiseFilter --> DiffCalc[Tidsdifferentiale: Flow Rate F = ΔY / Δt]
-        DiffCalc --> SpikeDetector{ΔF > 1.2 g/s?}
+    subgraph Dynamics & Filter Engine
+        ValidWeight --> MonotonicCheck{Aktiv Brygning & Y_i < LastValid - 0.5g?}
+        MonotonicCheck -- Ja (Kaffe forsvinder ikke) --> RejectDrop[Afvis som Outlier: Fasthold LastValid]
+        MonotonicCheck -- Nej --> MaxStepCheck{ΔY > Max Fysisk Stigning?}
+        MaxStepCheck -- Ja --> ClampStep[Afvis urealistisk spring]
+        MaxStepCheck -- Nej --> UpdateValid[Acceptér Vægt]
+        RejectDrop --> RateCalc
+        ClampStep --> RateCalc
+        UpdateValid --> RateCalc[Tidsdifferentiale Flow Rate F = ΔY / Δt]
+        RateCalc --> ClampFlow[Clamp Flow til maks 6.0 g/s]
+        ClampFlow --> SpikeDetector{ΔF > 1.2 g/s?}
         SpikeDetector -- Ja --> ChannelingAlert[Registrer Kanaliserings-Spike]
         SpikeDetector -- Nej --> SmoothCurve[Normal Ekstraktion]
         ChannelingAlert --> DataPoint[ShotDataPoint: time, weight, flow, isChanneling]
         SmoothCurve --> DataPoint
     end
 
-    subgraph Live UI Render
+    subgraph Black Box Telemetry (Sort Boks)
+        DataPoint --> TelemetryEngine[ScaleTelemetryCollector: optager frame, raw, conf, thumbs]
+        TelemetryEngine --> CloudSync[Upload til Supabase: scale_diagnostic_sessions]
+        CloudSync --> LocalSync[PC Tool: npm run sync:diag -> diagnostics/ mappe]
+    end
+
+    subgraph Live UI Render (Active Brew Cockpit)
         DataPoint --> LiveChart[HTML5 Canvas Flow Graph]
         DataPoint --> MonospaceDisplay[Courier Prime Stor Vægtvisning]
     end
@@ -150,7 +165,9 @@ flowchart LR
 ### Kritiske Regler for Skala-Monitoren:
 1. **Ryd altid op i `requestAnimationFrame`:** Afslutning af et shot eller navigation væk skal omgående stoppe render-loopet.
 2. **Kamerastream release:** Ved unmount af `ScaleMonitor` skal alle `MediaStreamTrack.stop()` kaldes for at slukke telefonens kameradiode.
-3. **Puck Resistance & Channelling:** Hvis flowet pludselig accelererer markant uden pumpeændring, markeres punktet med `isChanneling = true` og tælles i samlet shot-score.
+3. **Monotonic Floor Clamping:** Under aktiv brygning kan vægten aldrig falde $> 0.5\text{g}$ under den aktuelle vægt. Ekstraheret kaffe forsvinder ikke fra koppen.
+4. **Fysisk Flow Clamp:** Flow rate kan i espresso aldrig overstige $6.0\text{ g/s}$. Alle beregninger clampes til $[0, 6.0]\text{ g/s}$.
+5. **Puck Resistance & Channelling:** Hvis flowet pludselig accelererer markant uden pumpeændring, markeres punktet med `isChanneling = true` og tælles i samlet shot-score.
 
 ---
 

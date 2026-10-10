@@ -2,6 +2,29 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.0] - 2026-10-10
+### Etape 25: Fuldstændig Udryddelse af OCR-Flimren & Flow Spikes, Active Brew Focus UX & "Sort Boks" Telemetri med Supabase PC-Sync
+- **Fase 1: Kernerettelse mod OCR-Flimren & 242 g/s Flow Spikes:**
+  - **Fjernet Blokerende UI-Badge fra Reticle (`ScaleMonitor.tsx`):**
+    - Reticle-boksen havde et `-top-3` sort pillebadge (`☕ BREWING` / `TARE LOCKED`), som sad direkte oven i Muvna-vægtens øverste talrække og tvang OCR-algoritmen til at gribe fat i timeren nedenunder. Dette badge er fuldstændig fjernet fra reticle-boksen; status vises udelukkende i den faste statusbar over viewfinderen. Reticle-feltet er nu 100% ublokeret.
+  - **Udvidet Timer-Udelukkelse & Dobbelt-Række Lås (`ocr7segment.ts`):**
+    - Vægte som Muvna formaterer timeren som `0:00` (4 tegn med kolon) frem for `00:00` eller `00.00`. OCR belønnede tidligere `0.` med tare-point. Nu modtager ethvert mønster indeholdende `:` eller startende med `0:` en hård straf på `-300` point og kan aldrig tildeles tare-point.
+    - Ved dual-row displays (vægt + timer) er Række 0 (øverst) låst med `+150` fordel, mens Række 1 (nederst) straffes med `-250` point, så timeren aldrig kan vinde over den reelle vægt.
+  - **Monotonic Floor Clamping (`ScaleReadingFilter`):**
+    - Væskemekanisk faktum: Kaffe forsvinder ikke fra koppen under brygning. Hvis en aflæsning under aktiv brygning falder $> 0.5\text{g}$ under den aktuelle vægt, afvises den omgående som outlier (`isOutlier: true`).
+    - Selv hvis timeren i flere frames læses som `0.0g`, nægter filteret at springe til 0.
+  - **Fysisk Begrænsning af Flow Rate (`espressoMath.ts`):**
+    - `calculateSmoothedFlowRate` clampes nu til teoretisk maksimum for espresso ($6.0\text{ g/s}$) og afviser negative vægtspring, hvilket forhindrer falske 242 g/s spikes i grafen.
+- **Fase 2: Active Brew UX & Focus Mode (`ScaleMonitor.tsx`):**
+  - **Kompakt Viewfinder Cockpit:** Viewfinderen skifter under aktiv brygning automatisk til et kompakt panorama (`h-36 sm:h-44`), så baristaen har fuldt overblik over både kamera, tal og flowkurve uden lodret scrolling.
+  - **Focus Mode:** Sekundære kamerakontroller (Zoom, LED/LCD, kalibrering) skjules under aktiv udtrækning, så baristaen har et roligt, minimalistisk cockpit.
+  - **Ergonomisk Tommelfingervenlig Stop-Knap:** Stop-knappen i bunden er forstørret med højere trykfelt (`py-3.5 sm:py-4 text-xs sm:text-sm font-bold`), så den er hurtig og sikker at ramme med én hånd.
+- **Fase 3: Flight Data Recorder ("Sort Boks") & Automatisk Supabase PC-Sync:**
+  - **Telemetrimotor (`src/lib/scaleTelemetry.ts`):** Logger rå OCR-tekst, filtreret vægt, afviste frames, tidsstempler og thumbnail snapshots af vægten direkte i appen.
+  - **Supabase Cloud Diagnostic Tabel:** Oprettet tabellen `scale_diagnostic_sessions` i `supabase/schema.sql` og `AdminPortal.tsx` med fuld RLS-sikkerhed.
+  - **Admin Toggle i Curator Studio (`#admin`):** Admin kan nemt slå telemetri til/fra. Når aktivt, vises et diskret `REC` badge i viewfinderen.
+  - **Lokal PC-Sync (`npm run sync:diag`):** Oprettet `scripts/sync-telemetry.cjs`, som med én terminalkommando på computeren henter alle optagede data og billeder fra Supabase ned i `diagnostics/` mappen på PC'en til direkte fejlsøgning.
+
 ## [1.7.9] - 2026-10-10
 ### Etape 24: Knivskarp Roast Badge Kontrast, Persistent Basket Dose Hukommelse (17g) & Væskemekanisk Tids-Skalering
 - **Knivskarp Roast Badge Kontrast (`MEDIUM-DARK` & Alle Ristningsgrader):**

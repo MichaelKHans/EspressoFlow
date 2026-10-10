@@ -35,8 +35,10 @@ import {
   Copy,
   ArrowUpDown,
   Store,
+  Radio,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, UserAccessState } from '../types/espresso';
+import { isTelemetryEnabled, setTelemetryEnabled } from '../lib/scaleTelemetry';
 import {
   testSupabaseConnection,
   getSupabaseClient,
@@ -224,7 +226,35 @@ ON CONFLICT (barcode) DO UPDATE SET
   expert_score = EXCLUDED.expert_score,
   expert_source = EXCLUDED.expert_source,
   is_verified = TRUE,
-  updated_at = NOW();`;
+  updated_at = NOW();
+
+-- 7. SCALE DIAGNOSTIC SESSIONS TABLE (Flight Data Recorder for Camera/OCR Telemetry)
+CREATE TABLE IF NOT EXISTS scale_diagnostic_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id VARCHAR(64) UNIQUE NOT NULL,
+  device_info JSONB,
+  recipe_info JSONB,
+  summary_info JSONB,
+  telemetry_samples JSONB,
+  initial_image TEXT,
+  final_image TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_telemetry_created_at ON scale_diagnostic_sessions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_telemetry_session_id ON scale_diagnostic_sessions(session_id);
+
+ALTER TABLE scale_diagnostic_sessions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public insert scale_diagnostic_sessions" ON scale_diagnostic_sessions;
+CREATE POLICY "Allow public insert scale_diagnostic_sessions"
+  ON scale_diagnostic_sessions FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read scale_diagnostic_sessions" ON scale_diagnostic_sessions;
+CREATE POLICY "Allow public read scale_diagnostic_sessions"
+  ON scale_diagnostic_sessions FOR SELECT
+  USING (true);`;
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
   onBack,
@@ -239,6 +269,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [pinError, setPinError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'curator' | 'security' | 'supabase'>('metrics');
+  const [telemetryActive, setTelemetryActive] = useState<boolean>(() => isTelemetryEnabled());
+
+  const handleToggleTelemetry = () => {
+    const next = !telemetryActive;
+    setTelemetryActive(next);
+    setTelemetryEnabled(next);
+  };
 
   // Curator Hub & Periodic Audit State
   const [lastAuditDate, setLastAuditDate] = useState<string>(() => {
@@ -2437,6 +2474,65 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   )}
                 </div>
               )}
+            </div>
+
+            {/* 🔬 Black Box Scale Telemetry Recorder */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E8DFD5] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${telemetryActive ? 'bg-red-500/20 text-red-500' : 'bg-[#E8DFD5]/40 text-[#7A6E65]'}`}>
+                    <Radio className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase text-[#2C2018] flex items-center gap-2">
+                      <span>Sort Boks Telemetri (Flight Data Recorder)</span>
+                      {telemetryActive && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-600 text-white animate-pulse">
+                          REC AKTIV
+                        </span>
+                      )}
+                    </h4>
+                    <p className="text-[10px] text-[#7A6E65] font-sans">
+                      Optager rå OCR-data, kandidat-scores, afviste frames og flow rate under kørsel af kameraet.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleToggleTelemetry}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition flex items-center gap-2 cursor-pointer shadow-xs ${
+                    telemetryActive
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-[#2C2018] text-white hover:bg-[#3D2D22]'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${telemetryActive ? 'bg-white animate-ping' : 'bg-[#C26D52]'}`} />
+                  <span>{telemetryActive ? 'Deaktiver Telemetri' : 'Aktivér Telemetri'}</span>
+                </button>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-xs font-mono space-y-2">
+                <div className="text-[11px] text-[#2C2018] font-bold flex items-center gap-1.5">
+                  <span>💡 Automatisk PC-Sync med Supabase:</span>
+                </div>
+                <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
+                  Når du kører et shot på mobilen med telemetri slået til, uploades hele sessionen automatisk til Supabase.
+                  På din PC kan du køre følgende kommando i terminalen for at hente alle rå logs og thumbnails ned i mappen <code>diagnostics/</code>:
+                </p>
+                <div className="p-2.5 rounded-lg bg-[#2C2018] text-emerald-400 text-xs font-mono flex items-center justify-between shadow-inner">
+                  <code>npm run sync:diag</code>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('npm run sync:diag');
+                    }}
+                    className="text-[10px] text-[#E8DFD5]/80 hover:text-white px-2 py-0.5 rounded bg-white/10 cursor-pointer"
+                  >
+                    Kopiér
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Live Global Coffee Beans from Supabase */}

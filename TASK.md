@@ -25,6 +25,13 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] AI fotoscanning af kaffepose (OCR af ristedato, bønnetype, vaskeproces) via mobil kamera
 - [x] Kværn-oversættelse for mikro-justeringer (f.eks. +/- 1 trin på Encore ESP = +/- 2.5s udtræk, Eureka delestreger)
 - [x] $CO_2$ afgasnings-alarm for friskristede bønner (< 4 dage fra ristning)
+- [x] **Fuldstændig Udryddelse af OCR-Flimren, 242 g/s Spikes, Active Brew Focus UX & "Sort Boks" Telemetri (v1.8.0 - AFSLUTTET):**
+  - [x] Fjernet blokerende `-top-3` badge fra reticle, display er 100% frit
+  - [x] Række 0 prioritet (+150 point) og timer straf (-300 point på 0:00) i `ocr7segment.ts`
+  - [x] Monotonic Floor Clamping i `ScaleReadingFilter` (kaffe forsvinder ikke)
+  - [x] Fysisk flow clamp (maks 6.0 g/s) i `espressoMath.ts`
+  - [x] Kompakt cockpit viewfinder og ergonomisk stor Stop-knap
+  - [x] "Sort Boks" telemetrimotor med automatisk Supabase sync og PC script `npm run sync:diag`
 
 ## 🎨 FASE 7: Rebranding til Flowbean & Fuld Nativ Ikon-Suite (v1.4.0 - AFSLUTTET)
 - [x] Officielt navneskift til **Flowbean** (favner både Espresso, Pour Over og bønnerating)

@@ -11,6 +11,27 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Fuldstændig Udryddelse af OCR-Flimren & Flow Spikes, Active Brew Focus UX & "Sort Boks" Telemetri med Supabase PC-Sync (v1.8.0)
+- **Fase 1: Kernerettelse mod OCR-Flimren & 242 g/s Flow Spikes:**
+  - **Fjernet Blokerende UI-Badge fra Reticle (`ScaleMonitor.tsx`):**
+    - Reticle-boksen havde et `-top-3` sort pillebadge (`☕ BREWING` / `TARE LOCKED`), som sad direkte oven i Muvna-vægtens øverste talrække og forstyrrede OCR-aflæsningen. Badget er fjernet helt fra reticle; status vises nu udelukkende i den faste statusbar.
+  - **Udvidet Timer-Udelukkelse & Dobbelt-Række Lås (`ocr7segment.ts`):**
+    - Timerformater som `0:00` og kolon-mønstre straffes hårdt med `-300` point og udelukkes fra tare-bonus.
+    - Ved dual-row displays prioriteres Række 0 (øverst) med `+150` fordel, mens Række 1 (nederst) straffes med `-250` point, hvilket garanterer at timeren aldrig vinder over vægten.
+  - **Monotonic Floor Clamping (`ScaleReadingFilter`):**
+    - Under aktiv brygning kan vægt aldrig falde $> 0.5\text{g}$ under aktuel måling. Kaffe forsvinder ikke fra koppen. Alle pludselige fald afvises som outliers.
+  - **Fysisk Begrænsning af Flow Rate (`espressoMath.ts`):**
+    - `calculateSmoothedFlowRate` clampes nu til teoretisk maksimum for espresso ($6.0\text{ g/s}$) og afviser negative tids-/vægtspring, hvilket fuldstændig eliminerer 242 g/s spikes i grafen.
+- **Fase 2: Active Brew UX & Focus Mode (`ScaleMonitor.tsx`):**
+  - **Kompakt Viewfinder Cockpit:** Viewfinderen skifter under aktiv brygning automatisk til et kompakt panorama (`h-36 sm:h-44`), så baristaen har fuldt overblik over både kamera, tal og flowkurve uden lodret scrolling.
+  - **Focus Mode:** Sekundære kamerakontroller (Zoom, LED/LCD, kalibrering) skjules under aktiv udtrækning for et roligt cockpit.
+  - **Ergonomisk Tommelfingervenlig Stop-Knap:** Forstørret stop-knap i bunden med fuld bredde og stort touch-område.
+- **Fase 3: Flight Data Recorder ("Sort Boks") & Automatisk Supabase PC-Sync:**
+  - **Telemetrimotor (`src/lib/scaleTelemetry.ts`):** Logger rå OCR-tekst, filtreret vægt, afviste frames, tidsstempler og thumbnail snapshots.
+  - **Supabase Cloud Diagnostic Tabel:** Oprettet `scale_diagnostic_sessions` i `supabase/schema.sql` og `AdminPortal.tsx`.
+  - **Admin Toggle i Curator Studio (`#admin`):** Admin toggle til/fra med `REC` indikator i viewfinderen.
+  - **Lokal PC-Sync (`npm run sync:diag`):** Oprettet `scripts/sync-telemetry.cjs` til direkte hentning af sessioner til PC'ens `diagnostics/` mappe.
+
 ### 2026-10-10 -- Knivskarp Roast Badge Kontrast, Persistent Basket Dose Hukommelse (17g) & Væskemekanisk Tids-Skalering (v1.7.9)
 - **Knivskarp Roast Badge Kontrast (`MEDIUM-DARK` & Alle Ristningsgrader):**
   - **Identificeret Rodårsag:** Badget under `ACTIVE COFFEE BEAN` og i Dial-In Studio brugte `text-[#E8C2B0]`, som var for blegt på lys baggrund.

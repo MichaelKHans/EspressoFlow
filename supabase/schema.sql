@@ -146,3 +146,32 @@ ON CONFLICT (barcode) DO UPDATE SET
   suitable_for = CASE WHEN array_length(global_coffee_beans.suitable_for, 1) IS NULL OR array_length(global_coffee_beans.suitable_for, 1) = 0 THEN EXCLUDED.suitable_for ELSE global_coffee_beans.suitable_for END,
   is_verified = TRUE,
   updated_at = NOW();
+
+-- 7. SCALE DIAGNOSTIC SESSIONS TABLE (Flight Data Recorder for Camera/OCR Telemetry)
+CREATE TABLE IF NOT EXISTS scale_diagnostic_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id VARCHAR(64) UNIQUE NOT NULL,
+  device_info JSONB,
+  recipe_info JSONB,
+  summary_info JSONB,
+  telemetry_samples JSONB,
+  initial_image TEXT,
+  final_image TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_telemetry_created_at ON scale_diagnostic_sessions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_telemetry_session_id ON scale_diagnostic_sessions(session_id);
+
+ALTER TABLE scale_diagnostic_sessions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public insert scale_diagnostic_sessions" ON scale_diagnostic_sessions;
+CREATE POLICY "Allow public insert scale_diagnostic_sessions"
+  ON scale_diagnostic_sessions FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read scale_diagnostic_sessions" ON scale_diagnostic_sessions;
+CREATE POLICY "Allow public read scale_diagnostic_sessions"
+  ON scale_diagnostic_sessions FOR SELECT
+  USING (true);
+
