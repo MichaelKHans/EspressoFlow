@@ -707,8 +707,8 @@ function parseDigitsFromBinary(
     }
 
     // Multi-Digit Valley Splitter:
-    // If a span is overly wide (width >= 0.82 * bandH), it contains multiple fused digits
-    // (e.g. slight optical blur or glow bridging adjacent digits). Split at column projection valleys!
+    // Only split if a span is wider than a single digit (width >= 1.05 * bandH)
+    // to prevent single digits with thin center bars (like digit '4') from being sliced into two 1's!
     function splitFusedSpans(
       inputSpans: { start: number; end: number }[],
       counts: number[],
@@ -718,7 +718,7 @@ function parseDigitsFromBinary(
       const result: { start: number; end: number }[] = [];
       for (const s of inputSpans) {
         const w = s.end - s.start + 1;
-        if (w >= Math.floor(bH * 0.82)) {
+        if (w >= Math.floor(bH * 1.05)) {
           const sX1 = s.start + Math.floor(w * 0.25);
           const sX2 = s.start + Math.floor(w * 0.75);
           let minVal = Infinity;
@@ -1208,6 +1208,7 @@ export function recognizeScaleDigits(
 export class ScaleReadingFilter {
   private lastValidWeight: number = 0;
   private consecutiveSameCount: number = 0;
+  private consecutiveLowCount: number = 0;
   private recentWindow: number[] = [];
 
   public sanitize(
@@ -1219,13 +1220,35 @@ export class ScaleReadingFilter {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
-    // Monotonic Floor Clamping under Active Brewing:
-    // Liquid espresso drops into the cup and CANNOT physically disappear.
-    // Once an extraction is actively flowing (>= 2.5g), readings that drop significantly (> 0.5g)
-    // are optical glitches (e.g. steam, transient flicker) and MUST be rejected!
+    // Absolute Physical Ceiling for Espresso Extraction:
+    // A standard espresso pull yield is 15-60g. Readings > 80g during brewing
+    // are decimal-dropped optical artifacts (e.g. 113.3 or 100.1 instead of 11.3 or 10.0).
+    if (isBrewing && newReading > 80.0) {
+      return { weight: this.lastValidWeight, isOutlier: true };
+    }
+
+    // Self-Healing Monotonic Floor Clamping under Active Brewing:
+    // Liquid espresso drops into the cup and cannot physically disappear.
+    // However, if the filter was erroneously bumped up by an artifact,
+    // and the camera reads a lower consistent value for >= 5 consecutive frames (variance <= 0.3g),
+    // self-heal and adopt the consensus reading!
     if (isBrewing && this.lastValidWeight >= 2.5) {
       if (newReading < this.lastValidWeight - 0.5) {
+        this.consecutiveLowCount++;
+        if (this.consecutiveLowCount >= 5 && this.recentWindow.length >= 2) {
+          const wDiff = Math.abs(
+            this.recentWindow[this.recentWindow.length - 1] - this.recentWindow[this.recentWindow.length - 2]
+          );
+          if (wDiff <= 0.3) {
+            // Self-heal consensus recovery!
+            this.lastValidWeight = newReading;
+            this.consecutiveLowCount = 0;
+            return { weight: newReading, isOutlier: false };
+          }
+        }
         return { weight: this.lastValidWeight, isOutlier: true };
+      } else {
+        this.consecutiveLowCount = 0;
       }
     }
 
@@ -1235,6 +1258,7 @@ export class ScaleReadingFilter {
       this.lastValidWeight = newReading;
       this.recentWindow = [newReading];
       this.consecutiveSameCount = 0;
+      this.consecutiveLowCount = 0;
       return { weight: newReading, isOutlier: false };
     }
 
@@ -1264,9 +1288,15 @@ export class ScaleReadingFilter {
             return { weight: this.lastValidWeight, isOutlier: true };
           }
 
+          // If brewing, also never allow sudden giant jumps (> 6.0g in a single step)
+          if (isBrewing && delta > 6.0) {
+            return { weight: this.lastValidWeight, isOutlier: true };
+          }
+
           // Agreement confirmed on legitimate step change!
           this.lastValidWeight = newReading;
           this.consecutiveSameCount = 0;
+          this.consecutiveLowCount = 0;
           return { weight: newReading, isOutlier: false };
         }
       }
@@ -1276,6 +1306,7 @@ export class ScaleReadingFilter {
 
     // Valid reading confirmed
     this.consecutiveSameCount = 0;
+    this.consecutiveLowCount = 0;
     this.lastValidWeight = newReading;
     return { weight: newReading, isOutlier: false };
   }
@@ -1283,6 +1314,7 @@ export class ScaleReadingFilter {
   public reset(initialWeight: number = 0) {
     this.lastValidWeight = initialWeight;
     this.consecutiveSameCount = 0;
+    this.consecutiveLowCount = 0;
     this.recentWindow = [];
   }
 }

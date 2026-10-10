@@ -1,0 +1,89 @@
+{
+  "standardShot": {
+    "totalFrames": 113,
+    "validFrames": 24,
+    "outliers": 89,
+    "avgConfidence": "99.5",
+    "maxWeight": "100.1",
+    "pass": false
+  },
+  "channelingSpike": {
+    "peakFlowGps": "0.0",
+    "channelingDetected": false,
+    "pass": false
+  },
+  "digitAccuracy": [
+    {
+      "expected": 0,
+      "detected": 0,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 1.1,
+      "detected": 1.1,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 2.2,
+      "detected": 2.2,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 3.3,
+      "detected": 3.3,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 4.4,
+      "detected": 11.1,
+      "accurate": false,
+      "confidence": 0.9142857142857143
+    },
+    {
+      "expected": 5.5,
+      "detected": 5.5,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 6.6,
+      "detected": 6.6,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 7.7,
+      "detected": 7.7,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 8.8,
+      "detected": 8.8,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 9.9,
+      "detected": 9.9,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 18.4,
+      "detected": 18.4,
+      "accurate": true,
+      "confidence": 1
+    },
+    {
+      "expected": 36,
+      "detected": 36,
+      "accurate": true,
+      "confidence": 1
+    }
+  ]
+}
