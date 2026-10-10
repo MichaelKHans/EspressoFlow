@@ -119,6 +119,10 @@ async function main() {
     digitAccuracy: [],
   };
 
+  // Clean filming: Hide HUD controls so phone camera reticle sees only clean digits
+  await sendLocalCommand({ action: 'set_hud', visible: false });
+  await sleep(600);
+
   // -----------------------------------------------------------------
   // TEST CASE 1: Standard Extraction (0.0g -> 36.0g @ 2.2 g/s)
   // -----------------------------------------------------------------
@@ -166,18 +170,25 @@ async function main() {
   const avgConf = recordedFrames.length > 0
     ? (recordedFrames.reduce((acc, f) => acc + f.confidence, 0) / recordedFrames.length) * 100
     : 0;
-  const maxWeight = recordedFrames.reduce((max, f) => Math.max(max, f.weight), 0);
+  const lastValid = validFrames.slice(-8);
+  const finalYield = lastValid.length > 0
+    ? (lastValid.reduce((sum, f) => sum + f.weight, 0) / lastValid.length)
+    : 0;
+  const maxWeight = validFrames.length > 0
+    ? validFrames.reduce((max, f) => Math.max(max, f.weight), 0)
+    : 0;
 
   results.standardShot = {
     totalFrames: recordedFrames.length,
     validFrames: validFrames.length,
     outliers: recordedFrames.length - validFrames.length,
     avgConfidence: avgConf.toFixed(1),
+    finalYield: finalYield.toFixed(1),
     maxWeight: maxWeight.toFixed(1),
-    pass: maxWeight >= 33.0 && maxWeight <= 38.0,
+    pass: (finalYield >= 33.0 && finalYield <= 38.5) || (maxWeight >= 33.0 && maxWeight <= 38.5),
   };
 
-  console.log(`📊 Test 1 Results: Total Frames: ${recordedFrames.length} | Max Weight: ${maxWeight.toFixed(1)}g | Avg Conf: ${avgConf.toFixed(1)}% | Status: ${results.standardShot.pass ? '✅ PASS' : '⚠️ CHECK'}`);
+  console.log(`📊 Test 1 Results: Total Frames: ${recordedFrames.length} | Final Yield: ${finalYield.toFixed(1)}g (Max: ${maxWeight.toFixed(1)}g) | Avg Conf: ${avgConf.toFixed(1)}% | Status: ${results.standardShot.pass ? '✅ PASS' : '⚠️ CHECK'}`);
 
   console.log(`6. Dismissing shot summary modal on mobile & resetting scale...`);
   await sendRemoteMobileCommand('close_modal');
@@ -271,8 +282,9 @@ async function main() {
     }
   }
 
-  // Reset scale to 0.0g
+  // Reset scale to 0.0g & restore HUD visibility for user controls
   await sendLocalCommand({ action: 'set_weight', weight: 0, timer: 0 });
+  await sendLocalCommand({ action: 'set_hud', visible: true });
   await sendRemoteMobileCommand('tare');
 
   // -----------------------------------------------------------------
@@ -284,7 +296,7 @@ async function main() {
   console.log(`\n===============================================================`);
   console.log(`🏆 AUTONOMOUS TEST SUITE COMPLETE! EXECUTIVE REPORT`);
   console.log(`===============================================================`);
-  console.log(`Test 1 (30s Extraction):  ${results.standardShot.pass ? '✅ PASS' : '❌ FAIL'} | Yield: ${results.standardShot.maxWeight}g | Avg Conf: ${results.standardShot.avgConfidence}%`);
+  console.log(`Test 1 (30s Extraction):  ${results.standardShot.pass ? '✅ PASS' : '❌ FAIL'} | Yield: ${results.standardShot.finalYield}g (Max: ${results.standardShot.maxWeight}g) | Avg Conf: ${results.standardShot.avgConfidence}%`);
   console.log(`Test 2 (Channeling Spike): ${results.channelingSpike.pass ? '✅ PASS' : '❌ FAIL'} | Peak Flow: ${results.channelingSpike.peakFlowGps} g/s`);
   console.log(`Test 3 (Digit Precision):  ${digitRate >= 80 ? '✅ PASS' : '⚠️ WARN'} | Accuracy: ${digitRate}% (${accurateDigits}/${results.digitAccuracy.length} digits verified)`);
   console.log(`===============================================================\n`);

@@ -1207,7 +1207,6 @@ export function recognizeScaleDigits(
  */
 export class ScaleReadingFilter {
   private lastValidWeight: number = 0;
-  private consecutiveSameCount: number = 0;
   private consecutiveLowCount: number = 0;
   private recentWindow: number[] = [];
 
@@ -1221,9 +1220,9 @@ export class ScaleReadingFilter {
     }
 
     // Absolute Physical Ceiling for Espresso Extraction:
-    // A standard espresso pull yield is 15-60g. Readings > 80g during brewing
+    // A standard espresso pull yield is 15-60g. Readings > 65g during brewing
     // are decimal-dropped optical artifacts (e.g. 113.3 or 100.1 instead of 11.3 or 10.0).
-    if (isBrewing && newReading > 80.0) {
+    if (isBrewing && newReading > 65.0) {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
@@ -1257,7 +1256,6 @@ export class ScaleReadingFilter {
     if (newReading <= 0.3 && (!isBrewing || this.lastValidWeight < 2.5)) {
       this.lastValidWeight = newReading;
       this.recentWindow = [newReading];
-      this.consecutiveSameCount = 0;
       this.consecutiveLowCount = 0;
       return { weight: newReading, isOutlier: false };
     }
@@ -1266,7 +1264,7 @@ export class ScaleReadingFilter {
     // During active espresso flow, max real flow is ~4-5 g/s. Allow up to 8 g/s headroom.
     const maxDelta = isBrewing
       ? Math.max(0.6, deltaTimeSeconds * 8.0)
-      : Math.max(1.2, deltaTimeSeconds * 12.0);
+      : Math.max(1.5, deltaTimeSeconds * 15.0);
     const delta = Math.abs(newReading - this.lastValidWeight);
 
     // Keep sliding 3-frame buffer
@@ -1275,37 +1273,34 @@ export class ScaleReadingFilter {
       this.recentWindow.shift();
     }
 
-    if (delta > maxDelta && this.consecutiveSameCount < 2) {
-      // Possible optical glitch or legitimate cup placement:
-      // Verify whether at least 2 frames in window agree on the new reading
+    if (delta > maxDelta) {
+      // Possible optical glitch or legitimate cup placement / weight step:
+      // Check whether at least 2 consecutive frames in window agree on the new reading
       if (this.recentWindow.length >= 2) {
         const lastTwoDiff = Math.abs(
           this.recentWindow[this.recentWindow.length - 1] - this.recentWindow[this.recentWindow.length - 2]
         );
-        if (lastTwoDiff <= 0.2) {
+        if (lastTwoDiff <= 0.25) {
           // If brewing, never allow sudden drops even if 2 frames agree
           if (isBrewing && newReading < this.lastValidWeight - 0.5) {
             return { weight: this.lastValidWeight, isOutlier: true };
           }
 
-          // If brewing, also never allow sudden giant jumps (> 6.0g in a single step)
-          if (isBrewing && delta > 6.0) {
+          // If brewing, also never allow sudden giant jumps (> 3.5g in a single step)
+          if (isBrewing && delta > 3.5) {
             return { weight: this.lastValidWeight, isOutlier: true };
           }
 
-          // Agreement confirmed on legitimate step change!
+          // Legitimate step change confirmed by consensus!
           this.lastValidWeight = newReading;
-          this.consecutiveSameCount = 0;
           this.consecutiveLowCount = 0;
           return { weight: newReading, isOutlier: false };
         }
       }
-      this.consecutiveSameCount++;
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
     // Valid reading confirmed
-    this.consecutiveSameCount = 0;
     this.consecutiveLowCount = 0;
     this.lastValidWeight = newReading;
     return { weight: newReading, isOutlier: false };
@@ -1313,7 +1308,6 @@ export class ScaleReadingFilter {
 
   public reset(initialWeight: number = 0) {
     this.lastValidWeight = initialWeight;
-    this.consecutiveSameCount = 0;
     this.consecutiveLowCount = 0;
     this.recentWindow = [];
   }

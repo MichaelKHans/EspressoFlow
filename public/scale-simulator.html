@@ -851,6 +851,9 @@
         currentWeight = parseFloat(cmd.weight) || 0.0;
         if (cmd.timer) currentTimerSec = parseFloat(cmd.timer) || 0;
         updateDisplay();
+      } else if (cmd.action === 'set_hud') {
+        isHudVisible = !!cmd.visible;
+        hudOverlayEl.classList.toggle('hidden', !isHudVisible);
       } else if (cmd.action === 'stop') {
         stopActiveScenario();
       }

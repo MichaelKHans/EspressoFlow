@@ -132,6 +132,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const telemetryCollectorRef = useRef<ScaleTelemetryCollector>(new ScaleTelemetryCollector());
   const [isTelemetryActive, setIsTelemetryActive] = useState<boolean>(() => isTelemetryEnabled());
   const currentWeightRef = useRef<number>(0.0);
+  const currentFlowRef = useRef<number>(0.0);
   const startTimeRef = useRef<number>(0);
   const firstDropTimeRef = useRef<number | null>(null);
   const fpsCountRef = useRef<number>(0);
@@ -638,7 +639,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           weight: currentWeightRef.current,
           rawText: result.rawText,
           confidence: result.confidence,
-          flow: currentFlow,
+          flow: currentFlowRef.current,
           isOutlier: sanitized.isOutlier,
           polarity: result.detectedPolarity || displayMode,
           isBrewing,
@@ -667,6 +668,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setCurrentWeight(0.0);
     currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);
+    currentFlowRef.current = 0.0;
     setElapsedTime(0.0);
     setFirstDropTime(null);
     setPreInfusionDuration(0.0);
@@ -756,6 +758,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       pointsRef.current.push(newPoint);
       const flow = calculateSmoothedFlowRate(pointsRef.current);
       newPoint.flowRateGps = flow;
+      currentFlowRef.current = flow;
       setCurrentFlow(flow);
       if (onLivePointsUpdateRef.current) {
         onLivePointsUpdateRef.current([...pointsRef.current]);
@@ -829,6 +832,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setCurrentWeight(0.0);
     currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);
+    currentFlowRef.current = 0.0;
     setElapsedTime(0.0);
     setFirstDropTime(null);
     setPreInfusionDuration(0.0);
@@ -873,6 +877,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setPreInfusionDuration(0.0);
     setActiveFlowDuration(0.0);
     setCurrentFlow(0.0);
+    currentFlowRef.current = 0.0;
     filterRef.current.reset(0);
   };
 
@@ -880,6 +885,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setCurrentWeight(0.0);
     currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);
+    currentFlowRef.current = 0.0;
     setElapsedTime(0.0);
     startTimeRef.current = 0;
     firstDropTimeRef.current = null;
@@ -904,6 +910,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         }
       } else if (cmd.action === 'tare') {
         handleCalibrateTare();
+      } else if (cmd.action === 'reload_app') {
+        window.location.reload();
       }
     });
 

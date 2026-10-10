@@ -164,6 +164,10 @@ Simulator Controls:
       await sendRemoteMobileCommand('close_modal');
       setTimeout(() => process.exit(0), 1000);
       return;
+    } else if (arg === '--reload-app') {
+      await sendRemoteMobileCommand('reload_app');
+      setTimeout(() => process.exit(0), 1000);
+      return;
     } else if (arg === '--tare') {
       await sendRemoteMobileCommand('tare');
       setTimeout(() => process.exit(0), 1000);

@@ -156,6 +156,9 @@ export function App() {
       if (cmd.action === 'switch_tab' && cmd.name) {
         setActiveTab(cmd.name as any);
       }
+      if (cmd.action === 'reload_app') {
+        window.location.reload();
+      }
     });
     return () => unsub();
   }, [closeAllActiveModals]);

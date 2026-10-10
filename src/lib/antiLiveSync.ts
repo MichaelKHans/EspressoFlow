@@ -103,7 +103,8 @@ export type RemoteAction =
   | 'stop'
   | 'close_modal'
   | 'switch_tab'
-  | 'set_method';
+  | 'set_method'
+  | 'reload_app';
 
 export interface RemoteCommandPayload {
   action: RemoteAction;
