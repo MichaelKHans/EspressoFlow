@@ -2,6 +2,21 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.4] - 2026-10-10
+### Etape 29: Timer Nulstilling ved Ny Bryg, Fjernelse af Blokerende Nedtælling & Uafhængig Vægt-Zoom
+- **Automatisk Timer Nulstilling (`ScaleMonitor.tsx`):**
+  - **Identificeret Root Cause:** `elapsedTime` beholdt den forrige brygs sluttid (f.eks. `61.5s`) i cockpittet efter et shot var afsluttet, fordi `setElapsedTime(0.0)` kun blev kaldt ved afbrydelse (`handleCancelBrewing`). Ved tryk på "Tare (0.0g)" eller når baristaen vendte tilbage til cockpit, stod timeren fast på `61.5s`.
+  - **Løsning:** `elapsedTime` og tids-referencer nulstilles nu automatisk til `0.0s`:
+    1. Ved afslutning og lagring af et shot (`handleStopBrewing`).
+    2. Ved tryk på "Tare (0.0g)" (`handleCalibrateTare`).
+    3. Ved opstart af et nyt shot (`handleStartBrewing`).
+    4. Ved direkte berøring/klik på "Time" boksen i telemetri-gitteret når der ikke brygges.
+- **Fjernelse af Blokerende Nedtællingsbanner (`public/scale-simulator.html`):**
+  - **Identificeret Root Cause:** Simulatoren viste et 4-sekunders banner ("📱 Position phone camera... 3") centreret direkte ovenpå 7-segment displayet, hvilket blokerede for kameraets OCR-sigtekorn og forvirrede tallene i starten af optagelsen.
+  - **Løsning:** Det blokerende banner er fjernet. Test-scenarier starter øjeblikkeligt med 100% frit, uforstyrret udsyn til displayet.
+- **Uafhængig Vægt-Zoom & Knapstørrelse (`public/scale-simulator.html`):**
+  - Knapper og menulinje forbliver fuld størrelse ved 100% browserzoom (Ctrl + 0), mens selve vægtchassiset kan skaleres frit (`30%`, `45%`, `60%`, `100%`) for perfekt tilpasning til mobilens kamerasøger.
+
 ## [1.8.3] - 2026-10-10
 ### Etape 28: Løsning af Ciffer-Fusion & Inverteret 0 vs 8 Detektion (18.4g Stabilisering)
 - **Kritisk Fejlrettelse af 0 vs 8 Forveksling (`ocr7segment.ts`):**

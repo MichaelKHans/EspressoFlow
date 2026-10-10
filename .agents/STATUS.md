@@ -11,6 +11,20 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Timer Nulstilling ved Ny Bryg, Fjernelse af Blokerende Nedtælling & Uafhængig Vægt-Zoom (v1.8.4)
+- **Automatisk Timer Nulstilling (`ScaleMonitor.tsx`):**
+  - **Identificeret Årsag:** Ved afslutning af et shot eller tryk på Tare forblev `elapsedTime` på det forrige shots tid (f.eks. `61.5s`). Baristaen så derfor den gamle tid i cockpittet ved forberedelse af en ny bryg.
+  - **Løsning:** `elapsedTime` nulstilles nu automatisk til `0.0s`:
+    1. Ved afslutning og lagring af et shot (`handleStopBrewing`).
+    2. Ved tryk på "Tare (0.0g)" (`handleCalibrateTare`).
+    3. Ved opstart af et nyt shot (`handleStartBrewing`).
+    4. Ved direkte berøring af "Time" boksen i cockpittet når maskinen ikke brygger.
+- **Fjernelse af Blokerende Nedtællingsbanner (`public/scale-simulator.html`):**
+  - **Identificeret Årsag:** Simulatoren viste et stort 4-sekunders nedtællingsbanner ("📱 Position phone camera... 3") centreret midt på skærmen direkte henover 7-segment cifrene, hvilket forvirrede kameraets OCR reticle.
+  - **Løsning:** Nedtællingsbanneret er fjernet fuldstændigt. Scenarier og tests starter øjeblikkeligt med 100% frit udsyn til cifrene.
+- **Uafhængig Skalering af Vægt vs. Knapper (`public/scale-simulator.html`):**
+  - Tilføjet hurtigvalgsknapper (`30%`, `45%`, `60%`, `100%`) og standardstørrelse sat til 45%. Selve chassiset skaleres uafhængigt med CSS transform, så knapper, ikoner og værktøjslinje altid bevarer fuld størrelse og læsbarhed ved 100% browserzoom (Ctrl + 0).
+
 ### 2026-10-10 -- Løsning af Ciffer-Fusion & Inverteret 0 vs 8 Detektion (18.4g Stabilisering) (v1.8.3)
 - **Kritisk Fejlrettelse af 0 vs 8 Forveksling (`ocr7segment.ts`):**
   - Rettet inverteringsfejl (`if (!gStrict || centerHole) return '0'`), som forårsagede at *alle* 8-taller blev tvunget til at returnere '0'. Nu anvendes `gStrict` (segment `g` midterbjælke) med glans-hulrumsvalidering.
