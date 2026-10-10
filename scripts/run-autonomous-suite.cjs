@@ -122,8 +122,7 @@ async function main() {
   // Clean filming: Ensure scale simulator is in pure_weight mode and hide HUD
   await sendLocalCommand({ action: 'set_model', model: 'pure_weight' });
   await sendLocalCommand({ action: 'set_hud', visible: false });
-  await sendRemoteMobileCommand('reload_app');
-  await sleep(1500);
+  await sleep(600);
 
   // -----------------------------------------------------------------
   // TEST CASE 1: Standard Extraction (0.0g -> 36.0g @ 2.2 g/s)
