@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.8.0 (Fuldstændig Udryddelse af OCR-Flimren & Spikes, Active Brew Focus UX & "Sort Boks" Telemetri med Supabase PC-Sync)  
+> **Gældende version:** v1.8.1 (Anti-Book & Text Entropy Sanity Gates, Polaritetsvalidering & AI-Økonomi Arkitektur)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -120,17 +120,23 @@ flowchart LR
     subgraph Vision Pipeline (Client-Side Canvas 480x240)
         Video[HTML5 Camera Stream] --> FrameGrab[Offscreen Canvas 480x240]
         FrameGrab --> CropROI[Crop til Region-of-Interest]
-        CropROI --> MarginMask[4% Margin Mask mod kabinetstøj]
+        CropROI --> PolarityGate{LED Mode & Hvid Baggrund?}
+        PolarityGate -- Ja (Papir/Bog afvises) --> DropNoise[Kasser: Returner Null]
+        PolarityGate -- Nej --> MarginMask[4% Margin Mask mod kabinetstøj]
         MarginMask --> AdaptiveThresh[Adaptiv Bradley-Roth Kontrast]
         AdaptiveThresh --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]
         DualRowValley --> RowScoring[Række 0 Bonus +150 / Række 1 Timer Straf -250]
         RowScoring --> TimerPenalty[Kolon / 0:00 Straf -300]
-        TimerPenalty --> IntegratedDotSplit[Integreret Decimalpunktum Dal-Splitter]
-        IntegratedDotSplit --> SegmentAnalysis[7-Segment Segmentering A-G]
+        TimerPenalty --> TextEntropyGate{Spans > 8 el. Elementer > 7?}
+        TextEntropyGate -- Ja (Bogsætning afvises) --> DropNoise
+        TextEntropyGate -- Nej --> IntegratedDotSplit[Integreret Decimalpunktum Dal-Splitter]
+        IntegratedDotSplit --> MinHeightCheck{Cifferhøjde >= 18px & >= 42%?}
+        MinHeightCheck -- Nej (Mikrotekst afvises) --> DropNoise
+        MinHeightCheck -- Ja --> SegmentAnalysis[7-Segment Segmentering A-G]
         SegmentAnalysis --> DigitRecognition[Digit Recognition + Decimalkomma]
         DigitRecognition --> ConfidenceFilter{Confidence > 65%?}
         ConfidenceFilter -- Ja --> ValidWeight[Rå Vægt i gram: Y_i]
-        ConfidenceFilter -- Nej --> DropNoise[Kasser fejlaflæsning]
+        ConfidenceFilter -- Nej --> DropNoise
     end
 
     subgraph Dynamics & Filter Engine

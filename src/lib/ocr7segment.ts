@@ -571,6 +571,7 @@ function parseDigitsFromBinary(
 
   // Dynamic row threshold: adapts to actual digit stroke intensity
   const rowThreshold = Math.max(3, Math.floor(maxRowCount * 0.16));
+  const minRowH = Math.max(26, Math.floor(height * 0.12)); // Real digital scale rows are >= 26px (rejects small book text)
   const rawRowBands: { start: number; end: number }[] = [];
   let inRow = false;
   let rowStart = 0;
@@ -584,13 +585,13 @@ function parseDigitsFromBinary(
     } else {
       if (inRow) {
         inRow = false;
-        if (y - rowStart >= 12) {
+        if (y - rowStart >= minRowH) {
           rawRowBands.push({ start: rowStart, end: y });
         }
       }
     }
   }
-  if (inRow && height - rowStart >= 12) {
+  if (inRow && height - rowStart >= minRowH) {
     rawRowBands.push({ start: rowStart, end: height });
   }
 
@@ -690,6 +691,14 @@ function parseDigitsFromBinary(
       spans.push(span);
     }
 
+    // Anti-Sentence / Text-Entropy Gate:
+    // Coffee scale displays have at most 4-8 elements across a single band (e.g. "0:15  18.4g").
+    // A printed line of text from a book or newspaper contains dozens of characters.
+    // If the horizontal span count exceeds 8, this band is a sentence/text block, NOT a digital scale!
+    if (spans.length > 8) {
+      continue;
+    }
+
     const elements: ParsedElement[] = [];
     let rowHasColon = false;
 
@@ -786,7 +795,9 @@ function parseDigitsFromBinary(
       }
 
       // 7-Segment Digit
-      if (spanH >= bandH * 0.38) {
+      // Real espresso scale digits are >= 18px tall and occupy >= 42% of the row band height.
+      // Small printed book/paper letters (8-14px) are rejected here.
+      if (spanH >= Math.max(18, Math.floor(bandH * 0.42))) {
         const box = {
           x: span.start,
           y: spanMinY,
@@ -805,6 +816,11 @@ function parseDigitsFromBinary(
           });
         }
       }
+    }
+
+    // Reject row if detected elements exceed 7 (scale displays have at most 5-6 digits/symbols)
+    if (elements.length > 7) {
+      continue;
     }
 
     // 3. Spatial Token Clustering: Group elements into contiguous tokens based on spatial proximity
@@ -1056,6 +1072,24 @@ export function recognizeScaleDigits(
 
   if (displayMode === 'led' || displayMode === false) {
     const { binary, width, height, threshold, detectedPolarity } = binarizeROI(imageData, false);
+    // Sanity gate: If user selected LED mode (dark scale with glowing digits)
+    // but the scene is actually bright/white (e.g. white paper or bright book)
+    // where detectedPolarity === 'lcd', do NOT hallucinate numbers!
+    if (detectedPolarity === 'lcd') {
+      return {
+        weight: null,
+        rawText: '',
+        confidence: 0,
+        digits: [],
+        thresholdUsed: threshold,
+        isStableZero: false,
+        boundingBox: null,
+        detectedPolarity: 'lcd',
+        layoutType: 'single',
+        allCandidates: [],
+        autoPolarityUsed: 'led',
+      };
+    }
     const res = parseDigitsFromBinary(binary, width, height, threshold, detectedPolarity);
     res.autoPolarityUsed = 'led';
     return res;

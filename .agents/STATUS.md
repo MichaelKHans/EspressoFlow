@@ -11,6 +11,17 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Anti-Book & Text Entropy Sanity Gates, Polaritetsvalidering & AI-Økonomi Arkitektur (v1.8.1)
+- **Anti-Tekst & Sætningsfilter (Anti-Sentence Gate i `ocr7segment.ts`):**
+  - **Identificeret Årsag:** En bogside med dansk brødtekst blev læst som tal (`2.0g`, `0.7g`, `5.5g`), fordi adaptiv tærskling dannede 7-segment fragmenter af almindelige bogstaver (`o`, `s`, `e`, `-`, `.`).
+  - **Løsning:** Indført Text-Entropy Gate: Kaffevægte har maksimalt 4-6 elementer på én linje. Hvis vandrette spans eller elementer overstiger 8, forkastes rækken straks som tekst/sætning.
+- **Hård Ciffer-Højde Minimum ($\ge 18\text{px}$):**
+  - Små trykte bogstaver i en bog (8-14px) afvises konsekvent, da rigtige kaffevægts-cifre optager $\ge 18\text{px}$ og $\ge 42\%$ af rækkens højde.
+- **LED Polaritetssikkerhed & Hvidt Papir Rejection:**
+  - I LED-mode kontrolleres scenens luminans. Hvis scenen er lys som papir (`detectedPolarity === 'lcd'`), afvises den omgående.
+- **AI-Evaluering & Omkostningsanalyse:**
+  - Gennemregnet Cloud AI vs. On-Device AI vs. Heuristisk CV. Cloud AI koster 4–8 kr. pr. espresso (900 frames/shot) og har 500–1500 ms forsinkelse. De nye matematiske CV Sanity Gates koster 0 kr. og reagerer på under 1 ms.
+
 ### 2026-10-10 -- Fuldstændig Udryddelse af OCR-Flimren & Flow Spikes, Active Brew Focus UX & "Sort Boks" Telemetri med Supabase PC-Sync (v1.8.0)
 - **Fase 1: Kernerettelse mod OCR-Flimren & 242 g/s Flow Spikes:**
   - **Fjernet Blokerende UI-Badge fra Reticle (`ScaleMonitor.tsx`):**

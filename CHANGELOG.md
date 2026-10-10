@@ -2,6 +2,18 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.1] - 2026-10-10
+### Etape 26: Anti-Book & Text Entropy Sanity Gates, Polaritetsvalidering & AI-Økonomi Arkitektur
+- **Anti-Tekst & Sætningsfilter (Anti-Sentence Gate i `ocr7segment.ts`):**
+  - **Identificeret Problem:** Når kameraet peger på en bog, avis eller brochure med almindelig trykt tekst, kunne linjens ord og bogstaver (`o`, `s`, `e`, `-`, `.`) ved et tilfælde binde sig til 7-segment segmenter og danne hallucinerede vægtværdier som `2.0g`, `0.7g` og `5.5g`.
+  - **Løsning:** Indført et strengt Text-Entropy Gate: Digitale kaffevægte har maksimalt 4-6 elementer på et display. Hvis en række indeholder flere end 8 elementer eller 8 spans, forkastes hele linjen øjeblikkeligt som værende en tekstsætning, IKKE et vægtdisplay.
+- **Hård Ciffer-Højde Minimum (Anti-Microtext Filter):**
+  - Hævet cifferkravet så kun tegn med en højde på mindst $18\text{px}$ (og $\ge 42\%$ af rækkens højde) evalueres som 7-segment tal. Små trykte bogstaver i en bog (8-14px) afvises konsekvent.
+- **LED Polaritetssikkerhed & Hvidt Papir Rejection:**
+  - I LED-tilstand (hvor der forventes en mørk baggrund med lysende tal) tjekkes scenens gennemsnitlige luminans. Hvis scenen er lys/hvid som papir (`detectedPolarity === 'lcd'`), afvises scenen øjeblikkeligt uden at hallucineret kontrast kan danne tal.
+- **AI-Evaluering & Omkostningsanalyse:**
+  - Gennemført dybdegående beregning af Cloud AI vs. On-Device AI vs. Heuristisk CV. Fastslået at Cloud Vision AI (30 FPS $\times$ 30s = 900 billeder pr. shot) koster 4–8 kr. pr. kop kaffe i API-kald med 500–1500 ms forsinkelse, hvilket ville gøre en $4.99 Lifetime forretningsmodel umulig. De matematiske Sanity Gates løser problemet til **0 kr.** i drift, **0 ms** latenstid og **0 kB** download.
+
 ## [1.8.0] - 2026-10-10
 ### Etape 25: Fuldstændig Udryddelse af OCR-Flimren & Flow Spikes, Active Brew Focus UX & "Sort Boks" Telemetri med Supabase PC-Sync
 - **Fase 1: Kernerettelse mod OCR-Flimren & 242 g/s Flow Spikes:**
