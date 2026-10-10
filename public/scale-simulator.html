@@ -12,7 +12,7 @@
       --led-glow: rgba(34, 211, 238, 0.45);
       --led-inactive: rgba(34, 211, 238, 0.04);
       --font-mono: 'Courier Prime', monospace;
-      --scale-zoom: 0.60;
+      --scale-zoom: 0.45;
     }
 
     * {
@@ -324,11 +324,6 @@
 </head>
 <body>
 
-  <!-- Screen Countdown Banner for Camera Alignment -->
-  <div id="countdownBanner" class="countdown-banner">
-    📱 Position phone camera...<br><span id="countdownSec" style="font-size: 48px;">3</span>
-  </div>
-
   <!-- Scale Hardware Body -->
   <div id="scaleChassis" class="scale-chassis theme-muvna">
     <div id="screenBezel" class="screen-bezel">
@@ -387,12 +382,12 @@
       <!-- Scale Size Zoom Controller -->
       <div class="zoom-ctrl-group">
         <span style="font-size: 11px; color: #a1a1aa; font-weight: bold;">SIZE:</span>
-        <button class="btn-ctrl btn-zoom" data-zoom="0.35">35%</button>
-        <button class="btn-ctrl btn-zoom" data-zoom="0.50">50%</button>
-        <button class="btn-ctrl btn-zoom" data-zoom="0.70">70%</button>
+        <button class="btn-ctrl btn-zoom" data-zoom="0.30">30%</button>
+        <button class="btn-ctrl btn-zoom" data-zoom="0.45">45%</button>
+        <button class="btn-ctrl btn-zoom" data-zoom="0.60">60%</button>
         <button class="btn-ctrl btn-zoom" data-zoom="1.00">100%</button>
-        <input id="sliderZoom" type="range" min="0.25" max="1.50" step="0.05" value="0.60" style="width: 75px; cursor: pointer;" title="Adjust digital scale size without making buttons smaller">
-        <span id="zoomVal" style="font-family: var(--font-mono); font-size: 11px; color: #22d3ee; min-width: 30px;">60%</span>
+        <input id="sliderZoom" type="range" min="0.25" max="1.50" step="0.05" value="0.45" style="width: 75px; cursor: pointer;" title="Adjust digital scale size without making buttons smaller">
+        <span id="zoomVal" style="font-family: var(--font-mono); font-size: 11px; color: #22d3ee; min-width: 30px;">45%</span>
       </div>
 
       <!-- Scenario Runner -->
@@ -459,8 +454,6 @@
     const scaleChassisEl = document.getElementById('scaleChassis');
     const screenBezelEl = document.getElementById('screenBezel');
     const hudOverlayEl = document.getElementById('hudOverlay');
-    const countdownBannerEl = document.getElementById('countdownBanner');
-    const countdownSecEl = document.getElementById('countdownSec');
     const liveDotEl = document.getElementById('liveDot');
     const agentStatusTextEl = document.getElementById('agentStatusText');
 
@@ -630,23 +623,12 @@
       }
     }
 
-    // Countdown before starting scenario so phone is ready
+    // Scenarios start immediately with 100% clean, unobstructed screen
     function startCountdown(onComplete) {
       stopActiveScenario();
-      let count = 4;
-      countdownSecEl.textContent = count;
-      countdownBannerEl.classList.add('show');
-
-      const cdTimer = setInterval(() => {
-        count--;
-        if (count > 0) {
-          countdownSecEl.textContent = count;
-        } else {
-          clearInterval(cdTimer);
-          countdownBannerEl.classList.remove('show');
-          onComplete();
-        }
-      }, 1000);
+      if (typeof onComplete === 'function') {
+        onComplete();
+      }
     }
 
     // SCENARIO 1: Realistic 30s Espresso Shot
@@ -927,7 +909,7 @@
     // Scale Size Zoom Controller
     const sliderZoomEl = document.getElementById('sliderZoom');
     const zoomValEl = document.getElementById('zoomVal');
-    let currentScaleZoom = parseFloat(localStorage.getItem('scale_sim_zoom') || '0.60');
+    let currentScaleZoom = parseFloat(localStorage.getItem('scale_sim_zoom') || '0.45');
 
     function setScaleZoom(zoom) {
       currentScaleZoom = Math.max(0.20, Math.min(1.80, zoom));

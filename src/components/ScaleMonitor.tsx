@@ -787,11 +787,18 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     if (cameraState === 'standby') {
       setCameraState('live');
     }
-    // Hard tare reset for new shot initialization
+    // Hard tare & timer reset for new shot initialization
     filterRef.current.reset(0);
     currentWeightRef.current = 0.0;
     setCurrentWeight(0.0);
     setCurrentFlow(0.0);
+    setElapsedTime(0.0);
+    startTimeRef.current = Date.now();
+    firstDropTimeRef.current = null;
+    setFirstDropTime(null);
+    setPreInfusionDuration(0.0);
+    setActiveFlowDuration(0.0);
+    pointsRef.current = [];
     onBrewStart();
   };
 
@@ -857,12 +864,28 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     }
 
     onBrewFinish(finalWeight, finalTime, finalPre, finalFlow, [...pointsRef.current]);
+
+    // Reset stopwatch & shot telemetry so scale is clean and ready for the next shot
+    startTimeRef.current = 0;
+    firstDropTimeRef.current = null;
+    setElapsedTime(0.0);
+    setFirstDropTime(null);
+    setPreInfusionDuration(0.0);
+    setActiveFlowDuration(0.0);
+    setCurrentFlow(0.0);
+    filterRef.current.reset(0);
   };
 
   const handleCalibrateTare = () => {
     setCurrentWeight(0.0);
     currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);
+    setElapsedTime(0.0);
+    startTimeRef.current = 0;
+    firstDropTimeRef.current = null;
+    setFirstDropTime(null);
+    setPreInfusionDuration(0.0);
+    setActiveFlowDuration(0.0);
     setIsZeroDetected(true);
     filterRef.current.reset(0);
   };
@@ -1430,7 +1453,13 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
 
           {/* 3. Timer */}
-          <div className="bg-[#FAF7F2] p-2 sm:p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
+          <div
+            onClick={!isBrewing ? () => { setElapsedTime(0.0); startTimeRef.current = 0; } : undefined}
+            className={`bg-[#FAF7F2] p-2 sm:p-2.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs ${
+              !isBrewing ? 'cursor-pointer hover:bg-[#E8DFD5]/30 active:scale-95 transition' : ''
+            }`}
+            title={!isBrewing ? 'Tap to reset timer to 0.0s' : undefined}
+          >
             <span className="text-[9px] uppercase tracking-wider text-[#7A6E65] font-mono block">
               Time
             </span>
