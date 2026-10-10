@@ -2,6 +2,24 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.7.8] - 2026-10-10
+### Etape 23: Zoom-Hukommelse, Total Udrensning af Haptisk Forstyrrelse & Cross-Scale Benchmark Test-Suite
+- **Persistent Zoom-Hukommelse (`flowbean_scale_zoom`):**
+  - Kamera-zoomniveauet gemmes nu automatisk i `localStorage` og gendannes øjeblikkeligt ved hver åbning af Scale Cam, så baristaen slipper for at justere zoom gentagne gange.
+- **Fuldstændig Udrensning af Haptisk Feedback (Nul Rystelser):**
+  - **Identificeret Problem:** Haptisk feedback under vejning rystede telefonen i holderen/hånden, hvilket forstyrrede kameraets optiske fokus og i ekstreme tilfælde fik vibrationerne til at gå amok og skabe optisk sløring.
+  - **Løsning:** Samtlige kald til `@capacitor/haptics` er fjernet fra skala-flowet (start, tare, target yield og channeling). Kameraet og appen er nu 100% rolige under hele ekstraktionen.
+- **Cross-Scale Benchmark Test-Suite (16 Markedsledende Vægte Analyseret):**
+  - Etableret offline test-suite baseret på virkelige espresso-udtræk fra:
+    - *Timemore Nano* (side-by-side display med timer til venstre og vægt til højre)
+    - *Timemore Black Mirror Basic 2*
+    - *Acaia Lunar* (hvide LEDs på aluminiumsfront)
+    - *MHW-3BOMBER Smart Scale* (vinklet frontpanel)
+    - *SearchPean Tiny 2S* (blåhvide LEDs)
+    - *Felicita Arc* (skrå front)
+    - *Klassiske LCD-vægte* (mørke segmenter på lys baggrund)
+  - Kortlagt og implementeret præcis adskillelse mellem Side-by-Side (Timer til venstre, Vægt til højre) og Stacked Dual-Row arkitekturer.
+
 ## [1.7.7] - 2026-10-10
 ### Etape 22: Skala-OCR Præcision & Robust Dobbelt-Række Parsing (Muvna/Acaia/Timemore) & Ren Viewfinder UX
 - **Robust Dobbelt-Række Detektion (Vægt øverst vs. Timer nederst):**

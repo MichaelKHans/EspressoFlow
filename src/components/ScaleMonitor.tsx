@@ -22,7 +22,6 @@ import { calculateSmoothedFlowRate } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
 import { useTranslation } from '../i18n';
 import { wakeLock } from '../lib/wakeLock';
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 interface ScaleMonitorProps {
   isBrewing: boolean;
@@ -76,8 +75,19 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [cameraState, setCameraState] = useState<'standby' | 'live' | 'demo'>('live');
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Camera Optical Zoom & Interactive ROI Alignment state
-  const [zoomLevel, setZoomLevel] = useState<number>(1.8);
+  // Camera Optical Zoom & Interactive ROI Alignment state (Zoom persisted in localStorage)
+  const [zoomLevel, setZoomLevel] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('flowbean_scale_zoom');
+      if (saved) {
+        const val = parseFloat(saved);
+        if (!isNaN(val) && val >= 1.0 && val <= 3.0) return val;
+      }
+    } catch {
+      // Ignored
+    }
+    return 1.8;
+  });
   const [roiSize, setRoiSize] = useState<'compact' | 'standard'>('compact');
   const [roiCenter, setRoiCenter] = useState<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
   const [tapFeedback, setTapFeedback] = useState<{ x: number; y: number } | null>(null);
@@ -90,7 +100,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [isCalibrating, setIsCalibrating] = useState<boolean>(false);
   const [calibratedSuccess, setCalibratedSuccess] = useState<boolean>(false);
 
-  const zoomLevelRef = useRef<number>(1.8);
+  const zoomLevelRef = useRef<number>(zoomLevel);
   const roiSizeRef = useRef<'compact' | 'standard'>('compact');
   const roiCenterRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
 
@@ -154,6 +164,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const handleSetZoom = async (newZoom: number) => {
     zoomLevelRef.current = newZoom;
     setZoomLevel(newZoom);
+    try {
+      localStorage.setItem('flowbean_scale_zoom', newZoom.toString());
+    } catch {
+      // Ignored
+    }
     if (streamRef.current) {
       const track = streamRef.current.getVideoTracks()[0];
       if (track && track.applyConstraints) {
@@ -532,7 +547,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               setRoiCenter({ x: newNormX, y: newNormY });
             }
 
-            Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
             handleToggleFocusLock(true);
             setIsCalibrating(false);
             setCalibratedSuccess(true);
@@ -693,16 +707,13 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         onLivePointsUpdateRef.current([...pointsRef.current]);
       }
 
-      // Tactile haptic notification on reaching target yield
+      // Notification flags on reaching target yield or channeling
       if (weight >= activeTargetYield && !hasVibratedTargetRef.current) {
         hasVibratedTargetRef.current = true;
-        Haptics.notification({ type: NotificationType.Success }).catch(() => {});
       }
 
-      // Channeling detection haptic alert (ONLY for espresso! Pour over flow is naturally high)
       if (activeMethod !== 'pour_over' && firstDropTimeRef.current !== null && flow > 4.2 && !hasVibratedChannelingRef.current) {
         hasVibratedChannelingRef.current = true;
-        Haptics.notification({ type: NotificationType.Warning }).catch(() => {});
       }
 
       // Auto-finish if target reached in demo mode
@@ -719,7 +730,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   const handleStartBrewing = () => {
     requestOrientationPermission();
-    Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {});
     if (cameraState === 'standby') {
       setCameraState('live');
     }
@@ -775,7 +785,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleCalibrateTare = () => {
-    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
     setCurrentWeight(0.0);
     currentWeightRef.current = 0.0;
     setCurrentFlow(0.0);

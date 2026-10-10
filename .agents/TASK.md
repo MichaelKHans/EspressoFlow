@@ -13,3 +13,4 @@
 - [x] Professionel 5-Faners Mobile Bottom Navigation Bar (100% Vector Line-Art, Zero Emojis) (v1.6.0)
 - [x] AeroPress & French Press Immersion Steep Timer & Vægt Plunge Beskyttelse (v1.6.0)
 - [x] Skala-OCR Præcision & Robust Dobbelt-Række Parsing (Muvna/Acaia/Timemore) & Ren Viewfinder UX (v1.7.7)
+- [x] Zoom-Hukommelse, Total Udrensning af Haptisk Forstyrrelse & Cross-Scale Benchmark Test-Suite (v1.7.8)

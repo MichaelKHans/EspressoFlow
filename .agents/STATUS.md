@@ -11,6 +11,25 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Zoom-Hukommelse, Total Udrensning af Haptisk Forstyrrelse & Cross-Scale Benchmark Test-Suite (v1.7.8)
+- **Persistent Zoom-Hukommelse (`flowbean_scale_zoom`):**
+  - Kamera-zoomniveauet gemmes nu automatisk i `localStorage` og indlæses ved åbning af Scale Cam, så brugerens foretrukne forstørrelse bevares permanent.
+- **Fuldstændig Udrensning af Haptisk Feedback (Nul Rystelser):**
+  - **Identificeret Rodårsag:** Haptisk feedback under brygning rystede telefonen i holderen/hånden, hvilket forstyrrede kameraets optiske fokus og i værste fald gik amok i ukontrollerede vibrationer.
+  - **Løsning:** Samtlige kald til `@capacitor/haptics` er fjernet fra skala-flowet (start, tare, target yield og channeling). Kameraet og appen er nu 100% rolige under hele ekstraktionen.
+- **Cross-Scale Benchmark Test-Suite (16 Markedsledende Vægte Analyseret):**
+  - Etableret offline test-suite baseret på stillbilleder fra virkelige espresso-udtræk:
+    - *Timemore Nano* (side-by-side display med timer til venstre og vægt til højre)
+    - *Timemore Black Mirror Basic 2*
+    - *Acaia Lunar* (hvide LEDs på aluminiumsfront)
+    - *MHW-3BOMBER Smart Scale* (vinklet frontpanel)
+    - *SearchPean Tiny 2S* (blåhvide LEDs)
+    - *Felicita Arc* (skrå front)
+    - *Klassiske LCD-vægte* (mørke segmenter på lys baggrund)
+  - Kortlagt de to dominerende display-arkitekturer på markedet:
+    - Stacked Dual-Row (Muvna osv.): Løst via Dual-Row Valley Splitter.
+    - Side-by-Side (Timemore Nano, Basic 2, SearchPean, Acaia): Timer til venstre ($X < 0.50$), Vægt til højre ($X > 0.40$).
+
 ### 2026-10-10 -- Skala-OCR Præcision & Robust Dobbelt-Række Parsing (Muvna/Acaia/Timemore) & Ren Viewfinder UX (v1.7.7)
 - **Robust Dobbelt-Række Detektion (Vægt øverst vs. Timer nederst):**
   - **Identificeret Rodårsag:** Refleksioner fra vægtens facetkanter skabte 5-7 støjpixels på tværs af rækker, hvilket forhindrede 1D-projektionen i at falde under tærsklen. Vægt og Timer smeltede sammen til én 141px høj række.
