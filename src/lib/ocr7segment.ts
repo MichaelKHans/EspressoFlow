@@ -610,23 +610,52 @@ function parseDigitsFromBinary(
     rawRowBands.push({ start: rowStart, end: height });
   }
 
-  // Dual-Row Valley Splitter: If row is overly tall (H >= height * 0.50) and contains both Weight + Timer,
+  // Merge Intra-Digit Gaps:
+  // In 7-segment digits (especially '0', '7', '1' with no center bar 'g'),
+  // a small gap of 2-8px separates top and bottom vertical segments.
+  // Adjacent bands separated by <= 12px belong to the same digit row!
+  const mergedRowBands: { start: number; end: number }[] = [];
+  for (const b of rawRowBands) {
+    if (mergedRowBands.length === 0) {
+      mergedRowBands.push({ ...b });
+    } else {
+      const prev = mergedRowBands[mergedRowBands.length - 1];
+      const gap = b.start - prev.end;
+      if (gap <= Math.max(12, Math.floor(height * 0.08))) {
+        prev.end = b.end; // Merge top and bottom halves into single row
+      } else {
+        mergedRowBands.push({ ...b });
+      }
+    }
+  }
+
+  // Dual-Row Valley Splitter: If row is overly tall (H >= height * 0.70) and contains both Weight + Timer,
   // split at the most prominent horizontal valley between the two rows
   const rowBands: { start: number; end: number }[] = [];
-  for (const b of rawRowBands) {
+  for (const b of mergedRowBands) {
     const bH = b.end - b.start;
-    if (bH >= Math.floor(height * 0.48)) {
+    if (bH >= Math.floor(height * 0.70)) {
       const searchY1 = b.start + Math.floor(bH * 0.25);
       const searchY2 = b.start + Math.floor(bH * 0.75);
       let minVal = Infinity;
       let splitY = -1;
+      let lowRowCount = 0;
       for (let y = searchY1; y <= searchY2; y++) {
+        if (smoothedRows[y] <= Math.max(rowThreshold * 1.2, Math.floor(maxRowCount * 0.12))) {
+          lowRowCount++;
+        }
         if (smoothedRows[y] < minVal) {
           minVal = smoothedRows[y];
           splitY = y;
         }
       }
-      if (splitY !== -1 && minVal <= maxRowCount * 0.35 && splitY - b.start >= 12 && b.end - splitY >= 12) {
+      if (
+        splitY !== -1 &&
+        lowRowCount >= 10 &&
+        minVal <= Math.max(rowThreshold, Math.floor(maxRowCount * 0.10)) &&
+        splitY - b.start >= minRowH &&
+        b.end - splitY >= minRowH
+      ) {
         rowBands.push({ start: b.start, end: splitY });
         rowBands.push({ start: splitY, end: b.end });
         continue;
@@ -679,36 +708,9 @@ function parseDigitsFromBinary(
       rawSpans.push({ start: spanStart, end: width });
     }
 
-    // Integrated Decimal Point Splitter:
-    // On digital espresso scales (Muvna, King Arthur, Timemore), the decimal point is placed
-    // immediately adjacent to the preceding digit (e.g. "4."). If the span is wide (aspect >= 0.65)
-    // and has a valley in the right 25-45%, split off the trailing decimal dot!
-    const decimalSplitSpans: { start: number; end: number }[] = [];
-    for (const span of rawSpans) {
-      const spanW = span.end - span.start + 1;
-      if (spanW >= Math.floor(bandH * 0.65)) {
-        const vStart = span.start + Math.floor(spanW * 0.58);
-        const vEnd = span.start + Math.floor(spanW * 0.88);
-        let minCol = Infinity;
-        let valleyX = -1;
-        for (let x = vStart; x <= vEnd; x++) {
-          if (colCounts[x] < minCol) {
-            minCol = colCounts[x];
-            valleyX = x;
-          }
-        }
-        if (valleyX !== -1 && minCol <= Math.max(colThreshold * 1.5, Math.floor(bandH * 0.18))) {
-          decimalSplitSpans.push({ start: span.start, end: valleyX });
-          decimalSplitSpans.push({ start: valleyX + 1, end: span.end });
-          continue;
-        }
-      }
-      decimalSplitSpans.push(span);
-    }
-
     // Multi-Digit Valley Splitter:
     // Only split if a span is wider than a single digit (width >= 1.05 * bandH)
-    // to prevent single digits with thin center bars (like digit '4') from being sliced into two 1's!
+    // to prevent single digits with thin center bars (like digit '4' or '0') from being sliced into two 1's!
     function splitFusedSpans(
       inputSpans: { start: number; end: number }[],
       counts: number[],
@@ -745,7 +747,7 @@ function parseDigitsFromBinary(
       return result;
     }
 
-    const spans = splitFusedSpans(decimalSplitSpans, colCounts, bandH, colThreshold);
+    const spans = splitFusedSpans(rawSpans, colCounts, bandH, colThreshold);
 
     // Anti-Sentence / Text-Entropy Gate:
     // Coffee scale displays have at most 4-8 elements across a single band (e.g. "0:15  18.4g").

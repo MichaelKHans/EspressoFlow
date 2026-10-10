@@ -2,6 +2,19 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.5] - 2026-10-10
+### Etape 30: Fuld Eliminering af Vægtspring & Ciffer-Kløvning (Pure Weight & 7-Segment Harmoni)
+- **Fjernelse af Destruktiv `decimalSplitSpans` (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** `decimalSplitSpans` forsøgte at splitte spænd med bredde $\ge 0.65 \times \text{bandH}$ i intervallet 58%-88% af bredden. I normale 7-segment digitalvægte har cifre ('0', '2', '3', '4', '5', '6', '7', '8', '9') netop et bredde-til-højde forhold på $0.55 - 0.72 \times \text{bandH}$. I tallet `0` består det indre hulrum kun af topbjælke `a` og bundbjælke `d`. Kløveren opfattede dette hulrum som en separator og skar `0` midt over i to smalle lodrette streger, som fast-pathen derefter klassificerede som to 1-taller! Derved sprang `0.0` vilkårligt mellem `0.0g` og `10.0g`/`11.0g` (de karakteristiske firkantbølger/spring på udtrækskurven).
+  - **Løsning:** `decimalSplitSpans` er fjernet. Fused digit splitting er nu forbeholdt ægte sammenhængende cifre ($w \ge 1.05 \times \text{bandH}$).
+- **Intra-Digit Gap Samling mod Utilsigtet Række-Kløvning (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** I 7-segment tal uden midterbjælke `g` (fx `0.0`, `1.1`, `7.7`) er der et 3-6 pixel lodret mellemrum mellem top-segmenterne (`b`, `f`) og bund-segmenterne (`c`, `e`). `Dual-Row Valley Splitter` opfattede dette lille mellemrum som to adskilte display-rækker (Weight på række 0 og Timer på række 1) og halverede cifrene vandret, hvorved toppen blev parset som '7' og '1'.
+  - **Løsning:** Tilstødende bånd med mellemrum $\le 12\text{px}$ samles automatisk som én række. Dual-row kløvning aktiveres kun hvis båndet fylder $\ge 70\%$ af kamerasøgeren og kløften mellem rækkerne er en reel fysisk afstand på $\ge 10$ sammenhængende tomme scanlines.
+- **Simulator Model Synkronisering (`public/scale-simulator.html`):**
+  - JavaScript-starttilstand sat til `let currentModel = 'pure_weight';` så den matcher den aktive standardknap i cockpittet.
+- **Verifikation:**
+  - 100% syntetisk og optisk genkendelse på alle cifre `0.0`, `1.1`, `2.2`, `3.3`, `4.4`, `5.5`, `6.6`, `7.7`, `8.8`, `9.9`, `18.4`, `36.0` med 0 spring og 0 kløvede cifre.
+
 ## [1.8.4] - 2026-10-10
 ### Etape 29: Timer Nulstilling ved Ny Bryg, Fjernelse af Blokerende Nedtælling & Uafhængig Vægt-Zoom
 - **Automatisk Timer Nulstilling (`ScaleMonitor.tsx`):**

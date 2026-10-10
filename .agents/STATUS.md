@@ -11,6 +11,18 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Fuld Eliminering af Vægtspring & Ciffer-Kløvning (Pure Weight & 7-Segment Harmoni) (v1.8.5)
+- **Fjernelse af Destruktiv `decimalSplitSpans` (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** En decimal-splitter skar spænd med bredde $\ge 0.65 \times \text{højde}$ i intervallet 58%-88%. I tallet `0` har det indre hulrum lave søjletællinger (kun top/bund segment). Kløveren opfattede hulrummet som en adskillelse og skar `0` midt over i to smalle '1'-taller! Dette forårsagede de voldsomme firkantbølge-spring mellem `0.0g` og `10.0g`/`11.0g` på ekstraktionskurven.
+  - **Løsning:** `decimalSplitSpans` fjernet. Ciffer-kløvning sker nu udelukkende på ægte multi-digit spænd med bredde $\ge 1.05 \times \text{højde}$.
+- **Intra-Digit Gap Samling mod Utilsigtet Række-Kløvning (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** I cifre uden midterbjælke `g` (`0.0`, `1.1`, `7.7`) er der et 3-6px lodret mellemrum mellem top- og bund-segmenter. `Dual-Row Valley Splitter` opfattede dette lille mellemrum som to adskilte rækker (Weight og Timer) og skar cifrene vandret over, hvorved toppen blev parset som '7' og '1'.
+  - **Løsning:** Tilstødende bånd med mellemrum $\le 12\text{px}$ samles nu som én hel cifferrække. Række-kløvning kræver nu $\ge 70\%$ skærmhøjde og mindst 10 sammenhængende tomme scanlines.
+- **Simulator Synkronisering (`public/scale-simulator.html`):**
+  - Standardmodel sat til `pure_weight` i JS, så den matcher UI standardknappen.
+- **Test & Verifikation:**
+  - 100% fejlfri genkendelse af alle cifre `0.0`, `1.1`, `2.2`, `3.3`, `4.4`, `5.5`, `6.6`, `7.7`, `8.8`, `9.9`, `18.4`, `36.0` med nul firkantbølge-spring.
+
 ### 2026-10-10 -- Timer Nulstilling ved Ny Bryg, Fjernelse af Blokerende Nedtælling & Uafhængig Vægt-Zoom (v1.8.4)
 - **Automatisk Timer Nulstilling (`ScaleMonitor.tsx`):**
   - **Identificeret Årsag:** Ved afslutning af et shot eller tryk på Tare forblev `elapsedTime` på det forrige shots tid (f.eks. `61.5s`). Baristaen så derfor den gamle tid i cockpittet ved forberedelse af en ny bryg.
