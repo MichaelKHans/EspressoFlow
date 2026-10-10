@@ -262,8 +262,8 @@ async function main() {
   for (const targetVal of benchmarkValues) {
     process.stdout.write(`   Testing ${targetVal.toFixed(1)}g... `);
     await sendLocalCommand({ action: 'set_weight', weight: targetVal, timer: 0 });
-    // Wait for display update and camera frame
-    await sleep(2000);
+    // Wait for display update, OCR consensus buffer and network broadcast
+    await sleep(2400);
 
     const detected = latestMobileFrame ? latestMobileFrame.weight : null;
     const diff = detected !== null ? Math.abs(detected - targetVal) : 999;

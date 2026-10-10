@@ -2,6 +2,14 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.8.8] - 2026-10-10
+### Etape 33: Bezel-Margen Frasortering (22px) mod Foranstillet '1' & Simulator Timer 0 Nulstilling
+- **4.5% Yderkant-Spærre mod Skærm-Bezel (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** På et 480px canvas var den forrige spærre kun sat til 3px. Den skarpe kontrastkant på skærmens chassis/bezel ($x \approx 10-15\text{px}$) overlevede derfor og blev parset som et foranstillet '1' (så `1.1` blev `11.1`, `4.4` blev `14.5`, og `5.5` blev `15.5`).
+  - **Løsning:** `edgeMargin` er øget til $4.5\%$ ($\approx 22\text{px}$ på 480px canvas), så både venstre og højre ramme-artefakter og enhedsmarkører effektivt frasorteres før cifferklyngedannelse.
+- **Timer 0 Nulstilling (`scale-simulator.html`):**
+  - Rettet `if (cmd.timer !== undefined)` så `timer: 0` ikke fejlagtigt evaluerer falsk som 0, hvilket sikrer fuld nulstilling af timeren under vægttests.
+
 ## [1.8.7] - 2026-10-10
 ### Etape 32: Reparation af Hypersensitiv Hulrums-Glans & Fuld Genopretning af Cifre ('0', '8', '6', '9')
 - **Korrigering af Hulrums-Tærskel (`sampleSegment('c')` i `ocr7segment.ts`):**

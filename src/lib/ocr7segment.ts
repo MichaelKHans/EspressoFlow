@@ -843,13 +843,14 @@ function parseDigitsFromBinary(
       }
 
       // Unit letter filtering ('g', 'oz', 'ml' on far right with non-digit bit pattern)
-      if (spanW <= bandH * 0.45 && spanH <= bandH * 0.45 && span.start > width * 0.65) {
+      if (spanW <= bandH * 0.55 && spanH <= bandH * 0.70 && span.start > width * 0.68) {
         // Skip isolated unit markers
         continue;
       }
 
-      // Reject border-touching artifacts (screen bezel frame, camera crop boundary)
-      if (span.start <= 3 || span.end >= width - 3) {
+      // Reject border-touching artifacts (screen bezel frame, camera crop boundary, edge glares)
+      const edgeMargin = Math.max(16, Math.floor(width * 0.045));
+      if (span.start <= edgeMargin || span.end >= width - edgeMargin) {
         continue;
       }
 

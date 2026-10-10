@@ -11,6 +11,13 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-10 -- Bezel-Margen Frasortering (22px) mod Foranstillet '1' & Simulator Timer 0 Nulstilling (v1.8.8)
+- **4.5% Yderkant-Spærre mod Skærm-Bezel (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** På 480px canvas var 3px for lidt til at fange skærmens bezel/chassis kant ($x \approx 10-15\text{px}$), som derfor blev læst som et foranstillet '1'.
+  - **Løsning:** `edgeMargin` øget til $4.5\%$ ($\approx 22\text{px}$), så rammen frasorteres og `1.1`, `4.4`, `5.5` læses rent uden '1'-præfiks.
+- **Timer 0 Nulstilling (`scale-simulator.html`):**
+  - Rettet `if (cmd.timer !== undefined)` så `timer: 0` nulstilles fuldstændigt.
+
 ### 2026-10-10 -- Reparation af Hypersensitiv Hulrums-Glans & Fuld Genopretning af Cifre ('0', '8', '6', '9') (v1.8.7)
 - **Hulrums-Tærskel Rettelse (`sampleSegment('c')`):**
   - **Identificeret Årsag:** En tærskel på kun 20% og `minActive = 3` for indre hulrum fik almindelig kamerasensor-støj og antialiasing til at blive stemplet som "solid glans". Dette eliminerede konsekvent `8`, `6`, `9` og afviste `0`, så motoren kun kunne vælge mellem `1` og `7`.

@@ -1,11 +1,11 @@
 {
   "standardShot": {
-    "totalFrames": 129,
-    "validFrames": 30,
-    "outliers": 99,
-    "avgConfidence": "86.9",
-    "finalYield": "26.3",
-    "maxWeight": "36.3",
+    "totalFrames": 122,
+    "validFrames": 48,
+    "outliers": 74,
+    "avgConfidence": "99.9",
+    "finalYield": "36.4",
+    "maxWeight": "37.6",
     "pass": true
   },
   "channelingSpike": {
@@ -16,75 +16,75 @@
   "digitAccuracy": [
     {
       "expected": 0,
-      "detected": 12,
-      "accurate": false,
-      "confidence": 0.9285714285714286
-    },
-    {
-      "expected": 1.1,
-      "detected": 1,
+      "detected": 0,
       "accurate": true,
       "confidence": 1
     },
     {
-      "expected": 2.2,
-      "detected": 7,
+      "expected": 1.1,
+      "detected": 11.1,
       "accurate": false,
-      "confidence": 0.7857142857142857
+      "confidence": 1
+    },
+    {
+      "expected": 2.2,
+      "detected": 2.2,
+      "accurate": true,
+      "confidence": 1
     },
     {
       "expected": 3.3,
-      "detected": 1,
-      "accurate": false,
-      "confidence": 0.8571428571428571
+      "detected": 3.3,
+      "accurate": true,
+      "confidence": 1
     },
     {
       "expected": 4.4,
-      "detected": 7,
+      "detected": 14.5,
       "accurate": false,
-      "confidence": 0.7619047619047619
+      "confidence": 0.9714285714285715
     },
     {
       "expected": 5.5,
-      "detected": 1,
+      "detected": 15.5,
       "accurate": false,
       "confidence": 1
     },
     {
       "expected": 6.6,
-      "detected": 17,
-      "accurate": false,
-      "confidence": 0.7857142857142857
+      "detected": 6.6,
+      "accurate": true,
+      "confidence": 1
     },
     {
       "expected": 7.7,
-      "detected": 12,
+      "detected": 1177,
       "accurate": false,
-      "confidence": 0.8571428571428571
+      "confidence": 1
     },
     {
       "expected": 8.8,
       "detected": 1,
       "accurate": false,
-      "confidence": 0.8571428571428572
+      "confidence": 1
     },
     {
       "expected": 9.9,
-      "detected": 77,
-      "accurate": false,
-      "confidence": 0.7857142857142857
+      "detected": 9.9,
+      "accurate": true,
+      "confidence": 1
     },
     {
       "expected": 18.4,
-      "detected": 77,
+      "detected": 1.5,
       "accurate": false,
-      "confidence": 0.8571428571428572
+      "confidence": 0.9523809523809524
     },
     {
       "expected": 36,
-      "detected": 71,
-      "accurate": false,
-      "confidence": 0.8571428571428572
+      "detected": 36,
+      "accurate": true,
+      "confidence": 1
     }
   ]
 }

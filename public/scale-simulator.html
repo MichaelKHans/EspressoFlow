@@ -849,7 +849,7 @@
         else if (cmd.name === 'timer') runTimerStressTest();
       } else if (cmd.action === 'set_weight') {
         currentWeight = parseFloat(cmd.weight) || 0.0;
-        if (cmd.timer) currentTimerSec = parseFloat(cmd.timer) || 0;
+        if (cmd.timer !== undefined) currentTimerSec = parseFloat(cmd.timer) || 0;
         updateDisplay();
       } else if (cmd.action === 'set_hud') {
         isHudVisible = !!cmd.visible;
