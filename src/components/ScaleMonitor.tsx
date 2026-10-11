@@ -122,6 +122,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [ocrFps, setOcrFps] = useState<number>(0);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const viewfinderContainerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const inspectorCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -1034,6 +1035,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
       {/* Main Viewfinder Screen (Compact cockpit mode during active brew to prevent scroll blowout) */}
       <div
+        ref={viewfinderContainerRef}
         onClick={handleTapViewfinder}
         onTouchEnd={(e) => { e.preventDefault(); handleTapViewfinder(e); }}
         className={`relative ${
@@ -1122,17 +1124,59 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         {(() => {
           const hasValidReading = lastOcrResult !== null && lastOcrResult.weight !== null && lastOcrResult.confidence >= 0.65;
           const isDigitLocked = (cameraState === 'live' && (hasValidReading || lockHoldCountRef.current > 0)) || (cameraState === 'demo' && isBrewing);
-          // Reticle width in viewfinder perfectly mirrors isotropic optical crop width
-          const reticleWPercent = Math.max(22, Math.min(80, Math.round(((roiSize === 'compact' ? 0.44 : 0.58) / zoomLevel) * 100)));
+
+          // Calculate exact 1:1 screen projection matching the camera object-cover crop
+          let reticleStyle: React.CSSProperties = {
+            left: `${roiCenter.x * 100}%`,
+            top: `${roiCenter.y * 100}%`,
+            width: `${Math.max(22, Math.min(80, Math.round(((roiSize === 'compact' ? 0.44 : 0.58) / zoomLevel) * 100)))}%`,
+            transform: 'translate(-50%, -50%)',
+          };
+
+          const containerEl = viewfinderContainerRef.current;
+          const videoEl = videoRef.current;
+          if (cameraState === 'live' && containerEl && videoEl && videoEl.videoWidth && videoEl.videoHeight) {
+            const cW = containerEl.clientWidth;
+            const cH = containerEl.clientHeight;
+            const vW = videoEl.videoWidth;
+            const vH = videoEl.videoHeight;
+
+            if (cW > 0 && cH > 0 && vW > 0 && vH > 0) {
+              const cRatio = cW / cH;
+              const vRatio = vW / vH;
+
+              let renderedW = cW;
+              let renderedH = cH;
+              let offsetX = 0;
+              let offsetY = 0;
+
+              if (vRatio > cRatio) {
+                renderedW = cH * vRatio;
+                offsetX = (renderedW - cW) / 2;
+              } else {
+                renderedH = cW / vRatio;
+                offsetY = (renderedH - cH) / 2;
+              }
+
+              const screenCenterX = (roiCenter.x * renderedW) - offsetX;
+              const screenCenterY = (roiCenter.y * renderedH) - offsetY;
+
+              const baseFractionW = roiSize === 'compact' ? 0.44 : 0.58;
+              const cropW = (vW * baseFractionW) / zoomLevel;
+              const screenCropW = cropW * (renderedW / vW);
+
+              reticleStyle = {
+                left: `${screenCenterX}px`,
+                top: `${screenCenterY}px`,
+                width: `${screenCropW}px`,
+                transform: 'translate(-50%, -50%)',
+              };
+            }
+          }
 
           return (
             <div
-              style={{
-                left: `${roiCenter.x * 100}%`,
-                top: `${roiCenter.y * 100}%`,
-                width: `${reticleWPercent}%`,
-                transform: 'translate(-50%, -50%)',
-              }}
+              style={reticleStyle}
               className={`absolute z-10 rounded-xl transition-all duration-150 pointer-events-none aspect-2/1 ${
                 isBrewing
                   ? 'border-2 border-solid border-amber-400/90 bg-amber-400/5 shadow-[0_0_20px_rgba(251,191,36,0.25)]'

@@ -427,6 +427,25 @@ export const en = {
   'shotsummary.grinder_adjustment': 'Grinder Dial Adjustment:',
   'shotsummary.pre_infusion_abbr': 'Pre-Infusion',
   'shotsummary.flow_phase_abbr': 'Flow Phase',
+  'shotsummary.verdict_good': 'Great Extraction',
+  'shotsummary.verdict_fast': 'Ran Too Fast (Under-extracted)',
+  'shotsummary.verdict_slow': 'Ran Too Slow (Over-extracted)',
+  'shotsummary.verdict_channeling': 'Channeling Spike Detected',
+  'shotsummary.apply_grind': 'Set Grinder to {setting}',
+  'shotsummary.applied_grind': '✓ Grinder Updated',
+
+  // Pre-Brew Coach (Memory & Proactive Dial-in)
+  'coach.pre_brew_title': 'Barista Coach',
+  'coach.verdict_good': 'Last shot was spot on',
+  'coach.verdict_fast': 'Last shot ran fast',
+  'coach.verdict_slow': 'Last shot ran slow',
+  'coach.verdict_channeling': 'Last shot channeled',
+  'coach.recommend_finer': 'Last shot ran fast. Adjust grinder FINER to {setting} before brewing.',
+  'coach.recommend_coarser': 'Last shot ran slow. Adjust grinder COARSER to {setting} before brewing.',
+  'coach.recommend_keep': 'Last brew was in the Golden Zone! Keep your grinder at {setting}.',
+  'coach.recommend_channeling': 'Last brew had a flow spike. Keep grinder at {setting} and focus on WDT needle distribution.',
+  'coach.apply_btn': 'Set to {setting}',
+  'coach.dismiss': 'Dismiss',
 
   // Logbook Date Grouping & Curve Expansion
   'logbook.today': 'Today',

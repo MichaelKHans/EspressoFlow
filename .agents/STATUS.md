@@ -11,6 +11,24 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-11 -- Barista Dial-In Intelligence, Slutskærms Hero Decision Card & Pre-Brew Coach (v1.9.0)
+- **Optisk Billedsøger-Justering (`ScaleMonitor.tsx`):**
+  - **Identificeret Årsag:** Videoens CSS `object-cover` klipper og skalerer videostreamen i forhold til søgerens container. Tidligere blev reticle og cifferramme placeret via simple procenter af containeren (`roiCenter.y * 100%`), hvilket førte til en vertikal forskydning ned over timeren på visse mobil- og skærmopløsninger.
+  - **Løsning:** Tilføjet `viewfinderContainerRef` og en fuld 1:1 `object-cover` invers projektionsmatrix. Reticle og den grønne ciffer-boks renderes nu med subpixel-præcision præcis oven på vægtens cifre.
+- **4-Frame Damping mod Hurtige Vægtudsving (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** `ScaleReadingFilter` accepterede tidligere et stort vægtspring, hvis blot 2 billeder (kun 66 ms) var enige. Hurtige lysreflekser eller damp kunne derfor fremkalde kortvarige sprunge på 10-25g.
+  - **Løsning:** Udvidet filterets temporal buffer til 5 frames og sat krav om mindst 4 sammenhængende frames for spring $> 2.0g$. Desuden er maks frame-til-frame stigning sat til $6.5\text{ g/s}$ under aktiv brygning, hvilket svarer til den fysiske grænse for væskestrømning.
+- **Slutskærmens Hero Decision Card (`ShotSummaryModal.tsx`):**
+  - Indsat et visuelt dominerende "Barista Dom"-kort helt øverst i bryg-opsummeringen:
+    - 🟢 **GOD BRYGNING:** Vises når brygget rammer The Golden Zone (25–30s, optimalt flow, ingen channeling) ➔ Råder til at bevare nuværende kværntal.
+    - 🟡 **GIK FOR HURTIGT (< 24s):** Vises ved hurtig flow/underekstraktion ➔ Råder til: "Drej kværn FINERE: {nuværende} ➔ {anbefalet}".
+    - 🔴 **GIK FOR LANGSOMT (> 32s):** Vises ved overekstraktion/choked flow ➔ Råder til: "Drej kværn GROVERE: {nuværende} ➔ {anbefalet}".
+    - ⚠️ **KANALISERING:** Vises ved flow-spikes ➔ Råder til at fastholde kværnen og fokusere på WDT-nåle og jævn fordeling.
+  - Integreret en 1-klik knap (`[ Sæt kværn til {setting} ]`), der gemmer kværnindstillingen for drikken med det samme.
+- **Pre-Brew Coach på Cockpittet (`PreBrewCoachBanner.tsx`):**
+  - Hukommelse til næste bryg: Når baristaen åbner cockpittet og vælger en drik, slår appen automatisk det forrige bryg op i logbogen.
+  - Viser en proaktiv barista-vejledning over søgeren inden kværning: *"Sidste bryg gik for hurtigt. Stil kværnen FINERE til {setting} før du brygger!"* med en direkte 1-tap knap til at opdatere kværntallet.
+
 ### 2026-10-10 -- 4-Lags Bezel/Chassis Kant-Eliminering & 100% Ciffer-Præcision mod 1-Tals Spring (v1.8.9)
 - **4-Lags Sikring mod Falske 1-Taller fra Vægtens Chassis- & Skærmkanter (`ocr7segment.ts`):**
   - **Identificeret Årsag:** Brugeren observerede, at den lodrette kant ved siden af displayet tit kom til at tælle som et 1-tal (`den kant der er ved siden af kommer tit til at tælle som 1 tal`), hvilket gav uventede vægtspring mellem fx 36.0g og 136.0g eller 0.0g og 10.0g. Den forrige fast-path klassificerede enhver lodret streg med aspect $\le 0.42$ som '1' med 100% konfidens – selv tynde kanter på 2-5px.

@@ -15,6 +15,7 @@ import { TrialCountdownBanner } from './components/TrialCountdownBanner';
 import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
 import { BeandexView } from './components/BeandexView';
 import { ShotSummaryModal } from './components/ShotSummaryModal';
+import { PreBrewCoachBanner } from './components/PreBrewCoachBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { CoffeeBeanIcon } from './components/CustomCoffeeIcons';
 import { useMobileBackHandler } from './lib/useMobileBackHandler';
@@ -554,6 +555,15 @@ export function App() {
     setLastFinishedShot(updatedShot);
   };
 
+  const handleApplyGrindAdjustment = (newSetting: string) => {
+    setGrindSetting(newSetting);
+    const key = `${activeBeanId}_${activeDrinkId}`;
+    saveDrinkGrindSetting(key, newSetting);
+    const updatedBeans = beans.map((b) => (b.id === activeBeanId ? { ...b, grindSetting: newSetting } : b));
+    setBeans(updatedBeans);
+    saveBeans(updatedBeans);
+  };
+
   const handleDeleteShot = (shotId: string) => {
     const updated = deleteShot(shotId);
     setShots(updated);
@@ -920,6 +930,17 @@ export function App() {
                 <span>{t('scale.open_dialin')}</span>
               </button>
             </div>
+ 
+            {/* Pre-Brew Coach Recommendation Banner (Proactive Memory from Last Brew) */}
+            <PreBrewCoachBanner
+              activeDrinkId={activeDrinkId}
+              activeDrinkName={activeDrink.name}
+              currentGrindSetting={grindSetting}
+              grinderName={currentGrinder.name}
+              shots={shots}
+              onApplyGrindSetting={handleApplyGrindAdjustment}
+              isBrewing={isBrewing}
+            />
 
             <ScaleMonitor
               isBrewing={isBrewing}
@@ -1533,6 +1554,7 @@ export function App() {
           setActiveTab('logbook');
         }}
         onUpdateShot={handleUpdateShot}
+        onApplyGrindSetting={handleApplyGrindAdjustment}
       />
 
       {/* Settings Modal */}

@@ -55,6 +55,24 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
   - Pacing Guide Flow-Meter (mål 4.0–6.0 g/s) og deaktivering af kanaliseringsalarm i filtermode.
   - Dynamisk FlowChart tidsakse op til 4 minutter (240s) med minut-markeringer og Y-akse op til 500g.
 
+## ☕ FASE 9: Barista Dial-In Intelligence & Next-Brew Coach (v1.9.0 - AFSLUTTET)
+- [x] **1. Optisk Billedsøger-Justering (Top Viewfinder Alignment):**
+  - Fixet `object-cover` koordinat-mapping i det øverste kameraview i `ScaleMonitor.tsx` med `viewfinderContainerRef`, så den grønne boks sidder 100% præcist over vægttallene (nøjagtig som i projektionen forneden).
+- [x] **2. 4-Frame Damping på Hurtige Vægtudsving:**
+  - Opgraderet `ScaleReadingFilter` i `src/lib/ocr7segment.ts` til at kræve 4 sammenhængende frames for spring $> 2.0g$, og clamp frame-til-frame stigning til fysisk maks flow (6.5 g/s), så hurtige lysglimt ignoreres fuldstændigt.
+- [x] **3. Slutskærmen (Shot Summary Hero Decision Card):**
+  - Skabt et ultra-tydeligt Barista-resultatkort øverst i `ShotSummaryModal.tsx`:
+    - 🟢 **GOD BRYGNING:** Golden Zone (25–30s, optimalt flow, nul channeling) ➔ "Behold din kværnindstilling".
+    - 🟡 **GIK FOR HURTIGT (< 24s):** "Underekstraheret / Sur ➔ Kværn FINERE (+X trin/klik)".
+    - 🔴 **GIK FOR LANGSOMT (> 32s):** "Overekstraheret / Bitter ➔ Kværn GROVERE (-X trin/klik)".
+    - ⚠️ **KANALISERING:** Flow-spike detekteret ➔ "Hold kværn – forbedr puck-prep (WDT)".
+    - Direkte 1-klik knap: `[ Sæt kværn til {setting} ]` med instant update.
+- [x] **4. Pre-Brew Coach på Startskærmen (Hukommelse til næste brygning):**
+  - Implementeret `PreBrewCoachBanner.tsx` i cockpittet: Når brugeren vælger samme drik (f.eks. Double Espresso), hentes forrige skud automatisk via `storage.ts`.
+  - Viser et fremtrædende "Brew Coach" banner over søgeren:
+    - F.eks.: *"Sidste bryg gik for hurtigt. Stil kværnen FINERE til 13.0 før du brygger!"*
+    - Direkte knap til at kvittere / opdatere kværntallet med 1 tap.
+
 ---
 
 ## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)

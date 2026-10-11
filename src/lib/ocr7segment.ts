@@ -1363,32 +1363,35 @@ export class ScaleReadingFilter {
     }
 
     // Maximum physically possible flow rate from an espresso extraction / pour-over stream
-    // During active espresso flow, max real flow is ~4-5 g/s. Allow up to 10 g/s headroom.
+    // Under active brewing, real fluid flow never exceeds ~5-6 g/s.
+    // Frame delta ceiling:
     const maxDelta = isBrewing
-      ? Math.max(0.8, deltaTimeSeconds * 10.0)
-      : Math.max(1.5, deltaTimeSeconds * 15.0);
+      ? Math.max(0.4, deltaTimeSeconds * 6.5) // ~6.5 g/s maximum physical flow rate headroom
+      : Math.max(1.2, deltaTimeSeconds * 12.0);
     const delta = Math.abs(newReading - this.lastValidWeight);
 
-    // Keep sliding 3-frame buffer
+    // Keep sliding 5-frame buffer
     this.recentWindow.push(newReading);
-    if (this.recentWindow.length > 3) {
+    if (this.recentWindow.length > 5) {
       this.recentWindow.shift();
     }
 
     if (delta > maxDelta) {
-      // Possible optical glitch or legitimate step change:
-      // Check whether at least 2 consecutive frames in window agree on the new reading
-      if (this.recentWindow.length >= 2) {
-        const lastTwoDiff = Math.abs(
-          this.recentWindow[this.recentWindow.length - 1] - this.recentWindow[this.recentWindow.length - 2]
-        );
-        if (lastTwoDiff <= 0.3) {
+      // Possible optical glitch, glare reflection, or legitimate step change:
+      // For large jumps (delta > 2.0g), require at least 4 consecutive frames in agreement (~130ms at 30fps)
+      // For moderate jumps (delta <= 2.0g), require at least 3 frames.
+      const requiredFrames = delta > 2.0 ? 4 : 3;
+      if (this.recentWindow.length >= requiredFrames) {
+        const slice = this.recentWindow.slice(-requiredFrames);
+        const minW = Math.min(...slice);
+        const maxW = Math.max(...slice);
+        if (maxW - minW <= 0.35) {
           // If brewing, liquid cannot disappear (prevent sudden downward drops)
           if (isBrewing && newReading < this.lastValidWeight - 0.5) {
             return { weight: this.lastValidWeight, isOutlier: true };
           }
 
-          // Legitimate step change or channeling surge confirmed by consecutive frame agreement!
+          // Legitimate sustained step change confirmed!
           this.lastValidWeight = newReading;
           this.consecutiveLowCount = 0;
           return { weight: newReading, isOutlier: false };

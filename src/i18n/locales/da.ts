@@ -429,6 +429,25 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'shotsummary.grinder_adjustment': 'Kværnjustering:',
   'shotsummary.pre_infusion_abbr': 'Præ-infusion',
   'shotsummary.flow_phase_abbr': 'Flowfase',
+  'shotsummary.verdict_good': 'God Brygning',
+  'shotsummary.verdict_fast': 'Gik for Hurtigt (Underekstraheret)',
+  'shotsummary.verdict_slow': 'Gik for Langsomt (Overekstraheret)',
+  'shotsummary.verdict_channeling': 'Kanalisering Registreret',
+  'shotsummary.apply_grind': 'Sæt Kværn til {setting}',
+  'shotsummary.applied_grind': '✓ Kværn Opdateret',
+
+  // Pre-Brew Coach (Hukommelse & Proaktiv Dial-in)
+  'coach.pre_brew_title': 'Barista Coach',
+  'coach.verdict_good': 'Sidste bryg sad lige i skabet',
+  'coach.verdict_fast': 'Sidste bryg gik for hurtigt',
+  'coach.verdict_slow': 'Sidste bryg gik for langsomt',
+  'coach.verdict_channeling': 'Sidste bryg kanaliserede',
+  'coach.recommend_finer': 'Sidste bryg gik for hurtigt. Stil kværnen FINERE til {setting} før du brygger.',
+  'coach.recommend_coarser': 'Sidste bryg gik for langsomt. Stil kværnen GROVERE til {setting} før du brygger.',
+  'coach.recommend_keep': 'Sidste bryg ramte Golden Zone! Behold kværnen på {setting}.',
+  'coach.recommend_channeling': 'Sidste bryg havde flow-spike. Hold kværnen på {setting} og brug WDT-nåle til jævn fordeling.',
+  'coach.apply_btn': 'Sæt til {setting}',
+  'coach.dismiss': 'Skjul',
 
   // Logbook Date Grouping & Curve Expansion
   'logbook.today': 'I dag',

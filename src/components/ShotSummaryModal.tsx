@@ -22,6 +22,7 @@ interface ShotSummaryModalProps {
   onClose: () => void;
   onViewInLogbook: () => void;
   onUpdateShot: (updated: ShotRecord) => void;
+  onApplyGrindSetting?: (newSetting: string) => void;
 }
 
 export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
@@ -31,15 +32,18 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   onClose,
   onViewInLogbook,
   onUpdateShot,
+  onApplyGrindSetting,
 }) => {
   const { t } = useTranslation();
   const [selectedTaste, setSelectedTaste] = useState<TasteRating | null>(null);
   const [notes, setNotes] = useState<string>('');
+  const [appliedGrind, setAppliedGrind] = useState<boolean>(false);
 
   useEffect(() => {
     if (shot) {
       setSelectedTaste(shot.tasteRating || null);
       setNotes(shot.notes || '');
+      setAppliedGrind(false);
     }
   }, [shot]);
 
@@ -115,6 +119,28 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
     },
   ];
 
+  const isChanneling = Boolean(shot.channelingDetected || (typeof shot.channeling === 'object' && shot.channeling.detected));
+  const isFast = !isChanneling && (shot.totalTimeSeconds < 24.0 || advice.grindAdvice === 'finer');
+  const isSlow = !isChanneling && (shot.totalTimeSeconds > 32.0 || advice.grindAdvice === 'coarser');
+  const isGood = !isChanneling && !isFast && !isSlow;
+
+  const currentGrindNum = parseFloat(shot.grindSetting);
+  let nextSettingStr: string | null = null;
+  if (!isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
+    if (advice.grindAdvice === 'finer') {
+      nextSettingStr = String(Math.max(0, currentGrindNum - advice.grindDeltaSteps));
+    } else if (advice.grindAdvice === 'coarser') {
+      nextSettingStr = String(currentGrindNum + advice.grindDeltaSteps);
+    }
+  }
+
+  const handleApplyGrind = (newSetting: string) => {
+    if (onApplyGrindSetting) {
+      onApplyGrindSetting(newSetting);
+      setAppliedGrind(true);
+    }
+  };
+
   return (
     <div
       role="dialog"
@@ -168,6 +194,120 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
 
         {/* Scrollable Content Body */}
         <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
+          {/* Barista Decision Hero Card - Primary evaluation of extraction flow and grind setting */}
+          <div
+            className={`p-4 rounded-2xl border transition-all ${
+              isGood
+                ? 'bg-gradient-to-br from-[#72806B]/12 via-[#FAF7F2] to-[#FFFDF9] border-[#72806B]/35 shadow-xs'
+                : isChanneling
+                ? 'bg-gradient-to-br from-red-500/10 via-[#FAF7F2] to-[#FFFDF9] border-red-400/40 shadow-xs'
+                : isFast
+                ? 'bg-gradient-to-br from-amber-500/12 via-[#FAF7F2] to-[#FFFDF9] border-amber-400/40 shadow-xs'
+                : 'bg-gradient-to-br from-[#8C6046]/12 via-[#FAF7F2] to-[#FFFDF9] border-[#8C6046]/35 shadow-xs'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
+                    isGood
+                      ? 'bg-[#72806B] text-white'
+                      : isChanneling
+                      ? 'bg-red-600 text-white'
+                      : isFast
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-[#8C6046] text-white'
+                  }`}
+                >
+                  {isGood ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : isChanneling ? (
+                    <AlertCircle className="w-5 h-5" />
+                  ) : isFast ? (
+                    <Sliders className="w-5 h-5" />
+                  ) : (
+                    <Sliders className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                        isGood
+                          ? 'bg-[#72806B]/15 text-[#4E5A48] border border-[#72806B]/30'
+                          : isChanneling
+                          ? 'bg-red-100 text-red-800 border border-red-300'
+                          : isFast
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                          : 'bg-[#8C6046]/15 text-[#5C3F2D] border border-[#8C6046]/30'
+                      }`}
+                    >
+                      {isGood
+                        ? t('shotsummary.verdict_good')
+                        : isChanneling
+                        ? t('shotsummary.verdict_channeling')
+                        : isFast
+                        ? t('shotsummary.verdict_fast')
+                        : t('shotsummary.verdict_slow')}
+                    </span>
+                    <span className="text-xs font-bold text-[#2C2018]">
+                      {shot.totalTimeSeconds.toFixed(1)}s • {shot.actualYieldGrams.toFixed(1)}g (1:{ratio})
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold text-[#2C2018] mt-1">
+                    {advice.summary}
+                  </h4>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#2C2018]/90 mt-2.5 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-[#E8DFD5]">
+              {advice.rationale}
+            </p>
+
+            {/* Grind Adjustment Recommendation Callout */}
+            <div className="mt-3 pt-3 border-t border-[#DECFC0] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              <div className="text-xs">
+                <span className="text-[10px] text-[#7A6E65] uppercase font-bold block">
+                  {t('shotsummary.grinder_adjustment')}
+                </span>
+                <span className="text-sm font-bold text-[#C26D52]">
+                  {advice.grindAdvice === 'finer' && nextSettingStr
+                    ? `Drej kværn FINERE: ${shot.grindSetting} ➔ ${nextSettingStr}`
+                    : advice.grindAdvice === 'coarser' && nextSettingStr
+                    ? `Drej kværn GROVERE: ${shot.grindSetting} ➔ ${nextSettingStr}`
+                    : advice.grindAdvice === 'keep'
+                    ? `Behold kværn på ${shot.grindSetting} (optimalt)`
+                    : advice.grinderSpecificAdvice || 'Hold kværnindstilling – forbedr puck prep'}
+                </span>
+              </div>
+
+              {onApplyGrindSetting && nextSettingStr && advice.grindAdvice !== 'keep' && !isChanneling && (
+                <button
+                  type="button"
+                  onClick={() => handleApplyGrind(nextSettingStr!)}
+                  disabled={appliedGrind}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold font-mono transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95 shrink-0 ${
+                    appliedGrind
+                      ? 'bg-[#72806B] text-white cursor-default'
+                      : 'bg-[#C26D52] hover:bg-[#b05d43] text-white'
+                  }`}
+                >
+                  {appliedGrind ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>{t('shotsummary.applied_grind')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sliders className="w-3.5 h-3.5" />
+                      <span>{t('shotsummary.apply_grind', { setting: nextSettingStr })}</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
           {/* Telemetry Instrument Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5]">

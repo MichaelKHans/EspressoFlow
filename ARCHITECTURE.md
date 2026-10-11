@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.8.3 (Ciffer-Fusion & Inverteret 0 vs 8 Detektion Løst, 18.4g Stabiliseret)  
+> **Gældende version:** v1.9.0 (Barista Dial-In Intelligence, Slutskærms Hero Decision Card & Pre-Brew Coach)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -309,6 +309,7 @@ graph TD
     
     %% Hovedvisninger (Styres af 5-faners Mobile Bottom Nav på mobil / Desktop Header Bar)
     App --> DrinkTab[DrinkSelector.tsx<br/>Barista Deck & Espresso/Pour Over Toggle]
+    App --> PreBrewCoach[PreBrewCoachBanner.tsx<br/>Hukommelse & Proaktiv Kværnrådgivning før bryg]
     App --> MonitorTab[ScaleMonitor.tsx<br/>Live Scale Cam, OCR, Bloom/Steep & Flowgraf]
     App --> BeandexTab[BeandexView.tsx<br/>Bønnekartotek, Vivino Smagsnoter, Fotos]
     App --> LogbookTab[Logbook.tsx<br/>Dagsopdelt historik, kurver & smag]
@@ -322,7 +323,7 @@ graph TD
     App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]
     App --> ScannerModal[BeanScannerModal.tsx<br/>Stregkode + Etiket OCR Scanner]
     App --> VaultModal[CentralBeanVaultModal.tsx<br/>Fællesskabs-katalog fra Supabase]
-    App --> SummaryModal[ShotSummaryModal.tsx<br/>Post-shot evaluering & dial-in råd]
+    App --> SummaryModal[ShotSummaryModal.tsx<br/>Hero Decision Card: God/For hurtig/For langsom & 1-klik kværnjustering]
     App --> SettingsModal[SettingsModal.tsx<br/>Sprog, Enhed °C/°F, Pro & Kurator link]
     App --> PaywallModal[PaywallModal.tsx<br/>RevenueCat $4.99 Lifetime Unlock]
     App --> LegalModal[LegalModal.tsx<br/>Privacy Policy, Terms of Service, Support]
