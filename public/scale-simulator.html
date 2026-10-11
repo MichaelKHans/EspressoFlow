@@ -35,22 +35,66 @@
       position: relative;
     }
 
-    /* Outer Scale Chassis */
+    /* Outer Scale Chassis - Draggable */
     .scale-chassis {
       position: relative;
       background: radial-gradient(circle at 50% 30%, #1c1c1f, #0a0a0c);
       border: 3px solid #2a2a30;
       border-radius: 28px;
       box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.1);
-      padding: 48px 64px;
+      padding: 24px 44px 36px 44px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       transform-origin: center center;
-      transform: scale(var(--scale-zoom));
-      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translate(var(--scale-pos-x, 0px), var(--scale-pos-y, 0px)) scale(var(--scale-zoom));
+      transition: transform 0.1s ease-out;
       max-width: 90vw;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .scale-chassis.dragging {
+      cursor: grabbing;
+      transition: none !important;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.95), 0 0 0 2px #c26d52;
+    }
+
+    .scale-drag-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 5px 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      cursor: grab;
+    }
+
+    .scale-drag-bar:active {
+      cursor: grabbing;
+    }
+
+    .btn-pos-mini {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      color: #d4d4d8;
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .btn-pos-mini:hover {
+      background: #c26d52;
+      color: #ffffff;
+      border-color: #c26d52;
     }
 
     /* Screen Glass Bezel */
@@ -183,6 +227,36 @@
       align-items: center;
       gap: 16px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Bottom HUD Panel - Draggable & Minimizable */
+    .hud-panel.bottom-hud-panel {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .hud-panel.bottom-hud-panel.minimized {
+      padding: 8px 14px;
+      gap: 6px;
+    }
+
+    .hud-panel.bottom-hud-panel.minimized .hud-full-section {
+      display: none !important;
+    }
+
+    .hud-drag-handle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      cursor: grab;
+      padding-bottom: 6px;
+      margin-bottom: 2px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .hud-drag-handle:active {
+      cursor: grabbing;
     }
 
     .status-badge {
@@ -372,7 +446,7 @@
       width: 100%;
     }
 
-    /* Live Phone Mirror Widget */
+    /* Live Phone Mirror Widget - Draggable */
     .phone-mirror-widget {
       position: fixed;
       right: 24px;
@@ -386,8 +460,14 @@
       color: #faf7f2;
       box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7);
       z-index: 90;
-      transition: all 0.25s ease;
+      transition: box-shadow 0.25s ease;
       font-size: 12px;
+      user-select: none;
+    }
+
+    .phone-mirror-widget.dragging {
+      transition: none !important;
+      box-shadow: 0 24px 48px -4px rgba(0, 0, 0, 0.85), 0 0 0 2px #22c55e;
     }
 
     .phone-mirror-header {
@@ -397,6 +477,11 @@
       margin-bottom: 12px;
       padding-bottom: 8px;
       border-bottom: 1px solid #3f3f46;
+      cursor: grab;
+    }
+
+    .phone-mirror-header:active {
+      cursor: grabbing;
     }
 
     .mirror-stat-row {
@@ -489,8 +574,21 @@
 </head>
 <body>
 
-  <!-- Scale Hardware Body -->
-  <div id="scaleChassis" class="scale-chassis theme-muvna">
+  <!-- Scale Hardware Body (Draggable & Repositionable) -->
+  <div id="scaleChassis" class="scale-chassis theme-muvna" title="Træk for at flytte vægten rundt på skærmen">
+    <!-- Quick Drag & Preset Position Toolbar -->
+    <div id="scaleDragBar" class="scale-drag-bar">
+      <span style="display: flex; align-items: center; gap: 6px; color: #a1a1aa; font-weight: 600;">
+        ✥ Træk vægt
+      </span>
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <button id="btnPosTop" class="btn-pos-mini" title="Løft vægten op (perfekt til lave/delte vinduer)">⬆ Løft Op</button>
+        <button id="btnPosCenter" class="btn-pos-mini" title="Centrer vægt på skærmen">🎯 Midt</button>
+        <button id="btnPosLeft" class="btn-pos-mini" title="Flyt til venstre side">⬉ Venstre</button>
+        <button id="btnPosRight" class="btn-pos-mini" title="Flyt til højre side">⬈ Højre</button>
+      </div>
+    </div>
+
     <div id="screenBezel" class="screen-bezel">
 
       <!-- TOP ROW: Weight or Timer depending on model -->
@@ -509,9 +607,9 @@
     </div>
   </div>
 
-  <!-- Live Phone Telemetry Mirror (Right Floating Widget) -->
-  <div id="phoneMirrorWidget" class="phone-mirror-widget">
-    <div class="phone-mirror-header">
+  <!-- Live Phone Telemetry Mirror (Right Floating Widget - Draggable) -->
+  <div id="phoneMirrorWidget" class="phone-mirror-widget" title="Træk i overskriften for at flytte dette panel">
+    <div class="phone-mirror-header" id="phoneMirrorDragHandle">
       <span style="display: flex; align-items: center; gap: 6px; font-weight: bold; color: #faf7f2;">
         <span id="phoneOnlineDot" style="width: 8px; height: 8px; border-radius: 50%; background: #71717a; display: inline-block;"></span>
         📱 Phone Live Mirror
@@ -570,10 +668,20 @@
       </div>
     </div>
 
-    <!-- Bottom HUD Controls with Tab Deck -->
-    <div class="hud-panel" style="align-self: center; flex-direction: column; gap: 10px; max-width: 960px; width: 100%;">
-      <!-- Tab Navigation -->
-      <div class="tab-nav">
+    <!-- Bottom HUD Controls with Tab Deck (Draggable & Minimizable) -->
+    <div id="bottomHudPanel" class="hud-panel bottom-hud-panel" style="align-self: center; flex-direction: column; gap: 10px; max-width: 960px; width: 100%;">
+      <!-- Drag & Minimize Header Bar -->
+      <div class="hud-drag-handle" id="hudDragHandle">
+        <span style="font-size: 11px; color: #a1a1aa; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+          ✥ Kontrolpanel (Træk for at flytte)
+        </span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="btnMinimizeHud" class="btn-ctrl" style="padding: 2px 10px; font-size: 11px;">_ Minimer Panel</button>
+        </div>
+      </div>
+
+      <!-- Tab Navigation (Hidden when minimized) -->
+      <div class="tab-nav hud-full-section">
         <button class="tab-btn active" data-tab="espresso">☕ Espresso Lab</button>
         <button class="tab-btn" data-tab="filter">🫖 Filter & Pour-Over</button>
         <button class="tab-btn" data-tab="custom">🧪 Custom Brew Lab</button>
@@ -581,9 +689,9 @@
         <button class="tab-btn" data-tab="setup">⚙️ Vægt-Model & Zoom</button>
       </div>
 
-      <!-- Tab Panes -->
+      <!-- Tab Panes (Hidden when minimized) -->
       <!-- Tab 1: Espresso Lab -->
-      <div id="tabContent-espresso" class="tab-content-pane active">
+      <div id="tabContent-espresso" class="tab-content-pane active hud-full-section">
         <button id="btnOptShot" class="btn-ctrl" style="border-color: #22c55e;" title="18g -> 36g i 27.5s. Tester 'God brygning'">🟢 Optimal 1:2.0 (18g ➔ 36g / 27s)</button>
         <button id="btnFastShot" class="btn-ctrl" style="border-color: #eab308;" title="18g -> 38g i 17.5s. Tester 'Kværn finere'">🟡 For Hurtig (18g ➔ 38g / 17s)</button>
         <button id="btnSlowShot" class="btn-ctrl" style="border-color: #ef4444;" title="18g -> 32g i 42s. Tester 'Kværn grovere'">🔴 For Langsom (18g ➔ 32g / 42s)</button>
@@ -593,7 +701,7 @@
       </div>
 
       <!-- Tab 2: Filter & Pour-Over Lab -->
-      <div id="tabContent-filter" class="tab-content-pane">
+      <div id="tabContent-filter" class="tab-content-pane hud-full-section">
         <button id="btnV60Shot" class="btn-ctrl" style="border-color: #22d3ee;" title="15g -> 250g. Bloom 45g i 45s, 2. hæld til 150g, 3. hæld til 250g">🫖 V60 Standard (15g ➔ 250g / 3:00m)</button>
         <button id="btnKasuyaShot" class="btn-ctrl" style="border-color: #a78bfa;" title="20g -> 300g. 5 pulser á 60g med 40s pauser">🇯🇵 4:6 Metoden (20g ➔ 300g / 3:30m)</button>
         <button id="btnChemexShot" class="btn-ctrl" title="30g -> 500g. Bloom 80g og 2 store spiral-hældninger">⏳ Chemex Classic (30g ➔ 500g / 4:00m)</button>
@@ -601,7 +709,7 @@
       </div>
 
       <!-- Tab 3: Custom Parametric Lab -->
-      <div id="tabContent-custom" class="tab-content-pane">
+      <div id="tabContent-custom" class="tab-content-pane hud-full-section">
         <div class="custom-lab-row">
           <span>Target Udbytte: <input id="customTargetYield" type="number" value="36.0" step="0.5" min="5" max="600" class="input-num"> g</span>
           <span>Total Tid: <input id="customTotalTime" type="number" value="28" step="1" min="10" max="600" class="input-num"> s</span>
@@ -618,7 +726,7 @@
       </div>
 
       <!-- Tab 4: Benchmark & Kalibrering -->
-      <div id="tabContent-benchmark" class="tab-content-pane">
+      <div id="tabContent-benchmark" class="tab-content-pane hud-full-section">
         <button id="btnScenarioDigits" class="btn-ctrl">🔢 Digit Test (0-9)</button>
         <button id="btnScenarioTimer" class="btn-ctrl">⏱️ Timer Stress</button>
         <span style="font-size: 11px; color: #a1a1aa; margin-left: 6px;">HURTIG VÆGT:</span>
@@ -630,7 +738,7 @@
       </div>
 
       <!-- Tab 5: Scale Model & Zoom Setup -->
-      <div id="tabContent-setup" class="tab-content-pane">
+      <div id="tabContent-setup" class="tab-content-pane hud-full-section">
         <div style="display: flex; gap: 6px; align-items: center; border-right: 1px solid #3f3f46; padding-right: 14px;">
           <span style="font-size: 12px; color: #a1a1aa; font-weight: bold;">MODEL:</span>
           <button class="btn-ctrl active" data-model="pure_weight">Pure Weight</button>
@@ -650,7 +758,7 @@
         </div>
       </div>
 
-      <!-- Fælles Kontrolbjælke i Bunden -->
+      <!-- Fælles Kontrolbjælke i Bunden (Altid synlig) -->
       <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; border-top: 1px solid #27272a; padding-top: 8px; width: 100%;">
         <div style="display: flex; gap: 8px; align-items: center;">
           <button id="btnToggleMobileSync" class="btn-ctrl active" style="color: #22c55e;" title="Når slået til, starter og stopper mobilen automatisk sammen med simulatoren">📱 Mobil Sync: TIL</button>
@@ -1768,7 +1876,229 @@
       }
     });
 
+    // ==========================================
+    // DRAGGABLE SCALE CHASSIS & POSITION PRESETS
+    // ==========================================
+    let scalePosX = 0;
+    let scalePosY = 0;
+
+    function applyScalePosition(x, y) {
+      scalePosX = x;
+      scalePosY = y;
+      scaleChassisEl.style.setProperty('--scale-pos-x', `${x}px`);
+      scaleChassisEl.style.setProperty('--scale-pos-y', `${y}px`);
+      localStorage.setItem('scale_pos_custom', JSON.stringify({ x, y }));
+    }
+
+    function initScalePosition() {
+      const saved = localStorage.getItem('scale_pos_custom');
+      if (saved) {
+        try {
+          const p = JSON.parse(saved);
+          applyScalePosition(p.x, p.y);
+          return;
+        } catch (e) {}
+      }
+
+      // Auto-lift scale in low/split window heights (< 700px) so it never overlaps controls
+      if (window.innerHeight < 700) {
+        applyScalePosition(0, -95);
+      } else {
+        applyScalePosition(0, 0);
+      }
+    }
+
+    function setupScaleDraggable() {
+      let isDragging = false;
+      let startMouseX = 0;
+      let startMouseY = 0;
+      let originX = 0;
+      let originY = 0;
+
+      const dragHandle = document.getElementById('scaleDragBar') || scaleChassisEl;
+
+      dragHandle.addEventListener('mousedown', (e) => {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        isDragging = true;
+        scaleChassisEl.classList.add('dragging');
+        startMouseX = e.clientX;
+        startMouseY = e.clientY;
+        originX = scalePosX;
+        originY = scalePosY;
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startMouseX;
+        const dy = e.clientY - startMouseY;
+        applyScalePosition(originX + dx, originY + dy);
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          scaleChassisEl.classList.remove('dragging');
+        }
+      });
+
+      // Touch drag
+      dragHandle.addEventListener('touchstart', (e) => {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        isDragging = true;
+        scaleChassisEl.classList.add('dragging');
+        const touch = e.touches[0];
+        startMouseX = touch.clientX;
+        startMouseY = touch.clientY;
+        originX = scalePosX;
+        originY = scalePosY;
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        const dx = touch.clientX - startMouseX;
+        const dy = touch.clientY - startMouseY;
+        applyScalePosition(originX + dx, originY + dy);
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        if (isDragging) {
+          isDragging = false;
+          scaleChassisEl.classList.remove('dragging');
+        }
+      });
+
+      // Position preset buttons
+      const btnPosTop = document.getElementById('btnPosTop');
+      const btnPosCenter = document.getElementById('btnPosCenter');
+      const btnPosLeft = document.getElementById('btnPosLeft');
+      const btnPosRight = document.getElementById('btnPosRight');
+
+      if (btnPosTop) btnPosTop.addEventListener('click', () => applyScalePosition(0, -115));
+      if (btnPosCenter) btnPosCenter.addEventListener('click', () => applyScalePosition(0, 0));
+      if (btnPosLeft) btnPosLeft.addEventListener('click', () => applyScalePosition(-Math.round(window.innerWidth * 0.2), -60));
+      if (btnPosRight) btnPosRight.addEventListener('click', () => applyScalePosition(Math.round(window.innerWidth * 0.2), -60));
+    }
+
+    // ==========================================
+    // MINIMIZABLE & DRAGGABLE BOTTOM HUD PANEL
+    // ==========================================
+    function setupHudDraggableAndMinimize() {
+      const bottomHudPanel = document.getElementById('bottomHudPanel');
+      const btnMinimizeHud = document.getElementById('btnMinimizeHud');
+      if (!bottomHudPanel || !btnMinimizeHud) return;
+
+      const isMin = localStorage.getItem('hud_minimized') === 'true';
+      if (isMin) {
+        bottomHudPanel.classList.add('minimized');
+        btnMinimizeHud.textContent = '◻ Udvid Panel';
+      }
+
+      btnMinimizeHud.addEventListener('click', () => {
+        const minimized = bottomHudPanel.classList.toggle('minimized');
+        btnMinimizeHud.textContent = minimized ? '◻ Udvid Panel' : '_ Minimer Panel';
+        localStorage.setItem('hud_minimized', minimized ? 'true' : 'false');
+      });
+
+      // HUD Drag
+      const hudDragHandle = document.getElementById('hudDragHandle');
+      if (hudDragHandle) {
+        let isHudDragging = false;
+        let hudStartX = 0;
+        let hudStartY = 0;
+        let hudOriginX = 0;
+        let hudOriginY = 0;
+
+        hudDragHandle.addEventListener('mousedown', (e) => {
+          if (e.target.tagName === 'BUTTON') return;
+          isHudDragging = true;
+          hudStartX = e.clientX;
+          hudStartY = e.clientY;
+          const rect = bottomHudPanel.getBoundingClientRect();
+          hudOriginX = rect.left;
+          hudOriginY = rect.top;
+          e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!isHudDragging) return;
+          const dx = e.clientX - hudStartX;
+          const dy = e.clientY - hudStartY;
+          bottomHudPanel.style.position = 'fixed';
+          bottomHudPanel.style.left = `${hudOriginX + dx}px`;
+          bottomHudPanel.style.top = `${hudOriginY + dy}px`;
+          bottomHudPanel.style.bottom = 'auto';
+          bottomHudPanel.style.transform = 'none';
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (isHudDragging) isHudDragging = false;
+        });
+      }
+    }
+
+    // ==========================================
+    // DRAGGABLE PHONE LIVE MIRROR WIDGET
+    // ==========================================
+    function setupPhoneMirrorDraggable() {
+      const mirrorEl = document.getElementById('phoneMirrorWidget');
+      const mirrorHandle = document.getElementById('phoneMirrorDragHandle');
+      if (!mirrorEl || !mirrorHandle) return;
+
+      const saved = localStorage.getItem('phone_mirror_pos');
+      if (saved) {
+        try {
+          const p = JSON.parse(saved);
+          mirrorEl.style.left = `${p.x}px`;
+          mirrorEl.style.top = `${p.y}px`;
+          mirrorEl.style.right = 'auto';
+        } catch (e) {}
+      }
+
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let origLeft = 0;
+      let origTop = 0;
+
+      mirrorHandle.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        mirrorEl.classList.add('dragging');
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = mirrorEl.getBoundingClientRect();
+        origLeft = rect.left;
+        origTop = rect.top;
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const newX = origLeft + (e.clientX - startX);
+        const newY = origTop + (e.clientY - startY);
+        mirrorEl.style.left = `${newX}px`;
+        mirrorEl.style.top = `${newY}px`;
+        mirrorEl.style.right = 'auto';
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          mirrorEl.classList.remove('dragging');
+          const rect = mirrorEl.getBoundingClientRect();
+          localStorage.setItem('phone_mirror_pos', JSON.stringify({ x: rect.left, y: rect.top }));
+        }
+      });
+    }
+
     setScaleZoom(currentScaleZoom);
+
+    // Initialize Draggable Positions
+    initScalePosition();
+    setupScaleDraggable();
+    setupHudDraggableAndMinimize();
+    setupPhoneMirrorDraggable();
 
     // Start
     updateDisplay();
