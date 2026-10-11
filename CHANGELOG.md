@@ -2,6 +2,18 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.10.2] - 2026-10-11
+### Etape 38: Fuld Ciffersekvens Samling (131.5g, 216.1g) & Asymmetrisk Ciffer '1' Mellemrumskalibrering
+- **Løsning af Ciffer-Opsplitning ved Efterfølgende Ciffer '1' (fx `131.5g` ➔ `1.5g`) (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** 7-segment ciffer '1' har kun sine lodrette strøg på den højre kant af ciffercellen (segment $b$ og $c$). Den venstre halvdel af cellen er tom. Når et tal som `3` blev efterfulgt af `1` (fx `131.5`), var den optiske pixelafstand mellem `3` og strøget for `1` lig med $(\text{celleafstand}) + (\text{tom venstre celle}) \approx 0.60 \times \text{højde}$. Clustering-tærsklen var sat til blot $0.45 \times \text{bandH}$, hvilket huggede tallet over i to klumper: `13` og `1.5`. Da `1.5` havde decimalpunktum, vandt det, og de første to cifre forsvandt!
+  - **Løsning:** Asymmetrisk ciffermellemrum kalibreret: Når næste ciffer er et '1', tillades en afstand på op til $0.92 \times \text{bandH}$, så cifre der efterfølges af '1' forbliver 100% samlet i én sammenhængende cifferklynge.
+- **Fjernelse af Blind Forkastelse af Første Ciffer (fx `216.1g` ➔ `16.1g`) (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** Kantfilteret havde en blind regel `if (gap0 > medH * 0.45) result.shift()`, som fjernede det første element hvis afstanden til element 2 var $> 0.45 \times \text{højde}$. Når andet ciffer var et '1' (som i `216.1`), blev `2`-tallet blindt slettet, fordi afstanden til '1' var naturligt større.
+  - **Løsning:** Blind sletning af gyldige heltalscifre er fuldstændig fjernet. Kantfiltrering fokuserer udelukkende på isolerede kantsplinter eller umulige '1'-taller foran nul-tare (`10.0`). Cifre som `2`, `3`, `5` etc. slettes aldrig.
+- **Interaktiv Clean Mode Bund-Dock & Tastatur/Musehjul Vægtstyring (`scale-simulator.html`):**
+  - Tilføjet glidende bund-dock i Clean Camera Mode, der glider frem ved mouse-hover med skyder, tare og hurtigvalgsknapper.
+  - Tilføjet piletaster $\leftarrow/\rightarrow$ ($\pm 0.1\text{g}$) og $\uparrow/\downarrow$ ($\pm 1.0\text{g}$), samt genvejstaster `0` (tare), `1` ($18\text{g}$), `2` ($36\text{g}$), `3` ($127.3\text{g}$) og fri justering med musehjul direkte på skærmen.
+
 ## [1.10.1] - 2026-10-11
 ### Etape 37: Fuld Vægt-Rækkevidde Aflæsning (0.0g - 2000.0g), Ciffer '1' Bevarelse & Optisk Isolering
 - **Fjernelse af Hårdkodet 65g Espresso-Grænse i Standby (`ocr7segment.ts`):**

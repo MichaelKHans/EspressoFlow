@@ -952,8 +952,12 @@ function parseDigitsFromBinary(
       } else {
         const prev = currentCluster[currentCluster.length - 1];
         const gap = el.box.x - (prev.box.x + prev.box.width);
-        // Bounded gap threshold: real 7-segment digital displays have regular inter-digit spacing <= 0.45 * bandH
-        const maxGap = Math.max(16, Math.floor(bandH * 0.45));
+        // Bounded gap threshold: 7-segment digit '1' only has strokes on the right edge of its cell,
+        // so any digit preceding '1' has an empty cell half between them (~0.60 * bandH).
+        // Side-by-side timer and weight are separated by a large gulf (>= 1.2 * bandH) or colon ':'.
+        const maxGap = el.type === 'digit' && el.char === '1'
+          ? Math.max(28, Math.floor(bandH * 0.92))
+          : Math.max(20, Math.floor(bandH * 0.70));
 
         if (gap > maxGap || el.type === 'colon' || prev.type === 'colon') {
           clusters.push(currentCluster);
@@ -1017,20 +1021,18 @@ function parseDigitsFromBinary(
         }
       }
 
-      // Check for distant leading element separated by abnormal gap
-      if (result.length >= 2) {
-        const gap0 = result[1].box.x - (result[0].box.x + result[0].box.width);
-        if (gap0 > Math.max(18, Math.floor(medH * 0.45))) {
-          result.shift();
-        }
-      }
-
       // 1. Inspect first element if it's an edge artifact mimicking digit '1'
+      // Legitimate multi-digit numbers (e.g. 216.1, 131.5, 127.3, 18.0) are preserved.
+      // An edge artifact on the bezel is either abnormally tiny, separated by an enormous gap (> 0.70-0.92*medH),
+      // or precedes an impossible zero tare (e.g. "1" + "0.0").
       if (result.length >= 2 && result[0].type === 'digit' && result[0].char === '1') {
         const firstBox = result[0].box;
         const nextEl = result[1];
         const gapToNext = nextEl.box.x - (firstBox.x + firstBox.width);
-        const isDistantEdge = gapToNext > Math.max(18, Math.floor(medH * 0.45));
+        const maxDistantGap = nextEl.type === 'digit' && nextEl.char === '1'
+          ? Math.max(30, Math.floor(medH * 0.92))
+          : Math.max(22, Math.floor(medH * 0.70));
+        const isDistantEdge = gapToNext > maxDistantGap;
 
         // Spurious edge before zero tare (e.g. "1" + "0.0")
         const isImpossibleTare =
@@ -1063,7 +1065,7 @@ function parseDigitsFromBinary(
 
             const prevEl = result[lastIdx - 1];
             const gapToPrev = lastBox.x - (prevEl.box.x + prevEl.box.width);
-            const isDistantTrailing = gapToPrev > Math.max(18, Math.floor(medH * 0.40));
+            const isDistantTrailing = gapToPrev > Math.max(22, Math.floor(medH * 0.70));
 
             if (isMisaligned || isDistantTrailing) {
               result.pop();

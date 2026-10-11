@@ -185,6 +185,51 @@
       display: block;
     }
 
+    /* Clean Camera Mode Interactive Bottom Dock (Fades in on mouse hover) */
+    .clean-cam-dock {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 18, 22, 0.94);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 8px 16px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: auto;
+    }
+    body.clean-cam-mode .clean-cam-dock {
+      display: flex;
+    }
+    body.clean-cam-mode .clean-cam-dock:hover,
+    body.clean-cam-mode .clean-cam-dock.active-hover {
+      opacity: 1;
+    }
+    .btn-clean-quick {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      color: #faf7f2;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .btn-clean-quick:hover {
+      background: #3f3f46;
+      border-color: #22d3ee;
+      color: #22d3ee;
+    }
+
     /* Display Rows */
     .display-row {
       display: flex;
@@ -624,6 +669,23 @@
   <!-- Floating exit badge for Clean Camera Mode -->
   <div id="cleanModeBadge" class="clean-mode-badge" title="Klik her eller tast C for at vise kontroller igen">✕ Vis Kontroller (C)</div>
 
+  <!-- Interactive Clean Mode Bottom Dock (Appears when hovering near bottom of screen) -->
+  <div id="cleanCamDock" class="clean-cam-dock" title="Hurtig vægtjustering i Ren Tilstand (fader væk når musen fjernes)">
+    <button id="btnCleanTare" class="btn-ctrl" style="padding: 4px 10px; font-size: 11px;">🔄 Tare (0.0g)</button>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <input id="cleanSliderWeight" type="range" min="0" max="600" step="0.1" value="0" style="width: 140px; accent-color: #22d3ee; cursor: pointer;">
+      <span id="cleanSliderVal" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #22d3ee; min-width: 55px;">0.0g</span>
+    </div>
+    <div style="display: flex; gap: 4px;">
+      <button class="btn-clean-quick" data-weight="18.0">18g</button>
+      <button class="btn-clean-quick" data-weight="36.0">36g</button>
+      <button class="btn-clean-quick" data-weight="127.3" style="border-color: #22d3ee; color: #22d3ee;">127.3g</button>
+      <button class="btn-clean-quick" data-weight="250.0">250g</button>
+      <button class="btn-clean-quick" data-weight="500.0">500g</button>
+    </div>
+    <button id="btnCleanExit" class="btn-ctrl" style="padding: 4px 10px; font-size: 11px; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #f87171;">✕ Vis Alle Paneler (C)</button>
+  </div>
+
   <!-- Scale Hardware Body (Draggable & Repositionable) -->
   <div id="scaleChassis" class="scale-chassis theme-pure_weight" title="Træk for at flytte vægten rundt på skærmen">
     <!-- Quick Drag & Preset Position Toolbar -->
@@ -1015,6 +1077,11 @@
       gtFlowEl.textContent = `${currentFlow.toFixed(1)} g/s`;
       sliderValEl.textContent = `${weightStr}g`;
       sliderWeightEl.value = currentWeight;
+
+      const cleanSliderWeightEl = document.getElementById('cleanSliderWeight');
+      const cleanSliderValEl = document.getElementById('cleanSliderVal');
+      if (cleanSliderWeightEl) cleanSliderWeightEl.value = currentWeight;
+      if (cleanSliderValEl) cleanSliderValEl.textContent = `${weightStr}g`;
 
       // Report Ground Truth to Antigravity controller
       reportGroundTruth();
@@ -1799,8 +1866,67 @@
       cleanModeBadge.addEventListener('click', () => toggleCleanCameraMode(false));
     }
 
+    // Clean Camera Dock Event Listeners
+    const btnCleanExit = document.getElementById('btnCleanExit');
+    if (btnCleanExit) {
+      btnCleanExit.addEventListener('click', () => toggleCleanCameraMode(false));
+    }
+
+    const btnCleanTare = document.getElementById('btnCleanTare');
+    if (btnCleanTare) {
+      btnCleanTare.addEventListener('click', () => {
+        stopActiveScenario();
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+        sendMobileRemoteCmd('tare');
+      });
+    }
+
+    const cleanSliderWeight = document.getElementById('cleanSliderWeight');
+    if (cleanSliderWeight) {
+      cleanSliderWeight.addEventListener('input', (e) => {
+        stopActiveScenario();
+        currentWeight = parseFloat(e.target.value);
+        updateDisplay();
+      });
+    }
+
+    document.querySelectorAll('.btn-clean-quick').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        stopActiveScenario();
+        currentWeight = parseFloat(btn.dataset.weight);
+        updateDisplay();
+      });
+    });
+
+    // Reveal Clean Dock when mouse approaches bottom of screen
+    window.addEventListener('mousemove', (e) => {
+      if (!document.body.classList.contains('clean-cam-mode')) return;
+      const dock = document.getElementById('cleanCamDock');
+      if (!dock) return;
+      if (window.innerHeight - e.clientY < 75) {
+        dock.classList.add('active-hover');
+      } else if (!dock.matches(':hover')) {
+        dock.classList.remove('active-hover');
+      }
+    });
+
+    // Mouse wheel weight adjustment (scroll anywhere on background to change weight)
+    window.addEventListener('wheel', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.closest('.hud-panel'))) return;
+      stopActiveScenario();
+      const step = e.shiftKey ? 1.0 : (e.ctrlKey ? 10.0 : 0.1);
+      const dir = e.deltaY < 0 ? 1 : -1;
+      currentWeight = Math.max(0, Math.min(2000, Math.round((currentWeight + dir * step) * 10) / 10));
+      updateDisplay();
+    }, { passive: true });
+
     // Keyboard controls
     window.addEventListener('keydown', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
       if (e.key === 'c' || e.key === 'C') {
         toggleCleanCameraMode();
       } else if (e.key === 'h' || e.key === 'H') {
@@ -1810,6 +1936,47 @@
         e.preventDefault();
         if (activeScenarioInterval) stopActiveScenario();
         else runOptimalShot();
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        stopActiveScenario();
+        const step = e.shiftKey ? 1.0 : (e.ctrlKey ? 10.0 : 0.1);
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        currentWeight = Math.max(0, Math.min(2000, Math.round((currentWeight + dir * step) * 10) / 10));
+        updateDisplay();
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        stopActiveScenario();
+        const step = e.shiftKey ? 10.0 : 1.0;
+        const dir = e.key === 'ArrowUp' ? 1 : -1;
+        currentWeight = Math.max(0, Math.min(2000, Math.round((currentWeight + dir * step) * 10) / 10));
+        updateDisplay();
+      } else if (e.key === 't' || e.key === 'T' || e.key === '0') {
+        stopActiveScenario();
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+        sendMobileRemoteCmd('tare');
+      } else if (e.key === '1') {
+        stopActiveScenario();
+        currentWeight = 18.0;
+        updateDisplay();
+      } else if (e.key === '2') {
+        stopActiveScenario();
+        currentWeight = 36.0;
+        updateDisplay();
+      } else if (e.key === '3') {
+        stopActiveScenario();
+        currentWeight = 127.3;
+        updateDisplay();
+      } else if (e.key === '4') {
+        stopActiveScenario();
+        currentWeight = 250.0;
+        updateDisplay();
+      } else if (e.key === '5') {
+        stopActiveScenario();
+        currentWeight = 500.0;
+        updateDisplay();
       }
     });
 
