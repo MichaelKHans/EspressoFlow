@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.10.3 (Intelligent Zero-Anchor Lås, Tare-Nul 00.0 Prioritering & 80/50/10 Udryddelse)  
+> **Gældende version:** v1.10.4 (Aktiv Bryg Fokus-Lås & Berøringssikring)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---

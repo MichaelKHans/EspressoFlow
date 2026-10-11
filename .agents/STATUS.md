@@ -11,6 +11,21 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-11 -- Aktiv Bryg Fokus-Lås & Berøringssikring (v1.10.4)
+- **Fuldstændig Låsning af Søger & Fokus under Aktiv Brygning (`ScaleMonitor.tsx`):**
+  - **Identificeret Årsag:** Når en barista ved et uheld rørte skærmen under et shot (fx for at holde telefonen eller pege), opfangede søgeren klikket og flyttede OCR-beskæringen (Region-of-Interest) samt sendte hardware tap-to-focus til telefonens kamera. Dette fjernede fokus og klippede vægtdisplayet ud af synsfeltet midt under ekstraktionen.
+  - **Løsning:** 
+    - `handleTapViewfinder` afbrydes prompte hvis `isBrewing` er aktiv (`if (isBrewing) return`).
+    - Skærmklik og `touchEnd` events frakobles helt på søgeren under brygning (`onClick={!isBrewing ? handleTapViewfinder : undefined}`).
+    - `lockedRoiCenterRef` fryser det præcise koordinatsæt fra millisekundet før start. Både video-cropperen og skærmretiklen tvinges til at bruge de frosne koordinater, så søgeren aldrig kan forskyde sig.
+- **Hardware Fokus Lås ved Start (`ScaleMonitor.tsx`):**
+  - Så snart `handleStartBrewing` trykkes, aktiveres hardware focus lock omgående, og auto-kalibrering ("Tryk på Vægten") deaktiveres for at undgå utilsigtede kalibreringsspring.
+- **Statuschip og Reticle Låse-Badge (`ScaleMonitor.tsx`):**
+  - Under aktiv brygning erstattes "Stop Cam" og "Align" knapperne med en klar, beskyttende chip: `🔒 Fokus Låst` (`scale.focus_locked_brewing`).
+  - Retiklens sigtekorn udstyres med et diskret `🔒 Fokus Låst` badge i øverste højre hjørne.
+- **Berøringssikring af Tab-Navigation (`App.tsx`):**
+  - Både mobilens bundbjælke og tablet/desktop tab-bar deaktiverer fane-skift (`if (isBrewing) return`), og inaktive faner dæmpes (`opacity-35 cursor-not-allowed`), så et skærmtryk under brygning aldrig kan navigere væk fra den aktive ekstraktion.
+
 ### 2026-10-11 -- Intelligent Zero-Anchor Lås, Tare-Nul (00.0) Timer-Fritagelse & Udryddelse af 80/50/10 Glares (v1.10.3)
 - **Fritagelse af Tare-Nul (`00.0`) fra Timer-Straf (`ocr7segment.ts`):**
   - **Identificeret Årsag:** Kaffevægte med 4-tegns nulvisning (`00.0`) blev tidligere ramt af en timer-heuristik (`clText.startsWith('00.') && clText.length >= 4`), som antog det var brøkdele af et sekund på en timer (fx `00.15`) og idømte det en massiv straf på -300 point. Dette betød, at svage optiske reflekser af andre tal (fx `80`, `50` eller `10`) fik lov at overhale det reelle display!

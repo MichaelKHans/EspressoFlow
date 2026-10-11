@@ -778,8 +778,11 @@ export function App() {
           <div className="hidden md:block max-w-4xl mx-auto px-2 sm:px-4 pb-2 pt-0.5">
             <nav className="grid grid-cols-4 w-full gap-1 p-1 bg-[#F0E8DC]/80 rounded-xl sm:rounded-2xl border border-[#DECFC0] text-[11px] sm:text-xs font-mono shadow-inner">
               <button
-                onClick={() => setActiveTab('drinks')}
+                onClick={() => { if (!isBrewing) setActiveTab('drinks'); }}
+                disabled={isBrewing}
                 className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
+                  isBrewing && activeTab !== 'drinks' ? 'opacity-40 cursor-not-allowed' : ''
+                } ${
                   activeTab === 'drinks'
                     ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                     : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -807,8 +810,11 @@ export function App() {
               </button>
 
               <button
-                onClick={() => setActiveTab('logbook')}
+                onClick={() => { if (!isBrewing) setActiveTab('logbook'); }}
+                disabled={isBrewing}
                 className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
+                  isBrewing && activeTab !== 'logbook' ? 'opacity-40 cursor-not-allowed' : ''
+                } ${
                   activeTab === 'logbook'
                     ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                     : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -822,8 +828,11 @@ export function App() {
               </button>
 
               <button
-                onClick={() => setActiveTab('equipment')}
+                onClick={() => { if (!isBrewing) setActiveTab('equipment'); }}
+                disabled={isBrewing}
                 className={`py-1.5 sm:py-2 px-0.5 sm:px-3 rounded-lg sm:rounded-xl flex items-center justify-center gap-0.5 sm:gap-1.5 transition-all ${
+                  isBrewing && activeTab !== 'equipment' ? 'opacity-40 cursor-not-allowed' : ''
+                } ${
                   activeTab === 'equipment'
                     ? 'bg-[#2C2018] text-[#FAF7F2] font-bold shadow-xs'
                     : 'text-[#7A6E65] hover:text-[#2C2018] hover:bg-white/60'
@@ -1674,11 +1683,15 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              if (isBrewing) return;
               closeAllActiveModals();
               setActiveMode('flow');
               setActiveTab('drinks');
             }}
-            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer ${
+            disabled={isBrewing}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all ${
+              isBrewing ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer'
+            } ${
               activeMode === 'flow' && activeTab === 'drinks'
                 ? 'text-[#C26D52] font-bold'
                 : 'text-[#7A6E65] hover:text-[#2C2018]'
@@ -1724,10 +1737,14 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              if (isBrewing) return;
               closeAllActiveModals();
               setActiveMode('beandex');
             }}
-            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+            disabled={isBrewing}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all relative ${
+              isBrewing ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer'
+            } ${
               activeMode === 'beandex'
                 ? 'text-[#C26D52] font-bold'
                 : 'text-[#7A6E65] hover:text-[#2C2018]'
@@ -1756,11 +1773,15 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              if (isBrewing) return;
               closeAllActiveModals();
               setActiveMode('flow');
               setActiveTab('logbook');
             }}
-            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer ${
+            disabled={isBrewing}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all ${
+              isBrewing ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer'
+            } ${
               activeMode === 'flow' && activeTab === 'logbook'
                 ? 'text-[#C26D52] font-bold'
                 : 'text-[#7A6E65] hover:text-[#2C2018]'
@@ -1781,11 +1802,15 @@ export function App() {
           <button
             type="button"
             onClick={() => {
+              if (isBrewing) return;
               closeAllActiveModals();
               setActiveMode('flow');
               setActiveTab('equipment');
             }}
-            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer ${
+            disabled={isBrewing}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all ${
+              isBrewing ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer'
+            } ${
               activeMode === 'flow' && activeTab === 'equipment'
                 ? 'text-[#C26D52] font-bold'
                 : 'text-[#7A6E65] hover:text-[#2C2018]'

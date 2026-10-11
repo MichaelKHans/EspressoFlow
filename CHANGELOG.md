@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.10.4] - 2026-10-11
+### Etape 40: Aktiv Bryg Fokus-Lås & Berøringssikring (Brew Focus & Screen Tap Armor)
+- **Fuldstændig Låsning af Søger & Fokus under Aktiv Brygning (`ScaleMonitor.tsx`):**
+  - **Identificeret Root Cause:** Når en barista ved et uheld rørte skærmen under et shot (fx for at holde telefonen eller pege), opfangede søgeren klikket og flyttede OCR-beskæringen (Region-of-Interest) samt sendte hardware tap-to-focus til telefonens kamera. Dette fjernede fokus og klippede vægtdisplayet ud af synsfeltet midt under ekstraktionen.
+  - **Løsning:** 
+    - `handleTapViewfinder` afbrydes prompte hvis `isBrewing` er aktiv (`if (isBrewing) return`).
+    - Skærmklik og `touchEnd` events frakobles helt på søgeren under brygning (`onClick={!isBrewing ? handleTapViewfinder : undefined}`).
+    - `lockedRoiCenterRef` fryser det præcise koordinatsæt fra millisekundet før start. Både video-cropperen og skærmretiklen tvinges til at bruge de frosne koordinater, så søgeren aldrig kan forskyde sig.
+- **Hardware Fokus Lås ved Start (`ScaleMonitor.tsx`):**
+  - Så snart `handleStartBrewing` trykkes, aktiveres hardware focus lock omgående, og auto-kalibrering ("Tryk på Vægten") deaktiveres for at undgå utilsigtede kalibreringsspring.
+- **Statuschip og Reticle Låse-Badge (`ScaleMonitor.tsx`):**
+  - Under aktiv brygning erstattes "Stop Cam" og "Align" knapperne med en klar, beskyttende chip: `🔒 Fokus Låst` (`scale.focus_locked_brewing`).
+  - Retiklens sigtekorn udstyres med et diskret `🔒 Fokus Låst` badge i øverste højre hjørne.
+- **Berøringssikring af Tab-Navigation (`App.tsx`):**
+  - Både mobilens bundbjælke og tablet/desktop tab-bar deaktiverer fane-skift (`if (isBrewing) return`), og inaktive faner dæmpes (`opacity-35 cursor-not-allowed`), så et skærmtryk under brygning aldrig kan navigere væk fra den aktive ekstraktion.
+
 ## [1.10.3] - 2026-10-11
 ### Etape 39: Intelligent Zero-Anchor Lås, Tare-Nul (00.0) Timer-Fritagelse & Udryddelse af 80/50/10 Glares
 - **Fritagelse af Tare-Nul (`00.0`) fra Timer-Straf (`ocr7segment.ts`):**

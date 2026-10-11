@@ -219,6 +219,8 @@ export const en = {
   'scale.calibrated_success': 'Weight Locked & Focused! 🎯',
   'scale.focus_lock': 'Focus Lock',
   'scale.focus_auto': 'Auto Focus',
+  'scale.focus_locked_brewing': 'Focus Locked',
+  'scale.focus_locked_tooltip': 'Scale focus and framing are locked during extraction to prevent drift.',
   'scale.anti_shake': 'Anti-Shake Armor',
 
   // Roast Levels & Bean Chemistry

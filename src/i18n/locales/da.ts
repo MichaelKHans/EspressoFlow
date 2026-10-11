@@ -221,6 +221,8 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'scale.calibrated_success': 'Vægt Låst & Fokuseret! 🎯',
   'scale.focus_lock': 'Fokus Lås',
   'scale.focus_auto': 'Auto Fokus',
+  'scale.focus_locked_brewing': 'Fokus Låst',
+  'scale.focus_locked_tooltip': 'Fokus og ramme er låst under brygning for at forhindre forskydning.',
   'scale.anti_shake': 'Anti-Ryst Pansring',
 
   // Roast Levels & Bean Chemistry

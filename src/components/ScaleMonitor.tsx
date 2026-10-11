@@ -108,6 +108,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const zoomLevelRef = useRef<number>(zoomLevel);
   const roiSizeRef = useRef<'compact' | 'standard'>('compact');
   const roiCenterRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
+  const lockedRoiCenterRef = useRef<{ x: number; y: number } | null>(null);
 
   // Split-Timer state
   const [firstDropTime, setFirstDropTime] = useState<number | null>(null);
@@ -230,10 +231,17 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     }
   };
 
-  // Auto-lock focus during active brewing to prevent pump vibration focus hunting
+  // Auto-lock focus and freeze ROI framing during active brewing to prevent vibration drift
   useEffect(() => {
-    if (isBrewing && !isFocusLocked) {
-      handleToggleFocusLock(true);
+    if (isBrewing) {
+      if (!lockedRoiCenterRef.current) {
+        lockedRoiCenterRef.current = { ...roiCenterRef.current };
+      }
+      if (!isFocusLocked) {
+        handleToggleFocusLock(true);
+      }
+    } else {
+      lockedRoiCenterRef.current = null;
     }
   }, [isBrewing]);
 
@@ -262,12 +270,15 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   };
 
   const handleRecenter = () => {
+    if (isBrewing) return;
     requestOrientationPermission();
     roiCenterRef.current = { x: 0.5, y: 0.5 };
     setRoiCenter({ x: 0.5, y: 0.5 });
   };
 
   const handleTapViewfinder = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    // 🔒 Brew Focus Armor: Never allow screen taps to move ROI or defocus camera during active extraction
+    if (isBrewing) return;
     requestOrientationPermission();
     if (cameraState !== 'live') return;
     const container = e.currentTarget.getBoundingClientRect();
@@ -492,7 +503,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       // Maintain strictly ISOTROPIC 2:1 aspect ratio matching the 320x160 offscreen canvas
       const currentMode = roiSizeRef.current;
       const currentZoom = zoomLevelRef.current;
-      const currentCenter = roiCenterRef.current;
+      const currentCenter = (isBrewing && lockedRoiCenterRef.current)
+        ? lockedRoiCenterRef.current
+        : roiCenterRef.current;
 
       const baseFractionW = currentMode === 'compact' ? 0.44 : 0.58;
       const cropW = (vW * baseFractionW) / currentZoom;
@@ -535,8 +548,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         }
       }
 
-      // "Tryk på Vægten" Dynamic Delta Trigger: Auto-calibrates when barista presses scale
-      if (isCalibrating && result.weight !== null) {
+      // "Tryk på Vægten" Dynamic Delta Trigger: Auto-calibrates when barista presses scale (disabled during active brew)
+      if (isCalibrating && !isBrewing && result.weight !== null) {
         const now = Date.now();
         calibrationHistoryRef.current.push({ time: now, weight: result.weight });
         calibrationHistoryRef.current = calibrationHistoryRef.current.filter((e) => now - e.time <= 1200);
@@ -791,6 +804,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     if (cameraState === 'standby') {
       setCameraState('live');
     }
+    // Lock ROI and hardware focus immediately before first drop to prevent vibration drift
+    lockedRoiCenterRef.current = { ...roiCenterRef.current };
+    setIsCalibrating(false);
+    handleToggleFocusLock(true);
+
     // Hard tare & timer reset for new shot initialization
     filterRef.current.reset(0);
     currentWeightRef.current = 0.0;
@@ -827,6 +845,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   const handleCancelBrewing = () => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    lockedRoiCenterRef.current = null;
     startTimeRef.current = 0;
     firstDropTimeRef.current = null;
     pointsRef.current = [];
@@ -850,6 +869,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   const handleStopBrewing = () => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    lockedRoiCenterRef.current = null;
     const finalWeight = currentWeightRef.current;
     const finalTime = startTimeRef.current > 0 ? Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10 : elapsedTime;
     const finalPre = firstDropTimeRef.current !== null ? firstDropTimeRef.current : (machinePreInfusionRef.current || 5.0);
@@ -983,27 +1003,37 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               </button>
             </>
           ) : cameraState === 'live' ? (
-            <>
-              <button
-                type="button"
-                onClick={handleStopCamera}
-                className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] font-mono font-medium transition flex items-center gap-1 shadow-xs"
-                title="Stop camera and return to standby"
+            isBrewing ? (
+              <div
+                className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-300 font-mono font-bold flex items-center gap-1 shadow-xs select-none"
+                title={t('scale.focus_locked_tooltip')}
               >
-                <VideoOff className="w-3 h-3" />
-                <span>{t('scale.stop_cam_btn')}</span>
-              </button>
+                <Lock className="w-3 h-3 text-amber-400" />
+                <span>{t('scale.focus_locked_brewing')}</span>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleStopCamera}
+                  className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] font-mono font-medium transition flex items-center gap-1 shadow-xs"
+                  title="Stop camera and return to standby"
+                >
+                  <VideoOff className="w-3 h-3" />
+                  <span>{t('scale.stop_cam_btn')}</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={handleRecenter}
-                className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] font-mono transition flex items-center gap-1 shadow-xs active:scale-95"
-                title="Re-center alignment target box on display"
-              >
-                <Crosshair className="w-3 h-3 text-[#C26D52]" />
-                <span>{t('scale.align')}</span>
-              </button>
-            </>
+                <button
+                  type="button"
+                  onClick={handleRecenter}
+                  className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] font-mono transition flex items-center gap-1 shadow-xs active:scale-95"
+                  title="Re-center alignment target box on display"
+                >
+                  <Crosshair className="w-3 h-3 text-[#C26D52]" />
+                  <span>{t('scale.align')}</span>
+                </button>
+              </>
+            )
           ) : (
             <>
               <button
@@ -1036,11 +1066,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       {/* Main Viewfinder Screen (Compact cockpit mode during active brew to prevent scroll blowout) */}
       <div
         ref={viewfinderContainerRef}
-        onClick={handleTapViewfinder}
-        onTouchEnd={(e) => { e.preventDefault(); handleTapViewfinder(e); }}
+        onClick={!isBrewing ? handleTapViewfinder : undefined}
+        onTouchEnd={!isBrewing ? (e) => { e.preventDefault(); handleTapViewfinder(e); } : undefined}
         className={`relative ${
-          isBrewing ? 'h-36 sm:h-44' : 'aspect-16/10'
-        } bg-[#1A1412] flex items-center justify-center overflow-hidden cursor-crosshair select-none transition-all duration-300`}
+          isBrewing ? 'h-36 sm:h-44 cursor-default' : 'aspect-16/10 cursor-crosshair'
+        } bg-[#1A1412] flex items-center justify-center overflow-hidden select-none transition-all duration-300`}
       >
         {cameraState === 'standby' ? (
           <div className="absolute inset-0 bg-[#1A1412] flex flex-col items-center justify-center p-4 sm:p-6 text-center z-20 select-none animate-fadeIn">
@@ -1125,10 +1155,14 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           const hasValidReading = lastOcrResult !== null && lastOcrResult.weight !== null && lastOcrResult.confidence >= 0.65;
           const isDigitLocked = (cameraState === 'live' && (hasValidReading || lockHoldCountRef.current > 0)) || (cameraState === 'demo' && isBrewing);
 
+          const effectiveRoiCenter = (isBrewing && lockedRoiCenterRef.current)
+            ? lockedRoiCenterRef.current
+            : roiCenter;
+
           // Calculate exact 1:1 screen projection matching the camera object-cover crop
           let reticleStyle: React.CSSProperties = {
-            left: `${roiCenter.x * 100}%`,
-            top: `${roiCenter.y * 100}%`,
+            left: `${effectiveRoiCenter.x * 100}%`,
+            top: `${effectiveRoiCenter.y * 100}%`,
             width: `${Math.max(22, Math.min(80, Math.round(((roiSize === 'compact' ? 0.44 : 0.58) / zoomLevel) * 100)))}%`,
             transform: 'translate(-50%, -50%)',
           };
@@ -1158,8 +1192,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 offsetY = (renderedH - cH) / 2;
               }
 
-              const screenCenterX = (roiCenter.x * renderedW) - offsetX;
-              const screenCenterY = (roiCenter.y * renderedH) - offsetY;
+              const screenCenterX = (effectiveRoiCenter.x * renderedW) - offsetX;
+              const screenCenterY = (effectiveRoiCenter.y * renderedH) - offsetY;
 
               const baseFractionW = roiSize === 'compact' ? 0.44 : 0.58;
               const cropW = (vW * baseFractionW) / zoomLevel;
@@ -1190,6 +1224,14 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
               <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
               <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
+
+              {/* Locked Focus indicator badge during brew */}
+              {isBrewing && (
+                <div className="absolute -top-3.5 right-2 px-1.5 py-0.5 rounded-md bg-amber-500/95 text-black text-[9px] font-mono font-bold flex items-center gap-1 shadow-xs pointer-events-none">
+                  <Lock className="w-2.5 h-2.5" />
+                  <span>{t('scale.focus_locked_brewing')}</span>
+                </div>
+              )}
 
               {/* Precise Auto-Detected Digit Bounding Box (Subtle, non-obscuring outline without text blocking the view) */}
               {lastOcrResult && cameraState === 'live' && (() => {
