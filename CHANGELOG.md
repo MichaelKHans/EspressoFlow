@@ -2,6 +2,16 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.10.6] - 2026-10-11
+### Etape 42: Simuleret Vægtjustering vs. Shift-Zoom Separering (HIL Scale Bench)
+- **Streng Separering af Vægt-Inkrement og Visuel Størrelse (`scale-simulator.html`):**
+  - **Identificeret Root Cause:** `scaleChassisEl` havde en ubetinget hjullytter (`scaleChassisEl.addEventListener('wheel')`), som ændrede vægtens visuelle zoom (`setScaleZoom`) ved ethvert musehjulstræk over vægten. Da baristaen forsøgte at justere gramværdien med musen, voksede eller krympede vægten samtidig på skærmen og ødelagde kamerarammen.
+  - **Løsning:** 
+    - Den overflødige hjullytter på `scaleChassisEl` er fjernet.
+    - Hændelseslytterne er samlet i én central controller: Almindelig rulning med musehjulet (uden Shift) justerer **udelukkende kaffevægten i gram** ($\pm 0.1\text{g}$, eller $\pm 1.0\text{g}$ med Ctrl), og vægtens visuelle størrelse forbliver 100% uændret.
+    - Vægtens visuelle størrelse/zoom (20% – 180%) kan nu **kun** ændres, når baristaen aktivt holder **Shift** nede under rulning (`Shift + Wheel`), eller via de dedikerede zoom-knapper.
+    - Tilføjet beskyttelse mod utilsigtede klik i Ren Kamera-Mode, så HUD forbliver skjult under præcisionstests.
+
 ## [1.10.5] - 2026-10-11
 ### Etape 41: Dybdegående OCR & Stale-Closure Audit (10/50/80g Restore, 0.0g Brew Lockout Elimination & Tap-Kalibrering)
 - **Gendannelse af Fuld Aflæsning for Tal der Ender på `.0` (`10.0g`, `50.0g`, `80.0g`) (`ocr7segment.ts`):**

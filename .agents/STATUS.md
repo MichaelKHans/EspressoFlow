@@ -11,6 +11,15 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-11 -- Simuleret Vægtjustering vs. Shift-Zoom Separering (v1.10.6)
+- **Streng Separering af Vægt-Inkrement og Visuel Størrelse (`scale-simulator.html`):**
+  - **Identificeret Årsag:** `scaleChassisEl` havde en ubetinget hjullytter (`scaleChassisEl.addEventListener('wheel')`), som ændrede vægtens visuelle zoom (`setScaleZoom`) ved ethvert musehjulstræk over vægten. Da baristaen forsøgte at justere gramværdien med musen, voksede eller krympede vægten samtidig på skærmen og ødelagde kamerarammen.
+  - **Løsning:** 
+    - Den overflødige hjullytter på `scaleChassisEl` er fjernet.
+    - Hændelseslytterne er samlet i én central controller: Almindelig rulning med musehjulet (uden Shift) justerer **udelukkende kaffevægten i gram** ($\pm 0.1\text{g}$, eller $\pm 1.0\text{g}$ med Ctrl), og vægtens visuelle størrelse forbliver 100% uændret.
+    - Vægtens visuelle størrelse/zoom (20% – 180%) kan nu **kun** ændres, når baristaen aktivt holder **Shift** nede under rulning (`Shift + Wheel`), eller via de dedikerede zoom-knapper.
+    - Tilføjet beskyttelse mod utilsigtede klik i Ren Kamera-Mode, så HUD forbliver skjult under præcisionstests.
+
 ### 2026-10-11 -- Dybdegående OCR & Stale-Closure Audit (v1.10.5)
 - **Gendannelse af Fuld Aflæsning for Tal der Ender på `.0` (`10.0g`, `50.0g`, `80.0g`) (`ocr7segment.ts`):**
   - **Identificeret Årsag:** En aggressiv tare-nul beskyttelsesheuristik kontrollerede om et tal endte på `0.0` med en længde $\ge 4$, og klippede blindt det første ciffer af (`result.shift()`). Dette medførte, at fuldstændig reelle vægte som `10.0g`, `20.0g`, `30.0g`, `50.0g` og `80.0g` blev barberet ned til blot `0.0g`!

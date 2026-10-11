@@ -670,7 +670,7 @@
   <div id="cleanModeBadge" class="clean-mode-badge" title="Klik her eller tast C for at vise kontroller igen">✕ Vis Kontroller (C)</div>
 
   <!-- Interactive Clean Mode Bottom Dock (Appears when hovering near bottom of screen) -->
-  <div id="cleanCamDock" class="clean-cam-dock" title="Hurtig vægtjustering i Ren Tilstand (fader væk når musen fjernes)">
+  <div id="cleanCamDock" class="clean-cam-dock" title="Hurtig vægtjustering i Ren Tilstand. Tip: Rul mus for gram | Shift + Rul mus for at skalere vægtstørrelse">
     <button id="btnCleanTare" class="btn-ctrl" style="padding: 4px 10px; font-size: 11px;">🔄 Tare (0.0g)</button>
     <div style="display: flex; align-items: center; gap: 8px;">
       <input id="cleanSliderWeight" type="range" min="0" max="600" step="0.1" value="0" style="width: 140px; accent-color: #22d3ee; cursor: pointer;">
@@ -868,6 +868,7 @@
           <button class="btn-ctrl btn-zoom" data-zoom="1.00">100%</button>
           <input id="sliderZoom" type="range" min="0.25" max="1.50" step="0.05" value="0.45" style="width: 75px; cursor: pointer;">
           <span id="zoomVal" style="font-family: var(--font-mono); font-size: 11px; color: #22d3ee; min-width: 30px;">45%</span>
+          <span style="font-size: 10px; color: #71717a; margin-left: 4px;">(Shift + Rul mus)</span>
         </div>
       </div>
 
@@ -1913,15 +1914,26 @@
       }
     });
 
-    // Mouse wheel weight adjustment (scroll anywhere on background to change weight)
+    // Mouse wheel controller:
+    // - Shift + Wheel (over scale or anywhere): Adjusts visual scale size (zoom: 20% - 180%)
+    // - Normal Wheel (without Shift): Adjusts scale weight (0.1g, or 1.0g with Ctrl) WITHOUT altering visual scale appearance!
     window.addEventListener('wheel', (e) => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.closest('.hud-panel'))) return;
-      stopActiveScenario();
-      const step = e.shiftKey ? 1.0 : (e.ctrlKey ? 10.0 : 0.1);
-      const dir = e.deltaY < 0 ? 1 : -1;
-      currentWeight = Math.max(0, Math.min(2000, Math.round((currentWeight + dir * step) * 10) / 10));
-      updateDisplay();
-    }, { passive: true });
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.closest('.hud-panel') || e.target.closest('.mirror-widget'))) return;
+      e.preventDefault();
+
+      if (e.shiftKey) {
+        // Shift + Wheel: Kun her må vægten ændres udseendemæssigt (zoom)
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        setScaleZoom(currentScaleZoom + delta);
+      } else {
+        // Normal Wheel: Justerer kaffevægten (gram), visuel størrelse forbliver 100% låst
+        stopActiveScenario();
+        const step = e.ctrlKey ? 1.0 : 0.1;
+        const dir = e.deltaY < 0 ? 1 : -1;
+        currentWeight = Math.max(0, Math.min(2000, Math.round((currentWeight + dir * step) * 10) / 10));
+        updateDisplay();
+      }
+    }, { passive: false });
 
     // Keyboard controls
     window.addEventListener('keydown', (e) => {
@@ -2066,6 +2078,7 @@
     });
 
     scaleChassisEl.addEventListener('click', () => {
+      if (document.body.classList.contains('clean-cam-mode')) return;
       if (!isHudVisible) {
         isHudVisible = true;
         hudOverlayEl.classList.remove('hidden');
@@ -2102,12 +2115,6 @@
         setScaleZoom(parseFloat(e.target.value));
       });
     }
-
-    scaleChassisEl.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.05 : -0.05;
-      setScaleZoom(currentScaleZoom + delta);
-    }, { passive: false });
 
     window.addEventListener('keydown', (e) => {
       if (e.key === '+' || e.key === '=') {
