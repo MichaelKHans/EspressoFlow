@@ -10,7 +10,7 @@
       --bg-color: #0d0d0d;
       --led-active: #22d3ee; /* Cyan LED default */
       --led-glow: rgba(34, 211, 238, 0.45);
-      --led-inactive: rgba(34, 211, 238, 0.04);
+      --led-inactive: transparent;
       --font-mono: 'Courier Prime', monospace;
       --scale-zoom: 0.45;
     }
@@ -39,9 +39,9 @@
     .scale-chassis {
       position: relative;
       background: radial-gradient(circle at 50% 30%, #1c1c1f, #0a0a0c);
-      border: 3px solid #2a2a30;
+      border: 3px solid #27272a;
       border-radius: 28px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
       padding: 24px 44px 36px 44px;
       display: flex;
       flex-direction: column;
@@ -73,6 +73,7 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       font-size: 11px;
       cursor: grab;
+      transition: opacity 0.2s ease;
     }
 
     .scale-drag-bar:active {
@@ -97,47 +98,91 @@
       border-color: #c26d52;
     }
 
-    /* Screen Glass Bezel */
+    /* Screen Glass Bezel - Ultra clean black box without reflection lines */
     .screen-bezel {
       background: #000000;
       border: none;
       border-radius: 16px;
-      padding: 32px 48px;
+      padding: 36px 80px;
       position: relative;
-      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.95);
+      box-shadow: none;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 20px;
     }
 
-    /* Display Modes */
+    /* Display Modes - Inactive segments strictly transparent with 0 optical bleed */
     .theme-muvna {
       --led-active: #38bdf8;
       --led-glow: rgba(56, 189, 248, 0.5);
-      --led-inactive: rgba(56, 189, 248, 0.04);
+      --led-inactive: transparent;
     }
     .theme-timemore {
       --led-active: #f8fafc;
       --led-glow: rgba(248, 250, 252, 0.4);
-      --led-inactive: rgba(248, 250, 252, 0.04);
+      --led-inactive: transparent;
     }
     .theme-acaia {
       --led-active: #fdba74;
       --led-glow: rgba(253, 186, 116, 0.45);
-      --led-inactive: rgba(253, 186, 116, 0.04);
+      --led-inactive: transparent;
     }
     .theme-pure_weight {
       --led-active: #22d3ee;
       --led-glow: rgba(34, 211, 238, 0.45);
-      --led-inactive: rgba(34, 211, 238, 0.04);
+      --led-inactive: transparent;
     }
     .theme-lcd {
       background: #8b9bb4 !important;
       border-color: #64748b !important;
       --led-active: #0f172a;
       --led-glow: transparent;
-      --led-inactive: rgba(15, 23, 42, 0.06);
+      --led-inactive: transparent;
+    }
+
+    /* Clean Camera Mode (100% Pitch-Black Screen for Mobile Phone Camera) */
+    body.clean-cam-mode {
+      background: #000000 !important;
+    }
+    body.clean-cam-mode .scale-chassis {
+      background: #000000 !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    body.clean-cam-mode .scale-drag-bar {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    body.clean-cam-mode .hud-overlay {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    body.clean-cam-mode .phone-mirror-widget {
+      display: none !important;
+    }
+    body.clean-cam-mode .screen-bezel {
+      box-shadow: none !important;
+      padding: 50px 120px !important;
+    }
+
+    .clean-mode-badge {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: rgba(34, 211, 238, 0.15);
+      border: 1px solid rgba(34, 211, 238, 0.4);
+      color: #22d3ee;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      z-index: 999;
+      display: none;
+    }
+    body.clean-cam-mode .clean-mode-badge {
+      display: block;
     }
 
     /* Display Rows */
@@ -186,14 +231,16 @@
       height: 128px;
     }
 
-    /* Segment styles */
+    /* Segment styles - Inactive strictly 0 opacity, Active glowing */
     .seg {
-      fill: var(--led-inactive);
-      transition: fill 0.03s ease;
+      fill: transparent !important;
+      opacity: 0 !important;
+      transition: fill 0.03s ease, opacity 0.03s ease;
     }
 
     .seg.on {
-      fill: var(--led-active);
+      fill: var(--led-active) !important;
+      opacity: 1 !important;
       filter: drop-shadow(0 0 8px var(--led-glow));
     }
 
@@ -574,8 +621,11 @@
 </head>
 <body>
 
+  <!-- Floating exit badge for Clean Camera Mode -->
+  <div id="cleanModeBadge" class="clean-mode-badge" title="Klik her eller tast C for at vise kontroller igen">✕ Vis Kontroller (C)</div>
+
   <!-- Scale Hardware Body (Draggable & Repositionable) -->
-  <div id="scaleChassis" class="scale-chassis theme-muvna" title="Træk for at flytte vægten rundt på skærmen">
+  <div id="scaleChassis" class="scale-chassis theme-pure_weight" title="Træk for at flytte vægten rundt på skærmen">
     <!-- Quick Drag & Preset Position Toolbar -->
     <div id="scaleDragBar" class="scale-drag-bar">
       <span style="display: flex; align-items: center; gap: 6px; color: #a1a1aa; font-weight: 600;">
@@ -662,6 +712,7 @@
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="btnCleanCamMode" class="btn-ctrl" style="border-color: #22d3ee; color: #22d3ee; font-weight: bold;" title="100% ren sort skærm uden knapper eller refleksioner (tast C)">📷 Ren Kamera-Mode (C)</button>
         <button id="btnToggleMirror" class="btn-ctrl">📱 Toggle Mirror</button>
         <span class="hint-text">Press <b>H</b> to hide HUD</span>
         <button id="btnHideHud" class="btn-ctrl">👁️ Hide HUD</button>
@@ -1722,14 +1773,37 @@
       } else if (cmd.action === 'set_hud') {
         isHudVisible = !!cmd.visible;
         hudOverlayEl.classList.toggle('hidden', !isHudVisible);
+      } else if (cmd.action === 'set_clean_cam') {
+        toggleCleanCameraMode(!!cmd.enabled);
+      } else if (cmd.action === 'reload') {
+        window.location.reload();
       } else if (cmd.action === 'stop') {
         stopActiveScenario();
       }
     }
 
+    // Clean Camera Mode Toggle (100% clean pitch-black screen for camera)
+    function toggleCleanCameraMode(forceState) {
+      const isClean = forceState !== undefined ? forceState : !document.body.classList.contains('clean-cam-mode');
+      document.body.classList.toggle('clean-cam-mode', isClean);
+      localStorage.setItem('scale_clean_cam_mode', isClean ? 'true' : 'false');
+    }
+
+    const btnCleanCamMode = document.getElementById('btnCleanCamMode');
+    if (btnCleanCamMode) {
+      btnCleanCamMode.addEventListener('click', () => toggleCleanCameraMode(true));
+    }
+
+    const cleanModeBadge = document.getElementById('cleanModeBadge');
+    if (cleanModeBadge) {
+      cleanModeBadge.addEventListener('click', () => toggleCleanCameraMode(false));
+    }
+
     // Keyboard controls
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'h' || e.key === 'H') {
+      if (e.key === 'c' || e.key === 'C') {
+        toggleCleanCameraMode();
+      } else if (e.key === 'h' || e.key === 'H') {
         isHudVisible = !isHudVisible;
         hudOverlayEl.classList.toggle('hidden', !isHudVisible);
       } else if (e.code === 'Space') {

@@ -327,16 +327,24 @@ function probeDigitSegments(
   canvasW: number,
   box: { x: number; y: number; width: number; height: number }
 ): { segments: SegmentProbeResult; matchChar: string; confidence: number } {
-  // Relative probe positions cleanly centered within segments:
-  // Top/bottom vertical centers at 0.30 and 0.70 to avoid bleed from horizontal bars (a at 0.07, g at 0.50, d at 0.93)
+  // Relative probe positions cleanly centered within standard 7-segment strokes:
+  // Left vertical column (f, e) is centered at x=0.18 (box stroke span: ~0.10 - 0.26)
+  // Right vertical column (b, c) is centered at x=0.82 (box stroke span: ~0.74 - 0.90)
+  // Top horizontal bar a at y=0.10, bottom horizontal bar d at y=0.90
+  // Multi-point horizontal verification for center bar g (left 0.35, mid 0.50, right 0.65)
+  const gLeft = sampleSegment(binary, canvasW, box, 0.35, 0.50, 'g', 0.28);
+  const gMid = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.32);
+  const gRight = sampleSegment(binary, canvasW, box, 0.65, 0.50, 'g', 0.28);
+  const hasSolidGBar = gMid && (gLeft || gRight);
+
   const seg: SegmentProbeResult = {
-    a: sampleSegment(binary, canvasW, box, 0.50, 0.07, 'h'), // Top horizontal
-    b: sampleSegment(binary, canvasW, box, 0.88, 0.30, 'v'), // Top-Right vertical
-    c: sampleSegment(binary, canvasW, box, 0.88, 0.70, 'v'), // Bottom-Right vertical
-    d: sampleSegment(binary, canvasW, box, 0.50, 0.93, 'h'), // Bottom horizontal
-    e: sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v'), // Bottom-Left vertical
-    f: sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v'), // Top-Left vertical
-    g: sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g'), // Center horizontal (tight kernel)
+    a: sampleSegment(binary, canvasW, box, 0.50, 0.10, 'h'), // Top horizontal
+    b: sampleSegment(binary, canvasW, box, 0.82, 0.30, 'v'), // Top-Right vertical (centered in stroke)
+    c: sampleSegment(binary, canvasW, box, 0.82, 0.70, 'v'), // Bottom-Right vertical (centered in stroke)
+    d: sampleSegment(binary, canvasW, box, 0.50, 0.90, 'h'), // Bottom horizontal
+    e: sampleSegment(binary, canvasW, box, 0.18, 0.70, 'v'), // Bottom-Left vertical (centered in stroke)
+    f: sampleSegment(binary, canvasW, box, 0.18, 0.30, 'v'), // Top-Left vertical (centered in stroke)
+    g: hasSolidGBar, // Center horizontal requires true horizontal continuity
   };
 
   // Special fast-path for digit '1':
@@ -403,21 +411,38 @@ function probeDigitSegments(
   // ── Confusable-pair disambiguation with stricter re-verification ──
 
   // 0 vs 8: Both share outer segments a,b,c,d,e,f.
-  // The only difference is the horizontal center bar g.
-  // Re-verify segment g: if center bar is solid (gStrict is true), it is an '8'. If absent, it is a '0'.
+  // Center bar g: if center bar has solid horizontal width (hasSolidGBar is true), it is an '8'. If hollow cavity, strictly '0'.
   if ((bestMatch === '8' || bestMatch === '0') && bestScore >= 0.65) {
-    const gStrict = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.32);
-    if (!gStrict) {
+    if (!hasSolidGBar) {
       return {
-        segments: seg,
+        segments: { ...seg, g: false },
         matchChar: '0',
-        confidence: Math.max(0.92, bestScore),
+        confidence: Math.max(0.95, bestScore),
       };
     } else {
       return {
-        segments: seg,
+        segments: { ...seg, g: true },
         matchChar: '8',
         confidence: Math.max(0.95, bestScore),
+      };
+    }
+  }
+
+  // 5 topology check:
+  // Digit '5' requires a, f, g, c, d. It strictly forbids b (top-right) and e (bottom-left).
+  if (bestMatch === '5') {
+    if (seg.b && seg.e) {
+      return {
+        segments: seg,
+        matchChar: hasSolidGBar ? '8' : '0',
+        confidence: 0.92,
+      };
+    }
+    if (!hasSolidGBar) {
+      return {
+        segments: seg,
+        matchChar: '0',
+        confidence: 0.90,
       };
     }
   }
@@ -426,8 +451,8 @@ function probeDigitSegments(
   // Digit '0' has outer loop a,b,c,d,e,f (no g).
   // If matched as '2', but vertical segments c (bottom-right) and f (top-left) are active:
   if (bestMatch === '2' && bestScore >= 0.70) {
-    const cStrict = sampleSegment(binary, canvasW, box, 0.88, 0.70, 'v', 0.28);
-    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.28);
+    const cStrict = sampleSegment(binary, canvasW, box, 0.82, 0.70, 'v', 0.28);
+    const fStrict = sampleSegment(binary, canvasW, box, 0.18, 0.30, 'v', 0.28);
     if (cStrict && fStrict) {
       return {
         segments: seg,
@@ -927,8 +952,8 @@ function parseDigitsFromBinary(
       } else {
         const prev = currentCluster[currentCluster.length - 1];
         const gap = el.box.x - (prev.box.x + prev.box.width);
-        // Bounded gap threshold: accommodates digit '1' right-side alignment (~0.65 * bandH)
-        const maxGap = Math.max(22, Math.floor(bandH * 0.70));
+        // Bounded gap threshold: real 7-segment digital displays have regular inter-digit spacing <= 0.45 * bandH
+        const maxGap = Math.max(16, Math.floor(bandH * 0.45));
 
         if (gap > maxGap || el.type === 'colon' || prev.type === 'colon') {
           clusters.push(currentCluster);
@@ -969,17 +994,43 @@ function parseDigitsFromBinary(
 
       let result = [...elements];
 
-      // 1. Inspect first element if it's a digit '1'
+      // A coffee scale display has standard 1-decimal resolution (e.g. 0.0g or 36.2g)
+      // Check if there is a decimal point
+      const dotIdx = result.findIndex((e) => e.type === 'dot');
+      if (dotIdx !== -1) {
+        // In coffee scale displays: dot is followed by exactly 1 decimal digit (tenths place)
+        // Any trailing elements after (dotIdx + 1) are edge borders, unit 'g', or optical flare!
+        while (result.length > dotIdx + 2) {
+          result.pop();
+        }
+
+        // Also check if there's an impossible extra digit before a zero tare:
+        // E.g. ["5", "0", ".", "0"] or ["8", "0", ".", "0"] or ["1", "0", ".", "0"]
+        // If the number ends with "0.0":
+        if (result.length >= 4 && dotIdx >= 2) {
+          const charBeforeDot = result[dotIdx - 1];
+          const charAfterDot = result[dotIdx + 1];
+          if (charBeforeDot.char === '0' && charAfterDot.char === '0') {
+            // The display is showing tare zero "0.0"! Any leading digit preceding "0.0" is a border flare!
+            result.shift();
+          }
+        }
+      }
+
+      // Check for distant leading element separated by abnormal gap
+      if (result.length >= 2) {
+        const gap0 = result[1].box.x - (result[0].box.x + result[0].box.width);
+        if (gap0 > Math.max(18, Math.floor(medH * 0.45))) {
+          result.shift();
+        }
+      }
+
+      // 1. Inspect first element if it's an edge artifact mimicking digit '1'
       if (result.length >= 2 && result[0].type === 'digit' && result[0].char === '1') {
         const firstBox = result[0].box;
-        const isMisaligned =
-          Math.abs(firstBox.height - medH) > maxHDiff ||
-          Math.abs(firstBox.y - medTop) > maxTopDiff ||
-          Math.abs(firstBox.y + firstBox.height - medBot) > maxBotDiff;
-
         const nextEl = result[1];
         const gapToNext = nextEl.box.x - (firstBox.x + firstBox.width);
-        const isDistantEdge = gapToNext > Math.max(24, Math.floor(medH * 0.60));
+        const isDistantEdge = gapToNext > Math.max(18, Math.floor(medH * 0.45));
 
         // Spurious edge before zero tare (e.g. "1" + "0.0")
         const isImpossibleTare =
@@ -988,25 +1039,35 @@ function parseDigitsFromBinary(
           result[1].char === '0' &&
           result[2].type === 'dot';
 
-        if (isMisaligned || (isDistantEdge && isImpossibleTare)) {
+        // An edge sliver is abnormally tiny (less than 40% of median height)
+        const isTinyNoiseSliver = firstBox.height < Math.max(12, Math.floor(medH * 0.40));
+
+        if (isDistantEdge || isImpossibleTare || isTinyNoiseSliver) {
           result.shift();
         }
       }
 
-      // 2. Inspect last element if it's a digit '1'
+      // 2. Inspect last element if it's a trailing edge artifact
       if (result.length >= 2) {
         const lastIdx = result.length - 1;
-        const lastEl = result[lastIdx];
-        if (lastEl.type === 'digit' && lastEl.char === '1') {
-          const lastBox = lastEl.box;
-          const isMisaligned =
-            Math.abs(lastBox.height - medH) > maxHDiff ||
-            Math.abs(lastBox.y - medTop) > maxTopDiff ||
-            Math.abs(lastBox.y + lastBox.height - medBot) > maxBotDiff;
+        // If there's a decimal point, never prune the tenths place digit (dotIdx + 1)!
+        const isTenthsDigit = dotIdx !== -1 && lastIdx === dotIdx + 1;
+        if (!isTenthsDigit) {
+          const lastEl = result[lastIdx];
+          if (lastEl.type === 'digit' && (lastEl.char === '1' || lastEl.char === '2')) {
+            const lastBox = lastEl.box;
+            const isMisaligned =
+              Math.abs(lastBox.height - medH) > maxHDiff ||
+              Math.abs(lastBox.y - medTop) > maxTopDiff ||
+              Math.abs(lastBox.y + lastBox.height - medBot) > maxBotDiff;
 
-          // Prune trailing '1' only if physically misaligned with the digit baseline/top
-          if (isMisaligned) {
-            result.pop();
+            const prevEl = result[lastIdx - 1];
+            const gapToPrev = lastBox.x - (prevEl.box.x + prevEl.box.width);
+            const isDistantTrailing = gapToPrev > Math.max(18, Math.floor(medH * 0.40));
+
+            if (isMisaligned || isDistantTrailing) {
+              result.pop();
+            }
           }
         }
       }
@@ -1060,7 +1121,15 @@ function parseDigitsFromBinary(
 
       const cleanNum = clText.replace(/[^0-9.-]/g, '');
       const parsed = parseFloat(cleanNum);
-      const valid = !isNaN(parsed) && parsed >= -20 && parsed <= 2000;
+
+      // Strict syntax validation for coffee scale displays:
+      // A digital coffee scale ALWAYS displays at least one integer digit before the decimal dot (e.g. "0.0", "127.3").
+      // Incomplete fragments starting with '.' (e.g. ".1", ".", "-.") are noise slivers and MUST be rejected!
+      const hasValidSyntax = clHasDecimal
+        ? /^-?\d+\.\d+$/.test(cleanNum)
+        : /^-?\d+$/.test(cleanNum);
+
+      const valid = hasValidSyntax && !isNaN(parsed) && parsed >= -20 && parsed <= 2000;
       const conf = digitsInCl.length > 0 ? digitsInCl.reduce((s, d) => s + d.confidence, 0) / digitsInCl.length : 0;
 
       // Check for Timer format vs Weight format
@@ -1075,13 +1144,17 @@ function parseDigitsFromBinary(
         (clText.startsWith('00.') && clText.length >= 4);
 
       let clScore = conf * 20;
-      if (clHasDecimal && !isTimerPattern) clScore += 75; // Big bonus for 0.1g coffee scale decimal (e.g. 0.0g or 41.3g)
+      if (valid && clHasDecimal && !isTimerPattern) clScore += 75; // Big bonus for valid decimal coffee scale weight
       if (valid && !isTimerPattern) clScore += 35;
-      if (digitsInCl.length >= 2 && !isTimerPattern) clScore += 20; // Realistic multi-digit number (e.g. 41.3)
+      if (valid && digitsInCl.length >= 2 && !isTimerPattern) clScore += 20; // Realistic multi-digit number (e.g. 127.3)
+
+      if (!hasValidSyntax) {
+        clScore -= 300; // Strong elimination penalty for malformed fragments like ".1"
+      }
 
       if (isTimerPattern) {
         clScore -= 300; // Strong elimination penalty for timer format (0:00 / 00:00 / colon)
-      } else if (clText.startsWith('0.') && !clText.startsWith('00.')) {
+      } else if (valid && clText.startsWith('0.') && !clText.startsWith('00.')) {
         clScore += 50; // High confidence for tare zero
       }
 
@@ -1321,10 +1394,16 @@ export class ScaleReadingFilter {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
-    // Absolute Physical Ceiling for Espresso Extraction / Digital Scale:
-    // A standard espresso pull yield is 15-60g. Readings > 65g during brewing
-    // or when tared at <= 0.5g are decimal-dropped optical artifacts (e.g. 113.3 or 100.1 instead of 11.3 or 10.0).
-    if (newReading > 65.0 && (isBrewing || this.lastValidWeight <= 0.5)) {
+    // Digital coffee scale operating range is -20.0g to 2000.0g.
+    if (newReading < -20.0 || newReading > 2000.0) {
+      return { weight: this.lastValidWeight, isOutlier: true };
+    }
+
+    // Absolute Physical Ceiling during active Espresso Extraction:
+    // When actively pulling an espresso shot with a target yield ~36g, liquid yield cannot jump to > 150g
+    // (blocks optical glitches where a decimal point is dropped, e.g. 185 instead of 18.5).
+    // In standby / calibration / filter coffee, any weight up to 2000g is valid and supported.
+    if (isBrewing && newReading > 150.0 && this.lastValidWeight < 65.0) {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
 
@@ -1353,9 +1432,11 @@ export class ScaleReadingFilter {
       }
     }
 
-    // Always accept tare lock (0.0g - 0.3g) ONLY before extraction has started (lastValidWeight <= 0.3g)
-    // Once liquid espresso starts flowing, stray zeroes from reflections cannot drag the weight down!
-    if (newReading <= 0.3 && (!isBrewing || this.lastValidWeight <= 0.3)) {
+    // Tare zero lock (<= 0.3g):
+    // If already at or near zero, zero readings are accepted instantly with 0ms latency.
+    // If previously at a positive weight (e.g. 18.0g or 127.3g), a drop to 0.0g is a step change
+    // that requires multi-frame consensus below, preventing a single transient noise flare from wiping out weight!
+    if (newReading <= 0.3 && this.lastValidWeight <= 0.3) {
       this.lastValidWeight = newReading;
       this.recentWindow = [newReading];
       this.consecutiveLowCount = 0;
@@ -1378,9 +1459,9 @@ export class ScaleReadingFilter {
 
     if (delta > maxDelta) {
       // Possible optical glitch, glare reflection, or legitimate step change:
-      // For large jumps (delta > 2.0g), require at least 4 consecutive frames in agreement (~130ms at 30fps)
-      // For moderate jumps (delta <= 2.0g), require at least 3 frames.
-      const requiredFrames = delta > 2.0 ? 4 : 3;
+      // When brewing, require 4 consecutive frames (large jump) or 3 frames (moderate jump)
+      // When NOT brewing (standby / dosing / placing cup / slider testing), require only 2 consecutive frames for ultra-snappy reaction!
+      const requiredFrames = isBrewing ? (delta > 2.0 ? 4 : 3) : 2;
       if (this.recentWindow.length >= requiredFrames) {
         const slice = this.recentWindow.slice(-requiredFrames);
         const minW = Math.min(...slice);

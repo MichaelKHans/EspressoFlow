@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.10.0 (Udvidet Multi-Metode Bryglaboratorium & Live Telemetri Spejl)  
+> **Gældende version:** v1.10.1 (Fuld Vægt-Rækkevidde Aflæsning, Ciffer '1' Bevarelse & Optisk Isolering)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -181,6 +181,9 @@ flowchart LR
 3. **Monotonic Floor Clamping:** Under aktiv brygning kan vægten aldrig falde $> 0.5\text{g}$ under den aktuelle vægt. Ekstraheret kaffe forsvinder ikke fra koppen.
 4. **Fysisk Flow Clamp:** Flow rate kan i espresso aldrig overstige $6.0\text{ g/s}$. Alle beregninger clampes til $[0, 6.0]\text{ g/s}$.
 5. **Puck Resistance & Channelling:** Hvis flowet pludselig accelererer markant uden pumpeændring, markeres punktet med `isChanneling = true` og tælles i samlet shot-score.
+6. **Fuld Vægt-Rækkevidde (0.0g - 2000.0g):** I standby, ved dosering af bønner, eller ved brug af portafilter/kande accepteres hele kaffevægtens måleområde. Under aktiv espressobrygning beskyttes mod urealistiske spring $> 150g$.
+7. **Streng Syntaksvalidering mod Brøkfragmenter:** En gyldig vægtaflæsning SKAL have mindst ét heltalsciffer foran decimaltegnet. Ufuldstændige fragmenter som `".1"` eller `"."` afvises ubetinget for at forhindre korruption af konsensus-bufferen.
+8. **Asymmetrisk Konsensus-Damping:** I standby bekræftes trin-ændringer på 2 frames ($< 70\text{ ms}$) for øjeblikkelig taktil respons, mens aktiv brygning kræver 4 frames mod dampskyer og vibrationer.
 
 ---
 

@@ -83,6 +83,18 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] **4. CLI Controller Udvidet (`sim-ctl.cjs`):**
   - Støtte for alle 10 brygscenarier via `--scenario`.
 
+## 🔬 FASE 11: Fuld Vægt-Rækkevidde Aflæsning (0.0g - 2000.0g) & Ciffer '1' Bevarelse (v1.10.1 - AFSLUTTET)
+- [x] **1. Fjernelse af Hårdkodet 65g Espresso-Grænse i Standby (`ocr7segment.ts`):**
+  - Udvidet `ScaleReadingFilter` til det fulde fysiske måleområde op til 2000.0g, så vægte som `127.3g`, `250.0g` og `500.0g` ikke afvises som outliers under dosering, kalibrering eller pour-over.
+- [x] **2. Afvisning af Ufuldstændige Brøk-Fragmenter som .1 (`ocr7segment.ts`):**
+  - Indført krav om heltalsciffer før decimaltegn. Fragmenter som `".1"` afvises og kan ikke nulstille konsensusbufferen.
+- [x] **3. Bevarelse af Førende Ciffer '1' i Sammensatte Tal (`ocr7segment.ts`):**
+  - Ciffer '1' har færre tændte segmenter og er naturligt kortere. Kantfilteret beskytter nu '1' mod fejlagtig frasortering i tal som `127.3g`.
+- [x] **4. Snappy Standby Trinrespons (2-Frame Konsensus):**
+  - Trinrespons i standby bekræftes på blot 2 frames ($< 70\text{ ms}$), mens espressobrygning bevarer 4-frame damping mod dampskyer.
+- [x] **5. Optisk Isolering & Ren Kamera-Mode (`scale-simulator.html`):**
+  - Slukkede segmenter sat til 100% gennemsigtighed (`opacity: 0`), og tilføjet tastaturgenvej `C` og knap `📷 Ren Kamera-Mode`.
+
 ---
 
 ## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)

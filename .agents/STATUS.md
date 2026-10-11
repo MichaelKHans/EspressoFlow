@@ -11,6 +11,22 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-11 -- Fuld Vægt-Rækkevidde Aflæsning (0.0g - 2000.0g), Ciffer '1' Bevarelse & Optisk Isolering (v1.10.1)
+- **Fjernelse af Hårdkodet 65g Espresso-Grænse i Standby (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** `ScaleReadingFilter` havde en hårdkodet grænse på `newReading > 65.0`, der markerede alle vægte over 65g som `⚠️ OUTLIER`, hvis vægten hvilede nær 0.0g/0.1g. Selvom OCR-motoren korrekt læste `"127.3"` med 100% konfidens, blev værdien afvist som en outlier.
+  - **Løsning:** Filterets operationelle rækkevidde er udvidet til hele kaffevægtens fysiske måleområde (op til 2000.0g). Under aktiv espressobrygning beskyttes mod urealistiske spring $> 150g$, men i standby/dosering/kalibrering accepteres alle gyldige vægte op til 2000.0g.
+- **Afvisning af Ufuldstændige Brøk-Fragmenter (fx ".1") (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** Optiske reflekser eller slørede enkeltframes kunne generere et isoleret punktum med ciffer (fx `".1"`), som `parseFloat` fejlagtigt evaluerede til `0.1g`. Dette nulstillede konsensus-bufferen, så værdier som `127.3g` blev afbrudt.
+  - **Løsning:** Indført streng syntaksvalidering: En gyldig kaffevægtsvisning SKAL have mindst ét heltalsciffer foran decimaltegnet (`/^-?\d+\.\d+$/`). Ufuldstændige fragmenter som `".1"` eller `"."` afvises omgående.
+- **Bevarelse af Førende Ciffer '1' (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** 7-segment ciffer '1' består udelukkende af segment `b` og `c` og mangler top- og bundbjælke, hvorfor det naturligt er 30-35% lavere end cifrene 2, 7 og 3. Tidligere fejltjekkede kantfilteret højden og fjernede fejlagtigt '1' som en kant-artefakt.
+  - **Løsning:** Ciffer '1' beskyttes i sammensatte tal som `127.3g`, `18.0g` og `14.2g`.
+- **Hurtig Trinrespons i Standby (`ocr7segment.ts`):**
+  - I standby / dosering / test bekræftes vægtændringer på blot 2 på hinanden følgende frames ($< 70\text{ ms}$ ved 30 FPS) for lynhurtig og responsiv betjening, mens aktiv espressobrygning fortsat beskyttes med 4-frame konsensus.
+- **Optisk Billedisolering & Ren Kamera-Mode (`scale-simulator.html`):**
+  - Slukkede 7-segment segmenter sat til 100% gennemsigtighed (`opacity: 0`) for at eliminere enhver optisk skygge.
+  - Tilføjet tastaturgenvej `C` og knap `📷 Ren Kamera-Mode`, der skjuler alle knapper, rammer og paneler for 100% ren visning til kameratest.
+
 ### 2026-10-11 -- Udvidet Multi-Metode Bryglaboratorium & Live Telemetri Spejl (v1.10.0)
 - **Multi-Tab Bryglaboratorium i Vægtsimulatoren (`scale-simulator.html`):**
   - Opdelt simulator-HUD i 5 strukturerede faner: Espresso Lab (6 scenarier), Filter & Pour-Over (4 scenarier), Custom Brew Lab, Kalibrering & Vægte, samt Model & Zoom.
