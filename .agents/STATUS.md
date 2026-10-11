@@ -11,6 +11,21 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-11 -- Intelligent Zero-Anchor Lås, Tare-Nul (00.0) Timer-Fritagelse & Udryddelse af 80/50/10 Glares (v1.10.3)
+- **Fritagelse af Tare-Nul (`00.0`) fra Timer-Straf (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** Kaffevægte med 4-tegns nulvisning (`00.0`) blev tidligere ramt af en timer-heuristik (`clText.startsWith('00.') && clText.length >= 4`), som antog det var brøkdele af et sekund på en timer (fx `00.15`) og idømte det en massiv straf på -300 point. Dette betød, at svage optiske reflekser af andre tal (fx `80`, `50` eller `10`) fik lov at overhale det reelle display!
+  - **Løsning:** Indført `isTareZero` (`0.0`, `00.0`, `000.0`, `-0.0`, `0`, `00`), som ubetinget fritages for timer-straffe og i stedet tildeles en markant klynge- og rækkebonus (+160 point), så vægten altid låser prompte på nulpunktet.
+- **Robust Centerbjælke (Segment G) Verifikation mod Ciffer '0' ➔ '8' og '5' Fejl (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** Når vægten viste `00.0`, kunne svage skygger eller udtværing i hulrummet på det første `0` aktivere midterste segment $g$. Da tjekket tidligere blot krævede `gMid && (gLeft || gRight)`, kunne en enkelt lokal genskinnuance konvertere `0` til `8` (hvilket gav `80.0`) eller til `5`.
+  - **Løsning:** Segment $g$ kræver nu fuldstændig, ubrudt vandret kontinuitet (`gMid && gLeft && gRight`). Hvis et ciffer har aktiveret både segment $b$ og $e$ (begge lodrette strøg i højre hhv. venstre side) eller mangler den solide centerbjælke, tvinges klassificeringen entydigt til `0`.
+- **Automatisk Bortskæring af Førende Kantsplinter foran Nul (`10.0` ➔ `0.0`) (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** Displayrammer og kabinetkanter kunne danne en smal lodret skygge til venstre for displayet, der lignede et '1'-tal foran et gyldigt nulpunkt (`10.0`).
+  - **Løsning:** Hvis en aflæsning ender på `.0` og indeholder et foranstillet ciffer foran et nul, renses artefakten bort, så displayet entydigt forbliver forankret i rent `0.0`.
+- **Intelligent Zero-Anchor Baseline Lås i `ScaleReadingFilter` (`ocr7segment.ts`):**
+  - **Fysisk Umulige Spring ved Shotstart:** Når brugeren starter et shot (`isBrewing`), og vægten hviler på $\le 0.5\text{g}$, afvises alle spring $> 2.5\text{g}$ ubetinget som optiske outliers (espresso flow kan fysisk ikke levere $> 2.5\text{g}$ før det første dryp rammer koppen).
+  - **Standby Stabilitetskrævning:** Når vægten hviler i standby på $\le 0.3\text{g}$, kræver et spring til en stor vægt ($> 5.0\text{g}$) mindst 4 sammenhængende stabile frames (~150 ms) før det accepteres. Flygtige 1-frame genskin af `80g`, `50g` eller `10g` ignoreres fuldstændigt.
+  - **Snap-to-Zero:** Værdier $\le 0.3\text{g}$ snappes automatisk til præcis `0.0g`.
+
 ### 2026-10-11 -- Fuld Ciffersekvens Samling (131.5g, 216.1g) & Asymmetrisk Ciffer '1' Mellemrumskalibrering (v1.10.2)
 - **Løsning af Ciffer-Opsplitning ved Efterfølgende Ciffer '1' (fx `131.5g` ➔ `1.5g`) (`ocr7segment.ts`):**
   - **Identificeret Årsag:** 7-segment ciffer '1' har kun sine lodrette strøg på den højre kant af ciffercellen (segment $b$ og $c$). Den venstre halvdel af cellen er tom. Når et tal som `3` blev efterfulgt af `1` (fx `131.5`), var den optiske pixelafstand mellem `3` og strøget for `1` lig med $(\text{celleafstand}) + (\text{tom venstre celle}) \approx 0.60 \times \text{højde}$. Clustering-tærsklen var sat til blot $0.45 \times \text{bandH}$, hvilket huggede tallet over i to klumper: `13` og `1.5`. Da `1.5` havde decimalpunktum, vandt det, og de første to cifre forsvandt!

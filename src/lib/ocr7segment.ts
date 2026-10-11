@@ -335,7 +335,7 @@ function probeDigitSegments(
   const gLeft = sampleSegment(binary, canvasW, box, 0.35, 0.50, 'g', 0.28);
   const gMid = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.32);
   const gRight = sampleSegment(binary, canvasW, box, 0.65, 0.50, 'g', 0.28);
-  const hasSolidGBar = gMid && (gLeft || gRight);
+  const hasSolidGBar = gMid && gLeft && gRight;
 
   const seg: SegmentProbeResult = {
     a: sampleSegment(binary, canvasW, box, 0.50, 0.10, 'h'), // Top horizontal
@@ -430,19 +430,13 @@ function probeDigitSegments(
 
   // 5 topology check:
   // Digit '5' requires a, f, g, c, d. It strictly forbids b (top-right) and e (bottom-left).
+  // If either b or e is present, or if center bar g is not solid, it is a '0' (or '8').
   if (bestMatch === '5') {
-    if (seg.b && seg.e) {
+    if (seg.b || seg.e || !hasSolidGBar) {
       return {
-        segments: seg,
-        matchChar: hasSolidGBar ? '8' : '0',
-        confidence: 0.92,
-      };
-    }
-    if (!hasSolidGBar) {
-      return {
-        segments: seg,
+        segments: { ...seg, g: hasSolidGBar },
         matchChar: '0',
-        confidence: 0.90,
+        confidence: Math.max(0.92, bestScore),
       };
     }
   }
@@ -1008,15 +1002,17 @@ function parseDigitsFromBinary(
           result.pop();
         }
 
-        // Also check if there's an impossible extra digit before a zero tare:
-        // E.g. ["5", "0", ".", "0"] or ["8", "0", ".", "0"] or ["1", "0", ".", "0"]
-        // If the number ends with "0.0":
+        // Tare zero protection: If the number ends with "0.0" (e.g. "00.0", "50.0", "80.0", "10.0"):
+        // In coffee scales, numbers ending in "0.0" with a single leading digit are almost always
+        // displaying tare zero ("0.0" or "00.0"), where the first digit had an edge reflection or inactive segment glow!
         if (result.length >= 4 && dotIdx >= 2) {
           const charBeforeDot = result[dotIdx - 1];
           const charAfterDot = result[dotIdx + 1];
           if (charBeforeDot.char === '0' && charAfterDot.char === '0') {
-            // The display is showing tare zero "0.0"! Any leading digit preceding "0.0" is a border flare!
-            result.shift();
+            // If the leading digit is not '0' (e.g. '1', '8', '5' before "0.0"), strip it!
+            if (result[0].char !== '0') {
+              result.shift();
+            }
           }
         }
       }
@@ -1134,30 +1130,43 @@ function parseDigitsFromBinary(
       const valid = hasValidSyntax && !isNaN(parsed) && parsed >= -20 && parsed <= 2000;
       const conf = digitsInCl.length > 0 ? digitsInCl.reduce((s, d) => s + d.confidence, 0) / digitsInCl.length : 0;
 
-      // Check for Timer format vs Weight format
-      // Digital coffee scale timers commonly format as "0:00", "00:00", "00.00", or single digit plus colon "0:15"
+      // Check for Timer format vs Tare Zero Weight format
+      // Digital coffee scale timers commonly format as "0:00", "00:00", or "00.15" (2 decimal places with 4+ chars)
+      // A display showing "0.0", "00.0", "-0.0", or "0" is PURE TARE ZERO WEIGHT!
+      const isTareZero =
+        cleanNum === '0.0' ||
+        cleanNum === '00.0' ||
+        cleanNum === '000.0' ||
+        cleanNum === '-0.0' ||
+        cleanNum === '-00.0' ||
+        cleanNum === '0' ||
+        cleanNum === '00';
+
       const isTimerPattern =
-        clHasColon ||
-        clText.includes(':') ||
-        clText.startsWith('0:') ||
-        clText.startsWith('00:') ||
-        clText === '0:00' ||
-        clText === '00:00' ||
-        (clText.startsWith('00.') && clText.length >= 4);
+        !isTareZero &&
+        (clHasColon ||
+         clText.includes(':') ||
+         clText.startsWith('0:') ||
+         clText.startsWith('00:') ||
+         clText === '0:00' ||
+         clText === '00:00' ||
+         (/\b\d{2}\.\d{2}\b/.test(clText) && clText.length >= 5));
 
       let clScore = conf * 20;
-      if (valid && clHasDecimal && !isTimerPattern) clScore += 75; // Big bonus for valid decimal coffee scale weight
-      if (valid && !isTimerPattern) clScore += 35;
-      if (valid && digitsInCl.length >= 2 && !isTimerPattern) clScore += 20; // Realistic multi-digit number (e.g. 127.3)
+      if (isTareZero) {
+        clScore += 160; // Massive top-tier priority for tare zero readings ("0.0", "00.0")!
+      } else {
+        if (valid && clHasDecimal && !isTimerPattern) clScore += 75; // Big bonus for valid decimal coffee scale weight
+        if (valid && !isTimerPattern) clScore += 35;
+        if (valid && digitsInCl.length >= 2 && !isTimerPattern) clScore += 20; // Realistic multi-digit number (e.g. 127.3)
+      }
 
-      if (!hasValidSyntax) {
+      if (!hasValidSyntax && !isTareZero) {
         clScore -= 300; // Strong elimination penalty for malformed fragments like ".1"
       }
 
       if (isTimerPattern) {
         clScore -= 300; // Strong elimination penalty for timer format (0:00 / 00:00 / colon)
-      } else if (valid && clText.startsWith('0.') && !clText.startsWith('00.')) {
-        clScore += 50; // High confidence for tare zero
       }
 
       evaluatedClusters.push({
@@ -1203,18 +1212,32 @@ function parseDigitsFromBinary(
         ? selectedDigits.reduce((sum, d) => sum + d.confidence, 0) / selectedDigits.length
         : 0;
 
+    const rowIsTareZero =
+      cleanNumeric === '0.0' ||
+      cleanNumeric === '00.0' ||
+      cleanNumeric === '000.0' ||
+      cleanNumeric === '-0.0' ||
+      cleanNumeric === '-00.0' ||
+      cleanNumeric === '0' ||
+      cleanNumeric === '00';
+
     const rowIsTimer =
-      rowHasColon ||
-      parsedText.includes(':') ||
-      parsedText.startsWith('0:') ||
-      parsedText.startsWith('00:') ||
-      parsedText === '0:00' ||
-      parsedText === '00:00' ||
-      (parsedText.startsWith('00.') && parsedText.length >= 4);
+      !rowIsTareZero &&
+      (rowHasColon ||
+       parsedText.includes(':') ||
+       parsedText.startsWith('0:') ||
+       parsedText.startsWith('00:') ||
+       parsedText === '0:00' ||
+       parsedText === '00:00' ||
+       (/\b\d{2}\.\d{2}\b/.test(parsedText) && parsedText.length >= 5));
 
     let score = avgConfidence * 20;
-    if (hasDec && !rowIsTimer) score += 70;
-    if (parsedWeight !== null && !rowIsTimer) score += 35;
+    if (rowIsTareZero) {
+      score += 150; // Massive top-tier bonus for tare zero weight row ("0.0", "00.0")!
+    } else {
+      if (hasDec && !rowIsTimer) score += 70;
+      if (parsedWeight !== null && !rowIsTimer) score += 35;
+    }
 
     // Dual-Row Stacking Architecture:
     // On espresso scales (Muvna, Timemore, Acaia Lunar, MHW-3BOMBER), the WEIGHT is placed on Row 0 (TOP),
@@ -1229,8 +1252,6 @@ function parseDigitsFromBinary(
 
     if (rowIsTimer) {
       score -= 350; // Heavy elimination penalty for timer row
-    } else if (rIdx === 0 && (parsedText === '0.0' || parsedText === '0.00' || parsedText.startsWith('0.'))) {
-      score += 45; // Special high-confidence bonus for tare 0.0g format ONLY on top row
     }
 
     let minBoxX = width;
@@ -1404,7 +1425,12 @@ export class ScaleReadingFilter {
     // Absolute Physical Ceiling during active Espresso Extraction:
     // When actively pulling an espresso shot with a target yield ~36g, liquid yield cannot jump to > 150g
     // (blocks optical glitches where a decimal point is dropped, e.g. 185 instead of 18.5).
-    // In standby / calibration / filter coffee, any weight up to 2000g is valid and supported.
+    // And right at the start of brewing (lastValidWeight <= 0.5g), liquid extraction starts from zero.
+    // Liquid cannot physically jump to > 2.5g before pre-infusion completes and drips start.
+    // Blocks optical noise (like 80, 50, 10) from corrupting the shot start!
+    if (isBrewing && this.lastValidWeight <= 0.5 && newReading > 2.5) {
+      return { weight: this.lastValidWeight, isOutlier: true };
+    }
     if (isBrewing && newReading > 150.0 && this.lastValidWeight < 65.0) {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
@@ -1435,14 +1461,13 @@ export class ScaleReadingFilter {
     }
 
     // Tare zero lock (<= 0.3g):
-    // If already at or near zero, zero readings are accepted instantly with 0ms latency.
-    // If previously at a positive weight (e.g. 18.0g or 127.3g), a drop to 0.0g is a step change
-    // that requires multi-frame consensus below, preventing a single transient noise flare from wiping out weight!
+    // If already at or near zero, zero readings are accepted instantly with 0ms latency,
+    // locking firmly at 0.0g.
     if (newReading <= 0.3 && this.lastValidWeight <= 0.3) {
-      this.lastValidWeight = newReading;
-      this.recentWindow = [newReading];
+      this.lastValidWeight = 0.0;
+      this.recentWindow = [0.0];
       this.consecutiveLowCount = 0;
-      return { weight: newReading, isOutlier: false };
+      return { weight: 0.0, isOutlier: false };
     }
 
     // Maximum physically possible flow rate from an espresso extraction / pour-over stream
@@ -1461,9 +1486,13 @@ export class ScaleReadingFilter {
 
     if (delta > maxDelta) {
       // Possible optical glitch, glare reflection, or legitimate step change:
-      // When brewing, require 4 consecutive frames (large jump) or 3 frames (moderate jump)
-      // When NOT brewing (standby / dosing / placing cup / slider testing), require only 2 consecutive frames for ultra-snappy reaction!
-      const requiredFrames = isBrewing ? (delta > 2.0 ? 4 : 3) : 2;
+      // In standby resting at zero (lastValidWeight <= 0.3g), breaking out of zero to a high weight (> 5.0g)
+      // requires 4 consecutive stable frames (~150ms) to ensure it's not a fleeting reflection flare (like 80, 50, 10).
+      // During active brewing, large jumps require 4 frames (or 3 for moderate).
+      // When already at positive weight in standby, 2 frames ensures ultra-responsive tracking.
+      const requiredFrames = (this.lastValidWeight <= 0.3 && delta > 5.0)
+        ? 4
+        : (isBrewing ? (delta > 2.0 ? 4 : 3) : 2);
       if (this.recentWindow.length >= requiredFrames) {
         const slice = this.recentWindow.slice(-requiredFrames);
         const minW = Math.min(...slice);
