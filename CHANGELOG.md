@@ -2,6 +2,33 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.10.0] - 2026-10-11
+### Etape 36: Udvidet Multi-Metode Bryglaboratorium & Live Telemetri Spejl (http://localhost:4321/)
+- **Multi-Tab Bryglaboratorium i Vægtsimulatoren (`scale-simulator.html`):**
+  - **☕ Espresso Lab:**
+    - 🟢 *Optimal Shot (1:2.0):* 18.0g ➔ 36.0g på 27.5s (Pre-infusion 5s, jævnt flow $1.45\text{ g/s}$). Tester at appen kvitterer med "God brygning".
+    - 🟡 *For Hurtigt / Fast (1:2.1):* 18.0g ➔ 38.0g på 17.5s ($2.6\text{ g/s}$). Tester underekstraktion og anbefaling: "Kværn 1.0 trin FINERE".
+    - 🔴 *For Langsomt / Choked:* 18.0g ➔ 32.0g på 42.0s ($0.85\text{ g/s}$). Tester overekstraktion og anbefaling: "Kværn 1.0 trin GROVERE".
+    - ⚠️ *Kanalisering / Channeling:* Voldsom flow-spike til $4.8\text{ g/s}$ ved 12s. Tester kanalisering-detektion og WDT-råd.
+    - ☕ *Ristretto:* 18.0g ➔ 27.0g på 21s (1:1.5 ratio).
+    - ☕ *Lungo:* 18.0g ➔ 45.0g på 33s (1:2.5 ratio).
+  - **🫖 Filter & Pour-Over Lab:**
+    - 🫖 *V60 Standard:* 15g ➔ 250g på 3:00m (Bloom 45g til 45s, 2. hæld til 150g, 3. hæld til 250g, drawdown).
+    - 🇯🇵 *4:6 Kasuya Metoden:* 20g ➔ 300g på 3:30m (5 pulser á 60g med 40s pauser).
+    - ⏳ *Chemex Classic:* 30g ➔ 500g på 4:00m (Bloom 80g og spiral-hældninger til 500g).
+    - 🚀 *AeroPress Immersion:* 15g ➔ 200g på 2:00m (Hurtig fyldning 20s, steep til 1:45m, plunge).
+  - **🧪 Brugerdefineret Custom Brew Lab:**
+    - Parametriske inputs for Target Yield (g), Total Tid (s), Bloom/Pre-infusion (s) og flow-profil (Espresso S-kurve, Konstant flow eller Filter 2-pour).
+  - **🎯 Kalibrering & Hurtig Vægte:**
+    - Hurtigknapper for 0.0g, 18.0g, 36.0g, 250.0g, 500.0g samt forbedret vægtskyder op til 600.0g.
+- **📱 Live Phone Telemetry Mirror (Nul-Videolatens Spejling):**
+  - I stedet for tung videostreaming transmitterer mobil-appen sine OCR-aflæsninger, beregnede flowhastigheder og filtertilstand over Supabase Realtime broadcast-kanalen `anti-testbed-live` med under 50 ms latenstid.
+  - Vægtsimulatoren på PC'en viser et flydende "Phone Live Mirror"-widget med live OCR-vægt, nøjagtigheds-afvigelse ($\Delta\text{ g}$), beregnet flow, samt en direkte spejling af appens Post-Shot Hero Decision Card, så snart brygningen stoppes.
+- **2-Vejs Mobil Synkronisering:**
+  - Når `📱 Mobil Sync` er aktiveret i simulatoren, sender PC'en automatisk `tare` og `start_shot` til telefonen ved teststart, og `stop_shot` ved testafslutning, så mobil-app og simulator kører fuldstændig synkront.
+- **CLI Controller Udvidet (`sim-ctl.cjs`):**
+  - Understøtter alle 10 nye scenarier via `--scenario <name>`.
+
 ## [1.9.0] - 2026-10-11
 ### Etape 35: Barista Dial-In Intelligence, Slutskærms Hero Decision Card & Pre-Brew Coach
 - **Optisk Billedsøger-Justering (`ScaleMonitor.tsx`):**

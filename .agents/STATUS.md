@@ -11,6 +11,20 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-11 -- Udvidet Multi-Metode Bryglaboratorium & Live Telemetri Spejl (v1.10.0)
+- **Multi-Tab Bryglaboratorium i Vægtsimulatoren (`scale-simulator.html`):**
+  - Opdelt simulator-HUD i 5 strukturerede faner: Espresso Lab (6 scenarier), Filter & Pour-Over (4 scenarier), Custom Brew Lab, Kalibrering & Vægte, samt Model & Zoom.
+  - Espresso-scenarier: Optimal Shot (1:2.0 i 27.5s), For Hurtigt (17.5s ➔ råder finere), For Langsomt (42.0s ➔ råder grovere), Kanalisering (4.8 g/s spike), Ristretto (1:1.5), Lungo (1:2.5).
+  - Filter-scenarier: V60 Standard (3:00m m. bloom), 4:6 Metoden (5 pulser á 60g), Chemex Classic (500g i 4:00m), AeroPress Immersion (200g i 2:00m).
+  - Parametrisk brugerdefineret brygkurve med justerbar yield, tid, bloom og profil.
+- **Live Phone Telemetry Mirror (Nul-Videolatens Spejling):**
+  - Udnytter Supabase Realtime broadcast-kanalen `anti-testbed-live` til at streame mobilens OCR-læsninger, flow, og filterstatus live til PC-skærmen (< 50 ms).
+  - PC-simulatoren viser et dedikeret mini-widget med live vægt, delta-afvigelse mod ground truth, og spejler appens Hero Decision Card så snart skuddet stopper.
+- **2-Vejs Mobil Synkronisering:**
+  - Automatisk `tare`, `start_shot` og `stop_shot` kommandoer sendes direkte fra PC til mobil ved testkørsel.
+- **CLI Controller Udvidet (`sim-ctl.cjs`):**
+  - Fuld CLI-styring af alle 10 nye scenarier via `--scenario`.
+
 ### 2026-10-11 -- Barista Dial-In Intelligence, Slutskærms Hero Decision Card & Pre-Brew Coach (v1.9.0)
 - **Optisk Billedsøger-Justering (`ScaleMonitor.tsx`):**
   - **Identificeret Årsag:** Videoens CSS `object-cover` klipper og skalerer videostreamen i forhold til søgerens container. Tidligere blev reticle og cifferramme placeret via simple procenter af containeren (`roiCenter.y * 100%`), hvilket førte til en vertikal forskydning ned over timeren på visse mobil- og skærmopløsninger.

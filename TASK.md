@@ -73,6 +73,16 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
     - F.eks.: *"Sidste bryg gik for hurtigt. Stil kværnen FINERE til 13.0 før du brygger!"*
     - Direkte knap til at kvittere / opdatere kværntallet med 1 tap.
 
+## 🧪 FASE 10: Multi-Metode Bryglaboratorium & Live Telemetri Spejl (v1.10.0 - AFSLUTTET)
+- [x] **1. Udvidet Multi-Tab Scenario Deck i Vægtsimulatoren (`scale-simulator.html`):**
+  - 5 faner: Espresso Lab (Optimal 1:2.0, For hurtig, For langsom, Kanalisering, Ristretto, Lungo), Filter Lab (V60, 4:6 Kasuya, Chemex, AeroPress), Custom Lab (Parametrisk), Kalibrering (0-9 test, quick-weights op til 500g) og Hardware Setup.
+- [x] **2. Nul-Videolatens Live Phone Telemetry Mirror:**
+  - Letvægts streaming over Supabase Realtime (`anti-testbed-live`) med flydende widget på PC, der viser mobilens live OCR-vægt, nøjagtighed mod simulatoren ($\Delta\text{ g}$), flow, og automatisk spejling af appens Post-Shot Hero Decision Card.
+- [x] **3. 2-Vejs Mobil Synkronisering:**
+  - Automatisk `tare`, `start_shot` og `stop_shot` fra PC til mobil ved teststart og -stop.
+- [x] **4. CLI Controller Udvidet (`sim-ctl.cjs`):**
+  - Støtte for alle 10 brygscenarier via `--scenario`.
+
 ---
 
 ## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)

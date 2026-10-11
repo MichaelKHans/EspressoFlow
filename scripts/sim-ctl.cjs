@@ -121,9 +121,14 @@ Autonomous End-to-End Brewing & Testing:
   --stop-shot                                Remotely presses "Stop Shot" on mobile phone
   --tare                                     Remotely tares mobile scale to 0.0g
 
-Simulator Controls:
-  --scenario <standard|spike|digits|timer>   Run an automated test scenario on PC screen
-  --model <pure_weight|muvna|timemore|acaia> Switch simulated scale model
+Brew Test Scenarios:
+  --scenario <name>                          Run an automated test scenario:
+                                             Espresso: optimal, fast, slow, spike, ristretto, lungo
+                                             Filter:   v60, kasuya, chemex, aeropress
+                                             Stress:   digits, timer
+
+Simulator Hardware Controls:
+  --model <pure_weight|muvna|timemore|acaia|lcd> Switch simulated scale model
   --set-weight <grams> [--timer <sec>]       Set static weight and timer on simulator
   --stop                                     Stop active scenario on simulator
   --status                                   Check simulator connection and status

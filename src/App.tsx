@@ -58,7 +58,7 @@ import {
   getMachineTempProfile,
 } from './lib/storage';
 import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
-import { subscribeToRemoteCommands } from './lib/antiLiveSync';
+import { subscribeToRemoteCommands, broadcastShotVerdict } from './lib/antiLiveSync';
 
 export function App() {
   const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
@@ -535,6 +535,45 @@ export function App() {
     setShots((prev) => [newShot, ...prev]);
     setLastFinishedShot(newShot);
     setIsShotSummaryOpen(true);
+
+    // Broadcast shot verdict to Antigravity PC Simulator
+    const isChanneling = Boolean(channelingEvent.detected);
+    const isFast = !isChanneling && (timeSeconds < 24.0);
+    const isSlow = !isChanneling && (timeSeconds > 32.0);
+    const verdictStatus: 'channeling' | 'fast' | 'slow' | 'optimal' = isChanneling
+      ? 'channeling'
+      : isFast
+      ? 'fast'
+      : isSlow
+      ? 'slow'
+      : 'optimal';
+
+    const verdictTitle = isChanneling
+      ? '⚠️ Kanalisering Detekteret'
+      : isFast
+      ? '🟡 Gik for hurtigt'
+      : isSlow
+      ? '🔴 Gik for langsomt'
+      : '🟢 God brygning';
+
+    const verdictAdvice = isChanneling
+      ? 'Ujævn modstand i pucken. Hold kværn, brug WDT nål.'
+      : isFast
+      ? `Løb for hurtigt (${timeSeconds.toFixed(1)}s). Kværn 1.0 trin FINERE.`
+      : isSlow
+      ? `Kvalt/for langsom (${timeSeconds.toFixed(1)}s). Kværn 1.0 trin GROVERE.`
+      : `Flot afbalanceret 1:${(finalWeight / Math.max(1, doseGrams)).toFixed(1)} ratio på ${timeSeconds.toFixed(1)}s.`;
+
+    broadcastShotVerdict({
+      status: verdictStatus,
+      title: verdictTitle,
+      advice: verdictAdvice,
+      ratio: Math.round((finalWeight / Math.max(1, doseGrams)) * 10) / 10,
+      timeSeconds,
+      actualYield: finalWeight,
+      targetYield: targetYieldGrams,
+      dose: doseGrams,
+    });
   }, [
     activeDrinkId,
     coffeeBeanName,

@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.9.0 (Barista Dial-In Intelligence, Slutskærms Hero Decision Card & Pre-Brew Coach)  
+> **Gældende version:** v1.10.0 (Udvidet Multi-Metode Bryglaboratorium & Live Telemetri Spejl)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -415,3 +415,26 @@ Espresso Flow er pakket som en cross-platform mobilapplikation via Capacitor v8 
 - **App Identifier:** `com.mh.espressoflow`.
 - **Apple Developer Team:** `39T28DB5D4` (Mh Tegnestue).
 - **Fastlane Lane (`:beta`):** Opretter midlertidig isoleret CI Keychain, importerer `certificate.p12`, downloader officiel provisioning profil via App Store Connect API (`AuthKey_<ID>.p8`), kompilerer `.ipa` med manuel signing og uploader direkte til TestFlight uden ventetid.
+
+---
+
+## 10. OPTISK SKALA-SIMULATOR, E2E TESTBED & LIVE TELEMETRI SPEJL (`http://localhost:4321/`)
+
+For at sikre 100% urokkelig stabilitet og eliminere behovet for konstant fysisk kaffebrygning under AI-udvikling, indeholder Flowbean et autonomt optisk testbed og benchmark-system:
+
+### 10.1 Simulator Arkitektur & Multi-Metode Dæk (`public/scale-simulator.html`)
+- **Web-Server:** Node.js HTTP & SSE server (`scripts/scale-sim-server.cjs`) på port 4321.
+- **Display Emulering:** Fysisk SVG 7-segment display der understøtter 5 vægtmodeller (Pure Weight LED, Muvna Dual, Timemore, Acaia, Classic LCD) med justerbar zoom (25%–150%).
+- **5 Strukturerede Test-Faner:**
+  1. **☕ Espresso Lab:** Optimal 1:2.0 (18g ➔ 36g i 27.5s), For Hurtigt (17.5s), For Langsomt (42.0s), Kanalisering (4.8 g/s surge ved 12s), Ristretto (1:1.5) og Lungo (1:2.5).
+  2. **🫖 Filter & Pour-Over Lab:** V60 Standard (3:00m m. 45g bloom), 4:6 Kasuya (5 pulser á 60g m. 40s pauser), Chemex Classic (500g i 4:00m), AeroPress Immersion (200g i 2:00m).
+  3. **🧪 Custom Brew Lab:** Parametrisk simulation med justerbar målvægt, total tid, bloom-varighed og flowprofil (Espresso S-kurve, lineær eller multi-hæld).
+  4. **🎯 Kalibrering & Vægte:** 0-9 ciffer-sekvens, timer-stresstest, hurtigvægte (0g, 18g, 36g, 250g, 500g) og 600g skyder.
+  5. **⚙️ Hardware & Zoom Setup:** Skala-modeller og skærmstørrelse.
+
+### 10.2 Nul-Videolatens P2P Telemetri-Spejl (`anti-testbed-live`)
+- **Supabase Realtime Broadcast:** I stedet for tung videostreaming, sender mobil-appen sine lokale OCR- og flow-beregninger over WebSockets (< 50 ms latenstid).
+- **Flydende PC-Widget:** Viser live mobilvægt, flow, brygtilstand, OCR-konfidens samt afvigelse mod simulatorens ground truth ($\Delta\text{ g}$).
+- **Hero Decision Card Spejling:** Ved skudafslutning udsender appen automatisk `shot_verdict`, så PC-skærmen øjeblikkeligt spejler barista-dommen (🟢 God brygning, 🟡 Kværn finere, 🔴 Kværn grovere, ⚠️ Kanalisering).
+- **2-Vejs Synkronisering:** Teststart på PC udløser automatisk `tare` og `start_shot` på mobilen, og `stop_shot` ved målyield.
+

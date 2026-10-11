@@ -296,6 +296,165 @@
       padding: 5px 8px;
     }
 
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      border-bottom: 1px solid #3f3f46;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      color: #a1a1aa;
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      background: #27272a;
+      color: #faf7f2;
+    }
+
+    .tab-btn.active {
+      background: #c26d52;
+      border-color: #c26d52;
+      color: #ffffff;
+    }
+
+    .scenario-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .custom-lab-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      font-size: 12px;
+      color: #d4d4d8;
+      width: 100%;
+    }
+
+    .input-num {
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      color: #22d3ee;
+      font-family: var(--font-mono);
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 6px;
+      width: 65px;
+    }
+
+    .tab-content-pane {
+      display: none;
+      width: 100%;
+    }
+
+    .tab-content-pane.active {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Live Phone Mirror Widget */
+    .phone-mirror-widget {
+      position: fixed;
+      right: 24px;
+      top: 80px;
+      width: 300px;
+      background: rgba(24, 24, 27, 0.94);
+      backdrop-filter: blur(20px);
+      border: 1px solid #3f3f46;
+      border-radius: 14px;
+      padding: 16px;
+      color: #faf7f2;
+      box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7);
+      z-index: 90;
+      transition: all 0.25s ease;
+      font-size: 12px;
+    }
+
+    .phone-mirror-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #3f3f46;
+    }
+
+    .mirror-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .mirror-stat-label {
+      color: #a1a1aa;
+    }
+
+    .mirror-stat-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #22c55e;
+    }
+
+    .verdict-card-mirror {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .verdict-card-mirror.optimal {
+      display: block;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+    }
+
+    .verdict-card-mirror.fast {
+      display: block;
+      background: rgba(234, 179, 8, 0.15);
+      border: 1px solid rgba(234, 179, 8, 0.4);
+      color: #facc15;
+    }
+
+    .verdict-card-mirror.slow {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .verdict-card-mirror.channeling {
+      display: block;
+      background: rgba(249, 115, 22, 0.15);
+      border: 1px solid rgba(249, 115, 22, 0.4);
+      color: #fb923c;
+    }
+
     /* Compact Responsive Layout for Small / Split Windows */
     @media (max-width: 1080px), (max-height: 650px) {
       .hud-overlay {
@@ -318,6 +477,12 @@
       }
       .hint-text {
         display: none;
+      }
+      .phone-mirror-widget {
+        right: 10px;
+        top: 60px;
+        width: 260px;
+        padding: 10px;
       }
     }
   </style>
@@ -344,6 +509,43 @@
     </div>
   </div>
 
+  <!-- Live Phone Telemetry Mirror (Right Floating Widget) -->
+  <div id="phoneMirrorWidget" class="phone-mirror-widget">
+    <div class="phone-mirror-header">
+      <span style="display: flex; align-items: center; gap: 6px; font-weight: bold; color: #faf7f2;">
+        <span id="phoneOnlineDot" style="width: 8px; height: 8px; border-radius: 50%; background: #71717a; display: inline-block;"></span>
+        📱 Phone Live Mirror
+      </span>
+      <span id="phoneConnLabel" style="font-size: 10px; color: #a1a1aa; font-family: var(--font-mono);">Connecting...</span>
+    </div>
+    <div class="mirror-stat-row">
+      <span class="mirror-stat-label">Phone OCR Weight</span>
+      <span id="phoneMirrorWeight" class="mirror-stat-val">--.- g</span>
+    </div>
+    <div class="mirror-stat-row">
+      <span class="mirror-stat-label">Ground Truth Delta</span>
+      <span id="phoneMirrorDelta" class="mirror-stat-val" style="color: #22d3ee;">Δ 0.0g</span>
+    </div>
+    <div class="mirror-stat-row">
+      <span class="mirror-stat-label">Phone Flow Rate</span>
+      <span id="phoneMirrorFlow" class="mirror-stat-val" style="color: #eab308;">0.0 g/s</span>
+    </div>
+    <div class="mirror-stat-row">
+      <span class="mirror-stat-label">Phone Brew State</span>
+      <span id="phoneMirrorState" class="mirror-stat-val" style="color: #a1a1aa;">Idle</span>
+    </div>
+    <div class="mirror-stat-row">
+      <span class="mirror-stat-label">OCR Confidence</span>
+      <span id="phoneMirrorConf" class="mirror-stat-val" style="color: #a1a1aa;">--%</span>
+    </div>
+
+    <!-- Post-Shot Hero Decision Card Mirror -->
+    <div id="phoneVerdictCard" class="verdict-card-mirror optimal">
+      <div id="phoneVerdictTitle" style="font-weight: 700; margin-bottom: 3px;">🟢 God brygning</div>
+      <div id="phoneVerdictAdvice" style="font-weight: 400; opacity: 0.9;">Balanceret ekstraktion. Hold kværn.</div>
+    </div>
+  </div>
+
   <!-- HUD Control Overlay (Press 'H' to hide during camera shooting) -->
   <div id="hudOverlay" class="hud-overlay">
     <!-- Top HUD Bar -->
@@ -362,49 +564,101 @@
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px;">
-        <span class="hint-text">Press <b>H</b> to toggle HUD for clean filming</span>
+        <button id="btnToggleMirror" class="btn-ctrl">📱 Toggle Mirror</button>
+        <span class="hint-text">Press <b>H</b> to hide HUD</span>
         <button id="btnHideHud" class="btn-ctrl">👁️ Hide HUD</button>
       </div>
     </div>
 
-    <!-- Bottom HUD Controls -->
-    <div class="hud-panel" style="align-self: center;">
-      <!-- Scale Model Selector -->
-      <div style="display: flex; gap: 6px; align-items: center; border-right: 1px solid #3f3f46; padding-right: 14px;">
-        <span style="font-size: 12px; color: #a1a1aa; font-weight: bold;">SCALE:</span>
-        <button class="btn-ctrl active" data-model="pure_weight">Pure Weight (No Timer)</button>
-        <button class="btn-ctrl" data-model="muvna">Muvna Dual</button>
-        <button class="btn-ctrl" data-model="timemore">Timemore</button>
-        <button class="btn-ctrl" data-model="acaia">Acaia</button>
-        <button class="btn-ctrl" data-model="lcd">Classic LCD</button>
+    <!-- Bottom HUD Controls with Tab Deck -->
+    <div class="hud-panel" style="align-self: center; flex-direction: column; gap: 10px; max-width: 960px; width: 100%;">
+      <!-- Tab Navigation -->
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="espresso">☕ Espresso Lab</button>
+        <button class="tab-btn" data-tab="filter">🫖 Filter & Pour-Over</button>
+        <button class="tab-btn" data-tab="custom">🧪 Custom Brew Lab</button>
+        <button class="tab-btn" data-tab="benchmark">🎯 Kalibrering & Vægt</button>
+        <button class="tab-btn" data-tab="setup">⚙️ Vægt-Model & Zoom</button>
       </div>
 
-      <!-- Scale Size Zoom Controller -->
-      <div class="zoom-ctrl-group">
-        <span style="font-size: 11px; color: #a1a1aa; font-weight: bold;">SIZE:</span>
-        <button class="btn-ctrl btn-zoom" data-zoom="0.30">30%</button>
-        <button class="btn-ctrl btn-zoom" data-zoom="0.45">45%</button>
-        <button class="btn-ctrl btn-zoom" data-zoom="0.60">60%</button>
-        <button class="btn-ctrl btn-zoom" data-zoom="1.00">100%</button>
-        <input id="sliderZoom" type="range" min="0.25" max="1.50" step="0.05" value="0.45" style="width: 75px; cursor: pointer;" title="Adjust digital scale size without making buttons smaller">
-        <span id="zoomVal" style="font-family: var(--font-mono); font-size: 11px; color: #22d3ee; min-width: 30px;">45%</span>
+      <!-- Tab Panes -->
+      <!-- Tab 1: Espresso Lab -->
+      <div id="tabContent-espresso" class="tab-content-pane active">
+        <button id="btnOptShot" class="btn-ctrl" style="border-color: #22c55e;" title="18g -> 36g i 27.5s. Tester 'God brygning'">🟢 Optimal 1:2.0 (18g ➔ 36g / 27s)</button>
+        <button id="btnFastShot" class="btn-ctrl" style="border-color: #eab308;" title="18g -> 38g i 17.5s. Tester 'Kværn finere'">🟡 For Hurtig (18g ➔ 38g / 17s)</button>
+        <button id="btnSlowShot" class="btn-ctrl" style="border-color: #ef4444;" title="18g -> 32g i 42s. Tester 'Kværn grovere'">🔴 For Langsom (18g ➔ 32g / 42s)</button>
+        <button id="btnSpikeShot" class="btn-ctrl" style="border-color: #f97316;" title="Pludselig channeling spike til 4.8 g/s ved 12s">⚠️ Kanalisering / Spike (4.8 g/s)</button>
+        <button id="btnRistrettoShot" class="btn-ctrl" title="18g -> 27g i 21s. 1:1.5 ratio">☕ Ristretto (18g ➔ 27g / 21s)</button>
+        <button id="btnLungoShot" class="btn-ctrl" title="18g -> 45g i 33s. 1:2.5 ratio">☕ Lungo (18g ➔ 45g / 33s)</button>
       </div>
 
-      <!-- Scenario Runner -->
-      <div style="display: flex; gap: 6px; align-items: center; border-right: 1px solid #3f3f46; padding-right: 14px;">
-        <span style="font-size: 12px; color: #a1a1aa; font-weight: bold;">SCENARIOS:</span>
-        <button id="btnScenarioShot" class="btn-ctrl">☕ 30s Standard Shot</button>
-        <button id="btnScenarioSpike" class="btn-ctrl">⚡ Channeling Spike</button>
+      <!-- Tab 2: Filter & Pour-Over Lab -->
+      <div id="tabContent-filter" class="tab-content-pane">
+        <button id="btnV60Shot" class="btn-ctrl" style="border-color: #22d3ee;" title="15g -> 250g. Bloom 45g i 45s, 2. hæld til 150g, 3. hæld til 250g">🫖 V60 Standard (15g ➔ 250g / 3:00m)</button>
+        <button id="btnKasuyaShot" class="btn-ctrl" style="border-color: #a78bfa;" title="20g -> 300g. 5 pulser á 60g med 40s pauser">🇯🇵 4:6 Metoden (20g ➔ 300g / 3:30m)</button>
+        <button id="btnChemexShot" class="btn-ctrl" title="30g -> 500g. Bloom 80g og 2 store spiral-hældninger">⏳ Chemex Classic (30g ➔ 500g / 4:00m)</button>
+        <button id="btnAeroPressShot" class="btn-ctrl" title="15g -> 200g. Hurtig fyldning 20s, steep til 1:45m, plunge">🚀 AeroPress (15g ➔ 200g / 2:00m)</button>
+      </div>
+
+      <!-- Tab 3: Custom Parametric Lab -->
+      <div id="tabContent-custom" class="tab-content-pane">
+        <div class="custom-lab-row">
+          <span>Target Udbytte: <input id="customTargetYield" type="number" value="36.0" step="0.5" min="5" max="600" class="input-num"> g</span>
+          <span>Total Tid: <input id="customTotalTime" type="number" value="28" step="1" min="10" max="600" class="input-num"> s</span>
+          <span>Bloom / Pre-infusion: <input id="customBloomTime" type="number" value="5" step="1" min="0" max="120" class="input-num"> s</span>
+          <span>Profil: 
+            <select id="customProfileSelect" class="input-num" style="width: 140px;">
+              <option value="espresso">Espresso (S-kurve)</option>
+              <option value="linear">Konstant Flow</option>
+              <option value="filter">Filter (2 Hældninger)</option>
+            </select>
+          </span>
+          <button id="btnRunCustom" class="btn-ctrl" style="background: #c26d52; color: #ffffff; font-weight: bold;">▶ Kør Brugerdefineret</button>
+        </div>
+      </div>
+
+      <!-- Tab 4: Benchmark & Kalibrering -->
+      <div id="tabContent-benchmark" class="tab-content-pane">
         <button id="btnScenarioDigits" class="btn-ctrl">🔢 Digit Test (0-9)</button>
         <button id="btnScenarioTimer" class="btn-ctrl">⏱️ Timer Stress</button>
+        <span style="font-size: 11px; color: #a1a1aa; margin-left: 6px;">HURTIG VÆGT:</span>
+        <button class="btn-ctrl btn-quick-wt" data-weight="0.0">0.0g</button>
+        <button class="btn-ctrl btn-quick-wt" data-weight="18.0">18.0g</button>
+        <button class="btn-ctrl btn-quick-wt" data-weight="36.0">36.0g</button>
+        <button class="btn-ctrl btn-quick-wt" data-weight="250.0">250.0g</button>
+        <button class="btn-ctrl btn-quick-wt" data-weight="500.0">500.0g</button>
       </div>
 
-      <!-- Manual Controls -->
-      <div style="display: flex; gap: 8px; align-items: center;">
-        <button id="btnTare" class="btn-ctrl">Tare (0.0g)</button>
-        <input id="sliderWeight" type="range" min="0" max="60" step="0.1" value="0" style="width: 120px; cursor: pointer;">
-        <span id="sliderVal" style="font-family: var(--font-mono); font-size: 13px; width: 44px;">0.0g</span>
-        <button id="btnStop" class="btn-ctrl" style="color: #ef4444;">⏹ Stop</button>
+      <!-- Tab 5: Scale Model & Zoom Setup -->
+      <div id="tabContent-setup" class="tab-content-pane">
+        <div style="display: flex; gap: 6px; align-items: center; border-right: 1px solid #3f3f46; padding-right: 14px;">
+          <span style="font-size: 12px; color: #a1a1aa; font-weight: bold;">MODEL:</span>
+          <button class="btn-ctrl active" data-model="pure_weight">Pure Weight</button>
+          <button class="btn-ctrl" data-model="muvna">Muvna Dual</button>
+          <button class="btn-ctrl" data-model="timemore">Timemore</button>
+          <button class="btn-ctrl" data-model="acaia">Acaia</button>
+          <button class="btn-ctrl" data-model="lcd">Classic LCD</button>
+        </div>
+        <div class="zoom-ctrl-group">
+          <span style="font-size: 11px; color: #a1a1aa; font-weight: bold;">STØRRELSE:</span>
+          <button class="btn-ctrl btn-zoom" data-zoom="0.30">30%</button>
+          <button class="btn-ctrl btn-zoom" data-zoom="0.45">45%</button>
+          <button class="btn-ctrl btn-zoom" data-zoom="0.60">60%</button>
+          <button class="btn-ctrl btn-zoom" data-zoom="1.00">100%</button>
+          <input id="sliderZoom" type="range" min="0.25" max="1.50" step="0.05" value="0.45" style="width: 75px; cursor: pointer;">
+          <span id="zoomVal" style="font-family: var(--font-mono); font-size: 11px; color: #22d3ee; min-width: 30px;">45%</span>
+        </div>
+      </div>
+
+      <!-- Fælles Kontrolbjælke i Bunden -->
+      <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; border-top: 1px solid #27272a; padding-top: 8px; width: 100%;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button id="btnToggleMobileSync" class="btn-ctrl active" style="color: #22c55e;" title="Når slået til, starter og stopper mobilen automatisk sammen med simulatoren">📱 Mobil Sync: TIL</button>
+          <button id="btnTare" class="btn-ctrl">Tare (0.0g)</button>
+          <input id="sliderWeight" type="range" min="0" max="600" step="0.1" value="0" style="width: 140px; cursor: pointer;">
+          <span id="sliderVal" style="font-family: var(--font-mono); font-size: 13px; width: 50px;">0.0g</span>
+        </div>
+        <button id="btnStop" class="btn-ctrl" style="color: #ef4444; font-weight: bold;">⏹ Stop</button>
       </div>
     </div>
   </div>
@@ -631,42 +885,67 @@
       }
     }
 
-    // SCENARIO 1: Realistic 30s Espresso Shot
-    function runStandardShot() {
+    // State variables for Mobile Sync & Mirror
+    let isMobileSyncEnabled = true;
+    let livePhoneData = null;
+
+    // Trigger Remote Command to Mobile via Supabase Realtime
+    function sendMobileRemoteCmd(action, extra = {}) {
+      if (!isMobileSyncEnabled || !window.supabaseLiveChannel) return;
+      try {
+        window.supabaseLiveChannel.send({
+          type: 'broadcast',
+          event: 'remote_cmd',
+          payload: {
+            action,
+            source: 'scale_simulator',
+            timestamp: Date.now(),
+            ...extra
+          }
+        }).catch(err => console.warn('[Mobile Sync] Send error:', err));
+      } catch (e) {}
+    }
+
+    // SCENARIO 1: Optimal 1:2.0 Espresso Shot (18g in -> 36g out in 27.5s)
+    function runOptimalShot() {
       startCountdown(() => {
         currentWeight = 0.0;
         currentTimerSec = 0;
         currentFlow = 0.0;
         updateDisplay();
 
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
         let elapsedMs = 0;
-        const dt = 100; // 10 Hz simulation
+        const dt = 100;
 
         activeScenarioInterval = setInterval(() => {
           elapsedMs += dt;
           currentTimerSec = elapsedMs / 1000;
 
           if (currentTimerSec < 5.0) {
-            // Pre-infusion (no drips)
+            // Pre-infusion (0.0g)
             currentWeight = 0.0;
             currentFlow = 0.0;
-          } else if (currentTimerSec < 7.0) {
-            // First drips
-            currentFlow = 1.0;
+          } else if (currentTimerSec < 7.5) {
+            // First drops
+            currentFlow = 0.9;
             currentWeight += (currentFlow * dt) / 1000;
-          } else if (currentTimerSec < 24.0) {
-            // Steady 2.2 g/s extraction
-            currentFlow = 2.1 + Math.sin(elapsedMs / 1500) * 0.2;
+          } else if (currentTimerSec < 24.5) {
+            // Steady 1.45 g/s extraction
+            currentFlow = 1.45 + Math.sin(elapsedMs / 1200) * 0.1;
             currentWeight += (currentFlow * dt) / 1000;
-          } else if (currentTimerSec < 27.0) {
-            // Taper off into target 36.0g
-            currentFlow = Math.max(0, 2.0 - (currentTimerSec - 24.0) * 0.7);
+          } else if (currentTimerSec < 27.5) {
+            // Smooth taper off into target 36.0g
+            currentFlow = Math.max(0, 1.4 - (currentTimerSec - 24.5) * 0.45);
             currentWeight = Math.min(36.0, currentWeight + (currentFlow * dt) / 1000);
           } else {
-            // Shot complete: held steady
+            // Shot complete: locked at 36.0g
             currentFlow = 0.0;
             currentWeight = 36.0;
-            if (currentTimerSec >= 32.0) {
+            if (currentTimerSec >= 30.0) {
+              sendMobileRemoteCmd('stop_shot');
               stopActiveScenario();
             }
           }
@@ -676,13 +955,102 @@
       });
     }
 
-    // SCENARIO 2: Channeling Spike Test
+    // SCENARIO 2: Fast / Turbo / Under-extracted Shot (18g -> 38g in 17.5s) -> Verdict: Grind Finer
+    function runFastShot() {
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < 2.0) {
+            // Very fast pre-infusion
+            currentWeight = 0.0;
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 16.0) {
+            // Gushing fast extraction at 2.6 g/s
+            currentFlow = 2.6 + Math.sin(elapsedMs / 800) * 0.2;
+            currentWeight += (currentFlow * dt) / 1000;
+          } else if (currentTimerSec < 17.5) {
+            currentFlow = Math.max(0, 2.0 - (currentTimerSec - 16.0) * 1.3);
+            currentWeight = Math.min(38.0, currentWeight + (currentFlow * dt) / 1000);
+          } else {
+            currentFlow = 0.0;
+            currentWeight = 38.0;
+            if (currentTimerSec >= 20.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // SCENARIO 3: Slow / Choked / Over-extracted Shot (18g -> 32g in 42s) -> Verdict: Grind Coarser
+    function runSlowShot() {
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < 11.0) {
+            // Extremely slow choked pre-infusion
+            currentWeight = 0.0;
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 39.0) {
+            // Slow, restricted dripping extraction at 0.85 g/s
+            currentFlow = 0.85 + Math.sin(elapsedMs / 2000) * 0.08;
+            currentWeight += (currentFlow * dt) / 1000;
+          } else if (currentTimerSec < 42.0) {
+            currentFlow = Math.max(0, 0.7 - (currentTimerSec - 39.0) * 0.23);
+            currentWeight = Math.min(32.0, currentWeight + (currentFlow * dt) / 1000);
+          } else {
+            currentFlow = 0.0;
+            currentWeight = 32.0;
+            if (currentTimerSec >= 45.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // SCENARIO 4: Channeling Spike Test (Flow jumps to 4.8 g/s at 12s) -> Verdict: Channeling Alert
     function runSpikeTest() {
       startCountdown(() => {
         currentWeight = 0.0;
         currentTimerSec = 0;
         currentFlow = 0.0;
         updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
 
         let elapsedMs = 0;
         const dt = 100;
@@ -695,18 +1063,23 @@
             currentWeight = 0.0;
             currentFlow = 0.0;
           } else if (currentTimerSec < 12.0) {
-            currentFlow = 1.8;
+            currentFlow = 1.6;
             currentWeight += (currentFlow * dt) / 1000;
           } else if (currentTimerSec < 15.0) {
-            // VIOLENT CHANNELING SPIKE: Flow jumps to 4.8 g/s!
+            // VIOLENT CHANNELING SPIKE: Flow jumps abruptly to 4.8 g/s!
             currentFlow = 4.8;
             currentWeight += (currentFlow * dt) / 1000;
-          } else if (currentTimerSec < 25.0) {
-            currentFlow = 2.0;
+          } else if (currentTimerSec < 24.0) {
+            // Stabilizes again
+            currentFlow = 1.8;
             currentWeight += (currentFlow * dt) / 1000;
           } else {
             currentFlow = 0.0;
-            if (currentTimerSec >= 28.0) stopActiveScenario();
+            currentWeight = 36.0;
+            if (currentTimerSec >= 27.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
           }
 
           updateDisplay();
@@ -714,7 +1087,343 @@
       });
     }
 
-    // SCENARIO 3: Digit Stress Test (Cycles through 0-9)
+    // SCENARIO 5: Ristretto (18g -> 27g in 21s)
+    function runRistrettoShot() {
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < 4.5) {
+            currentWeight = 0.0;
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 19.0) {
+            currentFlow = 1.5;
+            currentWeight += (currentFlow * dt) / 1000;
+          } else if (currentTimerSec < 21.0) {
+            currentFlow = Math.max(0, 1.4 - (currentTimerSec - 19.0) * 0.7);
+            currentWeight = Math.min(27.0, currentWeight + (currentFlow * dt) / 1000);
+          } else {
+            currentFlow = 0.0;
+            currentWeight = 27.0;
+            if (currentTimerSec >= 24.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // SCENARIO 6: Lungo (18g -> 45g in 33s)
+    function runLungoShot() {
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < 5.0) {
+            currentWeight = 0.0;
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 30.0) {
+            currentFlow = 1.55;
+            currentWeight += (currentFlow * dt) / 1000;
+          } else if (currentTimerSec < 33.0) {
+            currentFlow = Math.max(0, 1.5 - (currentTimerSec - 30.0) * 0.5);
+            currentWeight = Math.min(45.0, currentWeight + (currentFlow * dt) / 1000);
+          } else {
+            currentFlow = 0.0;
+            currentWeight = 45.0;
+            if (currentTimerSec >= 36.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // FILTER SCENARIO 1: V60 Standard (15g -> 250g in 3:00m)
+    function runV60Standard() {
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < 10.0) {
+            // Bloom pour: 0 -> 45g
+            currentFlow = 4.5;
+            currentWeight = Math.min(45.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 45.0) {
+            // Bloom pause at 45g
+            currentFlow = 0.0;
+            currentWeight = 45.0;
+          } else if (currentTimerSec < 65.0) {
+            // Pour 2: 45g -> 150g (5.25 g/s)
+            currentFlow = 5.25;
+            currentWeight = Math.min(150.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 95.0) {
+            // Pause / drawdown
+            currentFlow = 0.0;
+            currentWeight = 150.0;
+          } else if (currentTimerSec < 115.0) {
+            // Pour 3: 150g -> 250g (5.0 g/s)
+            currentFlow = 5.0;
+            currentWeight = Math.min(250.0, currentWeight + (currentFlow * dt) / 1000);
+          } else {
+            // Drawdown completion to 3:00m
+            currentFlow = 0.0;
+            currentWeight = 250.0;
+            if (currentTimerSec >= 180.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // FILTER SCENARIO 2: 4:6 Kasuya Method (20g -> 300g in 3:30m, 5 equal 60g pulses)
+    function runV60Kasuya() {
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < 10.0) {
+            // Pour 1: 0 -> 50g
+            currentFlow = 5.0;
+            currentWeight = Math.min(50.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 45.0) {
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 55.0) {
+            // Pour 2: 50 -> 120g (+70g)
+            currentFlow = 7.0;
+            currentWeight = Math.min(120.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 90.0) {
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 100.0) {
+            // Pour 3: 120 -> 180g (+60g)
+            currentFlow = 6.0;
+            currentWeight = Math.min(180.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 135.0) {
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 145.0) {
+            // Pour 4: 180 -> 240g (+60g)
+            currentFlow = 6.0;
+            currentWeight = Math.min(240.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 180.0) {
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 190.0) {
+            // Pour 5: 240 -> 300g (+60g)
+            currentFlow = 6.0;
+            currentWeight = Math.min(300.0, currentWeight + (currentFlow * dt) / 1000);
+          } else {
+            currentFlow = 0.0;
+            currentWeight = 300.0;
+            if (currentTimerSec >= 210.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // FILTER SCENARIO 3: Chemex Classic (30g -> 500g in 4:00m)
+    function runChemex() {
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < 15.0) {
+            // Bloom: 0 -> 80g
+            currentFlow = 5.3;
+            currentWeight = Math.min(80.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 50.0) {
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 90.0) {
+            // Pour 2: 80 -> 280g
+            currentFlow = 5.0;
+            currentWeight = Math.min(280.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 120.0) {
+            currentFlow = 0.0;
+          } else if (currentTimerSec < 165.0) {
+            // Pour 3: 280 -> 500g
+            currentFlow = 4.9;
+            currentWeight = Math.min(500.0, currentWeight + (currentFlow * dt) / 1000);
+          } else {
+            currentFlow = 0.0;
+            currentWeight = 500.0;
+            if (currentTimerSec >= 240.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // FILTER SCENARIO 4: AeroPress Immersion (15g -> 200g in 2:00m)
+    function runAeroPress() {
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < 20.0) {
+            // Fast water pour to 200g
+            currentFlow = 10.0;
+            currentWeight = Math.min(200.0, currentWeight + (currentFlow * dt) / 1000);
+          } else if (currentTimerSec < 105.0) {
+            // Steep phase: weight stationary on scale
+            currentFlow = 0.0;
+            currentWeight = 200.0;
+          } else {
+            // Plunge phase to 120s
+            currentFlow = 0.0;
+            currentWeight = 200.0;
+            if (currentTimerSec >= 120.0) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // CUSTOM BREW SCENARIO: Parametric runner
+    function runCustomBrew() {
+      const targetYield = parseFloat(document.getElementById('customTargetYield').value) || 36.0;
+      const totalTime = parseFloat(document.getElementById('customTotalTime').value) || 28.0;
+      const bloomTime = parseFloat(document.getElementById('customBloomTime').value) || 5.0;
+      const profile = document.getElementById('customProfileSelect').value || 'espresso';
+
+      startCountdown(() => {
+        currentWeight = 0.0;
+        currentTimerSec = 0;
+        currentFlow = 0.0;
+        updateDisplay();
+
+        sendMobileRemoteCmd('tare');
+        setTimeout(() => sendMobileRemoteCmd('start_shot'), 400);
+
+        let elapsedMs = 0;
+        const dt = 100;
+        const flowDuration = Math.max(1, totalTime - bloomTime);
+        const avgFlow = targetYield / flowDuration;
+
+        activeScenarioInterval = setInterval(() => {
+          elapsedMs += dt;
+          currentTimerSec = elapsedMs / 1000;
+
+          if (currentTimerSec < bloomTime) {
+            currentWeight = 0.0;
+            currentFlow = 0.0;
+          } else if (currentTimerSec < totalTime) {
+            if (profile === 'espresso') {
+              // S-curve ramp
+              const progress = (currentTimerSec - bloomTime) / flowDuration;
+              currentFlow = avgFlow * (1 + 0.3 * Math.sin(progress * Math.PI));
+            } else {
+              // Linear flow
+              currentFlow = avgFlow;
+            }
+            currentWeight = Math.min(targetYield, currentWeight + (currentFlow * dt) / 1000);
+          } else {
+            currentFlow = 0.0;
+            currentWeight = targetYield;
+            if (currentTimerSec >= totalTime + 2.5) {
+              sendMobileRemoteCmd('stop_shot');
+              stopActiveScenario();
+            }
+          }
+
+          updateDisplay();
+        }, dt);
+      });
+    }
+
+    // SCENARIO: Digit Stress Test (Cycles through 0-9)
     function runDigitStressTest() {
       startCountdown(() => {
         const testValues = [0.0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, 18.4, 36.0, 41.3];
@@ -736,7 +1445,7 @@
       });
     }
 
-    // SCENARIO 4: Timer Stress (Timer ticks up rapidly while weight stays 0.0g)
+    // SCENARIO: Timer Stress Test
     function runTimerStressTest() {
       startCountdown(() => {
         currentWeight = 0.0;
@@ -754,7 +1463,7 @@
       });
     }
 
-    // Report Ground Truth to Local Antigravity Server
+    // Report Ground Truth to Local Server
     function reportGroundTruth() {
       const payload = {
         timestamp: Date.now(),
@@ -764,7 +1473,6 @@
         model: currentModel
       };
 
-      // Best effort send to local server if available
       if (window.isServerConnected) {
         fetch('http://localhost:4321/api/ground-truth', {
           method: 'POST',
@@ -796,11 +1504,8 @@
           liveDotEl.classList.remove('online');
           agentStatusTextEl.textContent = 'Antigravity Offline (Local Mode)';
         };
-      } catch (e) {
-        // Standalone mode
-      }
+      } catch (e) {}
 
-      // Also connect to Supabase Realtime Channel for Cross-Device Mobile Control
       initSupabaseLiveChannel();
     }
 
@@ -812,23 +1517,69 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkeGZtdnpkbWNxZml4YmVndW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MTY3NzYsImV4cCI6MjEwNjA5Mjc3Nn0.8MlspGgPxNuIiRWH819Z59MKgVWzAQdqKPE3cqFv9P4';
         const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const channel = sbClient.channel('anti-testbed-live');
+        window.supabaseLiveChannel = channel;
 
+        const phoneOnlineDot = document.getElementById('phoneOnlineDot');
+        const phoneConnLabel = document.getElementById('phoneConnLabel');
+        const phoneMirrorWeight = document.getElementById('phoneMirrorWeight');
+        const phoneMirrorDelta = document.getElementById('phoneMirrorDelta');
+        const phoneMirrorFlow = document.getElementById('phoneMirrorFlow');
+        const phoneMirrorState = document.getElementById('phoneMirrorState');
+        const phoneMirrorConf = document.getElementById('phoneMirrorConf');
+        const phoneVerdictCard = document.getElementById('phoneVerdictCard');
+        const phoneVerdictTitle = document.getElementById('phoneVerdictTitle');
+        const phoneVerdictAdvice = document.getElementById('phoneVerdictAdvice');
+
+        // Handle remote commands
         channel.on('broadcast', { event: 'remote_cmd' }, (payload) => {
-          console.log('[Supabase Realtime] 📱 Remote command from mobile:', payload.payload);
+          console.log('[Supabase Realtime] 📱 Remote command:', payload.payload);
           handleAgentCommand(payload.payload);
         });
 
+        // Handle live telemetry frames from mobile phone
         channel.on('broadcast', { event: 'live_frame' }, (payload) => {
           const f = payload.payload;
-          const phoneLiveValEl = document.getElementById('phoneLiveVal');
-          if (phoneLiveValEl && f) {
-            phoneLiveValEl.textContent = `${f.weight.toFixed(1)}g (raw: "${f.rawText}", ${(f.confidence * 100).toFixed(0)}%)`;
+          if (!f) return;
+          livePhoneData = f;
+
+          if (phoneOnlineDot) phoneOnlineDot.style.background = '#22c55e';
+          if (phoneConnLabel) phoneConnLabel.textContent = 'Online (Live Feed)';
+
+          if (phoneMirrorWeight) phoneMirrorWeight.textContent = `${f.weight.toFixed(1)} g`;
+          if (phoneMirrorFlow) phoneMirrorFlow.textContent = `${(f.flow || 0).toFixed(1)} g/s`;
+          if (phoneMirrorState) {
+            phoneMirrorState.textContent = f.isBrewing ? '🟢 Brewing' : '⏸️ Idle';
+            phoneMirrorState.style.color = f.isBrewing ? '#22c55e' : '#a1a1aa';
           }
+          if (phoneMirrorConf) phoneMirrorConf.textContent = `${((f.confidence || 0) * 100).toFixed(0)}%`;
+
+          // Calculate Delta vs Ground Truth
+          const delta = Math.abs(currentWeight - f.weight);
+          if (phoneMirrorDelta) {
+            phoneMirrorDelta.textContent = `Δ ${delta.toFixed(1)}g`;
+            phoneMirrorDelta.style.color = delta <= 0.3 ? '#22c55e' : (delta <= 1.0 ? '#eab308' : '#ef4444');
+          }
+
+          const phoneLiveValEl = document.getElementById('phoneLiveVal');
+          if (phoneLiveValEl) {
+            phoneLiveValEl.textContent = `${f.weight.toFixed(1)}g (raw: "${f.rawText}", ${((f.confidence || 0) * 100).toFixed(0)}%)`;
+          }
+        });
+
+        // Handle post-shot verdict mirror
+        channel.on('broadcast', { event: 'shot_verdict' }, (payload) => {
+          const v = payload.payload;
+          if (!v || !phoneVerdictCard) return;
+
+          phoneVerdictCard.className = `verdict-card-mirror ${v.status || 'optimal'}`;
+          phoneVerdictCard.style.display = 'block';
+          if (phoneVerdictTitle) phoneVerdictTitle.textContent = v.title || '🟢 God brygning';
+          if (phoneVerdictAdvice) phoneVerdictAdvice.textContent = v.advice || 'Balanceret ekstraktion';
         });
 
         channel.subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('[Supabase Realtime] ✅ Connected to anti-testbed-live channel');
+            console.log('[Supabase Realtime] ✅ Connected to anti-testbed-live');
             liveDotEl.classList.add('online');
             agentStatusTextEl.textContent = 'Antigravity & Phone Live Sync';
           }
@@ -838,15 +1589,24 @@
       }
     }
 
-    // Handle incoming command from Antigravity agent
+    // Handle incoming command from Antigravity agent or CLI
     function handleAgentCommand(cmd) {
       if (cmd.action === 'set_model') {
         setModel(cmd.model);
       } else if (cmd.action === 'run_scenario') {
-        if (cmd.name === 'standard') runStandardShot();
-        else if (cmd.name === 'spike') runSpikeTest();
-        else if (cmd.name === 'digits') runDigitStressTest();
-        else if (cmd.name === 'timer') runTimerStressTest();
+        const n = cmd.name;
+        if (n === 'optimal' || n === 'standard') runOptimalShot();
+        else if (n === 'fast') runFastShot();
+        else if (n === 'slow') runSlowShot();
+        else if (n === 'spike') runSpikeTest();
+        else if (n === 'ristretto') runRistrettoShot();
+        else if (n === 'lungo') runLungoShot();
+        else if (n === 'v60') runV60Standard();
+        else if (n === 'kasuya') runV60Kasuya();
+        else if (n === 'chemex') runChemex();
+        else if (n === 'aeropress') runAeroPress();
+        else if (n === 'digits') runDigitStressTest();
+        else if (n === 'timer') runTimerStressTest();
       } else if (cmd.action === 'set_weight') {
         currentWeight = parseFloat(cmd.weight) || 0.0;
         if (cmd.timer !== undefined) currentTimerSec = parseFloat(cmd.timer) || 0;
@@ -867,20 +1627,61 @@
       } else if (e.code === 'Space') {
         e.preventDefault();
         if (activeScenarioInterval) stopActiveScenario();
-        else runStandardShot();
+        else runOptimalShot();
       }
     });
 
-    // Button event listeners
+    // Tab Navigation Handlers
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-content-pane').forEach(pane => {
+          pane.classList.toggle('active', pane.id === `tabContent-${targetTab}`);
+        });
+      });
+    });
+
+    // Model Selector Handlers
     document.querySelectorAll('[data-model]').forEach(btn => {
       btn.addEventListener('click', () => setModel(btn.dataset.model));
     });
 
-    document.getElementById('btnScenarioShot').addEventListener('click', runStandardShot);
-    document.getElementById('btnScenarioSpike').addEventListener('click', runSpikeTest);
+    // Quick Weight Buttons
+    document.querySelectorAll('.btn-quick-wt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        stopActiveScenario();
+        currentWeight = parseFloat(btn.dataset.weight);
+        updateDisplay();
+      });
+    });
+
+    // Espresso Scenario Buttons
+    document.getElementById('btnOptShot').addEventListener('click', runOptimalShot);
+    document.getElementById('btnFastShot').addEventListener('click', runFastShot);
+    document.getElementById('btnSlowShot').addEventListener('click', runSlowShot);
+    document.getElementById('btnSpikeShot').addEventListener('click', runSpikeTest);
+    document.getElementById('btnRistrettoShot').addEventListener('click', runRistrettoShot);
+    document.getElementById('btnLungoShot').addEventListener('click', runLungoShot);
+
+    // Filter Scenario Buttons
+    document.getElementById('btnV60Shot').addEventListener('click', runV60Standard);
+    document.getElementById('btnKasuyaShot').addEventListener('click', runV60Kasuya);
+    document.getElementById('btnChemexShot').addEventListener('click', runChemex);
+    document.getElementById('btnAeroPressShot').addEventListener('click', runAeroPress);
+
+    // Custom Lab
+    document.getElementById('btnRunCustom').addEventListener('click', runCustomBrew);
+
+    // Benchmark Buttons
     document.getElementById('btnScenarioDigits').addEventListener('click', runDigitStressTest);
     document.getElementById('btnScenarioTimer').addEventListener('click', runTimerStressTest);
-    document.getElementById('btnStop').addEventListener('click', stopActiveScenario);
+
+    // Common Controls
+    document.getElementById('btnStop').addEventListener('click', () => {
+      stopActiveScenario();
+      sendMobileRemoteCmd('stop_shot');
+    });
 
     document.getElementById('btnTare').addEventListener('click', () => {
       stopActiveScenario();
@@ -888,6 +1689,20 @@
       currentTimerSec = 0;
       currentFlow = 0.0;
       updateDisplay();
+      sendMobileRemoteCmd('tare');
+    });
+
+    const btnToggleMobileSync = document.getElementById('btnToggleMobileSync');
+    btnToggleMobileSync.addEventListener('click', () => {
+      isMobileSyncEnabled = !isMobileSyncEnabled;
+      btnToggleMobileSync.classList.toggle('active', isMobileSyncEnabled);
+      btnToggleMobileSync.textContent = isMobileSyncEnabled ? '📱 Mobil Sync: TIL' : '📱 Mobil Sync: FRA';
+      btnToggleMobileSync.style.color = isMobileSyncEnabled ? '#22c55e' : '#a1a1aa';
+    });
+
+    const phoneMirrorWidget = document.getElementById('phoneMirrorWidget');
+    document.getElementById('btnToggleMirror').addEventListener('click', () => {
+      phoneMirrorWidget.style.display = phoneMirrorWidget.style.display === 'none' ? 'block' : 'none';
     });
 
     sliderWeightEl.addEventListener('input', (e) => {
@@ -901,7 +1716,6 @@
       hudOverlayEl.classList.add('hidden');
     });
 
-    // Click anywhere on scale chassis when HUD is hidden to bring HUD back
     scaleChassisEl.addEventListener('click', () => {
       if (!isHudVisible) {
         isHudVisible = true;
@@ -940,14 +1754,12 @@
       });
     }
 
-    // Scroll wheel on scale chassis to zoom scale size without affecting HUD
     scaleChassisEl.addEventListener('wheel', (e) => {
       e.preventDefault();
       const delta = e.deltaY < 0 ? 0.05 : -0.05;
       setScaleZoom(currentScaleZoom + delta);
     }, { passive: false });
 
-    // Keyboard shortcuts: '+' and '-' to resize scale, '0' to reset to 100%
     window.addEventListener('keydown', (e) => {
       if (e.key === '+' || e.key === '=') {
         setScaleZoom(currentScaleZoom + 0.05);

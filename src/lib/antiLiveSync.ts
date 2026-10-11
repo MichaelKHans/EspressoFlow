@@ -26,13 +26,14 @@ let activeChannel: RealtimeChannel | null = null;
 let lastSentTime = 0;
 
 /**
- * Checks if live streaming to Antigravity is enabled
+ * Checks if live streaming to Antigravity is enabled (default: true for seamless testbed connection)
  */
 export function isAntiLiveSyncEnabled(): boolean {
   try {
-    return localStorage.getItem(STORAGE_SYNC_KEY) === 'true';
+    const val = localStorage.getItem(STORAGE_SYNC_KEY);
+    return val === null || val === 'true';
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -45,6 +46,33 @@ export function setAntiLiveSyncEnabled(enabled: boolean): void {
   } catch (err) {
     console.warn('Failed to persist live sync state:', err);
   }
+}
+
+export interface ShotVerdictPayload {
+  status: 'optimal' | 'fast' | 'slow' | 'channeling';
+  title: string;
+  advice: string;
+  ratio: number;
+  timeSeconds: number;
+  actualYield: number;
+  targetYield: number;
+  dose: number;
+  suggestedGrindSetting?: string;
+}
+
+/**
+ * Broadcasts post-shot verdict and recommendations to Antigravity testbed / PC Simulator
+ */
+export function broadcastShotVerdict(payload: ShotVerdictPayload): void {
+  if (!isAntiLiveSyncEnabled()) return;
+  const channel = getAntiLiveChannel();
+  if (!channel) return;
+
+  channel.send({
+    type: 'broadcast',
+    event: 'shot_verdict',
+    payload,
+  }).catch(() => {});
 }
 
 /**
