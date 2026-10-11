@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.10.4 (Aktiv Bryg Fokus-Lås & Berøringssikring)  
+> **Gældende version:** v1.10.5 (Dybdegående OCR & Stale-Closure Audit)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -150,7 +150,7 @@ flowchart LR
         RejectDrop --> RateCalc
         ClampStep --> RateCalc
         UpdateValid --> RateCalc[Tidsdifferentiale Flow Rate F = ΔY / Δt]
-        RateCalc --> ClampFlow[Clamp Flow til maks 6.0 g/s]
+        RateCalc --> ClampFlow[Clamp Flow: Espresso <= 6.0 g/s, Pour-Over <= 15.0 g/s]
         ClampFlow --> SpikeDetector{ΔF > 1.2 g/s?}
         SpikeDetector -- Ja --> ChannelingAlert[Registrer Kanaliserings-Spike]
         SpikeDetector -- Nej --> SmoothCurve[Normal Ekstraktion]

@@ -548,18 +548,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     return suggestRoasters(formRoaster, 5);
   }, [formRoaster]);
 
-  const testConnection = useCallback(async (overrideUrl?: string, overrideKey?: string) => {
-    setIsTestingConn(true);
-    const targetUrl = overrideUrl || supabaseUrl;
-    const targetKey = overrideKey || supabaseKey;
-    const res = await testSupabaseConnection(targetUrl, targetKey);
-    setConnStatus(res);
-    setIsTestingConn(false);
-    if (res.ok) {
-      loadCloudBeans();
-    }
-  }, [supabaseUrl, supabaseKey]);
-
   const loadCloudBeans = useCallback(async () => {
     setIsLoadingCloudBeans(true);
     const client = getSupabaseClient();
@@ -578,6 +566,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
     setIsLoadingCloudBeans(false);
   }, []);
+
+  const testConnection = useCallback(async (overrideUrl?: string, overrideKey?: string) => {
+    setIsTestingConn(true);
+    const targetUrl = overrideUrl || supabaseUrl;
+    const targetKey = overrideKey || supabaseKey;
+    const res = await testSupabaseConnection(targetUrl, targetKey);
+    setConnStatus(res);
+    setIsTestingConn(false);
+    if (res.ok) {
+      loadCloudBeans();
+    }
+  }, [supabaseUrl, supabaseKey, loadCloudBeans]);
 
   useEffect(() => {
     if (isAuthenticated) {

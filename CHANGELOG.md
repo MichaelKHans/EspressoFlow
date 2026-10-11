@@ -2,6 +2,20 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.10.5] - 2026-10-11
+### Etape 41: Dybdegående OCR & Stale-Closure Audit (10/50/80g Restore, 0.0g Brew Lockout Elimination & Tap-Kalibrering)
+- **Gendannelse af Fuld Aflæsning for Tal der Ender på `.0` (`10.0g`, `50.0g`, `80.0g`) (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** En aggressiv tare-nul beskyttelsesheuristik kontrollerede om et tal endte på `0.0` med en længde $\ge 4$, og klippede blindt det første ciffer af (`result.shift()`). Dette medførte, at fuldstændig reelle vægte som `10.0g`, `20.0g`, `30.0g`, `50.0g` og `80.0g` blev barberet ned til blot `0.0g`!
+  - **Løsning:** Den blinde tare-bortskæring er fuldstændig fjernet. Kantfiltrering fokuserer udelukkende på ægte spatiale og geometriske uregelmæssigheder (kantsplinter med $< 40\%$ højde eller abnorme mellemrum $> 0.70-0.92 \times \text{højde}$).
+- **Udryddelse af Fastlåsning i `0.0g` ved Shotstart (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** `ScaleReadingFilter` havde en hård tidlig returnering (`if (isBrewing && lastValidWeight <= 0.5 && newReading > 2.5) return outlier`), som sprang opdateringen af den temporale buffer over. Hvis en pour-over eller hurtig espresso-flow passerede 2.5g, forblev `lastValidWeight` for evigt låst under 0.5g, hvilket skabte en uendelig lockout på `0.0g`.
+  - **Løsning:** Tidlig exit er fjernet. Konsensus-filteret beskytter fortsat mod 1-frame genskin via frame-historikken, men tillader et legitimt kaffeflow at stige naturligt uden frysning.
+- **Løsning af Stale Closures i OCR-Loop & Telemetri (`ScaleMonitor.tsx`):**
+  - **Identificeret Root Cause:** `isCalibrating`, `currentFlow`, og `handleToggleFocusLock` blev fanget i det langlivede OCR-interval uden at intervallet blev genstartet. Derfor reagerede "Tryk på Vægten" auto-kalibreringen aldrig på tryk, telemetrien loggede forældet flow-data, og der opstod React Compiler advarsler.
+  - **Løsning:** Indført synkrone refs (`isCalibratingRef`, `isFocusLockedRef`, `handleToggleFocusLockRef`, `handleStartBrewingRef`, `handleStopBrewingRef`, `handleCalibrateTareRef`, `ocrFpsRef`), så OCR- og timer-intervallerne altid tilgår de friskeste værdier uden at genstarte loops.
+- **Dynamisk Flow-Rate Clamping for Pour-Over (`ScaleMonitor.tsx`):**
+  - Flow-beregneren udvides dynamisk til $15.0\text{ g/s}$ ved filter/pour-over brygning (tillader hurtige pulse-pours), mens espresso fortsat beskyttes med et $6.0\text{ g/s}$ loft.
+
 ## [1.10.4] - 2026-10-11
 ### Etape 40: Aktiv Bryg Fokus-Lås & Berøringssikring (Brew Focus & Screen Tap Armor)
 - **Fuldstændig Låsning af Søger & Fokus under Aktiv Brygning (`ScaleMonitor.tsx`):**

@@ -105,6 +105,16 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [isCalibrating, setIsCalibrating] = useState<boolean>(false);
   const [calibratedSuccess, setCalibratedSuccess] = useState<boolean>(false);
 
+  const isCalibratingRef = useRef<boolean>(isCalibrating);
+  useEffect(() => {
+    isCalibratingRef.current = isCalibrating;
+  }, [isCalibrating]);
+
+  const isFocusLockedRef = useRef<boolean>(isFocusLocked);
+  useEffect(() => {
+    isFocusLockedRef.current = isFocusLocked;
+  }, [isFocusLocked]);
+
   const zoomLevelRef = useRef<number>(zoomLevel);
   const roiSizeRef = useRef<'compact' | 'standard'>('compact');
   const roiCenterRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
@@ -121,6 +131,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const [isLiveSyncActive, setIsLiveSyncActive] = useState<boolean>(() => isAntiLiveSyncEnabled());
   const [lastOcrResult, setLastOcrResult] = useState<OCRResult | null>(null);
   const [ocrFps, setOcrFps] = useState<number>(0);
+  const ocrFpsRef = useRef<number>(0);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const viewfinderContainerRef = useRef<HTMLDivElement | null>(null);
@@ -231,14 +242,19 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     }
   };
 
+  const handleToggleFocusLockRef = useRef(handleToggleFocusLock);
+  useEffect(() => {
+    handleToggleFocusLockRef.current = handleToggleFocusLock;
+  });
+
   // Auto-lock focus and freeze ROI framing during active brewing to prevent vibration drift
   useEffect(() => {
     if (isBrewing) {
       if (!lockedRoiCenterRef.current) {
         lockedRoiCenterRef.current = { ...roiCenterRef.current };
       }
-      if (!isFocusLocked) {
-        handleToggleFocusLock(true);
+      if (!isFocusLockedRef.current) {
+        handleToggleFocusLockRef.current(true);
       }
     } else {
       lockedRoiCenterRef.current = null;
@@ -549,7 +565,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       }
 
       // "Tryk på Vægten" Dynamic Delta Trigger: Auto-calibrates when barista presses scale (disabled during active brew)
-      if (isCalibrating && !isBrewing && result.weight !== null) {
+      if (isCalibratingRef.current && !isBrewing && result.weight !== null) {
         const now = Date.now();
         calibrationHistoryRef.current.push({ time: now, weight: result.weight });
         calibrationHistoryRef.current = calibrationHistoryRef.current.filter((e) => now - e.time <= 1200);
@@ -571,7 +587,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               setRoiCenter({ x: newNormX, y: newNormY });
             }
 
-            handleToggleFocusLock(true);
+            handleToggleFocusLockRef.current(true);
+            isCalibratingRef.current = false;
             setIsCalibrating(false);
             setCalibratedSuccess(true);
             calibrationHistoryRef.current = [];
@@ -603,6 +620,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       fpsCountRef.current++;
       const now = Date.now();
       if (now - lastFpsCalcTimeRef.current >= 1000) {
+        ocrFpsRef.current = fpsCountRef.current;
         setOcrFps(fpsCountRef.current);
         fpsCountRef.current = 0;
         lastFpsCalcTimeRef.current = now;
@@ -631,7 +649,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             rawWeight: result.weight,
             filteredWeight: currentWeightRef.current,
             isOutlier: sanitized.isOutlier,
-            flowGps: currentFlow,
+            flowGps: currentFlowRef.current,
             confidence: result.confidence,
             polarity: result.detectedPolarity || displayMode,
             candidatesCount: result.allCandidates?.length || 0,
@@ -657,7 +675,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           isOutlier: sanitized.isOutlier,
           polarity: result.detectedPolarity || displayMode,
           isBrewing,
-          fps: ocrFps,
+          fps: ocrFpsRef.current,
         });
       }
     }, ocrIntervalMs);
@@ -770,7 +788,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       };
 
       pointsRef.current.push(newPoint);
-      const flow = calculateSmoothedFlowRate(pointsRef.current);
+      const maxFlowRate = activeMethod === 'pour_over' ? 15.0 : 6.0;
+      const flow = calculateSmoothedFlowRate(pointsRef.current, 0.9, maxFlowRate);
       newPoint.flowRateGps = flow;
       currentFlowRef.current = flow;
       setCurrentFlow(flow);
@@ -790,7 +809,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       // Auto-finish if target reached in demo mode
       const minDemoSecs = activeMethod === 'pour_over' ? 120 : 25;
       if (activeCameraState === 'demo' && weight >= activeTargetYield && seconds > minDemoSecs) {
-        handleStopBrewing();
+        handleStopBrewingRef.current();
       }
     }, 100);
 
@@ -806,8 +825,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     }
     // Lock ROI and hardware focus immediately before first drop to prevent vibration drift
     lockedRoiCenterRef.current = { ...roiCenterRef.current };
+    isCalibratingRef.current = false;
     setIsCalibrating(false);
-    handleToggleFocusLock(true);
+    handleToggleFocusLockRef.current(true);
 
     // Hard tare & timer reset for new shot initialization
     filterRef.current.reset(0);
@@ -917,20 +937,35 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     filterRef.current.reset(0);
   };
 
+  const handleStartBrewingRef = useRef(handleStartBrewing);
+  useEffect(() => {
+    handleStartBrewingRef.current = handleStartBrewing;
+  });
+
+  const handleStopBrewingRef = useRef(handleStopBrewing);
+  useEffect(() => {
+    handleStopBrewingRef.current = handleStopBrewing;
+  });
+
+  const handleCalibrateTareRef = useRef(handleCalibrateTare);
+  useEffect(() => {
+    handleCalibrateTareRef.current = handleCalibrateTare;
+  });
+
   // Remote Command Listener: Allows Antigravity test runner to trigger Start Shot, Stop Shot, Tare
   useEffect(() => {
     const unsub = subscribeToRemoteCommands((cmd) => {
       console.log('[ScaleMonitor] Remote command received from Antigravity:', cmd);
       if (cmd.action === 'start_shot') {
         if (!isBrewing) {
-          handleStartBrewing();
+          handleStartBrewingRef.current();
         }
       } else if (cmd.action === 'stop_shot') {
         if (isBrewing) {
-          handleStopBrewing();
+          handleStopBrewingRef.current();
         }
       } else if (cmd.action === 'tare') {
-        handleCalibrateTare();
+        handleCalibrateTareRef.current();
       } else if (cmd.action === 'reload_app') {
         window.location.reload();
       }
@@ -1320,7 +1355,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setIsCalibrating(!isCalibrating);
+                const next = !isCalibrating;
+                isCalibratingRef.current = next;
+                setIsCalibrating(next);
               }}
               className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold transition flex items-center gap-1 cursor-pointer ${
                 isCalibrating

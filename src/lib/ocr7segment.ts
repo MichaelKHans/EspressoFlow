@@ -1001,26 +1001,12 @@ function parseDigitsFromBinary(
         while (result.length > dotIdx + 2) {
           result.pop();
         }
-
-        // Tare zero protection: If the number ends with "0.0" (e.g. "00.0", "50.0", "80.0", "10.0"):
-        // In coffee scales, numbers ending in "0.0" with a single leading digit are almost always
-        // displaying tare zero ("0.0" or "00.0"), where the first digit had an edge reflection or inactive segment glow!
-        if (result.length >= 4 && dotIdx >= 2) {
-          const charBeforeDot = result[dotIdx - 1];
-          const charAfterDot = result[dotIdx + 1];
-          if (charBeforeDot.char === '0' && charAfterDot.char === '0') {
-            // If the leading digit is not '0' (e.g. '1', '8', '5' before "0.0"), strip it!
-            if (result[0].char !== '0') {
-              result.shift();
-            }
-          }
-        }
       }
 
       // 1. Inspect first element if it's an edge artifact mimicking digit '1'
-      // Legitimate multi-digit numbers (e.g. 216.1, 131.5, 127.3, 18.0) are preserved.
-      // An edge artifact on the bezel is either abnormally tiny, separated by an enormous gap (> 0.70-0.92*medH),
-      // or precedes an impossible zero tare (e.g. "1" + "0.0").
+      // Legitimate multi-digit numbers (e.g. 216.1, 131.5, 127.3, 18.0, 10.0, 50.0, 80.0) are preserved.
+      // An edge artifact on the bezel is either abnormally tiny (<40% of median height),
+      // or separated by an enormous gap (> 0.70-0.92*medH) onto the outer chassis.
       if (result.length >= 2 && result[0].type === 'digit' && result[0].char === '1') {
         const firstBox = result[0].box;
         const nextEl = result[1];
@@ -1030,17 +1016,10 @@ function parseDigitsFromBinary(
           : Math.max(22, Math.floor(medH * 0.70));
         const isDistantEdge = gapToNext > maxDistantGap;
 
-        // Spurious edge before zero tare (e.g. "1" + "0.0")
-        const isImpossibleTare =
-          result.length >= 3 &&
-          result[1].type === 'digit' &&
-          result[1].char === '0' &&
-          result[2].type === 'dot';
-
         // An edge sliver is abnormally tiny (less than 40% of median height)
         const isTinyNoiseSliver = firstBox.height < Math.max(12, Math.floor(medH * 0.40));
 
-        if (isDistantEdge || isImpossibleTare || isTinyNoiseSliver) {
+        if (isDistantEdge || isTinyNoiseSliver) {
           result.shift();
         }
       }
@@ -1425,12 +1404,6 @@ export class ScaleReadingFilter {
     // Absolute Physical Ceiling during active Espresso Extraction:
     // When actively pulling an espresso shot with a target yield ~36g, liquid yield cannot jump to > 150g
     // (blocks optical glitches where a decimal point is dropped, e.g. 185 instead of 18.5).
-    // And right at the start of brewing (lastValidWeight <= 0.5g), liquid extraction starts from zero.
-    // Liquid cannot physically jump to > 2.5g before pre-infusion completes and drips start.
-    // Blocks optical noise (like 80, 50, 10) from corrupting the shot start!
-    if (isBrewing && this.lastValidWeight <= 0.5 && newReading > 2.5) {
-      return { weight: this.lastValidWeight, isOutlier: true };
-    }
     if (isBrewing && newReading > 150.0 && this.lastValidWeight < 65.0) {
       return { weight: this.lastValidWeight, isOutlier: true };
     }
