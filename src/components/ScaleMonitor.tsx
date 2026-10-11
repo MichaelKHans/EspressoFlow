@@ -506,10 +506,14 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     const ctx = offscreen.getContext('2d', { willReadFrequently: true });
 
     const ocrIntervalMs = isBrewing ? 33 : 80;
-    const dt = isBrewing ? 0.033 : 0.080;
+    let lastFrameTime = performance.now();
 
     ocrIntervalRef.current = window.setInterval(() => {
       if (!videoRef.current || videoRef.current.readyState < 2 || !ctx) return;
+
+      const nowPerf = performance.now();
+      const actualDt = Math.max(0.02, Math.min(0.5, (nowPerf - lastFrameTime) / 1000));
+      lastFrameTime = nowPerf;
 
       const video = videoRef.current;
       const vW = video.videoWidth || 1280;
@@ -628,7 +632,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
       // Filter and update weight
       if (result.weight !== null) {
-        const sanitized = filterRef.current.sanitize(result.weight, dt, isBrewing);
+        const sanitized = filterRef.current.sanitize(result.weight, actualDt, isBrewing);
         if (!sanitized.isOutlier) {
           const w = Math.round(sanitized.weight * 10) / 10;
           setCurrentWeight(w);
@@ -1259,14 +1263,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
               <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
               <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
-
-              {/* Locked Focus indicator badge during brew */}
-              {isBrewing && (
-                <div className="absolute -top-3.5 right-2 px-1.5 py-0.5 rounded-md bg-amber-500/95 text-black text-[9px] font-mono font-bold flex items-center gap-1 shadow-xs pointer-events-none">
-                  <Lock className="w-2.5 h-2.5" />
-                  <span>{t('scale.focus_locked_brewing')}</span>
-                </div>
-              )}
 
               {/* Precise Auto-Detected Digit Bounding Box (Subtle, non-obscuring outline without text blocking the view) */}
               {lastOcrResult && cameraState === 'live' && (() => {

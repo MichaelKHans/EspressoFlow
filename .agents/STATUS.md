@@ -11,6 +11,20 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-11 -- Udryddelse af Plateau-Fastlåsning, Rense Sigtekorn & Korrekt Gns. Flow (v1.10.7)
+- **Fjernelse af Låse-Badge fra Sigtekornet (`ScaleMonitor.tsx`):**
+  - **Identificeret Årsag:** Et badge med `🔒 Fokus Låst` var placeret øverst i højre hjørne af sigtekornet (`-top-3.5 right-2`) og dækkede for vægtdisplayets cifre/tællere.
+  - **Løsning:** Badget indeni sigtekornet er fjernet helt. Sigtekornet er 100% uforstyrret, og status-indikatoren er udelukkende placeret sikkert i top-bjælken over video-viewfinderen.
+- **Udryddelse af Plateau-Fastlåsning under Aktiv Brygning (`ocr7segment.ts`):**
+  - **Identificeret Årsag:** En statisk kravprofil ($\le 0.35\text{g}$ spredning over 4 frames) blokerede reelle kaffestrømme ($0.10 - 0.20\text{g}$ stigning pr. frame), så vægten frøs i plateauer (trappetrin: 0g -> 10g -> 18g -> 26g -> 36g) og udløste falske channeling-spikes på 6.0 g/s.
+  - **Løsning:** Filteret er omlagt til en flydende ekstraktionsmodel, der godkender jævn kaffestigning ($[-0.2\text{g}, \text{maxDelta}]$) øjeblikkeligt med 0 ms latenstid. Større ændringer verificeres over blot 2 konsekutive frames med indbyrdes overensstemmelse ($\le \text{maxDelta}$), hvilket afviser flygtige 1-frame genskin uden at bremse kaffeflowet.
+- **Målt Frame Delta-Tid (`actualDt`) i OCR-Loop (`ScaleMonitor.tsx`):**
+  - **Identificeret Årsag:** Hårdkodet `dt = 0.033s` passede ikke til mobilers reelle OCR-hastighed på ~13-15 FPS.
+  - **Løsning:** Måling af reelt frame-interval med `performance.now()`.
+- **Gennemsnitligt Flow i Graf ved Afslutning (`FlowChart.tsx`, `ShotSummaryModal.tsx`, `Logbook.tsx`):**
+  - **Identificeret Årsag:** Graffoden viste `0.0 g/s` efter afslutning, fordi det sidste punkt ved shot-stop naturligt har 0.0 g/s momentant flow.
+  - **Løsning:** Graffoden viser nu `Gns. flow: X.XX g/s` (`chart.avg_flow`) ved afsluttede shots i fuld harmoni med shot-opsummeringen.
+
 ### 2026-10-11 -- Simuleret Vægtjustering vs. Shift-Zoom Separering (v1.10.6)
 - **Streng Separering af Vægt-Inkrement og Visuel Størrelse (`scale-simulator.html`):**
   - **Identificeret Årsag:** `scaleChassisEl` havde en ubetinget hjullytter (`scaleChassisEl.addEventListener('wheel')`), som ændrede vægtens visuelle zoom (`setScaleZoom`) ved ethvert musehjulstræk over vægten. Da baristaen forsøgte at justere gramværdien med musen, voksede eller krympede vægten samtidig på skærmen og ødelagde kamerarammen.

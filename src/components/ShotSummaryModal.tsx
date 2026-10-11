@@ -385,6 +385,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
                 doseGrams={shot.doseGrams}
                 channelingEvent={shot.channeling}
                 preInfusionSeconds={shot.preInfusionSeconds}
+                averageFlowGps={shot.averageFlowGps}
                 isLive={false}
               />
             </div>

@@ -12,6 +12,7 @@ interface FlowChartProps {
   doseGrams?: number;
   isLive?: boolean;
   method?: 'espresso' | 'pour_over';
+  averageFlowGps?: number;
 }
 
 export const FlowChart: React.FC<FlowChartProps> = ({
@@ -22,6 +23,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   doseGrams = 18.0,
   isLive = false,
   method = 'espresso',
+  averageFlowGps,
 }) => {
   const { t } = useTranslation();
 
@@ -291,7 +293,20 @@ export const FlowChart: React.FC<FlowChartProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-1 bg-[#C26D52] rounded-full inline-block" />
-            <span>{t('chart.flow')}: {lastPoint?.flowRateGps.toFixed(1) || '0.0'} g/s</span>
+            <span>
+              {isLive ? t('chart.flow') : t('chart.avg_flow')}: {
+                isLive
+                  ? (lastPoint?.flowRateGps.toFixed(1) || '0.0')
+                  : (averageFlowGps !== undefined
+                      ? averageFlowGps.toFixed(2)
+                      : (() => {
+                          const active = points.filter((p) => p.flowRateGps > 0.1);
+                          return active.length > 0
+                            ? (active.reduce((acc, p) => acc + p.flowRateGps, 0) / active.length).toFixed(2)
+                            : (lastPoint?.flowRateGps.toFixed(1) || '0.0');
+                        })())
+              } g/s
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 bg-[#72806B]/30 rounded-xs inline-block" />

@@ -95,6 +95,16 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] **5. Optisk Isolering & Ren Kamera-Mode (`scale-simulator.html`):**
   - Slukkede segmenter sat til 100% gennemsigtighed (`opacity: 0`), og tilføjet tastaturgenvej `C` og knap `📷 Ren Kamera-Mode`.
 
+## ⚡ FASE 12: Udryddelse af Plateau-Fastlåsning, Rense Sigtekorn & Korrekt Gns. Flow (v1.10.7 - AFSLUTTET)
+- [x] **1. Fjernelse af Låse-Badge fra Sigtekornet (`ScaleMonitor.tsx`):**
+  - Fjernet badge med `🔒 Fokus Låst` fra retiklen; displayet og timerne er nu 100% frie for visuelle overlap.
+- [x] **2. Udryddelse af Plateau-Fastlåsning under Aktiv Brygning (`ocr7segment.ts`):**
+  - Omlagt `ScaleReadingFilter` til en kontinuerlig fremadrettet ekstraktionsmodel. Vægtstigninger godkendes prompte (0 ms forsinkelse), og trappetrin / falske 6.0 g/s channeling-spikes er udryddet.
+- [x] **3. Målt Frame Delta-Tid (`actualDt`) i OCR-Loop (`ScaleMonitor.tsx`):**
+  - OCR-filteret tilpasser sig dynamisk mobilens reelle framerate via `performance.now()`.
+- [x] **4. Korrekt Gennemsnitligt Flow i Graf ved Afslutning (`FlowChart.tsx`, `ShotSummaryModal.tsx`, `Logbook.tsx`):**
+  - Ekstraktionsgrafen viser nu `Gns. flow: X.XX g/s` (`chart.avg_flow`) ved afsluttede shots.
+
 ---
 
 ## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)

@@ -242,6 +242,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'chart.first_drip': 'Første Dråbe ({time}s)',
   'chart.yield': 'Udbytte',
   'chart.flow': 'Flow',
+  'chart.avg_flow': 'Gns. flow',
   'chart.ratio': 'Forhold',
   'chart.target_dose_yield': 'Mål: {yield}g (Dosis {dose}g)',
 

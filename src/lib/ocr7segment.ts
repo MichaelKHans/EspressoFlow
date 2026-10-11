@@ -1445,50 +1445,50 @@ export class ScaleReadingFilter {
 
     // Maximum physically possible flow rate from an espresso extraction / pour-over stream
     // Under active brewing, real fluid flow never exceeds ~5-6 g/s.
-    // Frame delta ceiling:
+    // Frame delta ceiling (with comfortable headroom for 10-15 FPS mobile cameras):
     const maxDelta = isBrewing
-      ? Math.max(0.4, deltaTimeSeconds * 6.5) // ~6.5 g/s maximum physical flow rate headroom
+      ? Math.max(0.65, deltaTimeSeconds * 6.5) // ~6.5 g/s maximum physical flow rate headroom
       : Math.max(1.2, deltaTimeSeconds * 12.0);
-    const delta = Math.abs(newReading - this.lastValidWeight);
+    const delta = newReading - this.lastValidWeight;
 
-    // Keep sliding 5-frame buffer
+    // Normal continuous forward extraction:
+    // If weight is advancing smoothly within physical flow limits, accept immediately!
+    if (delta >= -0.2 && delta <= maxDelta) {
+      this.consecutiveLowCount = 0;
+      this.lastValidWeight = newReading;
+      this.recentWindow.push(newReading);
+      if (this.recentWindow.length > 5) this.recentWindow.shift();
+      return { weight: newReading, isOutlier: false };
+    }
+
+    // What if delta > maxDelta? (e.g. dropped camera frames, or sudden optical reflection flare)
     this.recentWindow.push(newReading);
     if (this.recentWindow.length > 5) {
       this.recentWindow.shift();
     }
 
-    if (delta > maxDelta) {
-      // Possible optical glitch, glare reflection, or legitimate step change:
-      // In standby resting at zero (lastValidWeight <= 0.3g), breaking out of zero to a high weight (> 5.0g)
-      // requires 4 consecutive stable frames (~150ms) to ensure it's not a fleeting reflection flare (like 80, 50, 10).
-      // During active brewing, large jumps require 4 frames (or 3 for moderate).
-      // When already at positive weight in standby, 2 frames ensures ultra-responsive tracking.
-      const requiredFrames = (this.lastValidWeight <= 0.3 && delta > 5.0)
-        ? 4
-        : (isBrewing ? (delta > 2.0 ? 4 : 3) : 2);
-      if (this.recentWindow.length >= requiredFrames) {
-        const slice = this.recentWindow.slice(-requiredFrames);
-        const minW = Math.min(...slice);
-        const maxW = Math.max(...slice);
-        if (maxW - minW <= 0.35) {
-          // If brewing, liquid cannot disappear (prevent sudden downward drops)
-          if (isBrewing && newReading < this.lastValidWeight - 0.5) {
-            return { weight: this.lastValidWeight, isOutlier: true };
-          }
-
-          // Legitimate sustained step change confirmed!
-          this.lastValidWeight = newReading;
-          this.consecutiveLowCount = 0;
-          return { weight: newReading, isOutlier: false };
+    // To accept a jump > maxDelta:
+    // Glare reflections are isolated 1-frame spikes (e.g. 10g -> 80g -> 10g).
+    // Genuine coffee flow or tare jumps are confirmed when the last 2 consecutive readings
+    // both reside in the new weight regime and agree with each other (difference <= maxDelta)!
+    if (this.recentWindow.length >= 2) {
+      const prevInWindow = this.recentWindow[this.recentWindow.length - 2];
+      const interFrameDiff = Math.abs(newReading - prevInWindow);
+      if (interFrameDiff <= maxDelta) {
+        // If brewing, verify it's not an invalid downward collapse
+        if (isBrewing && newReading < this.lastValidWeight - 0.4) {
+          return { weight: this.lastValidWeight, isOutlier: true };
         }
+
+        // Confirmed legitimate forward flow or step change!
+        this.lastValidWeight = newReading;
+        this.consecutiveLowCount = 0;
+        return { weight: newReading, isOutlier: false };
       }
-      return { weight: this.lastValidWeight, isOutlier: true };
     }
 
-    // Valid reading confirmed
-    this.consecutiveLowCount = 0;
-    this.lastValidWeight = newReading;
-    return { weight: newReading, isOutlier: false };
+    // Isolated single-frame optical spike rejected: maintain last valid weight
+    return { weight: this.lastValidWeight, isOutlier: true };
   }
 
   public reset(initialWeight: number = 0) {

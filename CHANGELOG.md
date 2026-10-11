@@ -2,6 +2,21 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.10.7] - 2026-10-11
+### Etape 43: Udryddelse af Plateau-Fastlåsning, Rense Sigtekorn (Fjernelse af Låse-Badge) & Korrekt Gns. Flow-Visning
+- **Fjernelse af Låse-Badge fra Sigtekornet (`ScaleMonitor.tsx`):**
+  - **Identificeret Root Cause:** Et flydende badge med teksten `🔒 Fokus Låst` var placeret øverst i højre hjørne af sigtekornet (`-top-3.5 right-2`). På kaffevægte med display, timer eller ekstra cifre i toppen dækkede dette badge direkte henover cifrene og forstyrrede OCR-aflæsningen.
+  - **Løsning:** Badget indeni sigtekornet er fjernet helt. Retiklen er nu 100% ren og uforstyrret. Fokuslås-indikatoren forbliver udelukkende i top-bjælken over kamerasøgeren som en diskret chip, hvor den aldrig kan dække for vægtdisplayet.
+- **Udryddelse af Plateau-Fastlåsning under Aktiv Brygning (`ocr7segment.ts`):**
+  - **Identificeret Root Cause:** `ScaleReadingFilter` krævede tidligere 4 på hinanden følgende frames med en maksimal variation på $\le 0.35\text{g}$ for at godkende vægtændringer. Under reel kaffebrygning stiger vægten kontinuerligt med ca. $0.10 - 0.20\text{g}$ pr. frame ($1.2 - 2.5\text{ g/s}$). Over 4 frames stiger vægten altså med $0.5 - 0.8\text{g} > 0.35\text{g}$. Filteret troede fejlagtigt, at det var optisk støj og afviste ændringerne, hvorved vægten frøs i kunstige plateauer (trappetrin: 0g -> 10g -> 18g -> 26g -> 36g). Når vægten endelig blev sluppet igennem, sprang den med 8 gram i en enkelt frame, hvilket udløste en falsk channeling-alarm på 6.0 g/s og efterlod mellemliggende sektioner på 0.0 g/s!
+  - **Løsning:** Filteret er omskrevet til en flydende, fremadrettet ekstraktionsmodel. Jævn kaffestigning inden for fysiske grænser ($[-0.2\text{g}, \text{maxDelta}]$) godkendes øjeblikkeligt med 0 ms forsinkelse. Større spring verificeres over 2 konsekutive frames med indbyrdes overensstemmelse ($\le \text{maxDelta}$), hvilket afviser 1-frame genskin (fx 80g eller 50g), men lader den fysiske kaffetilførsel flyde 100% naturligt.
+- **Målt Frame Delta-Tid (`actualDt`) i OCR-Loop (`ScaleMonitor.tsx`):**
+  - **Identificeret Root Cause:** OCR-loopet antog en fast `dt = 0.033s` (30 FPS), men på mobilkameraer afvikles OCR ofte ved ~13-15 FPS (70-80 ms pr. frame). Dette medførte en for snæver `maxDelta` tærskel.
+  - **Løsning:** Frame-intervallet måles nu dynamisk via `performance.now()`, så grænserne tilpasser sig telefonens reelle framerate.
+- **Visning af Gennemsnitligt Flow i Ekstraktionsgraf (`FlowChart.tsx`, `ShotSummaryModal.tsx`, `Logbook.tsx`):**
+  - **Identificeret Root Cause:** I bunden af grafen under "Flow" stod der `0.0 g/s` på opsummeringsskærmen, fordi den viste det øjeblikkelige flow ved det allersidste datapunkt ($t = 29.6\text{s}$), hvor kaffedryppet naturligt var stoppet.
+  - **Løsning:** Graffoden viser nu `Gns. flow: X.XX g/s` (`chart.avg_flow`) ved afsluttede shots i overensstemmelse med shot-opsummeringen (`Ø 1.22 g/s`) og logbogen, mens `Flow: X.X g/s` bibeholdes under aktiv live-brygning.
+
 ## [1.10.6] - 2026-10-11
 ### Etape 42: Simuleret Vægtjustering vs. Shift-Zoom Separering (HIL Scale Bench)
 - **Streng Separering af Vægt-Inkrement og Visuel Størrelse (`scale-simulator.html`):**

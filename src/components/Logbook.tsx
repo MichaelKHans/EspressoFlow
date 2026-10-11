@@ -470,6 +470,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                                 doseGrams={shot.doseGrams}
                                 channelingEvent={shot.channeling}
                                 preInfusionSeconds={shot.preInfusionSeconds}
+                                averageFlowGps={shot.averageFlowGps}
                                 isLive={false}
                               />
                             </div>

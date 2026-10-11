@@ -240,6 +240,7 @@ export const en = {
   'chart.first_drip': 'First Drip ({time}s)',
   'chart.yield': 'Yield',
   'chart.flow': 'Flow',
+  'chart.avg_flow': 'Avg Flow',
   'chart.ratio': 'Ratio',
   'chart.target_dose_yield': 'Target: {yield}g (Dose {dose}g)',
 
