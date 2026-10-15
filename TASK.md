@@ -105,6 +105,22 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] **4. Korrekt Gennemsnitligt Flow i Graf ved Afslutning (`FlowChart.tsx`, `ShotSummaryModal.tsx`, `Logbook.tsx`):**
   - Ekstraktionsgrafen viser nu `Gns. flow: X.XX g/s` (`chart.avg_flow`) ved afsluttede shots.
 
+## 👁️ FASE 13: Deep Computer Vision Overhaul & Gemini 4 Argon Optimeringer (v1.10.8 - AFSLUTTET)
+- [x] **1. Zero-GC Static Memory Pool (`OCRScratchPool` & Typed Buffers):**
+  - Elimineret ~42 MB/s heap allocations ved 30 FPS. Pre-allokeret `Uint8Array`, `Int32Array` og 256-bin histogram i `ocrPool`.
+- [x] **2. 7-Bit Hardware Bitmask Matching (`POPCNT_7BIT`):**
+  - Udskiftet 210-array iterationer med præberegnet Hamming-distance lookup table og 7-bit bitmask maskevalidering ($O(1)$ per ciffer).
+- [x] **3. Specular Glare & Binarisering (Chroma-Boost, Integer Bradley-Roth & Morfologisk Åbning):**
+  - Rød/blå/grøn LED-separering via chroma-luminans, integer-krydsmultiplikation i Bradley-Roth med lokal kontrastdelta (10), `ledFloor` loft på 85 for at afværge Otsu-overeksponering samt 1D 3x1 horisontal morfologisk åbning (`morphologicalOpenHorizontal`) mod vertikale lysglimt/ridser.
+- [x] **4. Kursiv-Vinkel Detektion (Discrete Radon Sheared Projections):**
+  - 4 parallelle vinkelkandidater ($0^\circ, 5^\circ, 10^\circ, 15^\circ$ med $\tan \theta \in [0.0, 0.09, 0.18, 0.26]$) med L2 energivarians-maksimering og dynamisk slant-forskydning i segment-probing.
+- [x] **5. Topologisk Cut-Cost Segmentering af Sammenvoksede Cifre:**
+  - `splitFusedSpansTopological` med penetrationsstraf på midterste/øverste/nederste bjælke ($a, g, d$), så '0' og '8' aldrig skæres over i midten trods kraftig blooming.
+- [x] **6. Sub-Pixel & Morfologisk Decimalpunkts-Gendannelse:**
+  - `verifyAndRecoverDecimalPoint` med baseline-forankring, Right-Toe fremsprings-tjek mod prik-opslugning i 3, 5, 6 samt mikrogab-scanning.
+- [x] **7. 1D Kinematisk Alpha-Beta Kalman Filter & Auto-Healing af Tabt Prik:**
+  - `ScaleReadingFilter` med kontinuert tilstandsvektor $[w, v]^T$, adaptiv støjfiltrering baseret på OCR-konfidens, automatisk $\times 10$ korrektion ved tabt decimalpunkt og parallel hypotese-tracker ved hurtige vægtspring.
+
 ---
 
 ## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)

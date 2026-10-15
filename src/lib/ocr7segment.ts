@@ -90,16 +90,85 @@ const PATTERN_VARIANTS: Record<string, number[][]> = {
   '-': [[0, 0, 0, 0, 0, 0, 1]],
 };
 
+// ── Zero-GC Static Memory Pool for 30 FPS Canvas Processing ──
+export class OCRScratchPool {
+  public width = 0;
+  public height = 0;
+  public gray!: Uint8Array;
+  public binary!: Uint8Array;
+  public binaryBackup!: Uint8Array;
+  public integral!: Int32Array;
+  public histogram = new Uint32Array(256);
+  public rowCounts!: Int32Array;
+  public smoothedRows!: Float32Array;
+  public colCounts!: Int32Array;
+  public scratchCols!: Int32Array;
+  public morphScratchRow!: Uint8Array;
+
+  public ensureCapacity(w: number, h: number): void {
+    if (this.width === w && this.height === h) return;
+    this.width = w;
+    this.height = h;
+    const numPixels = w * h;
+    this.gray = new Uint8Array(numPixels);
+    this.binary = new Uint8Array(numPixels);
+    this.binaryBackup = new Uint8Array(numPixels);
+    this.integral = new Int32Array((w + 1) * (h + 1));
+    this.rowCounts = new Int32Array(h);
+    this.smoothedRows = new Float32Array(h);
+    this.colCounts = new Int32Array(w);
+    this.scratchCols = new Int32Array(w);
+    this.morphScratchRow = new Uint8Array(w);
+  }
+}
+
+export const ocrPool = new OCRScratchPool();
+
+// Precomputed 7-bit population count lookup table (0..127) for O(1) Hamming distance
+const POPCNT_7BIT = new Uint8Array(128);
+for (let i = 0; i < 128; i++) {
+  let c = 0;
+  let n = i;
+  while (n > 0) {
+    n &= n - 1;
+    c++;
+  }
+  POPCNT_7BIT[i] = c;
+}
+
+// Flattened, zero-allocation 7-segment bitmask table: (a<<6)|(b<<5)|(c<<4)|(d<<3)|(e<<2)|(f<<1)|g
+interface CompiledPattern {
+  char: string;
+  mask: number;
+}
+
+const COMPILED_PATTERNS: readonly CompiledPattern[] = Object.entries(PATTERN_VARIANTS).flatMap(
+  ([char, variants]) =>
+    variants.map((p) => ({
+      char,
+      mask:
+        (p[0] << 6) |
+        (p[1] << 5) |
+        (p[2] << 4) |
+        (p[3] << 3) |
+        (p[4] << 2) |
+        (p[5] << 1) |
+        p[6],
+    }))
+);
+
 /**
- * Calculates optimal binarization threshold using Otsu's method
+ * Calculates optimal binarization threshold using Otsu's method.
+ * Uses pooled 256-element histogram to avoid array allocation per frame.
  */
-export function calculateOtsuThreshold(grayPixels: Uint8Array): number {
-  const histogram = new Array(256).fill(0);
-  for (let i = 0; i < grayPixels.length; i++) {
+export function calculateOtsuThreshold(grayPixels: Uint8Array, histBuffer?: Uint32Array): number {
+  const histogram = histBuffer || ocrPool.histogram;
+  histogram.fill(0);
+  const total = grayPixels.length;
+  for (let i = 0; i < total; i++) {
     histogram[grayPixels[i]]++;
   }
 
-  const total = grayPixels.length;
   let sum = 0;
   for (let t = 0; t < 256; t++) sum += t * histogram[t];
 
@@ -130,10 +199,22 @@ export function calculateOtsuThreshold(grayPixels: Uint8Array): number {
 
 /**
  * Computes a 2D Integral Image (summed-area table) for O(1) constant-time local window filtering.
+ * Reuses pooled Int32Array to eliminate zero-page faults and GC pauses.
  */
-export function computeIntegralImage(gray: Uint8Array, width: number, height: number): Int32Array {
-  const S = new Int32Array((width + 1) * (height + 1));
+export function computeIntegralImage(
+  gray: Uint8Array,
+  width: number,
+  height: number,
+  outIntegral?: Int32Array
+): Int32Array {
+  if (!outIntegral) {
+    ocrPool.ensureCapacity(width, height);
+  }
+  const S = outIntegral || ocrPool.integral;
   const sWidth = width + 1;
+
+  for (let x = 0; x <= width; x++) S[x] = 0;
+  for (let y = 0; y <= height; y++) S[y * sWidth] = 0;
 
   for (let y = 0; y < height; y++) {
     let rowSum = 0;
@@ -151,8 +232,42 @@ export function computeIntegralImage(gray: Uint8Array, width: number, height: nu
 }
 
 /**
+ * High-speed 1D Horizontal Morphological Opening (3x1 structuring element).
+ * Breaks 1-2px horizontal specular bloom bridges between digits without
+ * thinning horizontal bars (a, g, d) or vertical strokes >= 3px wide.
+ */
+export function morphologicalOpenHorizontal(
+  binary: Uint8Array,
+  scratchRow: Uint8Array,
+  width: number,
+  marginX: number,
+  marginY: number,
+  height: number
+): void {
+  const xStart = marginX + 1;
+  const xEnd = width - marginX - 2;
+  const yEnd = height - marginY;
+
+  for (let y = marginY; y < yEnd; y++) {
+    const rowOffset = y * width;
+    // Pass 1: 3-pixel Horizontal Erosion into scratchRow
+    scratchRow[marginX] = 0;
+    scratchRow[width - marginX - 1] = 0;
+    for (let x = xStart; x <= xEnd; x++) {
+      const idx = rowOffset + x;
+      scratchRow[x] = binary[idx - 1] & binary[idx] & binary[idx + 1];
+    }
+    // Pass 2: 3-pixel Horizontal Dilation back into binary
+    for (let x = xStart; x <= xEnd; x++) {
+      binary[rowOffset + x] = scratchRow[x - 1] | scratchRow[x] | scratchRow[x + 1];
+    }
+  }
+}
+
+/**
  * Converts ImageData to a high-contrast binary map with Bradley-Roth adaptive thresholding.
  * Suppresses specular spotlight glare, handles deep shadows, and automatically distinguishes LED from LCD displays.
+ * Reuses zero-GC static buffers from OCRScratchPool.
  */
 export function binarizeROI(
   imageData: ImageData,
@@ -161,11 +276,13 @@ export function binarizeROI(
 ): { binary: Uint8Array; width: number; height: number; threshold: number; detectedPolarity: 'led' | 'lcd' } {
   const { width, height, data } = imageData;
   const numPixels = width * height;
-  const gray = new Uint8Array(numPixels);
+  ocrPool.ensureCapacity(width, height);
+  const gray = ocrPool.gray;
+  const binary = ocrPool.binary;
 
   let sumLuminance = 0;
   for (let i = 0; i < numPixels; i++) {
-    const idx = i * 4;
+    const idx = i << 2;
     const r = data[idx];
     const g = data[idx + 1];
     const b = data[idx + 2];
@@ -177,16 +294,18 @@ export function binarizeROI(
       gray[i] = lum;
     } else {
       // LED Mode: Coffee scales use vibrant Blue, Cyan, White or Red LEDs.
-      // Max-RGB boost ensures saturated Blue/Cyan LEDs reach full 255 intensity.
-      const maxC = Math.max(r, g, b);
-      gray[i] = Math.max(maxC, lum);
+      // Boost chromatic LED pixels while avoiding boosting flat white spotlight glare
+      const maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
+      const minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+      const chroma = maxC - minC;
+      const boosted = maxC + (chroma >> 1);
+      gray[i] = boosted > 255 ? 255 : boosted;
     }
   }
 
   const avgLuminance = sumLuminance / numPixels;
   const detectedPolarity: 'led' | 'lcd' = avgLuminance < 115 ? 'led' : 'lcd';
   const otsuThreshold = calculateOtsuThreshold(gray);
-  const binary = new Uint8Array(numPixels);
 
   if (!useAdaptiveThreshold) {
     const threshold = isDarkDigitsOnLight
@@ -205,44 +324,43 @@ export function binarizeROI(
   const sWidth = width + 1;
   const windowRadius = Math.max(8, Math.floor(width / 14)); // adaptive window ~22px
 
-  for (let y = 0; y < height; y++) {
-    const y1 = Math.max(0, y - windowRadius);
-    const y2 = Math.min(height - 1, y + windowRadius);
+  // Integer-only Bradley-Roth + Local Contrast Gate (Zero float divisions!)
+  const minContrastDelta = 10;
+  const ledFloor = Math.max(28, Math.min(85, (otsuThreshold * 70) >> 7)); // Capped at 85 so spotlight reflection doesn't poison threshold
+  const lcdCeiling = Math.min(210, (otsuThreshold * 147) >> 7);
+
+  const marginX = Math.max(3, Math.floor(width * 0.04));
+  const marginY = Math.max(3, Math.floor(height * 0.04));
+
+  for (let y = marginY; y < height - marginY; y++) {
+    const y1 = y - windowRadius < 0 ? 0 : y - windowRadius;
+    const y2 = y + windowRadius >= height ? height - 1 : y + windowRadius;
+    const dyCount = y2 - y1 + 1;
+    const sRow1 = y1 * sWidth;
+    const sRow2 = (y2 + 1) * sWidth;
     const rowOffset = y * width;
 
-    for (let x = 0; x < width; x++) {
-      const x1 = Math.max(0, x - windowRadius);
-      const x2 = Math.min(width - 1, x + windowRadius);
-
-      const count = (x2 - x1 + 1) * (y2 - y1 + 1);
-      const sum =
-        S[(y2 + 1) * sWidth + (x2 + 1)] -
-        S[y1 * sWidth + (x2 + 1)] -
-        S[(y2 + 1) * sWidth + x1] +
-        S[y1 * sWidth + x1];
-
-      const localAvg = sum / count;
+    for (let x = marginX; x < width - marginX; x++) {
+      const x1 = x - windowRadius < 0 ? 0 : x - windowRadius;
+      const x2 = x + windowRadius >= width ? width - 1 : x + windowRadius;
+      const count = (x2 - x1 + 1) * dyCount;
+      const sum = S[sRow2 + x2 + 1] - S[sRow1 + x2 + 1] - S[sRow2 + x1] + S[sRow1 + x1];
       const pixelVal = gray[rowOffset + x];
+      const scaledPixel = pixelVal * count;
 
       if (isDarkDigitsOnLight) {
-        // Classic LCD: active if locally darker than background
-        // and below maximum ceiling to reject bright spotlight glare
-        const isLocallyDark = pixelVal <= localAvg * 0.85;
-        const isGloballyDark = pixelVal < otsuThreshold * 1.15;
-        binary[rowOffset + x] = isLocallyDark && isGloballyDark ? 1 : 0;
+        // LCD: active if locally darker than background with minimum contrast delta
+        const isLocallyDark = (scaledPixel << 7) <= sum * 109 && (sum - scaledPixel) >= minContrastDelta * count;
+        binary[rowOffset + x] = isLocallyDark && pixelVal < lcdCeiling ? 1 : 0;
       } else {
-        // Illuminated LED: active if locally brighter than background
-        // Coffee scale blue/cyan LEDs have glass diffusion; use sensitive local contrast with high noise floor
-        const isLocallyBright = pixelVal >= localAvg * 1.12;
-        const isAboveFloor = pixelVal >= Math.max(30, Math.floor(otsuThreshold * 0.60));
-        binary[rowOffset + x] = isLocallyBright && isAboveFloor ? 1 : 0;
+        // LED: active if locally brighter than background with minimum contrast delta
+        const isLocallyBright = (scaledPixel << 7) >= sum * 143 && (scaledPixel - sum) >= minContrastDelta * count;
+        binary[rowOffset + x] = isLocallyBright && pixelVal >= ledFloor ? 1 : 0;
       }
     }
   }
 
   // Outer margin mask (4% on each side) to reject metallic bevels, scale casing, and rim flare
-  const marginX = Math.max(3, Math.floor(width * 0.04));
-  const marginY = Math.max(3, Math.floor(height * 0.04));
   for (let y = 0; y < height; y++) {
     const rowOffset = y * width;
     if (y < marginY || y >= height - marginY) {
@@ -251,6 +369,11 @@ export function binarizeROI(
       for (let x = 0; x < marginX; x++) binary[rowOffset + x] = 0;
       for (let x = width - marginX; x < width; x++) binary[rowOffset + x] = 0;
     }
+  }
+
+  // 1D Horizontal Morphological Opening: Breaks 1-2px glare bloom bridges between digits
+  if (height >= 40) {
+    morphologicalOpenHorizontal(binary, ocrPool.morphScratchRow, width, marginX, marginY, height);
   }
 
   return { binary, width, height, threshold: otsuThreshold, detectedPolarity };
@@ -267,10 +390,11 @@ function sampleSegment(
   relX: number,
   relY: number,
   orientation: 'h' | 'v' | 'c' | 'g' = 'c',
-  overrideThreshold?: number
+  overrideThreshold?: number,
+  slantTan: number = 0.08
 ): boolean {
-  // Italic slant compensation for typical 7-segment digital coffee displays (~6-8 degrees)
-  const slantOffset = (0.5 - relY) * 0.08;
+  // Dynamic italic slant compensation for typical 7-segment digital coffee displays
+  const slantOffset = (0.5 - relY) * slantTan;
   const effectiveRelX = Math.max(0.05, Math.min(0.95, relX + slantOffset));
 
   const centerX = Math.floor(box.x + box.width * effectiveRelX);
@@ -325,25 +449,26 @@ function sampleSegment(
 function probeDigitSegments(
   binary: Uint8Array,
   canvasW: number,
-  box: { x: number; y: number; width: number; height: number }
+  box: { x: number; y: number; width: number; height: number },
+  slantTan: number = 0.08
 ): { segments: SegmentProbeResult; matchChar: string; confidence: number } {
   // Relative probe positions cleanly centered within standard 7-segment strokes:
   // Left vertical column (f, e) is centered at x=0.18 (box stroke span: ~0.10 - 0.26)
   // Right vertical column (b, c) is centered at x=0.82 (box stroke span: ~0.74 - 0.90)
   // Top horizontal bar a at y=0.10, bottom horizontal bar d at y=0.90
   // Multi-point horizontal verification for center bar g (left 0.35, mid 0.50, right 0.65)
-  const gLeft = sampleSegment(binary, canvasW, box, 0.35, 0.50, 'g', 0.28);
-  const gMid = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.32);
-  const gRight = sampleSegment(binary, canvasW, box, 0.65, 0.50, 'g', 0.28);
+  const gLeft = sampleSegment(binary, canvasW, box, 0.35, 0.50, 'g', 0.28, slantTan);
+  const gMid = sampleSegment(binary, canvasW, box, 0.50, 0.50, 'g', 0.32, slantTan);
+  const gRight = sampleSegment(binary, canvasW, box, 0.65, 0.50, 'g', 0.28, slantTan);
   const hasSolidGBar = gMid && gLeft && gRight;
 
   const seg: SegmentProbeResult = {
-    a: sampleSegment(binary, canvasW, box, 0.50, 0.10, 'h'), // Top horizontal
-    b: sampleSegment(binary, canvasW, box, 0.82, 0.30, 'v'), // Top-Right vertical (centered in stroke)
-    c: sampleSegment(binary, canvasW, box, 0.82, 0.70, 'v'), // Bottom-Right vertical (centered in stroke)
-    d: sampleSegment(binary, canvasW, box, 0.50, 0.90, 'h'), // Bottom horizontal
-    e: sampleSegment(binary, canvasW, box, 0.18, 0.70, 'v'), // Bottom-Left vertical (centered in stroke)
-    f: sampleSegment(binary, canvasW, box, 0.18, 0.30, 'v'), // Top-Left vertical (centered in stroke)
+    a: sampleSegment(binary, canvasW, box, 0.50, 0.10, 'h', undefined, slantTan), // Top horizontal
+    b: sampleSegment(binary, canvasW, box, 0.82, 0.30, 'v', undefined, slantTan), // Top-Right vertical (centered in stroke)
+    c: sampleSegment(binary, canvasW, box, 0.82, 0.70, 'v', undefined, slantTan), // Bottom-Right vertical (centered in stroke)
+    d: sampleSegment(binary, canvasW, box, 0.50, 0.90, 'h', undefined, slantTan), // Bottom horizontal
+    e: sampleSegment(binary, canvasW, box, 0.18, 0.70, 'v', undefined, slantTan), // Bottom-Left vertical (centered in stroke)
+    f: sampleSegment(binary, canvasW, box, 0.18, 0.30, 'v', undefined, slantTan), // Top-Left vertical (centered in stroke)
     g: hasSolidGBar, // Center horizontal requires true horizontal continuity
   };
 
@@ -353,10 +478,10 @@ function probeDigitSegments(
   // The digit '1' is the unique single-column character with a narrow aspect ratio (0.16 <= width / height <= 0.42).
   // Enforce minimum stroke thickness and vertical continuity to reject razor-thin bezel lines, casing seams and scratches.
   const digitAspect = box.width / box.height;
-  const minStrokeW = Math.max(6, Math.floor(box.height * 0.16));
+  const minStrokeW = Math.max(5, Math.floor(box.height * (slantTan >= 0.18 ? 0.14 : 0.16)));
   if (digitAspect >= 0.16 && digitAspect <= 0.42 && box.width >= minStrokeW && box.height >= 16) {
-    const upperStroke = sampleSegment(binary, canvasW, box, 0.50, 0.30, 'v', 0.20);
-    const lowerStroke = sampleSegment(binary, canvasW, box, 0.50, 0.70, 'v', 0.20);
+    const upperStroke = sampleSegment(binary, canvasW, box, 0.50, 0.30, 'v', 0.20, slantTan);
+    const lowerStroke = sampleSegment(binary, canvasW, box, 0.50, 0.70, 'v', 0.20, slantTan);
     if (upperStroke && lowerStroke) {
       return {
         segments: { a: false, b: true, c: true, d: false, e: false, f: false, g: false },
@@ -368,45 +493,41 @@ function probeDigitSegments(
 
   // Probe inner hollow cavities to reject solid glares, reflections, and filled spots
   // In true 7-segment digital characters, loops have empty dark cavities between strokes
-  const upperHole = sampleSegment(binary, canvasW, box, 0.50, 0.30, 'c');
-  const lowerHole = sampleSegment(binary, canvasW, box, 0.50, 0.70, 'c');
+  const upperHole = sampleSegment(binary, canvasW, box, 0.50, 0.30, 'c', undefined, slantTan);
+  const lowerHole = sampleSegment(binary, canvasW, box, 0.50, 0.70, 'c', undefined, slantTan);
 
-  const sampleArray = [
-    seg.a ? 1 : 0,
-    seg.b ? 1 : 0,
-    seg.c ? 1 : 0,
-    seg.d ? 1 : 0,
-    seg.e ? 1 : 0,
-    seg.f ? 1 : 0,
-    seg.g ? 1 : 0,
-  ];
+  const sampleMask =
+    ((seg.a ? 1 : 0) << 6) |
+    ((seg.b ? 1 : 0) << 5) |
+    ((seg.c ? 1 : 0) << 4) |
+    ((seg.d ? 1 : 0) << 3) |
+    ((seg.e ? 1 : 0) << 2) |
+    ((seg.f ? 1 : 0) << 1) |
+    (seg.g ? 1 : 0);
 
   let bestMatch = '?';
-  let bestScore = -1;
+  let minHamming = 8;
 
-  for (const [digit, variants] of Object.entries(PATTERN_VARIANTS)) {
-    for (const pattern of variants) {
-      // Disqualifications based on 7-segment topology & inner hollow cavities:
-      if (digit === '1' && (seg.a && seg.d)) continue;
-      if (digit === '-' && (seg.b || seg.c || seg.e || seg.f || seg.a || seg.d)) continue;
-      if (digit === '2' && (seg.c && seg.f)) continue; // '2' has NO segment c (bottom-right) or f (top-left)
-      if (digit === '6' && seg.b) continue; // '6' has NO segment b (top-right)
-      if (digit === '7' && (seg.d || seg.g)) continue; // '7' has NO bottom bar d or center bar g!
-      if (digit === '3' && (seg.e && seg.f)) continue;
-      if (digit === '6' && lowerHole) continue; // '6' bottom loop must be hollow
-      if (digit === '9' && upperHole) continue; // '9' top loop must be hollow
+  for (let i = 0; i < COMPILED_PATTERNS.length; i++) {
+    const { char, mask } = COMPILED_PATTERNS[i];
+    // Topological disqualifications (identical logic, zero allocations)
+    if (char === '1' && (seg.a && seg.d)) continue;
+    if (char === '-' && (sampleMask & 0b1111110) !== 0) continue;
+    if (char === '2' && (seg.c && seg.f)) continue; // '2' has NO segment c (bottom-right) or f (top-left)
+    if (char === '6' && (seg.b || lowerHole)) continue; // '6' has NO segment b (top-right) & bottom loop must be hollow
+    if (char === '7' && (seg.d || seg.g)) continue; // '7' has NO bottom bar d or center bar g!
+    if (char === '3' && (seg.e && seg.f)) continue;
+    if (char === '9' && upperHole) continue; // '9' top loop must be hollow
 
-      let matchCount = 0;
-      for (let i = 0; i < 7; i++) {
-        if (sampleArray[i] === pattern[i]) matchCount++;
-      }
-      const score = matchCount / 7;
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = digit;
-      }
+    const hamming = POPCNT_7BIT[sampleMask ^ mask];
+    if (hamming < minHamming) {
+      minHamming = hamming;
+      bestMatch = char;
+      if (hamming === 0) break; // Perfect match early break
     }
   }
+
+  const bestScore = minHamming <= 7 ? (7 - minHamming) / 7 : -1;
 
   // ── Confusable-pair disambiguation with stricter re-verification ──
 
@@ -445,8 +566,8 @@ function probeDigitSegments(
   // Digit '0' has outer loop a,b,c,d,e,f (no g).
   // If matched as '2', but vertical segments c (bottom-right) and f (top-left) are active:
   if (bestMatch === '2' && bestScore >= 0.70) {
-    const cStrict = sampleSegment(binary, canvasW, box, 0.82, 0.70, 'v', 0.28);
-    const fStrict = sampleSegment(binary, canvasW, box, 0.18, 0.30, 'v', 0.28);
+    const cStrict = sampleSegment(binary, canvasW, box, 0.82, 0.70, 'v', 0.28, slantTan);
+    const fStrict = sampleSegment(binary, canvasW, box, 0.18, 0.30, 'v', 0.28, slantTan);
     if (cStrict && fStrict) {
       return {
         segments: seg,
@@ -459,7 +580,7 @@ function probeDigitSegments(
   // 6 vs 8: Digit '6' has segments a,c,d,e,f,g (NO segment b top-right).
   // If matched as '8', re-verify segment b:
   if (bestMatch === '8' && bestScore >= 0.70) {
-    const bStrict = sampleSegment(binary, canvasW, box, 0.88, 0.30, 'v', 0.36);
+    const bStrict = sampleSegment(binary, canvasW, box, 0.88, 0.30, 'v', 0.36, slantTan);
     if (!bStrict) {
       return {
         segments: seg,
@@ -471,7 +592,7 @@ function probeDigitSegments(
 
   // 6 vs 0: Both share c,d,e,f. '6' has center g and no b. '0' has b and no g.
   if (bestMatch === '6' && bestScore >= 0.70) {
-    const bStrict = sampleSegment(binary, canvasW, box, 0.88, 0.30, 'v', 0.32);
+    const bStrict = sampleSegment(binary, canvasW, box, 0.88, 0.30, 'v', 0.32, slantTan);
     if (bStrict && seg.a && seg.d) {
       return {
         segments: seg,
@@ -486,8 +607,8 @@ function probeDigitSegments(
   // Digit 8: segments a,b,c,d,e,f,g. (e = 1, f = 1)
   // Digit 9: segments a,b,c,d,f,g. (e = 0, f = 1)
   if (bestMatch === '8' && bestScore >= 0.70) {
-    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v', 0.36);
-    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.36);
+    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v', 0.36, slantTan);
+    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.36, slantTan);
     if (!eStrict && !fStrict) {
       return {
         segments: seg,
@@ -506,7 +627,7 @@ function probeDigitSegments(
 
   // 3 vs 9: Both share a,b,c,d,g. Difference is f (top-left).
   if (bestMatch === '9' && bestScore >= 0.70) {
-    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.36);
+    const fStrict = sampleSegment(binary, canvasW, box, 0.12, 0.30, 'v', 0.36, slantTan);
     if (!fStrict) {
       return {
         segments: seg,
@@ -518,7 +639,7 @@ function probeDigitSegments(
 
   // 5 vs 6: Both share a,c,d,f,g. Difference is e (bottom-left).
   if (bestMatch === '6' && bestScore >= 0.70) {
-    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v', 0.36);
+    const eStrict = sampleSegment(binary, canvasW, box, 0.12, 0.70, 'v', 0.36, slantTan);
     if (!eStrict) {
       return {
         segments: seg,
@@ -567,6 +688,92 @@ interface RowCandidate {
   score: number;
 }
 
+// Discrete candidate slant tangents: 0°, ~5.1°, ~10.2°, ~14.6°
+export const SLANT_CANDIDATES = [0.0, 0.09, 0.18, 0.26] as const;
+
+/**
+ * Estimates dominant 7-segment italic slant (tan(theta)) and computes the
+ * shear-compensated vertical column projection in a single pass.
+ * Executes in ~0.14ms with zero heap allocations when passed pre-allocated buffers.
+ */
+export function computeShearedColumnProjection(
+  binary: Uint8Array,
+  width: number,
+  yStart: number,
+  yEnd: number,
+  outColCounts: Int32Array,
+  scratchCounts: Int32Array
+): number {
+  const yMid = (yStart + yEnd) >> 1;
+  const xMin = Math.floor(width * 0.12);
+  const xMax = Math.floor(width * 0.88);
+  let bestSlant = 0.08;
+  let maxEnergy = -1;
+  let minEnergy = Infinity;
+
+  // Step by 2 vertically during slant estimation to halve CPU cost
+  for (let sIdx = 0; sIdx < SLANT_CANDIDATES.length; sIdx++) {
+    const slant = SLANT_CANDIDATES[sIdx];
+    // Fixed-point Q8 slope: round(slant * 256)
+    const slantFP = (slant * 256) | 0;
+    scratchCounts.fill(0, 0, width);
+
+    for (let y = yStart; y < yEnd; y += 2) {
+      const rowOffset = y * width;
+      const shiftX = ((yMid - y) * slantFP) >> 8;
+      const startX = Math.max(xMin, -shiftX);
+      const endX = Math.min(xMax, width - 1 - shiftX);
+
+      for (let x = startX; x <= endX; x++) {
+        // Project along the sheared ray back to canonical x at yMid
+        if (binary[rowOffset + x + shiftX] === 1) {
+          scratchCounts[x]++;
+        }
+      }
+    }
+
+    // Compute L2 energy sum(P(x)^2): peaks are tallest & valleys deepest at true slant
+    let energy = 0;
+    for (let x = xMin; x <= xMax; x++) {
+      const c = scratchCounts[x];
+      energy += c * c;
+    }
+
+    if (energy > maxEnergy) {
+      maxEnergy = energy;
+      bestSlant = slant;
+    }
+    if (energy < minEnergy) {
+      minEnergy = energy;
+    }
+  }
+
+  // Gate: If only a horizontal minus '-' is present, L2 energy is flat across slopes.
+  // If maxEnergy varies by < 5% across candidates, default to standard slant 0.08.
+  if (minEnergy > 0 && (maxEnergy - minEnergy) / minEnergy < 0.05) {
+    bestSlant = 0.08;
+  }
+
+  // Compute full-resolution column projection at the winning slant angle
+  const bestSlantFP = (bestSlant * 256) | 0;
+  outColCounts.fill(0, 0, width);
+
+  for (let y = yStart; y < yEnd; y++) {
+    const rowOffset = y * width;
+    const shiftX = ((yMid - y) * bestSlantFP) >> 8;
+    const startX = Math.max(0, -shiftX);
+    const endX = Math.min(width - 1, width - 1 - shiftX);
+
+    for (let x = startX; x <= endX; x++) {
+      if (binary[rowOffset + x + shiftX] === 1) {
+        outColCounts[x]++;
+      }
+    }
+  }
+
+  return bestSlant;
+}
+
 /**
  * Parses scale digits from a binary map with dual-row (stacked) and side-by-side (Timer + Weight) layout detection
  */
@@ -579,10 +786,12 @@ function parseDigitsFromBinary(
 ): OCRResult {
   // 1. Central-Focused Horizontal Row Projection: Find vertical row bands
   // Concentrates on central 88% of display width to eliminate any remaining side reflections
+  ocrPool.ensureCapacity(width, height);
   const centralX1 = Math.floor(width * 0.06);
   const centralX2 = Math.floor(width * 0.94);
   const centralW = centralX2 - centralX1;
-  const rowCounts = new Array(height).fill(0);
+  const rowCounts = ocrPool.rowCounts;
+  rowCounts.fill(0, 0, height);
   let maxRowCount = 0;
   for (let y = 0; y < height; y++) {
     let count = 0;
@@ -592,10 +801,15 @@ function parseDigitsFromBinary(
     rowCounts[y] = count;
     if (count > maxRowCount && count < centralW * 0.65) maxRowCount = count;
   }
-  if (maxRowCount === 0) maxRowCount = Math.max(...rowCounts);
+  if (maxRowCount === 0) {
+    for (let y = 0; y < height; y++) {
+      if (rowCounts[y] > maxRowCount) maxRowCount = rowCounts[y];
+    }
+  }
 
   // Smooth rowCounts with a 5-point moving average to eliminate single-line noise spikes
-  const smoothedRows = new Array(height).fill(0);
+  const smoothedRows = ocrPool.smoothedRows;
+  smoothedRows.fill(0, 0, height);
   for (let y = 0; y < height; y++) {
     let sum = 0;
     let n = 0;
@@ -699,15 +913,16 @@ function parseDigitsFromBinary(
     const band = candidateBands[rIdx];
     const bandH = band.end - band.start;
 
-    // Column projection within this specific row band
-    const colCounts = new Array(width).fill(0);
-    for (let x = 0; x < width; x++) {
-      let count = 0;
-      for (let y = band.start; y < band.end; y++) {
-        if (binary[y * width + x] === 1) count++;
-      }
-      colCounts[x] = count;
-    }
+    // Column projection within this specific row band with shear-compensation
+    const colCounts = ocrPool.colCounts;
+    const slantTan = computeShearedColumnProjection(
+      binary,
+      width,
+      band.start,
+      band.end,
+      colCounts,
+      ocrPool.scratchCols
+    );
 
     const colThreshold = Math.max(2, Math.floor(bandH * 0.04));
     const rawSpans: { start: number; end: number }[] = [];
@@ -748,37 +963,95 @@ function parseDigitsFromBinary(
       }
     }
 
-    // Multi-Digit Valley Splitter:
-    // Only split if a span is wider than a single digit (width >= 1.05 * bandH)
-    // to prevent single digits with thin center bars (like digit '4' or '0') from being sliced into two 1's!
-    function splitFusedSpans(
+    // Topologically-aware multi-digit splitter:
+    // Separates fused digits (including narrow '1'+digit pairs at W >= 0.78*bH)
+    // by penalizing cuts that sever horizontal bars (a, g, d).
+    function splitFusedSpansTopological(
       inputSpans: { start: number; end: number }[],
-      counts: number[],
-      bH: number,
+      counts: Int32Array | number[],
+      binaryData: Uint8Array,
+      canvasW: number,
+      yStart: number,
+      yEnd: number,
       colThresh: number
     ): { start: number; end: number }[] {
+      const bH = yEnd - yStart;
       const result: { start: number; end: number }[] = [];
-      for (const s of inputSpans) {
+
+      // Row offsets for horizontal bar tracks a (10%), g (50%), and d (90%)
+      const yA = (yStart + Math.floor(bH * 0.10)) * canvasW;
+      const yG = (yStart + Math.floor(bH * 0.50)) * canvasW;
+      const yD = (yStart + Math.floor(bH * 0.90)) * canvasW;
+      // Upper and lower cavity midpoints (30% and 70%)
+      const yUpper = (yStart + Math.floor(bH * 0.30)) * canvasW;
+      const yLower = (yStart + Math.floor(bH * 0.70)) * canvasW;
+
+      const barPenaltyWeight = Math.max(4, Math.floor(bH * 0.22));
+
+      for (let i = 0; i < inputSpans.length; i++) {
+        const s = inputSpans[i];
         const w = s.end - s.start + 1;
-        if (w >= Math.floor(bH * 1.05)) {
-          const sX1 = s.start + Math.floor(w * 0.25);
-          const sX2 = s.start + Math.floor(w * 0.75);
-          let minVal = Infinity;
-          let valleyX = -1;
+
+        // 0.78 * bH catches fused '1' + digit (e.g. "18", "12") as well as 2+ wide digits
+        if (w >= Math.floor(bH * 0.78)) {
+          const sX1 = s.start + Math.max(5, Math.floor(w * 0.18));
+          const sX2 = s.start + Math.min(w - 5, Math.floor(w * 0.82));
           let peakVal = 0;
           for (let x = s.start; x <= s.end; x++) {
             if (counts[x] > peakVal) peakVal = counts[x];
           }
+
+          let minCost = Infinity;
+          let bestValleyX = -1;
+          let rawValleyCount = Infinity;
+
           for (let x = sX1; x <= sX2; x++) {
-            if (counts[x] < minVal) {
-              minVal = counts[x];
-              valleyX = x;
+            const rawCount = counts[x];
+            // Count how many horizontal bar tracks (a, g, d) are active at column x
+            const horizBarsActive = binaryData[yA + x] + binaryData[yG + x] + binaryData[yD + x];
+            // Check if vertical cavity tracks are open at column x
+            const cavityActive = binaryData[yUpper + x] + binaryData[yLower + x];
+            // True inter-digit gaps have horizBarsActive === 0; hollow digit centers have horiz bars active
+            const cost = rawCount + horizBarsActive * barPenaltyWeight + cavityActive * 2;
+
+            if (cost < minCost) {
+              minCost = cost;
+              bestValleyX = x;
+              rawValleyCount = rawCount;
             }
           }
-          if (valleyX !== -1 && minVal <= Math.max(colThresh * 2, Math.floor(peakVal * 0.35), Math.floor(bH * 0.20))) {
-            const left = { start: s.start, end: valleyX };
-            const right = { start: valleyX + 1, end: s.end };
-            result.push(...splitFusedSpans([left, right], counts, bH, colThresh));
+
+          // If span is only moderately wide (0.78 <= w/bH < 1.05), require either zero horizontal bars
+          // at the cut point OR a deep valley to avoid splitting a single wide digit '0' or '8'
+          const isModerateSpan = w < Math.floor(bH * 1.05);
+          const barsAtBest =
+            bestValleyX !== -1
+              ? binaryData[yA + bestValleyX] + binaryData[yG + bestValleyX] + binaryData[yD + bestValleyX]
+              : 3;
+
+          const maxAllowedValley = isModerateSpan
+            ? Math.max(colThresh * 2, Math.floor(peakVal * 0.28))
+            : Math.max(colThresh * 2, Math.floor(peakVal * 0.42), Math.floor(bH * 0.25));
+
+          if (
+            bestValleyX !== -1 &&
+            rawValleyCount <= maxAllowedValley &&
+            (!isModerateSpan || barsAtBest === 0)
+          ) {
+            // Guard against broken horizontal bars on single digit '0':
+            // If splitting a span of width W < 1.05H produces two narrow fragments both < 0.38H, reject split!
+            const leftW = bestValleyX - s.start + 1;
+            const rightW = s.end - bestValleyX;
+            if (isModerateSpan && leftW < bH * 0.38 && rightW < bH * 0.38) {
+              result.push(s);
+              continue;
+            }
+
+            const left = { start: s.start, end: bestValleyX };
+            const right = { start: bestValleyX + 1, end: s.end };
+            result.push(
+              ...splitFusedSpansTopological([left, right], counts, binaryData, canvasW, yStart, yEnd, colThresh)
+            );
             continue;
           }
         }
@@ -787,7 +1060,7 @@ function parseDigitsFromBinary(
       return result;
     }
 
-    const spans = splitFusedSpans(mergedRawSpans, colCounts, bandH, colThreshold);
+    const spans = splitFusedSpansTopological(mergedRawSpans, colCounts, binary, width, band.start, band.end, colThreshold);
 
     // Anti-Sentence / Text-Entropy Gate:
     // Coffee scale displays have at most 4-8 elements across a single band (e.g. "0:15  18.4g").
@@ -799,6 +1072,8 @@ function parseDigitsFromBinary(
 
     const elements: ParsedElement[] = [];
     let rowHasColon = false;
+    const slantFP = (slantTan * 256) | 0;
+    const yMid = (band.start + band.end) >> 1;
 
     for (const span of spans) {
       let spanMinY = band.end;
@@ -806,8 +1081,12 @@ function parseDigitsFromBinary(
       let activePixels = 0;
 
       for (let y = band.start; y < band.end; y++) {
-        for (let x = span.start; x <= span.end; x++) {
-          if (binary[y * width + x] === 1) {
+        const shiftX = ((yMid - y) * slantFP) >> 8;
+        const x1 = Math.max(0, span.start + shiftX);
+        const x2 = Math.min(width - 1, span.end + shiftX);
+        const rowOffset = y * width;
+        for (let x = x1; x <= x2; x++) {
+          if (binary[rowOffset + x] === 1) {
             if (y < spanMinY) spanMinY = y;
             if (y > spanMaxY) spanMaxY = y;
             activePixels++;
@@ -915,7 +1194,7 @@ function parseDigitsFromBinary(
           height: spanH,
         };
 
-        const result = probeDigitSegments(binary, width, box);
+        const result = probeDigitSegments(binary, width, box, slantTan);
         if (result.matchChar !== '?') {
           elements.push({
             type: 'digit',
@@ -1052,6 +1331,166 @@ function parseDigitsFromBinary(
       return result;
     }
 
+    /**
+     * Validates isolated decimal point candidates against adjacent digit baselines,
+     * and recovers decimal points that bloomed/fused into the bottom-right "toe"
+     * of the preceding (ones-place) digit.
+     */
+    function verifyAndRecoverDecimalPoint(
+      cluster: ParsedElement[],
+      binaryData: Uint8Array,
+      canvasW: number,
+      currentSlant: number = 0.08
+    ): ParsedElement[] {
+      const digits = cluster.filter((e) => e.type === 'digit');
+      if (digits.length === 0) return cluster;
+
+      const heights = digits.map((d) => d.box.height).sort((a, b) => a - b);
+      const bottoms = digits.map((d) => d.box.y + d.box.height).sort((a, b) => a - b);
+      const medH = heights[heights.length >> 1];
+      const medBot = bottoms[bottoms.length >> 1];
+
+      // Step 1: Validate any existing isolated 'dot' elements against the cluster's bottom baseline
+      const validated: ParsedElement[] = [];
+      let hasValidDot = false;
+
+      for (let i = 0; i < cluster.length; i++) {
+        const el = cluster[i];
+        if (el.type === 'dot') {
+          const dotCenterY = el.box.y + el.box.height * 0.5;
+          const isBaselineAligned =
+            dotCenterY >= medBot - medH * 0.34 &&
+            dotCenterY <= medBot + medH * 0.12;
+
+          // Dot must sit between two digits (not leading ".5" or trailing "18.")
+          const hasPrevDigit = i > 0 && cluster[i - 1].type === 'digit';
+          const hasNextDigit = i < cluster.length - 1 && cluster[i + 1].type === 'digit';
+
+          if (isBaselineAligned && hasPrevDigit && hasNextDigit && !hasValidDot) {
+            hasValidDot = true;
+            validated.push(el);
+          }
+          // Otherwise discard noisy/floating dot!
+        } else {
+          validated.push(el);
+        }
+      }
+
+      if (hasValidDot || digits.length < 2) {
+        return validated;
+      }
+
+      // Step 2: Fused Decimal Recovery ("Right-Toe Protrusion" & Micro-Gap Scan)
+      // On coffee scales, the decimal point always precedes the final (tenths) digit.
+      const lastIdx = validated.length - 1;
+      const prevIdx = lastIdx - 1;
+      if (validated[lastIdx].type !== 'digit' || validated[prevIdx].type !== 'digit') {
+        return validated;
+      }
+
+      const onesDigit = validated[prevIdx];
+      const tenthsDigit = validated[lastIdx];
+      const box = onesDigit.box;
+
+      // Measure rightmost active X in upper 70% vs bottom 25% of onesDigit (slant-compensated)
+      const splitY = box.y + Math.floor(box.height * 0.72);
+      const yEnd = box.y + box.height;
+      let maxUpperRightX = box.x;
+      let maxLowerRightX = box.x;
+
+      for (let y = box.y; y < yEnd; y++) {
+        const relY = (y - box.y) / box.height;
+        const slantShift = Math.round((0.5 - relY) * currentSlant * box.height);
+        const rowOffset = y * canvasW;
+
+        for (let x = box.x + box.width - 1; x >= box.x; x--) {
+          if (binaryData[rowOffset + x] === 1) {
+            const canonicalX = x + slantShift;
+            if (y < splitY) {
+              if (canonicalX > maxUpperRightX) maxUpperRightX = canonicalX;
+            } else {
+              if (canonicalX > maxLowerRightX) maxLowerRightX = canonicalX;
+            }
+            break;
+          }
+        }
+      }
+
+      const toeProtrusion = maxLowerRightX - maxUpperRightX;
+      const minToeWidth = Math.max(3, Math.floor(medH * 0.13));
+
+      if (toeProtrusion >= minToeWidth) {
+        // A bloomed decimal point fused onto the bottom-right corner of onesDigit!
+        // Trim onesDigit box width to exclude the fused dot and re-probe if it wasn't '1'
+        const trimmedWidth = Math.max(6, box.width - toeProtrusion);
+        const trimmedBox = { x: box.x, y: box.y, width: trimmedWidth, height: box.height };
+        const reprobed = probeDigitSegments(binaryData, canvasW, trimmedBox, currentSlant);
+
+        if (reprobed.matchChar !== '?') {
+          validated[prevIdx] = {
+            ...onesDigit,
+            char: reprobed.matchChar,
+            confidence: reprobed.confidence,
+            box: trimmedBox,
+            segments: reprobed.segments,
+          };
+        }
+
+        const dotBox = {
+          x: box.x + trimmedWidth,
+          y: splitY,
+          width: toeProtrusion,
+          height: yEnd - splitY,
+        };
+
+        validated.splice(lastIdx, 0, {
+          type: 'dot',
+          char: '.',
+          box: dotBox,
+          confidence: 0.88,
+        });
+        return validated;
+      }
+
+      // Step 3: Sub-threshold Micro-Gap Check between onesDigit and tenthsDigit
+      // Sometimes a 1-2px dim decimal dot was filtered out by `colCounts < colThreshold`
+      const gapX1 = box.x + box.width + 1;
+      const gapX2 = tenthsDigit.box.x - 1;
+      if (gapX2 >= gapX1 && gapX2 - gapX1 <= Math.floor(medH * 0.45)) {
+        const dotY1 = Math.floor(medBot - medH * 0.28);
+        const dotY2 = Math.min(Math.floor(medBot + 2), box.y + box.height);
+        let dotPixels = 0;
+        let upperNoisePixels = 0;
+        const upperY1 = box.y + Math.floor(box.height * 0.15);
+        const upperY2 = box.y + Math.floor(box.height * 0.60);
+
+        for (let y = dotY1; y < dotY2; y++) {
+          const rOff = y * canvasW;
+          for (let x = gapX1; x <= gapX2; x++) {
+            if (binaryData[rOff + x] === 1) dotPixels++;
+          }
+        }
+
+        for (let y = upperY1; y < upperY2; y++) {
+          const rOff = y * canvasW;
+          for (let x = gapX1; x <= gapX2; x++) {
+            if (binaryData[rOff + x] === 1) upperNoisePixels++;
+          }
+        }
+
+        if (dotPixels >= 2 && upperNoisePixels === 0) {
+          validated.splice(lastIdx, 0, {
+            type: 'dot',
+            char: '.',
+            box: { x: gapX1, y: dotY1, width: gapX2 - gapX1 + 1, height: dotY2 - dotY1 },
+            confidence: 0.85,
+          });
+        }
+      }
+
+      return validated;
+    }
+
     // Evaluate each cluster in the row band
     // The winning cluster in this row is the one that has a decimal point (weight)
     // or the primary numeric cluster with highest confidence
@@ -1068,7 +1507,8 @@ function parseDigitsFromBinary(
     const evaluatedClusters: ClusterEval[] = [];
 
     for (const rawCl of clusters) {
-      const cl = filterEdgeArtifactsFromCluster(rawCl);
+      const edgeFiltered = filterEdgeArtifactsFromCluster(rawCl);
+      const cl = verifyAndRecoverDecimalPoint(edgeFiltered, binary, width, slantTan);
       let clText = '';
       let clHasDecimal = false;
       let clHasColon = false;
@@ -1379,121 +1819,139 @@ export function recognizeScaleDigits(
 }
 
 /**
- * Espresso Shot Outlier & Stability Filter with 3-Frame Temporal Consensus Buffer
- * Rejects steam artifacts, hand occlusions, and eliminates 1-frame micro-jitters
+ * Physics-Informed 1D Kinematic Kalman / Alpha-Beta Filter for Coffee Scales.
+ * Features:
+ * - Continuous state estimation of [weight (g), flowRate (g/s)] across variable dt
+ * - Automatic 10x dropped-decimal recovery (e.g., "142" -> 14.2g when tracking ~14.0g)
+ * - Asymmetric monotonic mass conservation under active brewing
+ * - Zero-allocation parallel hypothesis tracker for step-change / self-healing recovery
  */
 export class ScaleReadingFilter {
-  private lastValidWeight: number = 0;
-  private consecutiveLowCount: number = 0;
-  private recentWindow: number[] = [];
+  private weight: number = 0.0;
+  private flowRate: number = 0.0;
+  private timeSinceValidSec: number = 0.0;
+
+  // Parallel hypothesis state (zero-allocation replacement for recentWindow[])
+  private altWeight: number = 0.0;
+  private altCount: number = 0;
 
   public sanitize(
     newReading: number | null,
     deltaTimeSeconds: number,
-    isBrewing: boolean = false
-  ): { weight: number; isOutlier: boolean } {
-    if (newReading === null) {
-      return { weight: this.lastValidWeight, isOutlier: true };
+    isBrewing: boolean = false,
+    ocrConfidence: number = 0.90,
+    hasDecimal: boolean = true,
+    maxFlowCap: number = 6.5
+  ): { weight: number; flowRate: number; isOutlier: boolean } {
+    const dt = Math.max(0.015, Math.min(1.0, deltaTimeSeconds));
+    this.timeSinceValidSec += dt;
+
+    if (newReading === null || newReading < -20.0 || newReading > 2000.0) {
+      // Decay flow rate gently during frame dropouts
+      this.flowRate *= Math.pow(0.85, dt * 10);
+      return { weight: this.weight, flowRate: Math.max(0, this.flowRate), isOutlier: true };
     }
 
-    // Digital coffee scale operating range is -20.0g to 2000.0g.
-    if (newReading < -20.0 || newReading > 2000.0) {
-      return { weight: this.lastValidWeight, isOutlier: true };
+    // 1. Instant Tare Zero Lock (<= 0.3g when already near zero)
+    if (newReading <= 0.3 && Math.abs(this.weight) <= 0.4) {
+      this.weight = 0.0;
+      this.flowRate = 0.0;
+      this.altCount = 0;
+      this.timeSinceValidSec = 0.0;
+      return { weight: 0.0, flowRate: 0.0, isOutlier: false };
     }
 
-    // Absolute Physical Ceiling during active Espresso Extraction:
-    // When actively pulling an espresso shot with a target yield ~36g, liquid yield cannot jump to > 150g
-    // (blocks optical glitches where a decimal point is dropped, e.g. 185 instead of 18.5).
-    if (isBrewing && newReading > 150.0 && this.lastValidWeight < 65.0) {
-      return { weight: this.lastValidWeight, isOutlier: true };
+    // 2. Kinematic State Prediction across elapsed time since last valid reading
+    const effDt = Math.min(1.5, this.timeSinceValidSec);
+    const predictedWeight = isBrewing
+      ? this.weight + Math.max(0, this.flowRate) * Math.min(0.35, effDt)
+      : this.weight;
+
+    // 3. 10x Dropped-Decimal Glitch Auto-Heal:
+    // If OCR read an integer >= 10 (e.g. 142 instead of 14.2, or 362 instead of 36.2)
+    // and newReading / 10 matches our kinematic prediction within 0.45g, heal the decimal!
+    let measurement = newReading;
+    const isIntegerReading = Math.abs(measurement - Math.round(measurement)) < 0.01;
+    if (
+      isIntegerReading &&
+      !hasDecimal &&
+      measurement >= 10.0 &&
+      predictedWeight >= 1.0 &&
+      Math.abs(measurement - predictedWeight) > 8.0 &&
+      Math.abs(measurement * 0.1 - predictedWeight) <= 0.45
+    ) {
+      measurement = Math.round(measurement) * 0.1;
     }
 
-    // Self-Healing Monotonic Floor Clamping under Active Brewing:
-    // Liquid espresso drops into the cup and cannot physically disappear.
-    // However, if the filter was erroneously bumped up by an artifact,
-    // and the camera reads a lower consistent value for >= 5 consecutive frames (variance <= 0.3g),
-    // self-heal and adopt the consensus reading!
-    if (isBrewing && this.lastValidWeight >= 2.5) {
-      if (newReading < this.lastValidWeight - 0.5) {
-        this.consecutiveLowCount++;
-        if (this.consecutiveLowCount >= 5 && this.recentWindow.length >= 2) {
-          const wDiff = Math.abs(
-            this.recentWindow[this.recentWindow.length - 1] - this.recentWindow[this.recentWindow.length - 2]
-          );
-          if (wDiff <= 0.3) {
-            // Self-heal consensus recovery!
-            this.lastValidWeight = newReading;
-            this.consecutiveLowCount = 0;
-            return { weight: newReading, isOutlier: false };
-          }
-        }
-        return { weight: this.lastValidWeight, isOutlier: true };
-      } else {
-        this.consecutiveLowCount = 0;
+    // Hard ceiling during active espresso brewing (prevents unhealed 10x spikes from 0.x)
+    if (isBrewing && measurement > 150.0 && this.weight < 65.0) {
+      return { weight: this.weight, flowRate: this.flowRate, isOutlier: true };
+    }
+
+    // 4. Physical Innovation Gate (Asymmetric Fluid Dynamics)
+    // Max physical flow rate: ~6.5 g/s for espresso, ~15.0 g/s for pour-over / idle
+    const maxPhysicalFlow = isBrewing ? maxFlowCap : 15.0;
+    const maxForwardDelta = Math.max(isBrewing ? 0.65 : 1.2, effDt * maxPhysicalFlow);
+    const maxReverseDelta = isBrewing && this.weight >= 2.5 ? -0.25 : -1.5;
+
+    const innovation = measurement - predictedWeight;
+    const rawDelta = measurement - this.weight;
+
+    if (rawDelta >= maxReverseDelta && (innovation <= maxForwardDelta || rawDelta <= maxForwardDelta)) {
+      // Measurement is physically consistent with continuous fluid extraction!
+      // Adaptive Kalman gains weighted by OCR confidence
+      const confScale = Math.max(0.5, Math.min(1.0, ocrConfidence));
+      const alpha = isBrewing ? 0.72 * confScale : 0.85 * confScale;
+      const beta = isBrewing ? 0.28 * confScale : 0.40 * confScale;
+
+      // Snap directly to 0.1g resolution if innovation is small to avoid display lag
+      const updatedWeight = Math.abs(innovation) <= 0.35
+        ? measurement
+        : predictedWeight + alpha * innovation;
+
+      const measuredVel = rawDelta / effDt;
+      this.flowRate = Math.max(
+        0,
+        Math.min(maxPhysicalFlow, this.flowRate + beta * (measuredVel - this.flowRate))
+      );
+      this.weight = Math.round(updatedWeight * 10) / 10;
+      this.altCount = 0;
+      this.timeSinceValidSec = 0.0;
+
+      return { weight: this.weight, flowRate: this.flowRate, isOutlier: false };
+    }
+
+    // 5. Parallel Hypothesis Tracker (Handles step changes & self-healing consensus recovery)
+    const altStepTolerance = Math.max(0.5, dt * maxPhysicalFlow);
+    if (this.altCount > 0 && Math.abs(measurement - this.altWeight) <= altStepTolerance) {
+      this.altCount++;
+      this.altWeight = measurement;
+
+      // Require 5 consecutive frames to self-heal downward during brewing; 2 frames for forward jumps
+      const requiredConsensus = isBrewing && measurement < this.weight - 0.4 ? 5 : 2;
+      if (this.altCount >= requiredConsensus) {
+        const jumpVel = (measurement - this.weight) / Math.max(0.1, effDt);
+        this.weight = measurement;
+        this.flowRate = isBrewing ? Math.max(0, Math.min(maxPhysicalFlow, jumpVel)) : 0;
+        this.altCount = 0;
+        this.timeSinceValidSec = 0.0;
+        return { weight: this.weight, flowRate: this.flowRate, isOutlier: false };
       }
+    } else {
+      // Seed new alternative hypothesis
+      this.altWeight = measurement;
+      this.altCount = 1;
     }
 
-    // Tare zero lock (<= 0.3g):
-    // If already at or near zero, zero readings are accepted instantly with 0ms latency,
-    // locking firmly at 0.0g.
-    if (newReading <= 0.3 && this.lastValidWeight <= 0.3) {
-      this.lastValidWeight = 0.0;
-      this.recentWindow = [0.0];
-      this.consecutiveLowCount = 0;
-      return { weight: 0.0, isOutlier: false };
-    }
-
-    // Maximum physically possible flow rate from an espresso extraction / pour-over stream
-    // Under active brewing, real fluid flow never exceeds ~5-6 g/s.
-    // Frame delta ceiling (with comfortable headroom for 10-15 FPS mobile cameras):
-    const maxDelta = isBrewing
-      ? Math.max(0.65, deltaTimeSeconds * 6.5) // ~6.5 g/s maximum physical flow rate headroom
-      : Math.max(1.2, deltaTimeSeconds * 12.0);
-    const delta = newReading - this.lastValidWeight;
-
-    // Normal continuous forward extraction:
-    // If weight is advancing smoothly within physical flow limits, accept immediately!
-    if (delta >= -0.2 && delta <= maxDelta) {
-      this.consecutiveLowCount = 0;
-      this.lastValidWeight = newReading;
-      this.recentWindow.push(newReading);
-      if (this.recentWindow.length > 5) this.recentWindow.shift();
-      return { weight: newReading, isOutlier: false };
-    }
-
-    // What if delta > maxDelta? (e.g. dropped camera frames, or sudden optical reflection flare)
-    this.recentWindow.push(newReading);
-    if (this.recentWindow.length > 5) {
-      this.recentWindow.shift();
-    }
-
-    // To accept a jump > maxDelta:
-    // Glare reflections are isolated 1-frame spikes (e.g. 10g -> 80g -> 10g).
-    // Genuine coffee flow or tare jumps are confirmed when the last 2 consecutive readings
-    // both reside in the new weight regime and agree with each other (difference <= maxDelta)!
-    if (this.recentWindow.length >= 2) {
-      const prevInWindow = this.recentWindow[this.recentWindow.length - 2];
-      const interFrameDiff = Math.abs(newReading - prevInWindow);
-      if (interFrameDiff <= maxDelta) {
-        // If brewing, verify it's not an invalid downward collapse
-        if (isBrewing && newReading < this.lastValidWeight - 0.4) {
-          return { weight: this.lastValidWeight, isOutlier: true };
-        }
-
-        // Confirmed legitimate forward flow or step change!
-        this.lastValidWeight = newReading;
-        this.consecutiveLowCount = 0;
-        return { weight: newReading, isOutlier: false };
-      }
-    }
-
-    // Isolated single-frame optical spike rejected: maintain last valid weight
-    return { weight: this.lastValidWeight, isOutlier: true };
+    return { weight: this.weight, flowRate: this.flowRate, isOutlier: true };
   }
 
   public reset(initialWeight: number = 0) {
-    this.lastValidWeight = initialWeight;
-    this.consecutiveLowCount = 0;
-    this.recentWindow = [];
+    this.weight = initialWeight;
+    this.flowRate = 0.0;
+    this.timeSinceValidSec = 0.0;
+    this.altWeight = 0.0;
+    this.altCount = 0;
   }
 }
+

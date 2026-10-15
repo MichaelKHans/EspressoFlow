@@ -630,9 +630,18 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         lastFpsCalcTimeRef.current = now;
       }
 
-      // Filter and update weight
+      // Filter and update weight with kinematic alpha-beta filter & 10x dropped decimal auto-heal
       if (result.weight !== null) {
-        const sanitized = filterRef.current.sanitize(result.weight, actualDt, isBrewing);
+        const maxFlow = method === 'pour_over' ? 15.0 : 6.5;
+        const hasDec = result.rawText.includes('.');
+        const sanitized = filterRef.current.sanitize(
+          result.weight,
+          actualDt,
+          isBrewing,
+          result.confidence,
+          hasDec,
+          maxFlow
+        );
         if (!sanitized.isOutlier) {
           const w = Math.round(sanitized.weight * 10) / 10;
           setCurrentWeight(w);
@@ -687,7 +696,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     return () => {
       if (ocrIntervalRef.current) clearInterval(ocrIntervalRef.current);
     };
-  }, [cameraState, displayMode, isBrewing]);
+  }, [cameraState, displayMode, isBrewing, method]);
 
   // Handle Shot Timeline, Split-Timer & Simulation (isolated from prop re-triggers)
   useEffect(() => {

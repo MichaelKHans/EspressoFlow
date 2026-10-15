@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.10.7 (Udryddelse af Plateau-Fastlåsning, Rense Sigtekorn & Korrekt Gns. Flow)  
+> **Gældende version:** v1.10.8 (Deep Computer Vision Overhaul: Zero-GC, 7-Bit Bitmask, Kroma-Boost, Sheared Radon, Topologisk Split & Kinematisk Filter)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -117,40 +117,41 @@ Kernen i Espresso Flow er den canvas-baserede computer vision motor, der aflæse
 
 ```mermaid
 flowchart LR
-    subgraph Vision Pipeline (Client-Side Canvas 480x240)
+    subgraph Vision Pipeline (Client-Side Canvas 480x240 - Zero-GC OCRScratchPool)
         Video[HTML5 Camera Stream] --> FrameGrab[Offscreen Canvas 480x240]
         FrameGrab --> CropROI[Crop til Region-of-Interest]
-        CropROI --> PolarityGate{LED Mode & Hvid Baggrund?}
+        CropROI --> ChromaBoost[Kroma-Boostet Binarisering mod Hvidt Spotlight-Genskin]
+        ChromaBoost --> PolarityGate{LED Mode & Hvid Baggrund?}
         PolarityGate -- Ja (Papir/Bog afvises) --> DropNoise[Kasser: Returner Null]
         PolarityGate -- Nej --> MarginMask[4% Margin Mask mod kabinetstøj]
-        MarginMask --> AdaptiveThresh[Adaptiv Bradley-Roth Kontrast]
-        AdaptiveThresh --> MarginPiercingCheck{Gennembryder Margin over/under?}
-        MarginPiercingCheck -- Ja (Bezel/Ramme afvises) --> DropNoise
-        MarginPiercingCheck -- Nej --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]
-        DualRowValley --> RowScoring[Række 0 Bonus +150 / Række 1 Timer Straf -250]
-        RowScoring --> TimerPenalty[Kolon / 0:00 Straf -300]
-        TimerPenalty --> TextEntropyGate{Spans > 8 el. Elementer > 7?}
+        MarginMask --> IntegerThresh[Integer Bradley-Roth Kontrast + Local Contrast Gate]
+        IntegerThresh --> MorphOpen[1D Horisontal Morfologisk Åbning mod Bloom-Broer]
+        MorphOpen --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]
+        DualRowValley --> ShearedProj[4-Vinkels Sheared Søjleprojektion 0-15°]
+        ShearedProj --> TopoSplit[Topologisk Fused-Digits Split mod a,g,d Overklip]
+        TopoSplit --> TextEntropyGate{Spans > 8 el. Elementer > 7?}
         TextEntropyGate -- Ja (Bogsætning afvises) --> DropNoise
-        TextEntropyGate -- Nej --> MinHeightCheck{Cifferhøjde >= 18px & >= 42%?}
-        MinHeightCheck -- Nej (Mikrotekst afvises) --> DropNoise
-        MinHeightCheck -- Ja --> SegmentAnalysis[7-Segment Segmentering A-G & 1-Tals Strøgcheck]
-        SegmentAnalysis --> ClusterAlign[Klynge Typografi & Højde/Top/Bund Afvisning af Rammekant]
-        ClusterAlign --> DigitRecognition[Digit Recognition + Decimalkomma]
+        TextEntropyGate -- Nej --> SegmentAnalysis[7-Segment Bitmask Probing POPCNT 7-Bit O(1)]
+        SegmentAnalysis --> ClusterAlign[Klynge Typografi & Højde/Top/Bund Afvisning]
+        ClusterAlign --> DecimalRecovery[To-Trins Decimalvalidering & Right-Toe Scan]
+        DecimalRecovery --> DigitRecognition[Digit Recognition + Decimalkomma]
         DigitRecognition --> ConfidenceFilter{Confidence > 65%?}
         ConfidenceFilter -- Ja --> ValidWeight[Rå Vægt i gram: Y_i]
         ConfidenceFilter -- Nej --> DropNoise
     end
 
-    subgraph Dynamics & Filter Engine
-        ValidWeight --> MonotonicCheck{Aktiv Brygning & Y_i < LastValid - 0.5g?}
-        MonotonicCheck -- Ja (Kaffe forsvinder ikke) --> RejectDrop[Afvis som Outlier: Fasthold LastValid]
-        MonotonicCheck -- Nej --> MaxStepCheck{ΔY > Max Fysisk Stigning?}
-        MaxStepCheck -- Ja --> ClampStep[Afvis urealistisk spring]
-        MaxStepCheck -- Nej --> UpdateValid[Acceptér Vægt]
+    subgraph Dynamics & Kinematic Filter Engine
+        ValidWeight --> KinematicFilter[1D Kinematisk Alpha-Beta Kalman Filter]
+        KinematicFilter --> DecHeal{Tabt Decimalpunkt? 10x Glitch Auto-Heal}
+        DecHeal -- Ja (f.eks. 142g ved 14.0g) --> HealDot[Auto-Heal til 14.2g]
+        DecHeal -- Nej --> InnovationGate[Asymmetrisk Væskemekanisk Innovation Gate]
+        HealDot --> InnovationGate
+        InnovationGate --> StepTracker{Pludseligt Vægtspring? Parallel Hypotese Tracker}
+        StepTracker -- Konsensus bekræftet --> UpdateValid[Acceptér Vægt & Opdater Tilstandsvektor]
+        StepTracker -- Enkeltframe Outlier --> RejectDrop[Afvis som Outlier: Fasthold Estimator]
+        UpdateValid --> RateCalc[Kontinuerlig Flow Rate V_k og Tidsdifferentiale]
         RejectDrop --> RateCalc
-        ClampStep --> RateCalc
-        UpdateValid --> RateCalc[Tidsdifferentiale Flow Rate F = ΔY / Δt]
-        RateCalc --> ClampFlow[Clamp Flow: Espresso <= 6.0 g/s, Pour-Over <= 15.0 g/s]
+        RateCalc --> ClampFlow[Clamp Flow: Espresso <= 6.5 g/s, Pour-Over <= 15.0 g/s]
         ClampFlow --> SpikeDetector{ΔF > 1.2 g/s?}
         SpikeDetector -- Ja --> ChannelingAlert[Registrer Kanaliserings-Spike]
         SpikeDetector -- Nej --> SmoothCurve[Normal Ekstraktion]
