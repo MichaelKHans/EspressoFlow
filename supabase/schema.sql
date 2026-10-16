@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS global_coffee_beans (
   roast_level VARCHAR(30) NOT NULL,
   origin_country VARCHAR(100),
   purchase_country VARCHAR(10) DEFAULT 'DK',
-  purchase_location VARCHAR(120), -- Untappd-style store/venue (e.g. 'Føtex', 'Hedekaffe Gårdbutik', 'Meny', 'Online')
+  purchase_location VARCHAR(120), -- Retail store/venue (e.g. 'Føtex', 'Hedekaffe Gårdbutik', 'Meny', 'Online')
   suitable_for TEXT[] DEFAULT '{}',
   flavor_notes TEXT[] DEFAULT '{}',
   avg_rating NUMERIC(3,2) DEFAULT 0.00,
@@ -50,6 +50,9 @@ ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS flavor_notes TEXT[] DEF
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS verifications_count INT DEFAULT 1;
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS expert_score NUMERIC(4,1);
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS expert_source VARCHAR(60);
+ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS process_method VARCHAR(50);
+ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS altitude VARCHAR(50);
+ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS varietal VARCHAR(100);
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
@@ -60,9 +63,14 @@ CREATE INDEX IF NOT EXISTS idx_beans_rating ON global_coffee_beans(avg_rating DE
 CREATE INDEX IF NOT EXISTS idx_beans_verified ON global_coffee_beans(is_verified);
 CREATE INDEX IF NOT EXISTS idx_beans_curator_queue ON global_coffee_beans(is_verified ASC, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_beans_verified_rating ON global_coffee_beans(is_verified DESC, avg_rating DESC);
-CREATE INDEX IF NOT EXISTS idx_beans_roaster_name ON global_coffee_beans(roaster, name);
+CREATE INDEX IF NOT EXISTS idx_beans_roaster_name_search ON global_coffee_beans(LOWER(TRIM(roaster)), LOWER(TRIM(name)));
 CREATE INDEX IF NOT EXISTS idx_ratings_barcode ON bean_drink_ratings(barcode);
 CREATE INDEX IF NOT EXISTS idx_ratings_drink_type ON bean_drink_ratings(drink_type);
+
+-- Trigram search indexes (requires pg_trgm extension)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_beans_roaster_trgm ON global_coffee_beans USING gin (roaster gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_beans_name_trgm ON global_coffee_beans USING gin (name gin_trgm_ops);
 
 -- 5. ROW LEVEL SECURITY (RLS) POLICIES
 ALTER TABLE global_coffee_beans ENABLE ROW LEVEL SECURITY;
@@ -127,7 +135,7 @@ VALUES
   ('7072611000018', 'Tim Wendelboe', 'Caballero Geisha', 'light', 'Honduras', 'NO', 'Tim Wendelboe Oslo / Webshop', ARRAY['pure_espresso', 'modern_espresso'], ARRAY['Jasmin & Blomster', 'Fersken & Abrikos', 'Bergamot'], 0.00, 0, true, 95.5, 'Cup of Excellence'),
   ('5700000000099', 'April Coffee', 'Filter & Espresso Blend', 'light', 'Etiopien & Costa Rica', 'DK', 'April Coffee Store Kbh / Webshop', ARRAY['pure_espresso', 'flat_white'], ARRAY['Citrus & Bergamot', 'Røde Bær', 'Mælkechokolade'], 0.00, 0, true, NULL, NULL),
   
-  -- Classical Supermarket & Italian Espresso (Clean: NULL expert scores, Untappd retail locations, 0 user ratings)
+  -- Classical Supermarket & Italian Espresso (Clean: NULL expert scores, Retail locations, 0 user ratings)
   ('8000070025066', 'Lavazza', 'Espresso Barista Gran Crema', 'dark', 'Sydamerika & Sydøstasien', 'IT', 'Føtex, Bilka, Meny, Nemlig', ARRAY['pure_espresso', 'cappuccino', 'flat_white'], ARRAY['Mørk Chokolade', 'Krydderier', 'Karamel'], 0.00, 0, true, NULL, NULL),
   ('8000070025080', 'Lavazza', 'Espresso Barista Perfetto', 'medium', 'Central & Sydamerika (100% Arabica)', 'IT', 'Føtex, Bilka, Meny', ARRAY['pure_espresso', 'cortado', 'flat_white'], ARRAY['Chokolade', 'Jasmin & Blomster', 'Frugtagtig'], 0.00, 0, true, NULL, NULL),
   ('8000070025059', 'Lavazza', 'Espresso Barista Intenso', 'dark', 'Sydamerika & Afrika', 'IT', 'Føtex, Bilka, Meny', ARRAY['pure_espresso', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Krydderier'], 0.00, 0, true, NULL, NULL),

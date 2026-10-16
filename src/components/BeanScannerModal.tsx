@@ -39,6 +39,11 @@ import {
 } from '../lib/bagScanner';
 import { upsertGlobalBean } from '../lib/supabase';
 import { resolveGrinder } from '../lib/storage';
+import {
+  captureBagFrameFromVideo,
+  compressFileToBagFrame,
+} from '../lib/bagVisionClient';
+import { scanBagWithVisionAI } from '../lib/geminiBagVision';
 
 interface BeanScannerModalProps {
   isOpen: boolean;
@@ -49,7 +54,7 @@ interface BeanScannerModalProps {
   onOpenCentralVault?: () => void;
 }
 
-type ScanMode = 'barcode' | 'label_date';
+type ScanMode = 'bag_vision' | 'barcode' | 'label_date';
 
 export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   isOpen,
@@ -60,7 +65,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   onOpenCentralVault,
 }) => {
   const { t } = useTranslation();
-  const [mode, setMode] = useState<ScanMode>('barcode');
+  const [mode, setMode] = useState<ScanMode>('bag_vision');
   const [selectedGrinderName, setSelectedGrinderName] = useState<string>(() => {
     const res = resolveGrinder(currentGrinderName, grinders);
     return res?.name || currentGrinderName;
@@ -93,7 +98,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   const [showNameSuggestions, setShowNameSuggestions] = useState<boolean>(false);
   const bagImageInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Vivino-style Autocomplete & Did You Mean heuristics
+  // Beandex Autocomplete & Did You Mean heuristics
   const roasterSuggestions = useMemo(() => suggestRoasters(editRoaster, 5), [editRoaster]);
   const nameSuggestions = useMemo(() => searchCatalogBeans(editName, 4), [editName]);
   const didYouMean = useMemo(() => findDidYouMeanBean(editRoaster, editName), [editRoaster, editName]);
@@ -102,6 +107,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const bagVisionFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const barcodeSupported = isBarcodeDetectorSupported();
 
@@ -272,6 +278,59 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     }
   };
 
+  // Handle Beandex Bag Vision AI Scanning (Front Label)
+  const handleBagVisionCapture = async () => {
+    if (!videoRef.current) return;
+    setIsScanning(true);
+    setFeedbackMessage('Beandex Bag Vision™ analyserer kaffeposen via AI...');
+    try {
+      const frame = captureBagFrameFromVideo(videoRef.current);
+      if (!frame) {
+        setFeedbackMessage('Kameraet er ikke klar endnu. Prøv igen om et øjeblik.');
+        setIsScanning(false);
+        return;
+      }
+
+      const res = await scanBagWithVisionAI(frame.base64, frame.thumbnailBase64);
+      if (res.success && res.data) {
+        applyScanResult(res.data);
+        stopCamera();
+        setFeedbackMessage(`Genkendt: ${res.data.roaster || ''} - ${res.data.name}`);
+      } else {
+        setFeedbackMessage(res.error || 'Kunne ikke genkende kaffeposen. Prøv en anden vinkel eller bedre lys.');
+      }
+    } catch (err) {
+      console.warn('Bag vision capture error:', err);
+      setFeedbackMessage('Vision AI kaldet fejlede. Kontroller netværk og Supabase Edge Function.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleBagVisionFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsScanning(true);
+    setFeedbackMessage('Beandex Bag Vision™ analyserer kaffeposen via AI...');
+    try {
+      const frame = await compressFileToBagFrame(file);
+      const res = await scanBagWithVisionAI(frame.base64, frame.thumbnailBase64);
+      if (res.success && res.data) {
+        applyScanResult(res.data);
+        stopCamera();
+        setFeedbackMessage(`Genkendt: ${res.data.roaster || ''} - ${res.data.name}`);
+      } else {
+        setFeedbackMessage(res.error || 'Kunne ikke genkende kaffeposen fra billedet.');
+      }
+    } catch (err) {
+      console.warn('Bag vision file upload error:', err);
+      setFeedbackMessage('Kunne ikke analysere billedet.');
+    } finally {
+      setIsScanning(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
   // Handle Photo Snapshot / File Upload
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -279,7 +338,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setIsScanning(true);
     setFeedbackMessage('Analyzing bag photo, typography & roast date...');
     try {
-      // Compress and save bag photo thumbnail for Vivino-style card display
+      // Compress and save bag photo thumbnail for Beandex card display
       try {
         const compactDataUrl = await compressImageToDataUrl(file);
         setEditImageUrl(compactDataUrl);
@@ -444,14 +503,12 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-[#2C2018] tracking-tight">Bean & Barcode Vision Scanner</h2>
-                {barcodeSupported && (
-                  <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-[#72806B]/20 text-[#72806B]">
-                    Vision API
-                  </span>
-                )}
+                <h2 className="text-sm font-bold text-[#2C2018] tracking-tight">Beandex Bag & Vision Scanner</h2>
+                <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-[#C26D52]/15 text-[#C26D52]">
+                  Bag Vision™ AI
+                </span>
               </div>
-              <p className="text-[11px] text-[#7A6E65]">Scan coffee bag barcodes, packaging & roast date stamps</p>
+              <p className="text-[11px] text-[#7A6E65]">Optisk etiket-genkendelse, stregkoder & ristedato</p>
             </div>
           </div>
           <button
@@ -466,30 +523,45 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
         <div className="p-4 overflow-y-auto space-y-4 flex-1">
           {/* Mode Switcher */}
           {!scannedResult && (
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#F0EAE1] rounded-xl border border-[#E8DFD5]">
+            <div className="grid grid-cols-3 gap-1 p-1 bg-[#F0EAE1] rounded-xl border border-[#E8DFD5]">
+              <button
+                type="button"
+                onClick={() => setMode('bag_vision')}
+                className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                  mode === 'bag_vision'
+                    ? 'bg-white text-[#2C2018] shadow-sm font-bold'
+                    : 'text-[#7A6E65] hover:text-[#2C2018]'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+                <span className="truncate">Pose AI</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setMode('barcode')}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
                   mode === 'barcode'
                     ? 'bg-white text-[#2C2018] shadow-sm font-bold'
                     : 'text-[#7A6E65] hover:text-[#2C2018]'
                 }`}
               >
                 <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
-                <span>Barcode / EAN</span>
+                <span className="truncate">Stregkode</span>
+                {barcodeSupported && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#72806B]" title="Vision API aktiv" />
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => setMode('label_date')}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                className={`py-2 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
                   mode === 'label_date'
                     ? 'bg-white text-[#2C2018] shadow-sm font-bold'
                     : 'text-[#7A6E65] hover:text-[#2C2018]'
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5 text-[#72806B]" />
-                <span>Label & Roast Date</span>
+                <span className="truncate">Ristedato</span>
               </button>
             </div>
           )}
@@ -507,7 +579,17 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
               {/* Reticle / Target Overlay */}
               {isCameraActive && (
                 <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-6">
-                  {mode === 'barcode' ? (
+                  {mode === 'bag_vision' ? (
+                    <div className="relative w-48 h-56 border-2 border-[#C26D52] rounded-2xl shadow-xl flex items-center justify-center bg-[#C26D52]/5">
+                      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#C26D52] rounded-tl-lg" />
+                      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#C26D52] rounded-tr-lg" />
+                      <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#C26D52] rounded-bl-lg" />
+                      <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#C26D52] rounded-br-lg" />
+                      <span className="absolute -bottom-6 text-[10px] font-mono text-white/95 bg-black/75 px-2.5 py-0.5 rounded-full backdrop-blur-xs whitespace-nowrap shadow-sm">
+                        Centrér kaffeposens forside
+                      </span>
+                    </div>
+                  ) : mode === 'barcode' ? (
                     <div className="relative w-48 h-28 border-2 border-dashed border-[#C26D52] rounded-lg shadow-lg flex items-center justify-center">
                       <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#C26D52]" />
                       <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#C26D52]" />
@@ -549,14 +631,49 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
               {isScanning && (
                 <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-2 text-white">
                   <RefreshCw className="w-6 h-6 animate-spin text-[#C26D52]" />
-                  <span className="text-xs font-mono font-medium">Scanning & Parsing...</span>
+                  <span className="text-xs font-mono font-medium">Beandex Vision AI analyserer...</span>
                 </div>
               )}
             </div>
           )}
 
-          {/* Quick Capture & Upload Controls (when camera active) */}
-          {!scannedResult && (
+          {/* Bag Vision Primary Controls */}
+          {!scannedResult && mode === 'bag_vision' && (
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleBagVisionCapture}
+                disabled={isScanning || !isCameraActive}
+                className="w-full py-3 px-4 rounded-xl bg-[#C26D52] hover:bg-[#A95840] disabled:opacity-50 text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+              >
+                <Sparkles className="w-4 h-4 text-[#FFFDF9]" />
+                <span>Scan Kaffepose (Forside)</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <input
+                  ref={bagVisionFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleBagVisionFileUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => bagVisionFileInputRef.current?.click()}
+                  disabled={isScanning}
+                  className="flex-1 py-2 px-3 rounded-xl bg-white border border-[#E8DFD5] text-[#2C2018] text-xs font-semibold hover:bg-[#FAF7F2] transition flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-[#72806B]" />
+                  <span>Vælg posefoto fra Galleri</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Capture & Upload Controls for Barcode and Date modes */}
+          {!scannedResult && mode !== 'bag_vision' && (
             <div className="flex items-center gap-2">
               <input
                 ref={fileInputRef}
@@ -752,7 +869,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 
               {/* Form Fields */}
               <div className="p-4 rounded-xl bg-white border border-[#E8DFD5] space-y-3.5 shadow-sm">
-                {/* Vivino-style Did-You-Mean suggestion banner */}
+                {/* Beandex Did-You-Mean suggestion banner */}
                 {didYouMean && (
                   <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300 flex items-center justify-between text-xs animate-fadeIn">
                     <div className="flex items-center gap-2">
@@ -910,7 +1027,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                   )}
                 </div>
 
-                {/* Vivino-style Sensory Flavor Notes Selector */}
+                {/* Beandex Sensory Flavor Notes Selector */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-[10px] font-bold text-[#7A6E65] uppercase flex items-center gap-1">

@@ -657,7 +657,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               </div>
             </div>
 
-            {/* Sensory Flavor Notes Selector (Vivino Style) */}
+            {/* Sensory Flavor Notes Selector (Beandex Style) */}
             <div className="sm:col-span-2 space-y-1.5">
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono font-bold flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-[#C26D52]" />
@@ -1010,7 +1010,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       )}
                     </div>
 
-                    {/* Sensory Flavor Notes Pills (Vivino style) */}
+                    {/* Sensory Flavor Notes Pills (Beandex style) */}
                     <div className="space-y-1 pt-1 border-t border-[#E8DFD5]/50">
                       <div className="flex items-center justify-between">
                         <span className="text-[9.5px] uppercase font-mono font-bold text-[#7A6E65] flex items-center gap-1">

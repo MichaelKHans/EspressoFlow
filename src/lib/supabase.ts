@@ -14,7 +14,7 @@ export interface GlobalCoffeeBean {
   roast_level: 'light' | 'medium' | 'dark';
   origin_country?: string;
   purchase_country: string; // e.g. 'DK', 'SE', 'NO', 'DE', 'IT'
-  purchase_location?: string; // Untappd-style retail store/venue (e.g. 'Føtex', 'Hedekaffe Gårdbutik', 'Meny', 'Online')
+  purchase_location?: string; // Retail store/venue (e.g. 'Føtex', 'Hedekaffe Gårdbutik', 'Meny', 'Online')
   suitable_for: string[]; // e.g. ['pure_espresso', 'flat_white', 'cortado', 'cappuccino']
   flavor_notes: string[];
   avg_rating: number;
@@ -34,7 +34,7 @@ export interface BeanDrinkRating {
   rating: number;
   drink_type: 'pure_espresso' | 'flat_white' | 'cortado' | 'cappuccino' | 'all_rounder';
   purchase_country: string;
-  purchase_location?: string; // Untappd-style store where coffee was purchased
+  purchase_location?: string; // Store or roastery where coffee was purchased
   brew_ratio?: string;
   comment?: string;
   created_at?: string;

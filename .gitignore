@@ -42,4 +42,5 @@ ios/App/Pods
 *.mp4
 *.mov
 *.m4v
-
+# Supabase temporary files
+supabase/.temp/

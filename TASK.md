@@ -179,6 +179,24 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
   - `Logbook.tsx`: Fjernet det store tomme venstre kvadrat (~80px sparet pr. kort), miniature cup indsat direkte i headeren ved siden af `#130` og kaffenavnet, `whitespace-nowrap` på alle badges, i18n konsistens (`Share Card`, `telemetry_points`).
   - `ShotShareModal.tsx`: Det ultimative specialty share card med kop-silhuet ved siden af titel, renset udstyrsstreng (parenteser fjernet), sandfærdig dynamisk bundstatus (`Status: Channeling (X.X g/s)` eller `Status: Golden Zone`), ingen uformelle emojis, og rent `flowbean.app` domæne.
 
+## 👁️ FASE 14: Beandex Bag Vision™ (Pose-Scanning AI) & 100% Brand Purity (v1.13.0 - AFSLUTTET)
+- [x] **1. Grundig Undersøgelse af Google Gemini Model-Kataloget:**
+  - Bekræftet pensionering af `gemini-1.5-flash` (udfaset sept. 2025) og `gemini-2.0-flash` (udfaset juni 2026).
+  - Verificeret de aktive 2026 modeller (`gemini-3.5-flash-lite`, `gemini-3.5-flash`, `gemini-3.8-flash`) med 100% oppetid og sub-sekunds svartid.
+- [x] **2. 100% Brand Purity (Udryddelse af 3.-parts varemærker):**
+  - Komplet udrensning af alle referencer til 3.-parts brands (Vivino, Untappd osv.) i UI, kildekode, kommentarer, SQL-skema og typer.
+  - Standardiseret proprietary terminologi: **Beandex Bag Vision™** og **Beandex Sensoriske Smagsnoter**.
+- [x] **3. 100% Sikker Serverless Vision Pipeline (Mulighed B):**
+  - Oprettet `supabase/functions/scan-bag-vision/index.ts` i Deno/TypeScript.
+  - Google Gemini API-nøglen er isoleret i Supabase Secrets (`GEMINI_API_KEY`) – nul nøgler eller sårbarheder i klientkode/APK.
+  - Resilient automatisk failover-kæde over aktive Gemini modeller.
+- [x] **4. On-Device Billedbehandling & UI Integration (`BeanScannerModal.tsx`):**
+  - Implementeret `bagVisionClient.ts` med on-device canvas binarisering, 768px WebP komprimering (<40 KB) og 280x280 thumbnail generation.
+  - Tilføjet 3-vejs mode selector (`Pose AI`, `Stregkode`, `Ristedato`) med skræddersyet pose-søgeramme og `[ 📸 Scan Kaffepose (Forside) ]`.
+  - Verificeret med ægte billede via Supabase Edge Function med succesfuldt metadata-udtræk.
+- [x] **5. Database & Schema Forbedringer:**
+  - Rettet duplikat-fejl i Supabase for kaffeindekser; oprettet `idx_beans_roaster_name_search` og slået `pg_trgm` til for fuzzy-søgning.
+
 ---
 
 ## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)

@@ -1,5 +1,5 @@
 /**
- * Espresso Flow - Vivino-Style Coffee Catalog, Fuzzy Matching & Autocomplete Engine
+ * Flowbean - Beandex Specialty Coffee Catalog, Fuzzy Matching & Autocomplete Engine
  * Prevents typos, duplicates, and enriches beans with standardized specialty coffee metadata.
  */
 
@@ -369,7 +369,7 @@ export interface DidYouMeanMatch {
 }
 
 /**
- * Vivino-style "Did You Mean...?" fuzzy match detector for roaster or bean typos
+ * Beandex "Did You Mean...?" fuzzy match detector for roaster or bean typos
  */
 export function findDidYouMeanBean(inputRoaster: string, inputName: string): DidYouMeanMatch | null {
   const rClean = inputRoaster.trim().toLowerCase();

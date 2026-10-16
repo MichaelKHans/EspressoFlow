@@ -6,7 +6,7 @@
 - [x] Forbind til GitHub repository `MichaelKHans/EspressoFlow`
 - [x] Klargør Vercel deployment til `espressoflow.vercel.app` (inkl. /privacy, /terms, /support)
 - [x] Computer Vision Scale OCR med 7-segment digitalvægts genkendelse
-- [x] Beandex Coffee Bean Vault & Vivino-style smagsnoter
+- [x] Beandex Coffee Bean Vault & sensoriske smagsnoter
 - [x] Central Bean Vault & Supabase Cloud Directory
 - [x] Rebrand til Flowbean (v1.4.0) med nye native ikoner til iOS & Android
 - [x] Pour Over & Specialty Filterkaffe Integration (v1.5.0)
@@ -16,3 +16,4 @@
 - [x] Zoom-Hukommelse, Total Udrensning af Haptisk Forstyrrelse & Cross-Scale Benchmark Test-Suite (v1.7.8)
 - [x] Nativ Android/iOS Shot Card Deling via Capacitor Plugins & Canvas Graf-Afgrænsning (v1.11.1)
 - [x] Komplet Visuel Overhaling af Kopper/Glas, Digital Barista Deck, Logbog & Det Ultimative Specialty Share Card (v1.12.0)
+- [x] Beandex Bag Vision™ (Optisk Kaffepose AI), 100% Brand Purity & Sikker Supabase Edge Function (v1.13.0)

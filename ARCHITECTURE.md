@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.12.0 (Visuel Overhaling af Kopper/Glas, Digital Barista Deck, Logbog & Det Ultimative Specialty Share Card)  
+> **Gældende version:** v1.13.0 (Beandex Bag Vision™ Pose-Scanning AI, Brand Purity & Sikker Supabase Edge Function)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -10,7 +10,7 @@
 1. [Systemfilosofi & Nøgleprincipper](#1-systemfilosofi--nøgleprincipper)
 2. [End-to-End Procesoverblik & Brugerrejser](#2-end-to-end-procesoverblik--brugerrejser)
 3. [Computer Vision & Væskemekanisk Telemetrimotor](#3-computer-vision--væskemekanisk-telemetrimotor)
-4. [Bønnescanning, Vivino-Matching & Kurator-Pipeline](#4-bønnescanning-vivino-matching--kurator-pipeline)
+4. [Bønnescanning, Beandex Bag Vision™ & Kurator-Pipeline](#4-bønnescanning-beandex-bag-vision--kurator-pipeline)
 5. [Dataarkitektur & Local-First Synkronisering](#5-dataarkitektur--local-first-synkronisering)
 6. [Komponenthierarki & State Ownership](#6-komponenthierarki--state-ownership)
 7. [Konsekvensanalyse & Afhængighedsmatrix (Impact Map)](#7-konsekvensanalyse--afhængighedsmatrix-impact-map)
@@ -61,7 +61,7 @@ flowchart TD
     NavTabs -- Bønnesamling (Beandex) --> Beandex[Beandex Kaffehvælving]
     Beandex --> BeanActions{Handling i Beandex}
     BeanActions -- Scan Pose --> BagScanner[Bean Scanner Modal<br/>Stregkode + Etiket Vision OCR]
-    BeanActions -- Manuel Oprettelse --> CreateBean[Opret Ny Bønne Formular<br/>Med Vivino-Autocomplete & Smagsnoter]
+    BeanActions -- Manuel Oprettelse --> CreateBean[Opret Ny Bønne Formular<br/>Med Beandex-Autocomplete & Smagsnoter]
     BeanActions -- Udforsk Fællesskab --> CloudVault[Central Cloud Bean Vault Modal]
     BagScanner --> FuzzyCheck[Fuzzy Matcher: Undgå 'Coffee 3019'<br/>og 'Mente du...?']
     CreateBean --> FuzzyCheck
@@ -196,18 +196,24 @@ flowchart LR
 
 ---
 
-## 4. BØNNESCANNING, VIVINO-MATCHING & KURATOR-PIPELINE
+## 4. BØNNESCANNING, BEANDEX BAG VISION™ & KURATOR-PIPELINE
 
-For at opnå en professionel Vivino-lignende oplevelse anvendes flertrins genkendelse og kvalitetssikring:
+For at opnå en professionel specialty coffee oplevelse anvendes flertrins optisk genkendelse og kvalitetssikring:
 
 ```mermaid
 flowchart TD
     %% Scanning
     CamFeed[Kamera / Billed-upload] --> ScanType{Scanningsfokus}
     
+    ScanType -- Beandex Bag Vision™ (Pose AI) --> CanvasScale[bagVisionClient: On-device WebP komprimering 768px <40KB]
+    CanvasScale --> EdgeFunction[Supabase Edge Function: scan-bag-vision]
+    EdgeFunction --> GeminiAPI[Google Gemini Flash Multimodal: 3.5-flash-lite / 3.8-flash]
+    GeminiAPI --> VisionJSON[Struktureret JSON: Risteri, Navn, Ristegrad, Oprindelse, Noter]
+    VisionJSON --> FillMeta[Autoudfyld Risteri, Navn, Oprindelse & Smagsnoter]
+
     ScanType -- Stregkode (EAN) --> BarcodeDecoder[Native BarcodeDetector API / Fallback]
     BarcodeDecoder --> LocalDB{Kendt i KNOWN_BARCODE_DATABASE?}
-    LocalDB -- Ja --> FillMeta[Autoudfyld Risteri, Navn, Oprindelse]
+    LocalDB -- Ja --> FillMeta
     LocalDB -- Nej --> QueryCloud[Slå op i Supabase Central Vault]
 
     ScanType -- Poseetiket & Dato --> OCRBag[OCR Tekstgenkendelse]
@@ -217,7 +223,7 @@ flowchart TD
     DateCheck -- Italiensk MHD (fx 30/03/2028) --> Subtract24Months[Træk 24 mdr fra: Estimeret Ristedato]
     DateCheck -- Ingen dato --> ManualDate[Bruger indtaster dato manuelt]
 
-    %% Vivino Autocomplete & Kvalitet
+    %% Beandex Autocomplete & Kvalitet
     FillMeta --> NameSanitizer[sanitizeBeanInput: Rens og valider]
     ManualDate --> NameSanitizer
     NameSanitizer --> FuzzyMatch[findDidYouMeanBean: Levenshtein Sammenligning]
@@ -323,7 +329,7 @@ graph TD
     App --> DrinkTab[DrinkSelector.tsx<br/>Barista Deck & Espresso/Pour Over Toggle]
     App --> PreBrewCoach[PreBrewCoachBanner.tsx<br/>Hukommelse & Proaktiv Kværnrådgivning før bryg]
     App --> MonitorTab[ScaleMonitor.tsx<br/>Live Scale Cam, OCR, Bloom/Steep & Flowgraf]
-    App --> BeandexTab[BeandexView.tsx<br/>Bønnekartotek, Vivino Smagsnoter, Fotos]
+    App --> BeandexTab[BeandexView.tsx<br/>Bønnekartotek, Beandex Smagsnoter, Fotos]
     App --> LogbookTab[Logbook.tsx<br/>Dagsopdelt historik, kurver & smag]
     App --> GearTab[GrinderFleet / Gear Setup<br/>Kværn-flåde & baropsætning]
     App --> AdminTab[AdminPortal.tsx<br/>Curator Studio & Godkendelsespult]
@@ -334,7 +340,7 @@ graph TD
 
     %% Modaler & Overlays (Teleporteret til document.body med z-[60] - Starter under Header ved --app-header-height + 0.5rem)
     App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]
-    App --> ScannerModal[BeanScannerModal.tsx<br/>Stregkode + Etiket OCR Scanner]
+    App --> ScannerModal[BeanScannerModal.tsx<br/>Beandex Bag Vision AI + Stregkode + Etiket OCR]
     App --> VaultModal[CentralBeanVaultModal.tsx<br/>Fællesskabs-katalog fra Supabase]
     App --> SummaryModal[ShotSummaryModal.tsx<br/>Hero Decision Card: God/For hurtig/For langsom & 1-klik kværnjustering]
     App --> ShareModal[ShotShareModal.tsx<br/>1080x1350 Canvas Barista Shot Card & Native Web Share]
@@ -360,7 +366,9 @@ graph TD
     %% Under-moduler
     MonitorTab --> OCR7Segment[ocr7segment.ts<br/>Computer Vision Core]
     MonitorTab --> MathLib[espressoMath.ts<br/>Moving Avg, Flow & Kanalisering]
-    BeandexTab --> CatalogMatcher[beanCatalogMatcher.ts<br/>Fuzzy Matcher, Vivino Tags, Komprimering]
+    BeandexTab --> CatalogMatcher[beanCatalogMatcher.ts<br/>Fuzzy Matcher, Beandex Tags, Komprimering]
+    ScannerModal --> BagVisionClient[bagVisionClient.ts<br/>768px WebP & Thumbnail]
+    ScannerModal --> GeminiBagVision[geminiBagVision.ts<br/>Supabase Edge Function Bro]
     AdminTab --> SupabaseLib[supabase.ts<br/>Cloud API, Verificering & Kuratering]
 ```
 

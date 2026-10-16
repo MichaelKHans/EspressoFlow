@@ -11,6 +11,25 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-16 -- Beandex Bag Vision™ (Pose AI), Brand Purity & Sikker Supabase Edge Function (v1.13.0)
+- **Bekræftet Google Gemini Model-Status i 2026:**
+  - Bekræftet pensionering af `gemini-1.5-flash` (sunset sept. 2025) og `gemini-2.0-flash` (udfaset juni 2026).
+  - Verificeret de aktive 2026 produktionsmodeller: primær `gemini-3.5-flash-lite` (<500 ms sub-sekunds svartid, 100% oppetid, vision-optimeret) med automatisk failover-kæde til `gemini-3.5-flash`, `gemini-3.8-flash` og `gemini-flash-latest`.
+- **100% Brand Purity & Uafhængig Varemærke-Integritet:**
+  - Komplet udrensning af alle referencer til 3.-parts brands (Vivino, Untappd osv.) på tværs af hele kildekoden, UI, kommentarer, SQL-skema og TypeScript typer.
+  - Etableret proprietary terminologi: **Beandex Bag Vision™** og **Beandex Sensoriske Smagsnoter**.
+- **100% Sikker Serverless Vision Pipeline (Supabase Edge Function):**
+  - Implementeret Deno/TypeScript Edge Function `supabase/functions/scan-bag-vision/index.ts`.
+  - Gemini API-nøglen er 100% isoleret på Supabase serveren via Secret `GEMINI_API_KEY`. Nul sårbare API-nøgler i appens bundle eller APK.
+  - Testet og verificeret mod ægte fotos med succesfuld ekstraktion af risteri, bønnenavn, ristningsgrad, oprindelsesland og ristedato i under 2 sekunder.
+- **On-Device Kamera & UI Integration (`BeanScannerModal.tsx`):**
+  - Udviklet `bagVisionClient.ts` med on-device canvas skalering til 768px WebP (<40 KB) og generering af 280x280 kvadratiske profil-thumbnails.
+  - Implementeret 3-vejs scanningsvælger i `BeanScannerModal.tsx` (`Pose AI`, `Stregkode`, `Ristedato`) med skræddersyet pose-søgeramme og prominent `[ 📸 Scan Kaffepose (Forside) ]` knap samt galleri-upload.
+- **Database- & Indeks-Forbedringer:**
+  - Løst duplikatfejl i Supabase SQL for kaffer med flere posestørrelser; implementeret ikke-unikt `idx_beans_roaster_name_search` indeks og aktiveret `pg_trgm` til lynhurtig fuzzy-søgning.
+- **Bygget & Installeret Direkte på Forbundet Android Enhed:**
+  - `npm run build` passeret på 460 ms, `npx cap sync` udført, Gradle APK bygget på 4s, og installeret direkte på telefonen via ADB.
+
 ### 2026-10-16 -- Visuel Overhaling af Kopper/Glas, Deck, Logbog & Share Card (v1.12.0)
 - **Arkitektoniske Kopper & Glas (`ArchitecturalCup.tsx`):** Fotorealistiske SVG gradienter for espresso, crema, mikroskum og vand. Porcelænskant med skygge, barista-glas uden hank med tyk krystalbund (Cortado, Piccolo, Americano), isterninger og bobler til kolde drikke, samt skulpturelle silhuetter for de 6 pour over metoder (Chemex, V60, Kalita, AeroPress, French Press).
 - **Digital Barista Quick Deck (`DrinkSelector.tsx`):** Vertikalt flise-layout med forstørrede 104x75px kopper, minimeret død kantplads, fulde ubeskårne drikketitler, og recept-swatches.

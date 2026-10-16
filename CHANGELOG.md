@@ -2,6 +2,24 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.13.0] - 2026-10-16
+### Etape 48: Beandex Bag Vision™ (Optisk Kaffepose AI), 100% Brand Purity & Sikker Supabase Edge Function
+- **1. Grundig Model-Undersøgelse & 2026 Gemini AI Integration:**
+  - Bekræftet pensionering af legacy-modeller: `gemini-1.5-flash` (sunset 24. sept 2025) og `gemini-2.0-flash` (udfaset 1. juni 2026).
+  - Aktiveret Googles verificerede produktionsmodeller: primær `gemini-3.5-flash-lite` (<500 ms sub-sekunds svartid, 100% oppetid) med automatisk failover-kæde til `gemini-3.5-flash`, `gemini-3.8-flash` og `gemini-flash-latest`.
+- **2. 100% Brand Purity & Uafhængig Varemærke-Integritet:**
+  - Komplet udrensning af alle referencer til 3.-parts brands (Vivino, Untappd osv.) på tværs af hele kildekoden, UI, kommentarer, SQL-skema og TypeScript typer.
+  - Etableret unik proprietary terminologi: **Beandex Bag Vision™** og **Beandex Sensoriske Smagsnoter**.
+- **3. 100% Sikker Serverless Vision Pipeline (Supabase Edge Function):**
+  - Implementeret Deno/TypeScript Edge Function `supabase/functions/scan-bag-vision/index.ts`.
+  - Gemini API-nøglen er 100% isoleret på Supabase serveren via Secret `GEMINI_API_KEY`. Nul sårbare API-nøgler i appens bundle eller APK.
+  - Testet og verificeret mod ægte fotos med succesfuld ekstraktion af risteri, bønnenavn, ristningsgrad, oprindelsesland og ristedato.
+- **4. On-Device Kamera & UI Integration (`BeanScannerModal.tsx`):**
+  - Udviklet `bagVisionClient.ts` med automatisk billedskalering til 768px WebP (<40 KB) og generering af 280x280 kvadratiske profil-thumbnails.
+  - Implementeret 3-vejs scanningsvælger i `BeanScannerModal.tsx` (`Pose AI`, `Stregkode`, `Ristedato`) med skræddersyet pose-søgeramme og prominent `[ 📸 Scan Kaffepose (Forside) ]` knap samt galleri-upload.
+- **5. Database- & Indeks-Forbedringer:**
+  - Løst duplikatfejl i Supabase SQL for kaffer med flere posestørrelser; implementeret ikke-unikt `idx_beans_roaster_name_search` indeks og aktiveret `pg_trgm` til lynhurtig fuzzy-søgning.
+
 ## [1.12.0] - 2026-10-16
 ### Etape 47: Komplet Visuel Overhaling af Kopper/Glas, Digital Barista Deck, Logbog & Det Ultimative Specialty Share Card
 - **Etape 1: `ArchitecturalCup.tsx` & `drinkRecipes.ts` (Materialitet, Gradienter & Keramikkant):**

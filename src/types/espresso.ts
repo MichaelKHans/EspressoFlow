@@ -55,14 +55,14 @@ export interface CoffeeBeanProfile {
   rating?: number; // 1 to 5 stars
   isFavorite?: boolean;
   purchaseCountry?: string; // e.g. 'DK', 'SE', 'NO', 'DE'
-  purchaseLocation?: string; // Untappd-style store/venue (e.g. 'Føtex', 'Hedekaffe Gårdbutik', 'Meny', 'Online')
+  purchaseLocation?: string; // Retail store/venue (e.g. 'Føtex', 'Hedekaffe Gårdbutik', 'Meny', 'Online')
   suitableFor?: string[]; // e.g. ['pure_espresso', 'flat_white', 'cortado', 'cappuccino']
   communityRating?: number;
   communityVotes?: number;
   expertScore?: number; // 0-100 scale (e.g. 94.0 from Coffee Review or SCA Q-Grader)
   expertSource?: string; // e.g. 'Coffee Review' | 'SCA Cupping' | 'Cup of Excellence'
   imageUrl?: string; // Optional bag photo thumbnail (data URL or cloud link)
-  flavorNotes?: string[]; // Vivino-style sensory flavor tags (e.g. ['Dark Chocolate', 'Caramel'])
+  flavorNotes?: string[]; // Beandex sensory flavor tags (e.g. ['Dark Chocolate', 'Caramel'])
   originCountry?: string; // Origin region or country (e.g. 'Colombia', 'Vestjylland')
   pourOverGrindSetting?: string; // Grind setting for filter / pour over
   pourOverDoseGrams?: number;

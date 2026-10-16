@@ -212,7 +212,7 @@ CREATE POLICY "Allow public insert bean_drink_ratings" ON bean_drink_ratings FOR
 DROP POLICY IF EXISTS "Allow public delete bean_drink_ratings" ON bean_drink_ratings;
 CREATE POLICY "Allow public delete bean_drink_ratings" ON bean_drink_ratings FOR DELETE USING (true);
 
--- 6. VERIFIED SPECIALTY SEEDS (Clean: Only genuine public cup records, Untappd retail locations, 0 user ratings)
+-- 6. VERIFIED SPECIALTY SEEDS (Clean: Only genuine public cup records, Retail locations, 0 user ratings)
 INSERT INTO global_coffee_beans (barcode, roaster, name, roast_level, origin_country, purchase_country, purchase_location, suitable_for, flavor_notes, avg_rating, ratings_count, is_verified, expert_score, expert_source)
 VALUES
   ('4056489503019', 'Hedekaffe', 'Ristemesterens Foretrukne Mellemristet', 'medium', 'Sydamerika & Indonesien (Ulfborg)', 'DK', 'Hedekaffe Gårdbutik (Ulfborg) / Webshop', ARRAY['pure_espresso', 'flat_white', 'cortado', 'cappuccino'], ARRAY['Mørk Chokolade', 'Ristede Nødder', 'Karamel'], 0.00, 0, true, NULL, NULL),
@@ -1475,7 +1475,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <label className="text-[10px] text-[#7A6E65] uppercase font-mono flex items-center justify-between mb-1">
                         <span className="flex items-center gap-1 font-bold text-[#2C2018]">
                           <Store className="w-3.5 h-3.5 text-[#C26D52]" />
-                          <span>Købssted / Butik (Untappd-stil)</span>
+                          <span>Købssted / Kaffebar / Butik</span>
                         </span>
                         <span className="text-[9.5px] text-[#A6998E]">Hvor kan kaffen købes?</span>
                       </label>
@@ -1551,11 +1551,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       </div>
                     </div>
 
-                    {/* Vivino Sensory Flavor Pills Selector */}
+                    {/* Beandex Sensory Flavor Pills Selector */}
                     <div className="sm:col-span-2 space-y-1.5">
                       <label className="text-[10px] text-[#7A6E65] uppercase font-mono font-bold flex items-center gap-1.5">
                         <Tag className="w-3.5 h-3.5 text-[#C26D52]" />
-                        <span>Vivino Sensoriske Smagsnoter</span>
+                        <span>Beandex Sensoriske Smagsnoter</span>
                       </label>
                       <div className="flex flex-wrap gap-1.5">
                         {POPULAR_FLAVOR_TAGS.map((tag) => {
@@ -1960,7 +1960,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <label className="text-[10px] text-[#7A6E65] uppercase font-mono flex items-center justify-between mb-1">
                         <span className="flex items-center gap-1 font-bold text-[#2C2018]">
                           <Store className="w-3.5 h-3.5 text-[#C26D52]" />
-                          <span>Købssted / Butik (Untappd-stil)</span>
+                          <span>Købssted / Kaffebar / Butik</span>
                         </span>
                         <span className="text-[9.5px] text-[#A6998E]">Hvor kan kaffen købes?</span>
                       </label>
@@ -2020,7 +2020,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <div className="sm:col-span-2 space-y-1.5">
                       <label className="text-[10px] text-[#7A6E65] uppercase font-mono font-bold flex items-center gap-1.5">
                         <Tag className="w-3.5 h-3.5 text-[#C26D52]" />
-                        <span>Vivino Sensoriske Smagsnoter</span>
+                        <span>Beandex Sensoriske Smagsnoter</span>
                       </label>
                       <div className="flex flex-wrap gap-1.5">
                         {POPULAR_FLAVOR_TAGS.map((tag) => {

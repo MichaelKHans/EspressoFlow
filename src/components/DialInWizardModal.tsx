@@ -463,7 +463,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               {currentMatch?.reason || guidance.whyIdeal} {guidance.idealFlavorNotes && `• Target notes: ${guidance.idealFlavorNotes}`}
             </p>
 
-            {/* Vivino-style Active Bean Flavor Notes */}
+            {/* Beandex Active Bean Flavor Notes */}
             {activeBean.flavorNotes && activeBean.flavorNotes.length > 0 && (
               <div className="flex flex-wrap gap-1 pt-1 border-t border-[#E8DFD5]/40">
                 {activeBean.flavorNotes.map((note, idx) => (
