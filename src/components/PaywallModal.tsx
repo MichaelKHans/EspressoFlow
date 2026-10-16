@@ -73,18 +73,28 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
           </p>
         </div>
 
-        {/* Pricing Box */}
-        <div className="bg-[#FAF7F2] rounded-xl border border-[#E8DFD5] p-4 text-center mb-5">
-          <div className="text-3xl font-extrabold text-[#2C2018] font-mono">
-            {t('paywall.price')}
+        {/* Pricing Box - Vivino-style Luxury Coffee Card with Macro Backdrop */}
+        <div className="relative overflow-hidden rounded-2xl border border-[#C26D52]/40 bg-gradient-to-br from-[#241710] via-[#1B110B] to-[#120B07] text-[#FAF7F2] p-5 text-center mb-5 shadow-lg">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+            <img
+              src="/images/coffee-beans-macro.jpg"
+              alt=""
+              className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#140D09]/95 via-[#1E1510]/80 to-[#140D09]/60" />
           </div>
-          <div className="text-[11px] font-mono text-[#C26D52] font-semibold mt-1">
-            {t('paywall.pay_once')}
-          </div>
-          <div className="text-[11px] text-[#7A6E65] mt-1">
-            {accessState.isWithinTrial
-              ? t('paywall.trial_status', { days: accessState.daysRemainingInTrial })
-              : t('paywall.expired_status')}
+          <div className="relative z-10">
+            <div className="text-3xl font-extrabold text-[#FFFDF9] font-mono tracking-tight">
+              {t('paywall.price')}
+            </div>
+            <div className="text-xs font-mono text-[#E58367] font-bold mt-1 tracking-wide">
+              {t('paywall.pay_once')}
+            </div>
+            <div className="text-[11px] text-[#DECFC0]/80 mt-1">
+              {accessState.isWithinTrial
+                ? t('paywall.trial_status', { days: accessState.daysRemainingInTrial })
+                : t('paywall.expired_status')}
+            </div>
           </div>
         </div>
 

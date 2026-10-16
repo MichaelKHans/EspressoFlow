@@ -25,6 +25,13 @@
 - **100% Hardware-Accelereret GPU-Ydeevne (`index.css`):**
   - Udelukkende CSS `translate3d(...) rotate(...)` med `will-change: transform`.
   - Nul JavaScript CPU-loops, 0 ms main thread latenstid, nul batteridræn. Understøtter `prefers-reduced-motion`.
+- **Vivino-Style Makrografik på Mørke Kort (`DrinkSelector.tsx`, `BeandexView.tsx`, `PaywallModal.tsx`):**
+  - *Beandex Hero Banner:* Mørkristede specialty bønner med gylden rav-rimlight (`coffee-beans-macro.jpg`).
+  - *Barista Deck Hero Banner:* Nærbillede af espresso-dråbe med koncentriske ringe og fløjlsblød crema (`crema-ripple-macro.jpg`).
+  - *Paywall Pricing Card:* Luksuskort i mørk kaffeglans med ravfarvet dybde.
+- **Oprydning af Gentagelse på Tom Bønnehylde:**
+  - Fjernet de 4 overflødige gentagne knapper nede i den tomme bønnekasse, så Hero-banneret forbliver det eneste klare kommandocenter.
+  - Rettet pris-filtertekst til `Price Tier: All Prices` og fjernet rå `({count})` strenge fra fane-knapperne.
 - **Testet og Verificeret:**
   - `npm run build` passeret 100% fejlfrit, `npx cap sync` synkroniseret.
 

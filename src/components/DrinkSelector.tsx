@@ -303,7 +303,18 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6 animate-fadeIn pb-8 sm:pb-12">
       {/* 1. Barista Deck Hero Banner (Mobile Optimized) */}
-      <div className="bg-gradient-to-br from-[#2C2018] to-[#3D2D22] text-[#FAF7F2] p-3 sm:p-5 rounded-2xl sm:rounded-3xl shadow-md border border-[#2C2018] relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] p-3 sm:p-5 rounded-2xl sm:rounded-3xl shadow-md border border-[#3D2D22] relative overflow-hidden">
+        {/* Cinematic Coffee Droplet Crema Ripple Macro Backdrop */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+          <img
+            src="/images/crema-ripple-macro.jpg"
+            alt=""
+            className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/95 via-[#1E130D]/80 to-[#140C08]/65" />
+          <div className="absolute inset-0 bg-radial from-transparent via-[#140C08]/50 to-[#140C08]/90" />
+        </div>
+
         {/* Subtle background ambient glow */}
         <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#C26D52]/20 blur-3xl pointer-events-none" />
 

@@ -18,6 +18,13 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
   - Bygget udelukkende med CSS `transform: translate3d(...) rotate(...)` og `will-change: transform`.
   - Nul JavaScript CPU-loops, nul memory leaks, nul batteridræn på mobiltelefonen.
   - Automatisk understøttelse af `prefers-reduced-motion` for tilgængelighed.
+- **4. Vivino-Style Makrografik på Mørke Kort (`DrinkSelector.tsx`, `BeandexView.tsx`, `PaywallModal.tsx`):**
+  - *Beandex Hero Banner:* Fotorealistisk makro af mørkristede specialty bønner med gylden rav-rimlight (`coffee-beans-macro.jpg`) blødt indtonet med luminosity og vignet.
+  - *Barista Deck Hero Banner:* Nærbillede af espresso-dråbe, der rammer koppen og skaber gyldne koncentriske ringe og fløjlsblød crema (`crema-ripple-macro.jpg`).
+  - *Paywall Pricing Card:* Forvandlet til et eksklusivt luksuskort med mørk kaffeglans.
+- **5. Oprydning af Gentagelse på Tom Bønnehylde:**
+  - Fjernet de 4 overflødige gentagne knapper nede i den tomme bønnekasse, så Hero-banneret forbliver det eneste klare kommandocenter.
+  - Rettet pris-filtertekst til `Price Tier: All Prices` / `Prisniveau: Alle Priser` og fjernet rå `({count})` strenge fra fane-knapperne.
 
 ## [1.16.0] - 2026-10-16
 ### Etape 52: Verdensklasse Kaffebønner, Prisniveau-Kategorisering & Beandex Matchmaker™ Smagsfinder

@@ -479,8 +479,19 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     <div className="space-y-6 font-mono text-xs animate-fadeIn">
       {/* 1. Beandex Hero Banner with Rich Visual Contrast Spring */}
       <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-[#1E1510] via-[#2A1D15] to-[#140D09] text-[#FAF7F2] p-5 sm:p-6 border border-[#3D2D22] shadow-xl">
-        <div className="absolute -right-8 -top-8 w-40 h-40 bg-[#C26D52]/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute right-12 bottom-0 w-28 h-28 bg-[#D4A373]/10 rounded-full blur-xl pointer-events-none" />
+        {/* Cinematic Roasted Specialty Coffee Beans Macro Backdrop (Vivino-style luxury atmosphere) */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+          <img
+            src="/images/coffee-beans-macro.jpg"
+            alt=""
+            className="w-full h-full object-cover object-center opacity-35 mix-blend-luminosity scale-105"
+          />
+          <div className="absolute inset-0 bg-linear-to-r from-[#140D09]/95 via-[#1E1510]/80 to-[#140D09]/65" />
+          <div className="absolute inset-0 bg-radial from-transparent via-[#140D09]/50 to-[#140D09]/90" />
+        </div>
+
+        <div className="absolute -right-8 -top-8 w-40 h-40 bg-[#C26D52]/15 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute right-12 bottom-0 w-28 h-28 bg-[#D4A373]/15 rounded-full blur-xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
