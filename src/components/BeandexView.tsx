@@ -1025,16 +1025,44 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 </button>
               </>
             ) : (
-              <div className="py-6 px-4 rounded-xl space-y-2 max-w-sm mx-auto">
+              <div className="py-6 px-4 rounded-xl space-y-3 max-w-sm mx-auto">
                 <Coffee className="w-8 h-8 text-[#C26D52]/70 mx-auto" />
                 <h4 className="text-xs font-bold uppercase font-mono text-[#2C2018]">
                   {language === 'da' ? 'Bønnehylden er tom' : 'Coffee Shelf is Empty'}
                 </h4>
                 <p className="text-xs text-[#7A6E65] font-sans leading-relaxed">
                   {language === 'da'
-                    ? 'Brug handlingsknapperne foroven i Beandex-kortet til at scanne en pose, tjekke ristedato eller finde dit kaffematch.'
-                    : 'Use the action buttons in the card above to scan a bag, check roast dates, or find your coffee match.'}
+                    ? 'Scan din første kaffepose med kameraet eller tilføj manuelt for at starte dit kartotek.'
+                    : 'Scan your first coffee bag with the camera or add manually to start your inventory.'}
                 </p>
+                <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={onOpenScanner}
+                    className="px-4 py-2 rounded-xl bg-linear-to-r from-[#C26D52] to-[#A85840] hover:brightness-110 text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>{t('beandex.scan_bag_btn')}</span>
+                  </button>
+                  {onOpenRadar && (
+                    <button
+                      type="button"
+                      onClick={onOpenRadar}
+                      className="px-3.5 py-2 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Zap className="w-3.5 h-3.5 text-[#C26D52] fill-[#C26D52]" />
+                      <span>{t('radar.btn')}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingCustomBag(true)}
+                    className="px-3.5 py-2 rounded-xl border border-[#E8DFD5] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{t('beandex.add_bag_btn')}</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
