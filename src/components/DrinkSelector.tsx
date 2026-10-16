@@ -303,7 +303,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6 animate-fadeIn pb-8 sm:pb-12">
       {/* 1. Barista Deck Hero Banner (Mobile Optimized) */}
-      <div className="bg-gradient-to-br from-[#2C2018] to-[#3D2D22] text-[#FAF7F2] p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border border-[#2C2018] relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#2C2018] to-[#3D2D22] text-[#FAF7F2] p-3 sm:p-5 rounded-2xl sm:rounded-3xl shadow-md border border-[#2C2018] relative overflow-hidden">
         {/* Subtle background ambient glow */}
         <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#C26D52]/20 blur-3xl pointer-events-none" />
 
@@ -385,7 +385,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
           </div>
 
           {/* Symmetrical 2-Column Grid (Responsive Vertical Barista Tiles) */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
             {displayDeckDrinks.map((drink) => {
               const isSelected = drink.id === selectedDrink.id;
               const shortName = drink.name.split('/')[0].trim();
@@ -397,20 +397,20 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   key={drink.id}
                   type="button"
                   onClick={() => handleSelectDrinkWithScroll(drink)}
-                  className={`flex flex-col items-center text-center p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
+                  className={`flex flex-col items-center text-center p-1.5 pt-2 pb-2.5 sm:p-2.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
                     isSelected
-                      ? 'bg-[#B85D43] border-[#E08A70] text-[#FFFDF9] shadow-lg ring-2 ring-white/30 scale-[1.02]'
-                      : 'bg-[#241A14]/95 border-[#4A382C] text-[#FAF7F2] hover:border-[#7A5C48] hover:bg-[#2C2018]'
+                      ? 'bg-[#B85D43] border-[#E08A70] text-[#FFFDF9] shadow-lg scale-[1.01]'
+                      : 'bg-[#241A14]/95 border-[#3D2D22] text-[#FAF7F2] hover:border-[#7A5C48] hover:bg-[#2C2018]'
                   }`}
                 >
-                  {/* Generous Cup Showcase */}
-                  <div className="w-full h-13 sm:h-14 flex items-center justify-center mb-1.5 transition-transform group-hover:scale-105">
-                    <ArchitecturalCup drink={drink} size="sm" variant="dark" />
+                  {/* Generous Hero Cup Showcase */}
+                  <div className="w-full h-20 flex items-center justify-center transition-transform group-hover:scale-105">
+                    <ArchitecturalCup drink={drink} size="md" variant="dark" />
                   </div>
 
                   {/* Drink Name - Full Width Without Ugly Truncation */}
                   <h5
-                    className="w-full font-serif text-[13px] sm:text-[14px] font-bold leading-tight line-clamp-2 px-0.5 min-h-[2.2em] flex items-center justify-center"
+                    className="w-full font-serif text-[13px] sm:text-[14px] font-bold leading-tight truncate px-1 mt-1"
                     title={drink.name}
                   >
                     {shortName}
@@ -418,7 +418,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
                   {/* Subtitle / Volume & Ratio */}
                   <p
-                    className={`w-full font-sans text-[11px] mt-0.5 font-medium ${
+                    className={`w-full font-sans text-[10.5px] sm:text-[11px] mt-0.5 font-medium ${
                       isSelected ? 'text-[#FAF7F2]/90' : 'text-[#A39589]'
                     }`}
                   >

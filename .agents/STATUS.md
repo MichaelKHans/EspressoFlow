@@ -1238,7 +1238,7 @@
   - Desserter: Affogato fior di latte gelato-kugle, Con Panna skulpturel flødeskumstop.
   - Unikke Pour Over silhuetter: Chemex timeglas med trækrave og lædersnor, V60 med 60° spiralriller, Kalita med flad bund og bølgekant, AeroPress uden hank med måleskala og bajonethætte, French Press med stålgitter og stempel.
 - **Etape 3: `DrinkSelector.tsx` (Digital Barista Deck & Typografi):**
-  - Vertikale Barista Fliser på Quick Deck: Omlagt til et vertikalt flise-layout (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`), hvor koppen er over dobbelt så stor (`size="sm"` i `h-14` container) og drikketitlen har fuld bredde uden afskæring ('Cappuccino' og 'Double Espresso' fremstår 100% ubeskåret).
+  - Vertikale Barista Fliser på Quick Deck: Omlagt til et vertikalt flise-layout (`grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5`), hvor koppen er forstørret til 104x75px hero-størrelse (`size="md"` i `h-20` container) og unødig død kantplads (`p-1.5 pt-2 pb-2.5 sm:p-2.5`) er minimeret, så koppen fylder over 65% af kortet, og drikketitlen har fuld bredde uden afskæring ('Cappuccino' og 'Double Espresso' fremstår 100% ubeskåret).
   - Ingrediens-Swatches i Cup Anatomy: Erstattet de cirkulære prikker med stilrene rektangulære recept-swatches (`w-3.5 h-2.5 rounded-xs border border-[#CBB8A3]`), så mælkeskum ikke længere forveksles med en ikke-valgt radioknap.
   - Fuld Læsbarhed i Master Card: Fjernet `line-clamp-2` fra drikkebeskrivelsen for at undgå hårde sætningsafskæringer med `...`.
   - Opstrammet Master-kort: Forenklet samlet Grinder & Bean-kort med `divide-y / divide-x` uden "box-in-box" tunghed.

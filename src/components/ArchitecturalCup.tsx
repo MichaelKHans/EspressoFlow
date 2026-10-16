@@ -21,8 +21,8 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
   // Mobile-first dimension scaling
   const pixelSizes = {
     xs: { width: 28, height: 24 },
-    sm: { width: 44, height: 36 },
-    md: { width: 68, height: 56 },
+    sm: { width: 48, height: 38 },
+    md: { width: 104, height: 75 },
     lg: { width: 140, height: 110 },
   };
 

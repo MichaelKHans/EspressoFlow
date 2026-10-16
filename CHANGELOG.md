@@ -19,7 +19,7 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
     - AeroPress: Cylindrisk ekstraktionskammer UDEN hank, med millimeter-måleskala (1-4) og perforeret bajonet-filterhætte.
     - French Press: Bodum-stil stempelkande med forkromet stålgitter, lodret stempelstang og spiralformet trådnet.
 - **Etape 3: `DrinkSelector.tsx` (Digital Barista Deck & Typografi):**
-  - Vertikale Barista Fliser på Quick Deck: Omlagt til et vertikalt flise-layout (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`), hvor koppen er over dobbelt så stor (`size="sm"` i `h-14` container) og drikketitlen har fuld bredde uden afskæring ('Cappuccino' og 'Double Espresso' fremstår 100% ubeskåret).
+  - Vertikale Barista Fliser på Quick Deck: Omlagt til et vertikalt flise-layout (`grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5`), hvor koppen er forstørret til 104x75px hero-størrelse (`size="md"` i `h-20` container), unødig død kantplads (`p-1.5 pt-2 pb-2.5 sm:p-2.5`) er minimeret, så koppen fylder over 65% af kortet, og drikketitlen har fuld bredde uden afskæring ('Cappuccino' og 'Double Espresso' fremstår 100% ubeskåret).
   - Ingrediens-Swatches i Cup Anatomy: Erstattet de cirkulære prikker med stilrene rektangulære recept-swatches (`w-3.5 h-2.5 rounded-xs border border-[#CBB8A3]`), så mælkeskum ikke længere forveksles med en ikke-valgt radioknap.
   - Fuld Læsbarhed i Master Card: Fjernet `line-clamp-2` fra drikkebeskrivelsen for at undgå hårde sætningsafskæringer med `...`.
   - Opstrammet Master-kort: Forenklet samlet Grinder & Bean-kort med `divide-y / divide-x` uden "box-i-box" tunghed.
