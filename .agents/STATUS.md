@@ -1247,7 +1247,13 @@
   - `FlowChart.tsx`: Strikt SVG `<clipPath id="chart-area-clip">` og clamping forhindrer udbrud; responsiv header (`flex-col sm:flex-row gap-1.5`) holder kurveoverskrift på én linje på mobil.
   - `Logbook.tsx`: Fjernet det store tomme venstre kvadrat (~80px sparet pr. kort), miniature cup indsat direkte i headeren ved siden af `#130` og kaffenavnet, `whitespace-nowrap` på alle badges, i18n konsistens (`Share Card`, `telemetry_points`).
   - `ShotShareModal.tsx`: Det ultimative specialty share card med kop-silhuet ved siden af titel, renset udstyrsstreng (parenteser fjernet), sandfærdig dynamisk bundstatus (`Status: Channeling (X.X g/s)` eller `Status: Golden Zone`), ingen uformelle emojis, og rent `flowbean.app` domæne.
+- **Etape 6: Visuel Perfektion af Share Shot Card (`ShotShareModal.tsx`):**
+  - **Officielt Flowbean Logo:** Erstattet den primitive håndtegnede cirkel med det officielle `flowbean-logo.png` (bønne med gyldne crema-bølger) i en skarp 64x64px badge med keramikkant.
+  - **Opgraderet Subtitle:** Rettet 'ESPRESSO LAB TELEMETRY' til det slagkraftige barista-brand 'DIGITAL BARISTA EXTRACTION FLOW'.
+  - **Graf Forklaring & Sprog-ensretning:** Tilføjet en ren signaturforklaring (⚪ Yield, ╌ Flow, 🟨 Target Zone) i toppen af kurven; rettet 'MÅL' til '🎯 TARGET: 1.2–1.8 g/s' og 'Gns. Flow' til 'AVG FLOW' for international standard.
+  - **Målrettet Feature-Showcase & QR-Kode:** Fjernet unødig spildtekst og indført en integreret scanning-badge med offline 25x25 QR-kode (`https://flowbean.app`) samt fremhævning af kerneteknologier: `Scale OCR Cam`, `Flow Dynamics` og `Beandex Vault`.
 - **Lokal Verifikation & Android Studio Synkronisering:**
-  - `npm run build` testet og bekræftet 100% fejlfri (0 fejl, 554ms).
+  - `npm run build` testet og bekræftet 100% fejlfri (0 fejl, 492ms).
   - `npm run mobile:sync` synkroniseret web assets til Android og iOS.
-  - **Kritisk Fix af Android Studio Launch Hang:** Flyttet 3 store skærmoptagelser (1.31 GB MP4) ud af `public/` og ind i `diagnostics/recordings/`. APK-størrelsen blev reduceret med 99,6% fra 1.32 GB til kun 5.49 MB, hvilket fik Wireless ADB installationen og launch til at gennemføre lynhurtigt på under 4 sekunder.
+  - APK-bygning med gradlew gennemført på 5 sekunder, installeret og startet via ADB på OnePlus enhed.
+

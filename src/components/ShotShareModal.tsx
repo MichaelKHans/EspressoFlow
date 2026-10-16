@@ -7,6 +7,35 @@ import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
+// 25x25 Version 2 QR matrix for https://flowbean.app (Offline reliable fallback)
+const FLOWBEAN_QR_MATRIX: string[] = [
+  '1111111000000110001111111',
+  '1000001010111000001000001',
+  '1011101011101010101011101',
+  '1011101011001101101011101',
+  '1011101001111010001011101',
+  '1000001000111000001000001',
+  '1111111010101010101111111',
+  '0000000011111001100000000',
+  '1000001010010110011001110',
+  '0110100001011001000111110',
+  '1101001101011001110011011',
+  '0001110111011000001101001',
+  '1111011111100111101100001',
+  '1110110100101101100100010',
+  '1001001110100111110111011',
+  '1011110010101110010101101',
+  '1000101010001011111110100',
+  '0000000010100000100010000',
+  '1111111001001110101010001',
+  '1000001001110011100010001',
+  '1011101000010001111110111',
+  '1011101001001100011000011',
+  '1011101000000111010001101',
+  '1000001001101100111110001',
+  '1111111010111100100001001',
+];
+
 interface ShotShareModalProps {
   isOpen: boolean;
   shot: ShotRecord | null;
@@ -16,6 +45,8 @@ interface ShotShareModalProps {
 export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, onClose }) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const logoImgRef = useRef<HTMLImageElement | null>(null);
+  const qrImgRef = useRef<HTMLImageElement | null>(null);
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [isSharing, setIsSharing] = useState<boolean>(false);
@@ -56,26 +87,44 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.lineWidth = 2;
     ctx.strokeRect(36, 36, W - 72, H - 72);
 
-    // 2. Header: Logo & Branding
-    ctx.fillStyle = '#C26D52';
-    ctx.beginPath();
-    ctx.arc(90, 95, 22, 0, Math.PI * 2);
-    ctx.fill();
+    // 2. Header: Official Flowbean Logo & Branding
+    const logoX = 62;
+    const logoY = 62;
+    const logoSize = 64;
 
-    // Coffee Bean curve inside logo
-    ctx.strokeStyle = '#FAF7F2';
-    ctx.lineWidth = 4;
+    ctx.save();
     ctx.beginPath();
-    ctx.arc(90, 95, 14, 0.4, 2.7);
+    ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+
+    if (logoImgRef.current && logoImgRef.current.complete && logoImgRef.current.naturalWidth > 0) {
+      ctx.drawImage(logoImgRef.current, logoX, logoY, logoSize, logoSize);
+    } else {
+      // Warm roasted espresso background with coffee bean swirl
+      ctx.fillStyle = '#2C2018';
+      ctx.fillRect(logoX, logoY, logoSize, logoSize);
+      ctx.fillStyle = '#FAF7F2';
+      ctx.beginPath();
+      ctx.ellipse(logoX + 28, logoY + 32, 14, 20, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Terracotta ring around logo
+    ctx.strokeStyle = '#C26D52';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.fillStyle = '#FAF7F2';
-    ctx.font = 'bold 32px "Courier Prime", monospace';
-    ctx.fillText('FLOWBEAN', 130, 95);
+    ctx.font = 'bold 34px "Courier Prime", monospace';
+    ctx.fillText('FLOWBEAN', 142, 94);
 
     ctx.fillStyle = '#C26D52';
-    ctx.font = 'bold 16px "Courier Prime", monospace';
-    ctx.fillText('ESPRESSO LAB TELEMETRY', 132, 118);
+    ctx.font = 'bold 15px "Courier Prime", monospace';
+    ctx.fillText('DIGITAL BARISTA EXTRACTION FLOW', 144, 118);
 
     // Date & Time
     const shotDate = new Date(shot.timestamp);
@@ -104,7 +153,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
                     drinkNameUpper.includes('TONIC') ||
                     drinkNameUpper.includes('AMERICANO');
 
-    // Silhouette icon
+    // Silhouette icon (refined cup with saucer & handle or faceted tumbler)
     ctx.save();
     ctx.fillStyle = 'rgba(194, 109, 82, 0.25)';
     ctx.strokeStyle = '#C26D52';
@@ -113,25 +162,35 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     if (isGlass) {
       // Tumbler / Faceted glass
       ctx.beginPath();
-      ctx.moveTo(64, 184);
-      ctx.lineTo(92, 184);
-      ctx.lineTo(88, 214);
-      ctx.lineTo(68, 214);
+      ctx.moveTo(64, 182);
+      ctx.lineTo(94, 182);
+      ctx.lineTo(88, 216);
+      ctx.lineTo(70, 216);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
+      // Crystal sham base
+      ctx.strokeStyle = '#FAF7F2';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(70, 212, 18, 4);
     } else {
-      // Demitasse / Ceramic cup with handle
+      // Ceramic cup with saucer & handle
+      // Saucer
       ctx.beginPath();
-      ctx.moveTo(64, 186);
-      ctx.lineTo(88, 186);
-      ctx.quadraticCurveTo(88, 214, 76, 214);
-      ctx.quadraticCurveTo(64, 214, 64, 186);
+      ctx.ellipse(78, 218, 18, 3, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      // Cup body
+      ctx.beginPath();
+      ctx.moveTo(65, 184);
+      ctx.lineTo(91, 184);
+      ctx.quadraticCurveTo(91, 214, 78, 214);
+      ctx.quadraticCurveTo(65, 214, 65, 184);
+      ctx.closePath();
       ctx.fill();
       ctx.stroke();
       // Handle
       ctx.beginPath();
-      ctx.arc(92, 198, 5.5, -Math.PI / 2, Math.PI / 2);
+      ctx.arc(94, 196, 5.5, -Math.PI / 2, Math.PI / 2);
       ctx.stroke();
     }
     ctx.restore();
@@ -139,7 +198,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     // Drink badge (placed beside cup silhouette)
     ctx.fillStyle = '#C26D52';
     ctx.beginPath();
-    ctx.roundRect(108, 180, 220, 38, 8);
+    ctx.roundRect(110, 180, 220, 38, 8);
     ctx.fill();
     ctx.fillStyle = '#FAF7F2';
     ctx.font = 'bold 18px "Courier Prime", monospace';
@@ -214,10 +273,28 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Chart Header inside box
+    // Chart Header inside box with visual legend
     ctx.fillStyle = '#FAF7F2';
-    ctx.font = 'bold 22px "Courier Prime", monospace';
-    ctx.fillText('EXTRACTION DYNAMICS & FLOW RATE', chartX + 24, chartY + 40);
+    ctx.font = 'bold 20px "Courier Prime", monospace';
+    ctx.fillText('EXTRACTION DYNAMICS & FLOW RATE', chartX + 24, chartY + 38);
+
+    // Legend on the right side of chart header
+    const legendRight = chartX + chartW - 24;
+    ctx.textAlign = 'right';
+    ctx.font = '13px "Courier Prime", monospace';
+
+    // Golden zone
+    ctx.fillStyle = '#D4A373';
+    ctx.fillText('🟨 Target (1.2-1.8)', legendRight, chartY + 38);
+
+    // Flow
+    ctx.fillStyle = '#C26D52';
+    ctx.fillText('╌ Flow (g/s)', legendRight - 180, chartY + 38);
+
+    // Yield
+    ctx.fillStyle = '#FAF7F2';
+    ctx.fillText('─ Yield (g)', legendRight - 310, chartY + 38);
+    ctx.textAlign = 'left';
 
     const rawPoints = shot.dataPoints || [];
 
@@ -328,11 +405,11 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
       const gzBadgeTop = mapYFlow(THE_GOLDEN_ZONE.MAX_FLOW_GPS);
       ctx.fillStyle = 'rgba(255, 253, 249, 0.95)';
       ctx.beginPath();
-      ctx.roundRect(pLeft + 12, gzBadgeTop + 4, 160, 22, 4);
+      ctx.roundRect(pLeft + 12, gzBadgeTop + 4, 175, 22, 4);
       ctx.fill();
       ctx.fillStyle = '#8A5A2B';
       ctx.font = 'bold 12px "Courier Prime", monospace';
-      ctx.fillText('🎯 MÅL: 1.2–1.8 g/s', pLeft + 20, gzBadgeTop + 19);
+      ctx.fillText('🎯 TARGET: 1.2–1.8 g/s', pLeft + 18, gzBadgeTop + 19);
 
       // Y-axis grid (Weight left)
       ctx.fillStyle = '#A39589';
@@ -379,22 +456,23 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
 
     ctx.fillStyle = '#FAF7F2';
     ctx.font = 'bold 20px "Courier Prime", monospace';
-    const avgFlowText = `Gns. Flow: ${effectiveAvgFlow.toFixed(2)} g/s`;
+    const avgFlowText = `AVG FLOW: ${effectiveAvgFlow.toFixed(2)} g/s`;
     ctx.fillText(avgFlowText, 90, statsY + 46);
 
     ctx.fillStyle = '#D4A373';
-    const profileText = `Profil: ${shot.flowProfile ? shot.flowProfile.toUpperCase() : 'STEADY'}`;
+    const profileText = `PROFILE: ${shot.flowProfile ? shot.flowProfile.toUpperCase() : 'STEADY'}`;
     ctx.fillText(profileText, 450, statsY + 46);
 
     ctx.fillStyle = '#72806B';
-    const stabText = `Stabilitet: ${shot.flowStabilityPercent || 92}%`;
+    const stabText = `STABILITY: ${shot.flowStabilityPercent || 92}%`;
     ctx.fillText(stabText, 780, statsY + 46);
 
-    // 7. Dynamic Status & Promotion Banner
-    const footY = 1120;
+    // 7. Dynamic Status & Promotion Banner with QR Code
+    const footY = 1105;
+    const footH = 185;
     ctx.fillStyle = '#160E0A';
     ctx.beginPath();
-    ctx.roundRect(60, footY, W - 120, 160, 16);
+    ctx.roundRect(60, footY, W - 120, footH, 16);
     ctx.fill();
 
     const isChanneling = shot.channelingDetected || (shot.channeling && shot.channeling.detected);
@@ -408,32 +486,85 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     // Status pill
     ctx.fillStyle = isChanneling ? 'rgba(194, 109, 82, 0.18)' : 'rgba(114, 128, 107, 0.18)';
     ctx.beginPath();
-    ctx.roundRect(95, footY + 26, 360, 38, 8);
+    ctx.roundRect(85, footY + 20, 370, 36, 8);
     ctx.fill();
     ctx.strokeStyle = isChanneling ? '#C26D52' : '#72806B';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = isChanneling ? '#E08B73' : '#A3B899';
-    ctx.font = 'bold 17px "Courier Prime", monospace';
+    ctx.font = 'bold 16px "Courier Prime", monospace';
     const statusText = isChanneling
       ? `STATUS: CHANNELING (${spikeVal > 0 ? spikeVal.toFixed(1) : '3.2'} g/s)`
       : `STATUS: GOLDEN ZONE (1:${ratioDisplay} in ${shot.totalTimeSeconds.toFixed(0)}s)`;
-    ctx.fillText(statusText, 110, footY + 51);
+    ctx.fillText(statusText, 98, footY + 44);
 
-    // App Branding & Subtitle
+    // App Branding next to status pill
     ctx.fillStyle = '#FAF7F2';
-    ctx.font = 'bold 22px "Courier Prime", monospace';
-    ctx.fillText('MEASURED WITH FLOWBEAN', 490, footY + 51);
+    ctx.font = 'bold 20px "Courier Prime", monospace';
+    ctx.fillText('POWERED BY FLOWBEAN', 480, footY + 44);
 
+    // Feature highlights line (Clean, punchy, high contrast)
+    ctx.fillStyle = '#D4A373';
+    ctx.font = 'bold 16px "Courier Prime", monospace';
+    ctx.fillText('📷 SCALE OCR CAM   •   📈 FLOW DYNAMICS   •   🫘 BEANDEX VAULT', 85, footY + 86);
+
+    // Supporting targeted tagline
     ctx.fillStyle = '#A39589';
-    ctx.font = '18px sans-serif';
-    ctx.fillText('Real-Time Scale OCR & Mathematical Fluid Dynamics for Baristas', 95, footY + 98);
+    ctx.font = '15px "Courier Prime", monospace';
+    ctx.fillText('Turn any digital scale into a precision espresso monitor.', 85, footY + 118);
 
-    // Clean domain & link prompt without emojis
+    // Website Link
     ctx.fillStyle = '#C26D52';
     ctx.font = 'bold 20px "Courier Prime", monospace';
-    ctx.fillText('FLOWBEAN.APP  •  PRECISION EXTRACTION SUITE', 95, footY + 134);
+    ctx.fillText('FLOWBEAN.APP', 85, footY + 154);
+
+    ctx.fillStyle = '#7A6E65';
+    ctx.font = '14px "Courier Prime", monospace';
+    ctx.fillText('• Precision Specialty Extraction Suite', 235, footY + 154);
+
+    // --- QR CODE DISPLAY (Right side of banner) ---
+    const qrCardX = W - 60 - 155;
+    const qrCardY = footY + 16;
+    const qrCardW = 140;
+    const qrCardH = 153;
+
+    // QR Badge container (latte white background)
+    ctx.fillStyle = '#FFFDF9';
+    ctx.beginPath();
+    ctx.roundRect(qrCardX, qrCardY, qrCardW, qrCardH, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#C26D52';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // QR Code Image / Matrix
+    const qrX = qrCardX + 12;
+    const qrY = qrCardY + 12;
+    const qrSize = 116;
+
+    if (qrImgRef.current && qrImgRef.current.complete && qrImgRef.current.naturalWidth > 0) {
+      ctx.drawImage(qrImgRef.current, qrX, qrY, qrSize, qrSize);
+    } else {
+      // Pixel-perfect offline 25x25 matrix fallback
+      const modCount = FLOWBEAN_QR_MATRIX.length;
+      const modSize = qrSize / modCount;
+      ctx.fillStyle = '#1E1510';
+      for (let r = 0; r < modCount; r++) {
+        for (let c = 0; c < modCount; c++) {
+          if (FLOWBEAN_QR_MATRIX[r][c] === '1') {
+            ctx.fillRect(qrX + c * modSize, qrY + r * modSize, modSize + 0.3, modSize + 0.3);
+          }
+        }
+      }
+    }
+
+    // "SCAN TO OPEN" label under QR
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#2C2018';
+    ctx.font = 'bold 11px "Courier Prime", monospace';
+    ctx.fillText('SCAN TO OPEN', qrCardX + qrCardW / 2, qrCardY + qrCardH - 8);
+    ctx.textAlign = 'left';
 
     // Generate data URL for preview
     const dataUrl = canvas.toDataURL('image/png');
@@ -441,6 +572,23 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
   }, [shot]);
 
   useEffect(() => {
+    // Preload logo and QR code images
+    const logo = new Image();
+    logo.src = '/flowbean-logo.png';
+    logo.onload = () => {
+      logoImgRef.current = logo;
+      if (isOpen && shot) drawCard();
+    };
+    if (logo.complete) logoImgRef.current = logo;
+
+    const qr = new Image();
+    qr.src = '/flowbean-qr.png';
+    qr.onload = () => {
+      qrImgRef.current = qr;
+      if (isOpen && shot) drawCard();
+    };
+    if (qr.complete) qrImgRef.current = qr;
+
     if (isOpen && shot) {
       // Delay slightly to ensure canvas ref is mounted
       const t = setTimeout(drawCard, 80);
@@ -480,7 +628,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
         await Share.share({
           title: shareTitle,
           text: shareText,
-          url: 'https://espressoflow.vercel.app',
+          url: 'https://flowbean.app',
           files: [saveResult.uri],
           dialogTitle: t('share.card_title') || 'Del Barista Shot Card',
         });
@@ -498,7 +646,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
               await navigator.share({
                 title: shareTitle,
                 text: shareText,
-                url: 'https://espressoflow.vercel.app',
+                url: 'https://flowbean.app',
                 files: [file],
               });
             } catch (err: any) {
