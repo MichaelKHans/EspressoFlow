@@ -28,12 +28,13 @@ import {
   HelpCircle,
   RotateCcw,
 } from 'lucide-react';
-import type { CoffeeBeanProfile, GrinderProfile, RoastLevel, RepurchaseVerdict } from '../types/espresso';
+import type { CoffeeBeanProfile, GrinderProfile, RoastLevel, RepurchaseVerdict, PriceTier } from '../types/espresso';
 import { fetchAllGlobalBeans, syncBeanRepurchaseVerdict, type GlobalCoffeeBean } from '../lib/supabase';
 import { resolveGrinder } from '../lib/storage';
 import { calculateBeanFreshness } from '../lib/espressoMath';
 import { FreshnessInfoModal } from './FreshnessInfoModal';
 import { FinishBeanModal } from './FinishBeanModal';
+import { BeanMatchmakerModal } from './BeanMatchmakerModal';
 import { useTranslation } from '../i18n';
 import {
   POPULAR_FLAVOR_TAGS,
@@ -45,6 +46,7 @@ import {
   type CatalogCoffeeItem,
   type DidYouMeanMatch,
 } from '../lib/beanCatalogMatcher';
+import { PRICE_TIERS, resolveBeanPriceTier } from '../lib/coffeeCatalogData';
 
 export interface BeandexViewProps {
   beans: CoffeeBeanProfile[];
@@ -90,9 +92,11 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [roastFilter, setRoastFilter] = useState<string>('all');
+  const [priceFilter, setPriceFilter] = useState<PriceTier | 'all'>('all');
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
   const [inventoryTab, setInventoryTab] = useState<'active' | 'archive'>('active');
   const [finishingBean, setFinishingBean] = useState<CoffeeBeanProfile | null>(null);
+  const [isMatchmakerOpen, setIsMatchmakerOpen] = useState<boolean>(false);
 
   // Inline custom bag form state
   const [isAddingCustomBag, setIsAddingCustomBag] = useState<boolean>(false);
@@ -106,6 +110,8 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   const [newBagNotes, setNewBagNotes] = useState<string>('');
   const [newBagGrinderName, setNewBagGrinderName] = useState<string>(activeGrinderName);
   const [newBagOriginCountry, setNewBagOriginCountry] = useState<string>('');
+  const [newBagSpecies, setNewBagSpecies] = useState<string>('100% Arabica');
+  const [newBagVarietal, setNewBagVarietal] = useState<string>('');
   const [newBagImageUrl, setNewBagImageUrl] = useState<string | undefined>(undefined);
   const [newBagFlavorNotes, setNewBagFlavorNotes] = useState<string[]>([]);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -198,13 +204,18 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
         return false;
       }
 
+      if (priceFilter !== 'all') {
+        const tier = b.priceTier || resolveBeanPriceTier(b);
+        if (tier !== priceFilter) return false;
+      }
+
       if (favoritesOnly && (b.rating || 0) < 4 && !b.isFavorite) {
         return false;
       }
 
       return true;
     });
-  }, [inventoryTab, activeBags, finishedBags, searchQuery, roastFilter, favoritesOnly]);
+  }, [inventoryTab, activeBags, finishedBags, searchQuery, roastFilter, priceFilter, favoritesOnly]);
 
   // Handle finishing / archiving a bag
   const handleConfirmFinish = (
@@ -300,6 +311,8 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     setNewBagRoastLevel(item.roastLevel);
     setNewBagOriginCountry(item.originCountry);
     setNewBagFlavorNotes(item.flavorNotes);
+    if (item.species) setNewBagSpecies(item.species);
+    if (item.varietal) setNewBagVarietal(item.varietal);
     if (item.notes && !newBagNotes) {
       setNewBagNotes(item.notes);
     }
@@ -403,6 +416,8 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
       imageUrl: newBagImageUrl,
       flavorNotes: newBagFlavorNotes.length > 0 ? newBagFlavorNotes : undefined,
       originCountry: newBagOriginCountry.trim() || undefined,
+      species: newBagSpecies.trim() || undefined,
+      varietal: newBagVarietal.trim() || undefined,
     });
 
     setNewBagName('');
@@ -412,6 +427,8 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     setNewBagDateOpened('');
     setNewBagNotes('');
     setNewBagOriginCountry('');
+    setNewBagSpecies('100% Arabica');
+    setNewBagVarietal('');
     setNewBagImageUrl(undefined);
     setNewBagFlavorNotes([]);
     setDidYouMeanMatch(null);
@@ -485,6 +502,15 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
 
           {/* Action Chips */}
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsMatchmakerOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-linear-to-r from-[#D4A373] to-[#C26D52] hover:brightness-110 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md transition active:scale-95 cursor-pointer ring-1 ring-white/20"
+              title="Find dit næste bønne-match baseret på smag, mælk og budget"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
+              <span>{t('beandex.matchmaker_btn')}</span>
+            </button>
             <button
               type="button"
               onClick={onOpenScanner}
@@ -678,6 +704,38 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
 
             <div>
               <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
+                {t('beandex.species_label')}
+              </label>
+              <select
+                value={newBagSpecies}
+                onChange={(e) => setNewBagSpecies(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+              >
+                <option value="100% Arabica">🌿 100% Arabica</option>
+                <option value="Arabica / Robusta Blend (80/20)">☕ Arabica / Robusta Blend (80/20)</option>
+                <option value="Arabica / Robusta Blend (70/30)">☕ Arabica / Robusta Blend (70/30)</option>
+                <option value="Arabica / Robusta Blend (60/40)">☕ Arabica / Robusta Blend (60/40)</option>
+                <option value="Arabica / Robusta Blend (50/50)">☕ Arabica / Robusta Blend (50/50)</option>
+                <option value="100% Robusta">⚡ 100% Robusta (Canephora)</option>
+                <option value="Liberica">🍃 Liberica</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
+                {t('beandex.varietal_label')} (Optional)
+              </label>
+              <input
+                type="text"
+                value={newBagVarietal}
+                onChange={(e) => setNewBagVarietal(e.target.value)}
+                placeholder="e.g. SL28, Bourbon, Geisha, Catuaí..."
+                className="w-full px-3 py-2 rounded-xl border border-[#E8DFD5] bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] text-[#7A6E65] uppercase font-mono block mb-1">
                 Roast Date
               </label>
               <input
@@ -852,6 +910,19 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               <option value="dark">{t('beandex.filter_dark')}</option>
             </select>
 
+            <select
+              value={priceFilter}
+              onChange={(e) => setPriceFilter(e.target.value as PriceTier | 'all')}
+              className="px-2 py-1.5 rounded-xl border border-[#E8DFD5] bg-white text-[11px] font-semibold text-[#2C2018] focus:outline-none"
+              title={t('beandex.filter_price_tier')}
+            >
+              <option value="all">{t('beandex.filter_price_tier')}: {t('beandex.filter_all')}</option>
+              <option value="budget">{PRICE_TIERS.budget.symbol} {t('beandex.price_budget')}</option>
+              <option value="standard">{PRICE_TIERS.standard.symbol} {t('beandex.price_standard')}</option>
+              <option value="premium">{PRICE_TIERS.premium.symbol} {t('beandex.price_premium')}</option>
+              <option value="ultra_rare">{PRICE_TIERS.ultra_rare.symbol} {t('beandex.price_ultra_rare')}</option>
+            </select>
+
             <button
               type="button"
               onClick={() => setFavoritesOnly(!favoritesOnly)}
@@ -948,7 +1019,15 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 <p className="text-xs text-[#7A6E65] font-sans max-w-md mx-auto">
                   {t('beandex.empty_vault')}
                 </p>
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setIsMatchmakerOpen(true)}
+                    className="px-3.5 py-2 rounded-xl bg-linear-to-r from-[#D4A373] to-[#C26D52] hover:brightness-110 text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
+                    <span>{t('beandex.matchmaker_btn')}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={onOpenScanner}
@@ -1015,6 +1094,23 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                         >
                           {bean.roastLevel}
                         </span>
+
+                        {(() => {
+                          const tier = bean.priceTier || resolveBeanPriceTier(bean);
+                          const meta = PRICE_TIERS[tier];
+                          return (
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${meta.badgeClass}`}
+                              title={`${meta.labelEn} (${meta.rangeDkk})`}
+                            >
+                              <span>{meta.icon}</span>
+                              <span className="font-mono">{meta.symbol}</span>
+                              {bean.approxPriceDkk && (
+                                <span className="text-[8px] opacity-75">~{bean.approxPriceDkk}kr</span>
+                              )}
+                            </span>
+                          );
+                        })()}
 
                         {bean.bagCount && bean.bagCount > 1 && (
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-[#2C2018] text-[#FAF7F2] font-mono flex items-center gap-0.5 shadow-2xs">
@@ -1164,6 +1260,33 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                             <span>🏪</span>
                             <span className="font-semibold">{bean.purchaseLocation}</span>
                           </p>
+                        )}
+                        {(bean.species || bean.varietal) && (
+                          <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                            {bean.species && (
+                              <span
+                                className={`text-[9.5px] font-mono font-medium px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${
+                                  bean.species.toLowerCase().includes('robusta')
+                                    ? bean.species.toLowerCase().includes('100% robusta')
+                                      ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                      : 'bg-orange-50 text-orange-800 border-orange-200'
+                                    : 'bg-[#72806B]/10 text-[#4E5C49] border-[#72806B]/20'
+                                }`}
+                                title={bean.species}
+                              >
+                                <span>{bean.species.toLowerCase().includes('robusta') ? (bean.species.toLowerCase().includes('100% robusta') ? '⚡' : '☕') : '🌿'}</span>
+                                <span className="truncate max-w-[130px]">{bean.species}</span>
+                              </span>
+                            )}
+                            {bean.varietal && (
+                              <span
+                                className="text-[9.5px] font-mono px-1.5 py-0.5 rounded-md bg-[#FAF7F2] border border-[#DECFC0] text-[#7A6E65] truncate max-w-[120px]"
+                                title={`Botanisk Varietet: ${bean.varietal}`}
+                              >
+                                ✨ {bean.varietal}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1674,6 +1797,14 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
         onClose={() => setFinishingBean(null)}
         bean={finishingBean}
         onConfirmFinish={handleConfirmFinish}
+      />
+
+      {/* Beandex Matchmaker™ Modal */}
+      <BeanMatchmakerModal
+        isOpen={isMatchmakerOpen}
+        onClose={() => setIsMatchmakerOpen(false)}
+        onAddBeanToShelf={onCreateBean}
+        activeGrinderName={activeGrinderName}
       />
     </div>
   );

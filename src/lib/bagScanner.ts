@@ -1,5 +1,6 @@
 import type { RoastLevel } from '../types/espresso';
 import { fetchGlobalBean } from './supabase';
+import { ALL_VERIFIED_COFFEE_CATALOG } from './coffeeCatalogData';
 
 export interface ScannedBeanInfo {
   name: string;
@@ -23,6 +24,9 @@ export interface ScannedBeanInfo {
   imageUrl?: string;
   flavorNotes?: string[];
   originCountry?: string;
+  species?: string;
+  varietal?: string;
+  processMethod?: string;
 }
 
 export interface ParsedRoastDateResult {
@@ -551,7 +555,32 @@ export async function lookupBarcode(barcode: string): Promise<ScannedBeanInfo | 
   const cleanCode = barcode.trim().replace(/[^0-9]/g, '');
   if (!cleanCode) return null;
 
-  // 1. Check local offline database first for instant zero-latency match
+  // 1. Check verified specialty & international catalog first (50+ beans)
+  const catalogMatch = ALL_VERIFIED_COFFEE_CATALOG.find((item) => item.barcode === cleanCode);
+  if (catalogMatch) {
+    return {
+      name: catalogMatch.name,
+      roaster: catalogMatch.roaster,
+      roastDate: '',
+      hasExplicitRoastDate: false,
+      roastLevel: catalogMatch.roastLevel,
+      notes: catalogMatch.notes || `Matched from Verified Catalog (${cleanCode})`,
+      barcode: cleanCode,
+      detectedFormat: 'Verified Specialty Catalog',
+      purchaseCountry: catalogMatch.purchaseCountry || 'DK',
+      purchaseLocation: catalogMatch.purchaseLocation,
+      suitableFor: catalogMatch.suitableFor,
+      flavorNotes: catalogMatch.flavorNotes,
+      species: catalogMatch.species,
+      varietal: catalogMatch.varietal,
+      originCountry: catalogMatch.originCountry,
+      expertScore: catalogMatch.scaScore,
+      expertSource: 'SCA Specialty Lot',
+      imageUrl: catalogMatch.imageUrl,
+    };
+  }
+
+  // 2. Check local offline database fallback
   if (KNOWN_BARCODE_DATABASE[cleanCode]) {
     const known = KNOWN_BARCODE_DATABASE[cleanCode];
     return {

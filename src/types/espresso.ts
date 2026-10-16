@@ -38,6 +38,7 @@ export interface ExtractionTelemetrySummary {
 }
 
 export type RepurchaseVerdict = 'buy_again' | 'neutral' | 'never_again';
+export type PriceTier = 'budget' | 'standard' | 'premium' | 'ultra_rare';
 
 export interface CoffeeBeanProfile {
   id: string;
@@ -72,6 +73,11 @@ export interface CoffeeBeanProfile {
   imageUrl?: string; // Optional bag photo thumbnail (data URL or cloud link)
   flavorNotes?: string[]; // Beandex sensory flavor tags (e.g. ['Dark Chocolate', 'Caramel'])
   originCountry?: string; // Origin region or country (e.g. 'Colombia', 'Vestjylland')
+  species?: '100% Arabica' | '100% Robusta' | 'Arabica / Robusta Blend' | 'Liberica' | string; // Botanical coffee species
+  varietal?: string; // Botanical varietals (e.g. 'Geisha', 'SL28 / SL34', 'Bourbon', 'Catuaí', 'Heirloom', 'Caturra')
+  processMethod?: 'washed' | 'natural' | 'honey' | 'anaerobic' | 'monsooned' | 'pulped natural' | string;
+  priceTier?: PriceTier; // 'budget' | 'standard' | 'premium' | 'ultra_rare'
+  approxPriceDkk?: number; // Retail price estimate in DKK for 250g
   pourOverGrindSetting?: string; // Grind setting for filter / pour over
   pourOverDoseGrams?: number;
   pourOverTargetYieldGrams?: number;

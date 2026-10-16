@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.15.0 (Kaffepose Livscyklus, Tømte Posers Arkiv & Kommerciel B2B Markedsviden i Admin Hub)  
+> **Gældende version:** v1.16.0 (Verdensklasse Kaffebønner, Prisniveau-Kategorisering & Beandex Matchmaker™ Smagsfinder)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -367,6 +367,8 @@ graph TD
     App --> LegalModal[LegalModal.tsx<br/>Privacy Policy, Terms of Service, Support]
     DrinkTab --> AllDrinksModal[DrinkSelector: All Drinks & Deck Modal<br/>createPortal z-[60], sticky top/bottom, back dismiss]
     BeandexTab --> FreshnessModal[FreshnessInfoModal.tsx<br/>createPortal z-[60], sticky top/bottom, back dismiss]
+    BeandexTab --> FinishModal[FinishBeanModal.tsx<br/>Tømt pose exit-verdict & genkøbsrating]
+    BeandexTab --> MatchmakerModal[BeanMatchmakerModal.tsx<br/>Beandex Matchmaker™ 4-trins smagsguide & bønneanbefalinger]
 
     %% Top Header & Z-Index Lagdeling:
     %% z-[70]: Flowbean Sticky Header (#app-header) - Altid synlig foroven, dækkes aldrig af modaler
@@ -385,6 +387,7 @@ graph TD
     MonitorTab --> OCR7Segment[ocr7segment.ts<br/>Computer Vision Core]
     MonitorTab --> MathLib[espressoMath.ts<br/>Moving Avg, Flow & Kanalisering]
     BeandexTab --> CatalogMatcher[beanCatalogMatcher.ts<br/>Fuzzy Matcher, Beandex Tags, Komprimering]
+    BeandexTab --> MatchEngine[beanMatchmakerEngine.ts<br/>Vægtet scoring: Drikkemetode, Smagsnoter, Syrebalance, Prisniveau & SCA]
     ScannerModal --> BagVisionClient[bagVisionClient.ts<br/>768px WebP & Thumbnail]
     ScannerModal --> GeminiBagVision[geminiBagVision.ts<br/>Supabase Edge Function Bro]
     AdminTab --> SupabaseLib[supabase.ts<br/>Cloud API, Verificering & Kuratering]

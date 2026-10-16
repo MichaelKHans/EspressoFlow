@@ -11,6 +11,26 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-16 -- Verdensklasse Kaffebønner, Prisniveau-Kategorisering & Beandex Matchmaker™ Smagsfinder (v1.16.0)
+- **Verdensklasse Konkurrencekaffer i Kataloget (`coffeeCatalogData.ts`):**
+  - Tilføjet 8 internationalt berømte mesterskabskaffer brugt i World Barista Championship og Cup of Excellence (Sey Coffee Geisha, Manhattan Diego Bermudez Thermal Shock, DAK Milky Cake, Gesha Village Chaka, Hacienda La Esmeralda Private Collection, Friedhats Fieshitu, Proud Mary Ghost Rider, Subtext Las Margaritas).
+- **4-Trins Prisniveau-Kategorisering (`PriceTier` & Metadata):**
+  - Opdelt kaffepartier i 4 prisniveauer med DKK-intervaller, ikoner og badges:
+    - 🏷️ `budget` (`$` / < 75,- DKK)
+    - ☕ `standard` (`$$` / 75 – 125,- DKK)
+    - 🌟 `premium` (`$$$` / 130 – 220,- DKK)
+    - 👑 `ultra_rare` (`$$$$` / 225 – 600+,- DKK)
+  - Synlige prisniveau-badges på alle kort i Beandex samt nyt prisdropdown-filter i søgelinjen.
+- **Beandex Matchmaker™ Smagsfinder (`BeanMatchmakerModal.tsx` & `beanMatchmakerEngine.ts`):**
+  - Udviklet en intelligent 4-trins kaffeguide og match-motor:
+    - Trin 1: Drik & metode (Ren Espresso, Mælk/Flat White, Filter/Pour Over, All-Rounder).
+    - Trin 2: Smagsretning (Vælg 1-3 noter blandt frugt, bær, chokolade, nødder, krydderier, blomster).
+    - Trin 3: Syretolerance (Lav/dyb chokolade, balanceret, høj/nordisk) og budgetramme.
+    - Trin 4: Top 4 kuraterede matches med match %, rangering, barista-begrundelse, købssteder og 1-klik tilføjelse til brugerens Beandex-hylde.
+  - Fremhævet med ny "✨ Find Kaffe Match" CTA-knap i Beandex hero og ved tomt lager.
+- **Bygget og Verificeret:**
+  - `npm run build` passeret 100% fejlfrit med 0 advarsler/fejl.
+
 ### 2026-10-16 -- Kaffepose Livscyklus, Tømte Posers Arkiv & Kommerciel B2B Markedsviden i Admin Hub (v1.15.0)
 - **Faneopdelt Bønnebank (`BeandexView.tsx`):**
   - Tilføjet fanevælger mellem `[ ☕ Aktive Poser ({count}) ]` og `[ 📜 Tømte Poser / Arkiv ({count}) ]`.

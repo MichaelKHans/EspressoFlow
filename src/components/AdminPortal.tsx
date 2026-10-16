@@ -146,6 +146,8 @@ CREATE TABLE IF NOT EXISTS global_coffee_beans (
   name VARCHAR(150) NOT NULL,
   roast_level VARCHAR(30) NOT NULL,
   origin_country VARCHAR(100),
+  species VARCHAR(80),
+  varietal VARCHAR(120),
   purchase_country VARCHAR(10) DEFAULT 'DK',
   purchase_location VARCHAR(120),
   suitable_for TEXT[] DEFAULT '{}',
@@ -178,6 +180,8 @@ CREATE TABLE IF NOT EXISTS bean_drink_ratings (
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS purchase_location VARCHAR(120);
 ALTER TABLE bean_drink_ratings ADD COLUMN IF NOT EXISTS purchase_location VARCHAR(120);
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS flavor_notes TEXT[] DEFAULT '{}';
+ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS species VARCHAR(80);
+ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS varietal VARCHAR(120);
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS verifications_count INT DEFAULT 1;
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS expert_score NUMERIC(4,1);
 ALTER TABLE global_coffee_beans ADD COLUMN IF NOT EXISTS expert_source VARCHAR(60);

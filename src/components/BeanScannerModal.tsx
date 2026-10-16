@@ -448,6 +448,10 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       expertSource: scannedResult?.expertSource,
       flavorNotes: editFlavorNotes.length > 0 ? editFlavorNotes : undefined,
       imageUrl: editImageUrl,
+      species: scannedResult?.species,
+      varietal: scannedResult?.varietal,
+      processMethod: scannedResult?.processMethod,
+      originCountry: scannedResult?.originCountry,
     };
 
     // Fire-and-forget background cloud sync to Supabase (Zero UI latency)
@@ -886,6 +890,16 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                         🏪 {scannedResult.purchaseLocation}
                       </span>
                     )}
+                    {scannedResult.species && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#72806B]/15 border border-[#72806B]/30 text-[#44503E] text-[10px] font-mono font-semibold">
+                        🌿 {scannedResult.species}
+                      </span>
+                    )}
+                    {scannedResult.varietal && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#FAF7F2] border border-[#DECFC0] text-[#2C2018] text-[10px] font-mono">
+                        ✨ {scannedResult.varietal}
+                      </span>
+                    )}
                   </div>
                   {scannedResult.suitableFor && scannedResult.suitableFor.length > 0 && (
                     <div className="flex items-center gap-1 flex-wrap">
@@ -962,6 +976,26 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                               setEditRoaster(item.roaster);
                               setEditRoastLevel(item.roastLevel);
                               if (item.flavorNotes) setEditFlavorNotes(item.flavorNotes);
+                              setScannedResult((prev) => ({
+                                ...(prev || {
+                                  name: item.name,
+                                  roastDate: '',
+                                  roastLevel: item.roastLevel,
+                                }),
+                                name: item.name,
+                                roaster: item.roaster,
+                                roastLevel: item.roastLevel,
+                                species: item.species,
+                                varietal: item.varietal,
+                                originCountry: item.originCountry,
+                                notes: item.notes,
+                                suitableFor: item.suitableFor,
+                                flavorNotes: item.flavorNotes,
+                                expertScore: item.scaScore,
+                                expertSource: item.scaScore ? 'SCA Specialty Lot' : undefined,
+                                purchaseLocation: item.purchaseLocation,
+                                purchaseCountry: item.purchaseCountry,
+                              }));
                               setShowNameSuggestions(false);
                             }}
                             className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-[#FAF7F2] text-xs text-[#2C2018] flex items-center justify-between transition"

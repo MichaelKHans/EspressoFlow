@@ -2,6 +2,32 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.16.0] - 2026-10-16
+### Etape 52: Verdensklasse Kaffebønner, Prisniveau-Kategorisering & Beandex Matchmaker™ Smagsfinder
+- **1. Verdensklasse Konkurrence- & Mesterkaffer (`coffeeCatalogData.ts`):**
+  - Tilføjet 8 internationalt anerkendte kaffer brugt i World Barista Championship, Brewers Cup og Cup of Excellence:
+    - *Sey Coffee (Brooklyn, USA):* Finca La Palma Geisha Washed (SCA 93.5, Bergamot, Fersken, Jasmin, Hvid Te).
+    - *Manhattan Coffee Roasters (Rotterdam):* Diego Bermudez Y05 Thermal Shock (SCA 92.5, Fersken yoghurt, Jordbær, Litchi).
+    - *DAK Coffee Roasters (Amsterdam):* Milky Cake Thermal Shock / Anaerobic (SCA 91.0, Kardemommebolle, Vaniljecreme, Pistacie).
+    - *Gesha Village Estate (Etiopien):* Chaka Gesha Natural (SCA 91.5, Røde bær, Papaya, Jasmin, Kakao).
+    - *Hacienda La Esmeralda (Boquete, Panama):* Private Collection Geisha Washed (SCA 94.0, Jasmin, Mandarin, Bergamot).
+    - *Friedhats Coffee Roasters (Amsterdam):* Fieshitu Guji Ethiopia Natural (SCA 89.5, Blåbær, Fersken, Mælkechokolade).
+    - *Proud Mary Coffee (Melbourne, Australien):* Ghost Rider Natural Blend (SCA 89.0, Mørk chokolade, Blomme, Rom).
+    - *Subtext Coffee Roasters (Toronto, Canada):* Las Margaritas Pacamara Natural (SCA 91.0, Mango, Passionsfrugt, Blomsterhonning).
+- **2. 4-Trins Prisniveau-Kategorisering (`PriceTier` & Metadata):**
+  - 🏷️ **Budget (`$` / < 75,- DKK):** Supermarkeds- & hverdagsklassikere (Peter Larsen, BKI, Lavazza).
+  - ☕ **Specialty Hverdag (`$$` / 75 – 125,- DKK):** Gode specialty husblandinger og single origins (Hedekaffe, Coffee Collective Vista Hermosa).
+  - 🌟 **Premium Single Origin (`$$$` / 130 – 220,- DKK):** Højtsorterede mikrolot kaffer med SCA 88-90+ (Coffee Collective Kieni, La Cabra).
+  - 👑 **Luksus / Konkurrence (`$$$$` / 225 – 600+,- DKK):** Cup of Excellence, Geisha og eksperimentelle anaerobe fermenteringer.
+  - Dynamiske badges på hvert bønnekort i Beandex med ikon, prissymbol og cirka-pris i DKK.
+  - Nyt prisfilter i Beandex-søgelinjen for øjeblikkelig filtrering efter budget.
+- **3. Beandex Matchmaker™ Smagsfinder (`BeanMatchmakerModal.tsx` & `beanMatchmakerEngine.ts`):**
+  - Intelligent 4-trins smagsguide til at finde det perfekte bønne-match:
+    - **Trin 1 (Bryggemetode / Drik):** Ren Espresso, Mælkedrikke (Flat White, Cortado), Filter/Pour Over eller All-Rounder.
+    - **Trin 2 (Smagsretning):** Vælg op til 3 personlige favoritsmagsnoter (chokolade, frugt, bær, nødder, krydderier, blomster).
+    - **Trin 3 (Syretolerance & Prisniveau):** Juster syre-balance (lav/dyb, balanceret, høj/nordisk) og budgetramme.
+    - **Trin 4 (Top 4 Kuraterede Resultater):** Beregner matchprocent (0-100%), rangering, barista-begrundelse på dansk og engelsk, købssteder og 1-klik tilføjelse til egen Beandex-hylde.
+
 ## [1.15.0] - 2026-10-16
 ### Etape 51: Kaffepose Livscyklus, Tømte Posers Arkiv & Kommerciel B2B Markedsviden i Admin Hub
 - **1. Livscyklus & Kaffekirkegård / Arkiv (`BeandexView.tsx`):**
