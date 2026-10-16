@@ -1226,3 +1226,25 @@
 - **Lokal Verifikation & Android Studio Synkronisering:**
   - `npm run build` testet og bekræftet 100% fejlfri.
   - `npx cap sync android` synkroniseret til native Android-build.
+
+### 2026-10-16 – Komplet Visuel Overhaling af Kopper/Glas, Digital Barista Deck, Logbog & Det Ultimative Specialty Share Card (v1.12.0)
+- **Etape 1: `ArchitecturalCup.tsx` & `drinkRecipes.ts` (Materialitet, Gradienter & Keramikkant):**
+  - Fuld lineær gradient palet i SVG `<defs>` for ægte espresso (`#1C100B` → `#4A2511`), gylden crema, mikroskum, filterkaffe og krystalklart vand.
+  - Tydelig porcelænsgodstykkelse (~2.5px porcelæn med `#CBB8A3` skyggekant) og skitseret standring, der popper mod mørke baggrunde (`#241A14`).
+  - Autentiske barista-glas uden hank, tyk krystalbund (sham `rgba(255,255,255,0.35)`), lodret lysrefleks og Gibraltar facetter til Cortado/Piccolo.
+  - Americano i glas (`glassStyle: 'glass'`) med varm ravfarvet vandbase og flydende espresso/crema.
+- **Etape 2: `ArchitecturalCup.tsx` & `types/espresso.ts` (Isterninger, Desserter & Unikke Pour Over Silhuetter):**
+  - Kolde drikke (Iced Latte, Espresso Tonic, Cold Brew) med vinklede isterninger og kulsyrebobler.
+  - Desserter: Affogato fior di latte gelato-kugle, Con Panna skulpturel flødeskumstop.
+  - Unikke Pour Over silhuetter: Chemex timeglas med trækrave og lædersnor, V60 med 60° spiralriller, Kalita med flad bund og bølgekant, AeroPress uden hank med måleskala og bajonethætte, French Press med stålgitter og stempel.
+- **Etape 3: `DrinkSelector.tsx` (Digital Barista Deck & Typografi):**
+  - Symmetrisk 2-kolonne Quick Deck (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`) med forstørrede kopper (`w-10 h-11`).
+  - Master-kort: Runde farveprikker i lag-forklaringen (ikke afkrydsningsfelter), samlet Grinder & Bean calibration card uden box-in-box tunghed.
+  - Specialty Menu Modal tekst-afkortnings fix (`font-sans text-xs` `${ml}ml • ${category} • 1:${ratio}`) og forstørret kop (`w-11 h-12`).
+- **Etape 4: `FlowChart.tsx`, `Logbook.tsx`, `ShotShareModal.tsx` & i18n:**
+  - `FlowChart.tsx`: Strikt SVG `<clipPath id="chart-area-clip">` og clamping forhindrer udbrud; responsiv header (`flex-col sm:flex-row gap-1.5`) holder kurveoverskrift på én linje på mobil.
+  - `Logbook.tsx`: Fjernet det store tomme venstre kvadrat (~80px sparet pr. kort), miniature cup indsat direkte i headeren ved siden af `#130` og kaffenavnet, `whitespace-nowrap` på alle badges, i18n konsistens (`Share Card`, `telemetry_points`).
+  - `ShotShareModal.tsx`: Det ultimative specialty share card med kop-silhuet ved siden af titel, renset udstyrsstreng (parenteser fjernet), sandfærdig dynamisk bundstatus (`Status: Channeling (X.X g/s)` eller `Status: Golden Zone`), ingen uformelle emojis, og rent `flowbean.app` domæne.
+- **Lokal Verifikation & Android Studio Synkronisering:**
+  - `npm run build` testet og bekræftet 100% fejlfri (0 fejl, 1.30s).
+  - `npm run mobile:sync` synkroniseret web assets til Android og iOS.

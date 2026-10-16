@@ -60,10 +60,10 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const chartW = width - padLeft - padRight;
   const chartH = height - padTop - padBottom;
 
-  // Coordinate mappers
-  const getX = (t: number) => padLeft + (t / maxTime) * chartW;
-  const getYWeight = (w: number) => padTop + chartH - (w / maxWeight) * chartH;
-  const getYFlow = (f: number) => padTop + chartH - (Math.min(f, maxFlow) / maxFlow) * chartH;
+  // Coordinate mappers with strict boundary clamping
+  const getX = (t: number) => Math.max(padLeft, Math.min(padLeft + chartW, padLeft + (t / maxTime) * chartW));
+  const getYWeight = (w: number) => Math.max(padTop, Math.min(padTop + chartH, padTop + chartH - (w / maxWeight) * chartH));
+  const getYFlow = (f: number) => Math.max(padTop, Math.min(padTop + chartH, padTop + chartH - (Math.min(f, maxFlow) / maxFlow) * chartH));
 
   // Flow Zone band coordinates (Pour over: 4-6 g/s pacing; Espresso: 1.2-1.8 g/s golden zone)
   const goldenMinFlow = isPourOver ? 4.0 : THE_GOLDEN_ZONE.MIN_FLOW_GPS;
@@ -89,23 +89,23 @@ export const FlowChart: React.FC<FlowChartProps> = ({
 
   return (
     <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-4 shadow-xs">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-1.5">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-[#C26D52]" />
-          <span className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
+          <TrendingUp className="w-4 h-4 text-[#C26D52] shrink-0" />
+          <span className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono truncate">
             {t('chart.title')}
           </span>
         </div>
 
         {isLive ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/15 text-[#C26D52] text-xs font-mono font-bold border border-[#C26D52]/30 animate-pulse">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/15 text-[#C26D52] text-xs font-mono font-bold border border-[#C26D52]/30 animate-pulse shrink-0">
             <span className="w-2 h-2 rounded-full bg-[#C26D52]" />
-            <span>LIVE {isPourOver ? 'POUR OVER' : 'FLOW'} CURVE</span>
+            <span>LIVE {isPourOver ? 'POUR OVER' : 'TELEMETRY'}</span>
           </div>
         ) : !isPourOver && channelingEvent?.detected ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-semibold border border-[#C26D52]/30">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-semibold border border-[#C26D52]/30 shrink-0">
             <AlertCircle className="w-3.5 h-3.5 text-[#C26D52]" />
-            <span>
+            <span className="whitespace-nowrap">
               {t('chart.channeling_spike', {
                 time: channelingEvent.timestampSeconds ?? 0,
                 spike: channelingEvent.flowSpikeGps ?? 0,
@@ -113,7 +113,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-[11px] font-mono text-[#72806B] bg-[#72806B]/10 px-2 py-0.5 rounded border border-[#72806B]/20">
+          <div className="flex items-center gap-1 text-[11px] font-mono text-[#72806B] bg-[#72806B]/10 px-2 py-0.5 rounded border border-[#72806B]/20 shrink-0 whitespace-nowrap">
             <Sparkles className="w-3 h-3" />
             <span>{isPourOver ? 'Steady Extraction' : t('chart.optimal_flow')}</span>
           </div>
@@ -123,6 +123,12 @@ export const FlowChart: React.FC<FlowChartProps> = ({
       {/* SVG Canvas with Dual Y-Axis */}
       <div className="w-full overflow-x-auto">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto select-none font-mono text-[10px]">
+          <defs>
+            <clipPath id="chart-area-clip">
+              <rect x={padLeft} y={padTop} width={chartW} height={chartH} />
+            </clipPath>
+          </defs>
+
           {/* Golden / Pacing Target Flow Band */}
           <rect
             x={padLeft}
@@ -278,78 +284,81 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             </g>
           )}
 
-          {/* Channeling / Surge Marker on Curve (Only for espresso) */}
-          {!isPourOver &&
-            channelingEvent?.detected &&
-            channelingEvent.timestampSeconds &&
-            channelingEvent.flowSpikeGps && (
+          {/* Clipped Data Curves & Events Group */}
+          <g clipPath="url(#chart-area-clip)">
+            {/* Channeling / Surge Marker on Curve (Only for espresso) */}
+            {!isPourOver &&
+              channelingEvent?.detected &&
+              channelingEvent.timestampSeconds &&
+              channelingEvent.flowSpikeGps && (
+                <g>
+                  <circle
+                    cx={getX(channelingEvent.timestampSeconds)}
+                    cy={getYFlow(channelingEvent.flowSpikeGps)}
+                    r="6"
+                    fill="#B85B48"
+                    stroke="#FFFDF9"
+                    strokeWidth="2"
+                  />
+                  <text
+                    x={getX(channelingEvent.timestampSeconds)}
+                    y={getYFlow(channelingEvent.flowSpikeGps) - 10}
+                    textAnchor="middle"
+                    fill="#B85B48"
+                    fontWeight="bold"
+                    fontSize="9"
+                  >
+                    SPIKE {channelingEvent.flowSpikeGps} g/s
+                  </text>
+                </g>
+              )}
+
+            {/* Cumulative weight line (Espresso dark roast) */}
+            <path
+              d={weightPath}
+              fill="none"
+              stroke="#2C2018"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Flow rate line (Terracotta) */}
+            <path
+              d={flowPath}
+              fill="none"
+              stroke="#C26D52"
+              strokeWidth="2"
+              strokeDasharray="4 2"
+              strokeLinecap="round"
+            />
+
+            {/* Current cursor tip */}
+            {lastPoint && (
               <g>
-                <circle
-                  cx={getX(channelingEvent.timestampSeconds)}
-                  cy={getYFlow(channelingEvent.flowSpikeGps)}
-                  r="6"
-                  fill="#B85B48"
-                  stroke="#FFFDF9"
-                  strokeWidth="2"
-                />
-                <text
-                  x={getX(channelingEvent.timestampSeconds)}
-                  y={getYFlow(channelingEvent.flowSpikeGps) - 10}
-                  textAnchor="middle"
-                  fill="#B85B48"
-                  fontWeight="bold"
-                  fontSize="9"
-                >
-                  SPIKE {channelingEvent.flowSpikeGps} g/s
-                </text>
-              </g>
-            )}
-
-          {/* Cumulative weight line (Espresso dark roast) */}
-          <path
-            d={weightPath}
-            fill="none"
-            stroke="#2C2018"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Flow rate line (Terracotta) */}
-          <path
-            d={flowPath}
-            fill="none"
-            stroke="#C26D52"
-            strokeWidth="2"
-            strokeDasharray="4 2"
-            strokeLinecap="round"
-          />
-
-          {/* Current cursor tip */}
-          {lastPoint && (
-            <g>
-              {isLive && (
+                {isLive && (
+                  <circle
+                    cx={getX(lastPoint.timeSeconds)}
+                    cy={getYWeight(lastPoint.weightGrams)}
+                    r="8"
+                    fill="none"
+                    stroke="#C26D52"
+                    strokeWidth="1.5"
+                    opacity="0.6"
+                    className="animate-ping"
+                  />
+                )}
                 <circle
                   cx={getX(lastPoint.timeSeconds)}
                   cy={getYWeight(lastPoint.weightGrams)}
-                  r="8"
-                  fill="none"
-                  stroke="#C26D52"
-                  strokeWidth="1.5"
-                  opacity="0.6"
-                  className="animate-ping"
+                  r="4.5"
+                  fill="#C26D52"
+                  stroke="#FFFDF9"
+                  strokeWidth="2"
                 />
-              )}
-              <circle
-                cx={getX(lastPoint.timeSeconds)}
-                cy={getYWeight(lastPoint.weightGrams)}
-                r="4.5"
-                fill="#C26D52"
-                stroke="#FFFDF9"
-                strokeWidth="2"
-              />
-            </g>
-          )}
+              </g>
+            )}
+          </g>
         </svg>
       </div>
 

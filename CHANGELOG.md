@@ -2,6 +2,31 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.12.0] - 2026-10-16
+### Etape 47: Komplet Visuel Overhaling af Kopper/Glas, Digital Barista Deck, Logbog & Det Ultimative Specialty Share Card
+- **Etape 1: `ArchitecturalCup.tsx` & `drinkRecipes.ts` (Materialitet, Gradienter & Keramikkant):**
+  - Fuld SVG `<defs>` linearGradient farvesammensætning for espresso (`#1C100B` → `#4A2511`), gylden crema, varm mikroskum, filterkaffe og krystalklart vand.
+  - Tydelig porcelænsgodstykkelse (~2.5px porcelæn med `#CBB8A3` skyggekant) og skitseret standring i bunden, der sikrer høj kontrast mod mørke knapper (`#241A14`).
+  - Autentiske barista-glas uden hank, tyk krystalbund (sham `rgba(255,255,255,0.35)`), lodret lysrefleks og Gibraltar facetter for Cortado og Piccolo.
+  - Americano serveres nu som en autentisk barista-drik i glas (`glassStyle: 'glass'`) med varm krystal-ravbase og flydende espresso/crema på toppen.
+- **Etape 2: `ArchitecturalCup.tsx` & `types/espresso.ts` (Isterninger, Desserter & Unikke Pour Over Silhuetter):**
+  - Kolde drikke (Iced Latte, Espresso Tonic, Cold Brew) renderes med vinklede, gennemskinnelige isterninger (`#E8F1F5`) og opstigende kulsyrebobler.
+  - Dessert-specialiteter: Affogato med cremet fior di latte gelato-kugle; Espresso con Panna med skulpturel flødeskumstop (whipped cream peak).
+  - Unikke silhuetter for de 6 Pour Over metoder:
+    - Chemex: Timeglas-karaffel med træ-krave (`wood collar`) og lædersnor med træperle.
+    - Hario V60: 60-graders kegle med karakteristiske parabolske spiral-riller.
+    - Kalita Wave: Fladbundet drypper med 3 ekstraktionshuller og bølgefolder.
+    - AeroPress: Cylindrisk ekstraktionskammer UDEN hank, med millimeter-måleskala (1-4) og perforeret bajonet-filterhætte.
+    - French Press: Bodum-stil stempelkande med forkromet stålgitter, lodret stempelstang og spiralformet trådnet.
+- **Etape 3: `DrinkSelector.tsx` (Digital Barista Deck & Typografi):**
+  - Symmetrisk 2-kolonne Quick Deck (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`) med forstørrede kopper (`w-10 h-11`).
+  - Opstrammet Master-kort: Runde farveprikker i lag-forklaringen (erstatter firkanter der lignede tomme afkrydsningsfelter), forenklet samlet Grinder & Bean-kort med `divide-y / divide-x` uden "box-i-box" tunghed.
+  - Specialty Menu Modal tekst-afkortnings fix: Undgår afskæring af ratio på mobiler (`font-sans text-xs` `${ml}ml • ${category} • 1:${ratio}`), og prominent forstørret kop (`w-11 h-12`).
+- **Etape 4: `FlowChart.tsx`, `Logbook.tsx`, `ShotShareModal.tsx` & i18n:**
+  - `FlowChart.tsx`: Strikt SVG `<clipPath id="chart-area-clip">` og matematisk clamping (`Math.max(padTop, Math.min(padTop + chartH, y))`) forhindrer kurver i at overlappe akser eller overskrifter. Responsiv header (`flex-col sm:flex-row gap-1.5`) holder kurveoverskriften på én linje på smalle mobiler.
+  - `Logbook.tsx`: Fjernet det store tomme venstre kvadrat (~80px sparet pr. kort), og indsat miniature `<ArchitecturalCup size="xs" />` direkte i shot-headeren ved siden af `#130` og kaffenavnet. Alle status-badges har fået `whitespace-nowrap`, og sprogkonsistens (`Share Card`, `telemetry_points`).
+  - `ShotShareModal.tsx`: Det ultimative specialty delingskort med kop-silhuet ved siden af drikketitel, renset udstyrsstreng (fjerner interne parenteskoder), sandfærdig dynamisk bundstatus (`Status: Channeling (X.X g/s)` eller `Status: Golden Zone (1:2.0 in 28s)`), fjernelse af uformelle emojis til fordel for minimalistisk typografi og rent `flowbean.app` domæne.
+
 ## [1.11.1] - 2026-10-16
 ### Etape 46: Nativ Android/iOS Shot Card Deling via Capacitor Plugins & Canvas Graf-Afgrænsning
 - **Nativ Deling via `@capacitor/share` & `@capacitor/filesystem` (`ShotShareModal.tsx`):**

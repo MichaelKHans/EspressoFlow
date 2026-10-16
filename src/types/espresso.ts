@@ -196,7 +196,7 @@ export interface DrinkRecipe {
   ratioStyle: RatioStyle;
   expectedTimeSeconds: number;
   cupVolumeMl?: number;
-  glassStyle?: 'cup' | 'glass' | 'tall-glass' | 'demitasse' | 'server' | 'press';
+  glassStyle?: 'cup' | 'glass' | 'tall-glass' | 'demitasse' | 'server' | 'press' | 'chemex' | 'kalita' | 'aeropress' | 'french-press';
   isDefaultActive?: boolean;
   idealRoastLevels?: RoastLevel[];
   pourOverGuide?: PourOverGuide;

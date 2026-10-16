@@ -265,209 +265,202 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                       key={shot.id}
                       className={`bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] ${statusBorder} p-3.5 sm:p-4 shadow-xs hover:border-[#C26D52]/40 transition font-mono space-y-3`}
                     >
-                      {/* Main Card Overview Row */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-4">
-                        {/* Visual Drink Cup Silhouette */}
-                        <div className="flex sm:flex-col items-center justify-between sm:justify-center p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] shrink-0 self-start sm:self-center w-full sm:w-20">
-                          <div className="py-1">
-                            <ArchitecturalCup drink={matchingRecipe} size="sm" />
+                      {/* Shot Details & Extraction Metrics */}
+                      <div className="space-y-2.5">
+                        {/* Journal Card Header */}
+                        <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2 text-xs">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {/* Miniature Architectural Cup Icon */}
+                            <div className="w-8 h-8 flex items-center justify-center shrink-0 p-0.5 bg-[#FAF7F2] rounded-lg border border-[#E8DFD5]" title={drinkLabel}>
+                              <ArchitecturalCup drink={matchingRecipe} size="xs" />
+                            </div>
+                            <span className="bg-[#2C2018] text-[#FAF7F2] px-2 py-0.5 rounded text-[10px] font-bold shrink-0">
+                              #{shotNumber}
+                            </span>
+                            <span className="font-bold text-[#2C2018] font-serif">{shot.coffeeName}</span>
+                            <span className="bg-[#FAF7F2] border border-[#C26D52]/30 text-[#C26D52] px-2 py-0.5 rounded text-[10px] font-bold shrink-0 whitespace-nowrap">
+                              {drinkLabel}
+                            </span>
+                            {shot.roastLevel && roastKey && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded border uppercase font-mono tracking-wider font-semibold border-[#E8DFD5] bg-[#FAF7F2] text-[#7A6E65] shrink-0 whitespace-nowrap">
+                                {t(roastKey as any)}
+                              </span>
+                            )}
                           </div>
-                          <span className="text-[9px] font-bold text-[#7A6E65] sm:mt-1 text-center truncate max-w-[120px] sm:max-w-[70px]">
-                            {matchingRecipe.name.split('/')[0].trim()}
-                          </span>
-                        </div>
 
-                        {/* Shot Details & Extraction Metrics */}
-                        <div className="flex-1 min-w-0 space-y-2">
-                          {/* Journal Card Header */}
-                          <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2 text-xs">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="bg-[#2C2018] text-[#FAF7F2] px-2 py-0.5 rounded text-[10px] font-bold">
-                                #{shotNumber}
-                              </span>
-                              <span className="font-bold text-[#2C2018]">{shot.coffeeName}</span>
-                              <span className="bg-[#FAF7F2] border border-[#C26D52]/30 text-[#C26D52] px-2 py-0.5 rounded text-[10px] font-bold">
-                                {drinkLabel}
-                              </span>
-                              {shot.roastLevel && roastKey && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded border uppercase font-mono tracking-wider font-semibold border-[#E8DFD5] bg-[#FAF7F2] text-[#7A6E65]">
-                                  {t(roastKey as any)}
-                                </span>
-                              )}
+                          {/* Actions & Timestamp */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-1 text-[11px] text-[#7A6E65]">
+                              <Clock className="w-3 h-3" />
+                              <span className="whitespace-nowrap">{timeStr}</span>
                             </div>
 
-                            {/* Actions & Timestamp */}
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 text-[11px] text-[#7A6E65]">
-                                <Clock className="w-3 h-3" />
-                                <span>{timeStr}</span>
-                              </div>
-
-                              {/* Safe Delete Button */}
-                              {onDeleteShot && (
-                                <div className="flex items-center gap-1 ml-2">
-                                  {isConfirming ? (
-                                    <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-lg p-1">
-                                      <span className="text-[10px] text-red-700 font-bold px-1">
-                                        {t('logbook.delete_confirm_prompt')}
-                                      </span>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => handleDelete(shot.id, e)}
-                                        className="p-1 rounded hover:bg-red-200 text-red-700 transition"
-                                        title={t('logbook.confirm_delete')}
-                                      >
-                                        <Check className="w-3 h-3" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={handleCancelDelete}
-                                        className="p-1 rounded hover:bg-gray-200 text-[#7A6E65] transition"
-                                        title={t('logbook.cancel')}
-                                      >
-                                        <X className="w-3 h-3" />
-                                      </button>
-                                    </div>
-                                  ) : (
+                            {/* Safe Delete Button */}
+                            {onDeleteShot && (
+                              <div className="flex items-center gap-1 ml-2">
+                                {isConfirming ? (
+                                  <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-lg p-1">
+                                    <span className="text-[10px] text-red-700 font-bold px-1">
+                                      {t('logbook.delete_confirm_prompt')}
+                                    </span>
                                     <button
                                       type="button"
                                       onClick={(e) => handleDelete(shot.id, e)}
-                                      className="p-1.5 rounded-lg text-[#7A6E65] hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition"
-                                      title={t('logbook.delete_tooltip')}
+                                      className="p-1 rounded hover:bg-red-200 text-red-700 transition"
+                                      title={t('logbook.confirm_delete')}
                                     >
-                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <Check className="w-3 h-3" />
                                     </button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Extraction Metrics Row */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-1">
-                            <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
-                              <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
-                                {t('logbook.ratio')}
-                              </div>
-                              <div className="font-bold text-[#2C2018] text-xs mt-0.5">
-                                {shot.doseGrams}g →{' '}
-                                <span className="text-[#C26D52]">{shot.actualYieldGrams}g</span>
-                              </div>
-                              <div className="text-[10px] text-[#7A6E65] mt-0.5">
-                                1:
-                                {shot.doseGrams > 0
-                                  ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1)
-                                  : '2.0'}{' '}
-                                ratio
-                              </div>
-                            </div>
-
-                            <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
-                              <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
-                                {t('logbook.time_and_flow')}
-                              </div>
-                              <div className="font-bold text-[#2C2018] text-xs mt-0.5">
-                                {shot.totalTimeSeconds}s @ {shot.averageFlowGps}g/s
-                              </div>
-                              {shot.preInfusionSeconds !== undefined && (
-                                <div className="text-[10px] text-[#7A6E65] mt-0.5 truncate">
-                                  {t('logbook.pre_abbr')}: {shot.preInfusionSeconds}s •{' '}
-                                  {t('logbook.flow_abbr')}: {shot.flowTimeSeconds}s
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
-                              <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
-                                {t('logbook.equipment')}
-                              </div>
-                              <div className="font-bold text-[#2C2018] text-xs mt-0.5 truncate">
-                                {shot.grinderName.split(' ')[0]} @{' '}
-                                <strong className="text-[#C26D52]">{shot.grindSetting}</strong>
-                              </div>
-                              {shot.machineName && (
-                                <div className="text-[10px] text-[#7A6E65] truncate mt-0.5">
-                                  {shot.machineName.split(' ')[0]}
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
-                              <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
-                                {t('logbook.taste_flow')}
-                              </div>
-                              <div className="flex items-center gap-1 font-semibold capitalize text-[#2C2018] mt-0.5">
-                                {shot.channelingDetected ? (
-                                  <span className="text-[#B85B48] flex items-center gap-1 text-[11px] font-bold">
-                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />{' '}
-                                    {t('logbook.channeling')}
-                                    {shot.channeling?.flowSpikeGps
-                                      ? ` (${shot.channeling.flowSpikeGps} g/s)`
-                                      : ''}
-                                  </span>
+                                    <button
+                                      type="button"
+                                      onClick={handleCancelDelete}
+                                      className="p-1 rounded hover:bg-gray-200 text-[#7A6E65] transition"
+                                      title={t('logbook.cancel')}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
                                 ) : (
-                                  <span className="text-[#72806B] flex items-center gap-1 text-[11px] font-bold">
-                                    <CheckCircle className="w-3.5 h-3.5 shrink-0" />{' '}
-                                    {shot.tasteRating
-                                      ? shot.tasteRating === 'sour'
-                                        ? t('taste.sour_label')
-                                        : shot.tasteRating === 'bitter'
-                                        ? t('taste.bitter_label')
-                                        : shot.tasteRating === 'watery'
-                                        ? t('taste.watery_label')
-                                        : t('taste.balanced_label')
-                                      : t('logbook.balanced')}
-                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleDelete(shot.id, e)}
+                                    className="p-1.5 rounded-lg text-[#7A6E65] hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition"
+                                    title={t('logbook.delete_tooltip')}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 )}
                               </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Extraction Metrics Row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-1">
+                          <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                            <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
+                              {t('logbook.ratio')}
+                            </div>
+                            <div className="font-bold text-[#2C2018] text-xs mt-0.5">
+                              {shot.doseGrams}g →{' '}
+                              <span className="text-[#C26D52]">{shot.actualYieldGrams}g</span>
+                            </div>
+                            <div className="text-[10px] text-[#7A6E65] mt-0.5">
+                              1:
+                              {shot.doseGrams > 0
+                                ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1)
+                                : '2.0'}{' '}
+                              ratio
                             </div>
                           </div>
 
-                          {shot.notes && (
-                            <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[11px] text-[#2C2018] flex items-start gap-1.5 leading-relaxed">
-                              <span className="text-[#C26D52] font-serif text-sm font-bold select-none shrink-0 leading-none mt-0.5">
-                                “
-                              </span>
-                              <span className="italic flex-1">{shot.notes}</span>
-                              <span className="text-[#C26D52] font-serif text-sm font-bold select-none shrink-0 leading-none self-end">
-                                ”
-                              </span>
+                          <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                            <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
+                              {t('logbook.time_and_flow')}
                             </div>
-                          )}
+                            <div className="font-bold text-[#2C2018] text-xs mt-0.5">
+                              {shot.totalTimeSeconds}s @ {shot.averageFlowGps}g/s
+                            </div>
+                            {shot.preInfusionSeconds !== undefined && (
+                              <div className="text-[10px] text-[#7A6E65] mt-0.5 truncate">
+                                {t('logbook.pre_abbr')}: {shot.preInfusionSeconds}s •{' '}
+                                {t('logbook.flow_abbr')}: {shot.flowTimeSeconds}s
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                            <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
+                              {t('logbook.equipment')}
+                            </div>
+                            <div className="font-bold text-[#2C2018] text-xs mt-0.5 truncate">
+                              {shot.grinderName.split(' ')[0]} @{' '}
+                              <strong className="text-[#C26D52]">{shot.grindSetting}</strong>
+                            </div>
+                            {shot.machineName && (
+                              <div className="text-[10px] text-[#7A6E65] truncate mt-0.5">
+                                {shot.machineName.split(' ')[0]}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                            <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
+                              {t('logbook.taste_flow')}
+                            </div>
+                            <div className="flex items-center gap-1 font-semibold capitalize text-[#2C2018] mt-0.5">
+                              {shot.channelingDetected ? (
+                                <span className="text-[#B85B48] flex items-center gap-1 text-[11px] font-bold whitespace-nowrap">
+                                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />{' '}
+                                  {t('logbook.channeling')}
+                                  {shot.channeling?.flowSpikeGps
+                                    ? ` (${shot.channeling.flowSpikeGps} g/s)`
+                                    : ''}
+                                </span>
+                              ) : (
+                                <span className="text-[#72806B] flex items-center gap-1 text-[11px] font-bold whitespace-nowrap">
+                                  <CheckCircle className="w-3.5 h-3.5 shrink-0" />{' '}
+                                  {shot.tasteRating
+                                    ? shot.tasteRating === 'sour'
+                                      ? t('taste.sour_label')
+                                      : shot.tasteRating === 'bitter'
+                                      ? t('taste.bitter_label')
+                                      : shot.tasteRating === 'watery'
+                                      ? t('taste.watery_label')
+                                      : t('taste.balanced_label')
+                                    : t('logbook.balanced')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
+
+                        {shot.notes && (
+                          <div className="p-2 sm:p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[11px] text-[#2C2018] flex items-start gap-1.5 leading-relaxed">
+                            <span className="text-[#C26D52] font-serif text-sm font-bold select-none shrink-0 leading-none mt-0.5">
+                              “
+                            </span>
+                            <span className="italic flex-1">{shot.notes}</span>
+                            <span className="text-[#C26D52] font-serif text-sm font-bold select-none shrink-0 leading-none self-end">
+                              ”
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Expandable Flow Curve Action Button */}
-                      <div className="border-t border-[#E8DFD5]/60 pt-2 flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() => toggleExpand(shot.id)}
-                          className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] hover:bg-[#E8DFD5] border border-[#E8DFD5] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition"
-                        >
-                          <TrendingUp className="w-3.5 h-3.5 text-[#C26D52]" />
-                          <span>
-                            {isExpanded ? t('logbook.hide_curve') : t('logbook.view_curve')}
-                          </span>
-                          {isExpanded ? (
-                            <ChevronUp className="w-3.5 h-3.5 text-[#7A6E65]" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5 text-[#7A6E65]" />
-                          )}
-                        </button>
+                      {/* Expandable Flow Curve Action Button & Share Card */}
+                      <div className="border-t border-[#E8DFD5]/60 pt-2 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleExpand(shot.id)}
+                            className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] hover:bg-[#E8DFD5] border border-[#E8DFD5] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                          >
+                            <TrendingUp className="w-3.5 h-3.5 text-[#C26D52]" />
+                            <span className="whitespace-nowrap">
+                              {isExpanded ? t('logbook.hide_curve') : t('logbook.view_curve')}
+                            </span>
+                            {isExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5 text-[#7A6E65]" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 text-[#7A6E65]" />
+                            )}
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => setSharingShot(shot)}
-                          className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] hover:bg-[#E8DFD5] border border-[#DECFC0] text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer active:scale-98"
-                          title="Del Barista Shot Card"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                          <span>Del Card</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => setSharingShot(shot)}
+                            className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] hover:bg-[#E8DFD5] border border-[#DECFC0] text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer active:scale-98"
+                            title={t('logbook.share_card')}
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                            <span className="whitespace-nowrap">{t('logbook.share_card')}</span>
+                          </button>
+                        </div>
 
-                        <span className="text-[10px] text-[#7A6E65]">
+                        <span className="text-[10px] text-[#7A6E65] whitespace-nowrap">
                           {shot.dataPoints && shot.dataPoints.length > 0
-                            ? `${shot.dataPoints.length} telemetri punkter`
+                            ? t('logbook.telemetry_points', { count: shot.dataPoints.length })
                             : ''}
                         </span>
                       </div>

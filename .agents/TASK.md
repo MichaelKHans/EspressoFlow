@@ -14,3 +14,5 @@
 - [x] AeroPress & French Press Immersion Steep Timer & Vægt Plunge Beskyttelse (v1.6.0)
 - [x] Skala-OCR Præcision & Robust Dobbelt-Række Parsing (Muvna/Acaia/Timemore) & Ren Viewfinder UX (v1.7.7)
 - [x] Zoom-Hukommelse, Total Udrensning af Haptisk Forstyrrelse & Cross-Scale Benchmark Test-Suite (v1.7.8)
+- [x] Nativ Android/iOS Shot Card Deling via Capacitor Plugins & Canvas Graf-Afgrænsning (v1.11.1)
+- [x] Komplet Visuel Overhaling af Kopper/Glas, Digital Barista Deck, Logbog & Det Ultimative Specialty Share Card (v1.12.0)

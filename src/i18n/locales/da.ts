@@ -285,6 +285,8 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'logbook.flow_abbr': 'Flow',
   'logbook.channeling': 'Kanalisering',
   'logbook.balanced': 'Balanceret',
+  'logbook.share_card': 'Del Card',
+  'logbook.telemetry_points': '{count} telemetripunkter',
 
   // Roast Level Details & Chemistry
   'roast.light_label': 'Lys Ristning',

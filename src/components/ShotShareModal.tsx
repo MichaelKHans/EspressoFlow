@@ -96,14 +96,54 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.stroke();
 
     // 3. Hero Shot Info (Drink & Bean)
-    // Drink badge
+    // Cup / Glass outline silhouette beside drink badge
+    const drinkNameUpper = (shot.drinkName || 'Espresso').toUpperCase();
+    const isGlass = drinkNameUpper.includes('GLASS') ||
+                    drinkNameUpper.includes('CORTADO') ||
+                    drinkNameUpper.includes('COLD') ||
+                    drinkNameUpper.includes('TONIC') ||
+                    drinkNameUpper.includes('AMERICANO');
+
+    // Silhouette icon
+    ctx.save();
+    ctx.fillStyle = 'rgba(194, 109, 82, 0.25)';
+    ctx.strokeStyle = '#C26D52';
+    ctx.lineWidth = 2.5;
+
+    if (isGlass) {
+      // Tumbler / Faceted glass
+      ctx.beginPath();
+      ctx.moveTo(64, 184);
+      ctx.lineTo(92, 184);
+      ctx.lineTo(88, 214);
+      ctx.lineTo(68, 214);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      // Demitasse / Ceramic cup with handle
+      ctx.beginPath();
+      ctx.moveTo(64, 186);
+      ctx.lineTo(88, 186);
+      ctx.quadraticCurveTo(88, 214, 76, 214);
+      ctx.quadraticCurveTo(64, 214, 64, 186);
+      ctx.fill();
+      ctx.stroke();
+      // Handle
+      ctx.beginPath();
+      ctx.arc(92, 198, 5.5, -Math.PI / 2, Math.PI / 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Drink badge (placed beside cup silhouette)
     ctx.fillStyle = '#C26D52';
     ctx.beginPath();
-    ctx.roundRect(60, 180, 220, 38, 8);
+    ctx.roundRect(108, 180, 220, 38, 8);
     ctx.fill();
     ctx.fillStyle = '#FAF7F2';
     ctx.font = 'bold 18px "Courier Prime", monospace';
-    ctx.fillText((shot.drinkName || 'Espresso').toUpperCase(), 76, 205);
+    ctx.fillText(drinkNameUpper, 124, 205);
 
     // Bean name
     ctx.fillStyle = '#FAF7F2';
@@ -111,10 +151,12 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     const beanName = shot.coffeeName || 'House Blend Specialty';
     ctx.fillText(beanName.length > 28 ? beanName.slice(0, 26) + '...' : beanName, 60, 265);
 
-    // Roast & Gear
+    // Cleaned Gear & Roast string (parentheses stripped)
     ctx.fillStyle = '#D4A373';
     ctx.font = '24px "Courier Prime", monospace';
-    const gearText = `${shot.grinderName || 'Grinder'} @ ${shot.grindSetting || '–'}${shot.machineName ? ` • ${shot.machineName}` : ''}`;
+    const cleanGrinder = (shot.grinderName || 'Grinder').replace(/\s*\([^)]*\)/g, '').trim();
+    const cleanMachine = shot.machineName ? shot.machineName.replace(/\s*\([^)]*\)/g, '').trim() : '';
+    const gearText = `${cleanGrinder} @ ${shot.grindSetting || '–'}${cleanMachine ? ` • ${cleanMachine}` : ''}`;
     ctx.fillText(gearText, 60, 305);
 
     // 4. Primary KPI Metric Cards (Dose, Yield, Ratio, Time)
@@ -348,27 +390,50 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     const stabText = `Stabilitet: ${shot.flowStabilityPercent || 92}%`;
     ctx.fillText(stabText, 780, statsY + 46);
 
-    // 7. Footer Viral Promotion Banner
+    // 7. Dynamic Status & Promotion Banner
     const footY = 1120;
     ctx.fillStyle = '#160E0A';
     ctx.beginPath();
     ctx.roundRect(60, footY, W - 120, 160, 16);
     ctx.fill();
-    ctx.strokeStyle = '#C26D52';
+
+    const isChanneling = shot.channelingDetected || (shot.channeling && shot.channeling.detected);
+    const spikeVal = shot.channeling?.flowSpikeGps || 0;
+
+    // Status border color: Terracotta if channeling, Sage green if Golden Zone
+    ctx.strokeStyle = isChanneling ? '#C26D52' : '#72806B';
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    // Status pill
+    ctx.fillStyle = isChanneling ? 'rgba(194, 109, 82, 0.18)' : 'rgba(114, 128, 107, 0.18)';
+    ctx.beginPath();
+    ctx.roundRect(95, footY + 26, 360, 38, 8);
+    ctx.fill();
+    ctx.strokeStyle = isChanneling ? '#C26D52' : '#72806B';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = isChanneling ? '#E08B73' : '#A3B899';
+    ctx.font = 'bold 17px "Courier Prime", monospace';
+    const statusText = isChanneling
+      ? `STATUS: CHANNELING (${spikeVal > 0 ? spikeVal.toFixed(1) : '3.2'} g/s)`
+      : `STATUS: GOLDEN ZONE (1:${ratioDisplay} in ${shot.totalTimeSeconds.toFixed(0)}s)`;
+    ctx.fillText(statusText, 110, footY + 51);
+
+    // App Branding & Subtitle
     ctx.fillStyle = '#FAF7F2';
-    ctx.font = 'bold 26px "Courier Prime", monospace';
-    ctx.fillText('☕ MÅLT MED FLOWBEAN', 95, footY + 55);
+    ctx.font = 'bold 22px "Courier Prime", monospace';
+    ctx.fillText('MEASURED WITH FLOWBEAN', 490, footY + 51);
 
     ctx.fillStyle = '#A39589';
-    ctx.font = '20px sans-serif';
-    ctx.fillText('Real-Time Skala OCR & Matematisk Ekstraktionsdynamik for Baristaer', 95, footY + 92);
+    ctx.font = '18px sans-serif';
+    ctx.fillText('Real-Time Scale OCR & Mathematical Fluid Dynamics for Baristas', 95, footY + 98);
 
+    // Clean domain & link prompt without emojis
     ctx.fillStyle = '#C26D52';
-    ctx.font = 'bold 22px "Courier Prime", monospace';
-    ctx.fillText('👉 espressoflow.vercel.app', 95, footY + 130);
+    ctx.font = 'bold 20px "Courier Prime", monospace';
+    ctx.fillText('FLOWBEAN.APP  •  PRECISION EXTRACTION SUITE', 95, footY + 134);
 
     // Generate data URL for preview
     const dataUrl = canvas.toDataURL('image/png');
@@ -394,9 +459,9 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     if (!canvasRef.current) return;
     setIsSharing(true);
 
-    const shareTitle = `Mit Espresso Shot: ${shot.drinkName || 'Espresso'}`;
+    const shareTitle = `Espresso Shot: ${shot.drinkName || 'Espresso'}`;
     const ratioVal = shot.doseGrams > 0 ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1) : '2.0';
-    const shareText = `☕ ${shot.coffeeName || 'Espresso'} • ${shot.doseGrams}g ➔ ${shot.actualYieldGrams.toFixed(1)}g i ${shot.totalTimeSeconds}s (Ratio 1:${ratioVal}). Målt med Flowbean! 👉 https://espressoflow.vercel.app`;
+    const shareText = `${shot.drinkName || 'Espresso'} | ${shot.coffeeName || 'Coffee Blend'} • ${shot.doseGrams}g -> ${shot.actualYieldGrams.toFixed(1)}g in ${shot.totalTimeSeconds}s (1:${ratioVal} ratio). Measured with Flowbean: https://flowbean.app`;
     const fileName = `flowbean-shot-${Date.now()}.png`;
 
     try {
@@ -510,12 +575,18 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
 
   const handleCopyText = async () => {
     const ratioVal = shot.doseGrams > 0 ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1) : '2.0';
-    const text = `☕ ${shot.drinkName || 'Espresso'} — ${shot.coffeeName || 'Coffee Blend'}\n` +
-      `📊 Dosis: ${shot.doseGrams.toFixed(1)}g ➔ Yield: ${shot.actualYieldGrams.toFixed(1)}g (Ratio 1:${ratioVal})\n` +
-      `⏱ Tid: ${shot.totalTimeSeconds.toFixed(1)}s (Pre: ${shot.preInfusionSeconds.toFixed(1)}s)\n` +
-      `⚙️ Kværn: ${shot.grinderName || 'Grinder'} @ ${shot.grindSetting || '–'}\n` +
-      `🌊 Gns. flow: ${(shot.averageFlowGps || 0).toFixed(2)} g/s\n\n` +
-      `Analyseret med Flowbean: https://espressoflow.vercel.app`;
+    const cleanGrinder = (shot.grinderName || 'Grinder').replace(/\s*\([^)]*\)/g, '').trim();
+    const cleanMachine = shot.machineName ? shot.machineName.replace(/\s*\([^)]*\)/g, '').trim() : '';
+    const isChanneling = shot.channelingDetected || (shot.channeling && shot.channeling.detected);
+    const spikeVal = shot.channeling?.flowSpikeGps;
+
+    const text = `FLOWBEAN BARISTA TELEMETRY\n` +
+      `Drink: ${shot.drinkName || 'Espresso'} — ${shot.coffeeName || 'Coffee Blend'}\n` +
+      `Extraction: ${shot.doseGrams.toFixed(1)}g -> ${shot.actualYieldGrams.toFixed(1)}g in ${shot.totalTimeSeconds.toFixed(1)}s (1:${ratioVal} ratio)\n` +
+      `Flow: ${(shot.averageFlowGps || 0).toFixed(2)} g/s avg (Pre: ${shot.preInfusionSeconds.toFixed(1)}s)\n` +
+      `Gear: ${cleanGrinder} @ ${shot.grindSetting || '–'}${cleanMachine ? ` • ${cleanMachine}` : ''}\n` +
+      `Status: ${isChanneling ? `Channeling (${spikeVal ? spikeVal.toFixed(1) : '3.2'} g/s)` : 'Golden Zone'}\n\n` +
+      `Analyze your shots with Flowbean: https://flowbean.app`;
 
     try {
       await navigator.clipboard.writeText(text);
@@ -590,7 +661,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
             className="w-full py-3.5 px-4 rounded-xl bg-[#C26D52] hover:bg-[#A85840] active:scale-98 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md cursor-pointer disabled:opacity-50"
           >
             <Share2 className="w-4 h-4" />
-            <span>{isSharing ? (t('share.sharing') || 'Åbner deling...') : (t('share.btn_share') || 'Del Shot Card')}</span>
+            <span>{isSharing ? (t('share.sharing') || 'Opening...') : (t('logbook.share_card') || 'Share Shot Card')}</span>
           </button>
 
           {/* Secondary Actions Grid */}
@@ -601,7 +672,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
               className="py-2.5 px-3 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] active:scale-98 text-[#2C2018] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
             >
               <Download className="w-4 h-4 text-[#7A6E65]" />
-              <span>{t('share.btn_download') || 'Gem Billede'}</span>
+              <span>{t('share.btn_download') || 'Save Image'}</span>
             </button>
 
             <button
@@ -614,7 +685,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
               ) : (
                 <Copy className="w-4 h-4 text-[#7A6E65]" />
               )}
-              <span>{isCopied ? (t('share.copied') || 'Kopieret!') : (t('share.btn_copy') || 'Kopiér Tekst')}</span>
+              <span>{isCopied ? (t('share.copied') || 'Copied!') : (t('share.btn_copy') || 'Copy Card')}</span>
             </button>
           </div>
         </div>

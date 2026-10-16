@@ -366,52 +366,54 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
         {/* 2. Active Bar Deck Ribbon & Customizer */}
         <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/10">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-[9px] sm:text-[10px] font-mono text-[#E8DFD5]/70 uppercase tracking-wider font-bold">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="text-[10px] sm:text-[11px] font-sans text-[#E8DFD5]/80 uppercase tracking-wider font-bold">
               {methodFilter === 'espresso' ? 'Espresso Deck' : 'Pour Over Deck'} ({displayDeckDrinks.length} pinned):
             </div>
             <button
               type="button"
               onClick={() => setIsCustomizeModalOpen(true)}
-              className="text-[10px] sm:text-[11px] font-mono text-[#FAF7F2] hover:text-[#FFFDF9] bg-white/10 hover:bg-white/20 border border-white/15 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition cursor-pointer"
+              className="text-[11px] font-sans font-medium text-[#FAF7F2] hover:text-[#FFFDF9] bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-xs"
               title="Browse all drinks or customize quick deck"
             >
-              <Settings2 className="w-3 h-3 text-[#C26D52]" />
-              <span>All Drinks & Deck</span>
+              <Settings2 className="w-3.5 h-3.5 text-[#C26D52]" />
+              <span>All Drinks & Pin ({DRINK_RECIPES.filter((d) => (d.method || 'espresso') === methodFilter).length})</span>
             </button>
           </div>
 
-          {/* Quick Deck Buttons: Wrapped so all pinned drinks are instantly visible! */}
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          {/* Symmetrical 2-Column Grid (3 clean rows of 2 on mobile, 3-cols on tablet) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {displayDeckDrinks.map((drink) => {
               const isSelected = drink.id === selectedDrink.id;
               const shortName = drink.name.split('/')[0].trim();
+              const ratioDisplay = `1:${drink.targetRatio}`;
+              const volumeDisplay = drink.cupVolumeMl ? `${drink.cupVolumeMl}ml` : `${Math.round(drink.targetYieldGrams)}g`;
+
               return (
                 <button
                   key={drink.id}
+                  type="button"
                   onClick={() => handleSelectDrinkWithScroll(drink)}
-                  className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium transition flex items-center gap-1.5 sm:gap-2 cursor-pointer ${
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all text-left cursor-pointer ${
                     isSelected
-                      ? 'bg-[#C26D52] text-white shadow-xs font-bold ring-2 ring-white/30 scale-[1.02]'
-                      : 'bg-white/10 text-[#FAF7F2] hover:bg-white/20 border border-white/10'
+                      ? 'bg-[#B85D43] border-[#E08A70] text-[#FFFDF9] shadow-md ring-2 ring-white/20 scale-[1.01]'
+                      : 'bg-[#241A14]/95 border-[#4A382C] text-[#FAF7F2] hover:border-[#7A5C48] hover:bg-[#2C2018]'
                   }`}
                 >
-                  <ArchitecturalCup drink={drink} size="xs" />
-                  <span className="whitespace-nowrap">{shortName}</span>
+                  <div className="w-10 h-11 shrink-0 flex items-center justify-center p-0.5 rounded-lg bg-black/20 border border-white/10">
+                    <ArchitecturalCup drink={drink} size="xs" variant="dark" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-serif text-[13px] sm:text-[14px] font-semibold leading-tight truncate">
+                      {shortName}
+                    </h5>
+                    <p className="font-sans text-[11px] opacity-80 truncate mt-0.5">
+                      {volumeDisplay} • {ratioDisplay}
+                    </p>
+                  </div>
                 </button>
               );
             })}
-
-            {/* "+ More Drinks" button right in the ribbon */}
-            <button
-              type="button"
-              onClick={() => setIsCustomizeModalOpen(true)}
-              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-mono font-medium bg-white/5 hover:bg-white/15 border border-dashed border-white/30 text-[#E8DFD5] transition flex items-center gap-1.5 cursor-pointer"
-              title="Browse all specialty recipes"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#C26D52]" />
-              <span>More</span>
-            </button>
           </div>
         </div>
       </div>
@@ -425,15 +427,10 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-6 pb-4 sm:pb-6 border-b border-[#E8DFD5]">
           {/* Drink Name & Header */}
           <div className="space-y-1.5 max-w-xl">
-            {/* Visual Anchor Bar - Extra clear on small screens so barista never loses orientation */}
+            {/* Visual Status Badges (Streamlined on single row) */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#C26D52]/10 text-[#C26D52] border border-[#C26D52]/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C26D52] animate-pulse" />
-                <span>{t('drink.active_badge') || 'Active Coffee'}</span>
-              </span>
-
               <span
-                className={`text-[9px] sm:text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full border ${
+                className={`text-[10px] font-sans font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
                   selectedDrink.category === 'milk'
                     ? 'bg-[#FAF7F2] text-[#7A6E65] border-[#E8DFD5]'
                     : selectedDrink.category === 'dessert'
@@ -450,11 +447,11 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
               {/* Dialed In Status Badge */}
               {isDialedIn ? (
-                <span className="text-[9px] sm:text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 flex items-center gap-1">
+                <span className="text-[10px] font-sans font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" /> DIALED IN
                 </span>
               ) : (
-                <span className="text-[9px] sm:text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1">
+                <span className="text-[10px] font-sans font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1">
                   <Sliders className="w-3 h-3" /> NEEDS DIAL-IN
                 </span>
               )}
@@ -467,14 +464,14 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               <button
                 type="button"
                 onClick={() => setIsCustomizeModalOpen(true)}
-                className="text-[10px] sm:text-[11px] font-mono text-[#C26D52] hover:text-[#2C2018] flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5]/50 transition shrink-0"
+                className="text-[11px] font-sans text-[#C26D52] hover:text-[#2C2018] flex items-center gap-1 font-bold px-2.5 py-1 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5]/50 transition shrink-0 cursor-pointer"
                 title="Switch to another specialty drink"
               >
                 <span>{t('drink.switch_btn') || 'Switch'}</span>
                 <ChevronRight className="w-3 h-3" />
               </button>
             </div>
-            <p className="text-xs text-[#7A6E65] leading-relaxed line-clamp-2 sm:line-clamp-none">
+            <p className="text-xs text-[#7A6E65] font-sans leading-relaxed line-clamp-2 sm:line-clamp-none">
               {selectedDrink.description}
             </p>
           </div>
@@ -484,7 +481,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             <button
               type="button"
               onClick={() => onOpenDialInWizard(selectedDrink)}
-              className="flex-1 sm:flex-none px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border border-[#C26D52] bg-[#FAF7F2] hover:bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
+              className="flex-1 sm:flex-none px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border border-[#C26D52] bg-[#FAF7F2] hover:bg-[#C26D52]/10 text-[#C26D52] text-xs font-sans font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
               title="Open Dial-In Studio to adjust beans, grinder settings, and ratios"
             >
               <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
@@ -494,7 +491,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             <button
               type="button"
               onClick={() => onLaunchScaleCam(selectedDrink)}
-              className="flex-2 sm:flex-none px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition shadow-md group cursor-pointer"
+              className="flex-2 sm:flex-none px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-sans font-bold flex items-center justify-center gap-2 transition shadow-md group cursor-pointer"
             >
               <span>
                 {selectedDrink.method === 'pour_over'
@@ -510,7 +507,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-stretch">
           {/* Architectural Layered Cup Graphic */}
           <div className="md:col-span-5 flex flex-col items-center justify-center bg-[#FAF7F2] p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-[#E8DFD5]">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-[#7A6E65] mb-2 font-bold flex items-center gap-1.5">
+            <div className="text-[10px] font-sans uppercase tracking-wider text-[#7A6E65] mb-2 font-bold flex items-center gap-1.5">
               <Layers className="w-3 h-3 text-[#C26D52]" />
               <span>
                 {selectedDrink.method === 'pour_over' ? 'Carafe / Server Anatomy' : 'Cup Anatomy'} ({selectedDrink.cupVolumeMl || 180}ml)
@@ -521,27 +518,27 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               <ArchitecturalCup drink={selectedDrink} size="lg" showLabels={false} />
             </div>
 
-            {/* Layer Legend Breakdown */}
-            <div className="w-full mt-3 pt-2.5 border-t border-[#E8DFD5] space-y-1">
+            {/* Layer Legend Breakdown with Round Colored Dots */}
+            <div className="w-full mt-3 pt-2.5 border-t border-[#E8DFD5] space-y-1.5">
               {selectedDrink.layers.map((layer, idx) => (
-                <div key={idx} className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono">
-                  <div className="flex items-center gap-1.5 truncate">
+                <div key={idx} className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-2 truncate">
                     <span
-                      className="w-2.5 h-2.5 rounded-2xs border border-black/20 shrink-0"
+                      className="w-2.5 h-2.5 rounded-full border border-black/15 shrink-0 shadow-2xs"
                       style={{ backgroundColor: layer.color }}
                     />
-                    <span className="text-[#2C2018] font-medium truncate">{layer.name}</span>
+                    <span className="text-[#2C2018] font-sans font-medium truncate">{layer.name}</span>
                   </div>
-                  <span className="text-[#7A6E65] shrink-0 font-semibold">
+                  <span className="text-[#7A6E65] font-mono text-[11px] shrink-0 font-bold">
                     {layer.volumeMl ? `${layer.volumeMl}ml` : `${layer.percentage}%`}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="text-[10px] text-[#7A6E65] font-mono mt-2 text-center">
+            <div className="text-[10px] text-[#7A6E65] font-sans mt-2.5 text-center">
               {selectedDrink.method === 'pour_over' ? 'Target Brew Water' : 'Target Output'}:{' '}
-              <strong className="text-[#2C2018]">{effectiveYield.toFixed(1)}g</strong>
+              <strong className="text-[#2C2018] font-mono font-bold">{effectiveYield.toFixed(1)}g</strong>
             </div>
           </div>
 
@@ -550,30 +547,30 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             {/* 4 Primary Extraction Metrics (2x2 on phone, 4-col on tablet/desktop) */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
-                <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">
+                <div className="text-[10px] text-[#7A6E65] font-sans uppercase font-bold tracking-wider">
                   {selectedDrink.method === 'pour_over' ? 'Coffee Dose' : 'Dry Dose'}
                 </div>
-                <div className="text-sm sm:text-base font-bold font-mono text-[#2C2018] mt-0.5">
+                <div className="text-base sm:text-lg font-bold font-mono text-[#2C2018] mt-0.5">
                   {effectiveDose.toFixed(1)}g
                 </div>
               </div>
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
-                <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">
+                <div className="text-[10px] text-[#7A6E65] font-sans uppercase font-bold tracking-wider">
                   {selectedDrink.method === 'pour_over' ? 'Total Water' : 'Target Yield'}
                 </div>
-                <div className="text-sm sm:text-base font-bold font-mono text-[#C26D52] mt-0.5">
+                <div className="text-base sm:text-lg font-bold font-mono text-[#C26D52] mt-0.5">
                   {effectiveYield.toFixed(1)}g
                 </div>
               </div>
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
-                <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">Ratio</div>
-                <div className="text-sm sm:text-base font-bold font-mono text-[#2C2018] mt-0.5">
+                <div className="text-[10px] text-[#7A6E65] font-sans uppercase font-bold tracking-wider">Ratio</div>
+                <div className="text-base sm:text-lg font-bold font-mono text-[#2C2018] mt-0.5">
                   1:{effectiveRatio.toFixed(1)}
                 </div>
               </div>
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] text-center">
-                <div className="text-[9px] text-[#7A6E65] font-mono uppercase font-semibold">Target Time</div>
-                <div className="text-sm sm:text-base font-bold font-mono text-[#2C2018] mt-0.5">
+                <div className="text-[10px] text-[#7A6E65] font-sans uppercase font-bold tracking-wider">Target Time</div>
+                <div className="text-base sm:text-lg font-bold font-mono text-[#2C2018] mt-0.5">
                   {selectedDrink.method === 'pour_over'
                     ? `~${Math.floor(effectiveTargetTime / 60)}:${String(effectiveTargetTime % 60).padStart(2, '0')}m`
                     : `~${effectiveTargetTime}s`}
@@ -677,10 +674,10 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                     </button>
                   </div>
 
-                  {/* 2 Read-Only Overview Information Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    {/* Active Bean Info Card */}
-                    <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5] space-y-1">
+                  {/* Unified Grinder & Bean Calibration Card */}
+                  <div className="rounded-xl bg-white border border-[#E8DFD5] grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E8DFD5] overflow-hidden text-xs shadow-xs">
+                    {/* Active Bean Info */}
+                    <div className="p-3 space-y-1.5">
                       <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
                         <span>{t('drink.active_bean_label') || 'Active Coffee Bean'}</span>
                         <span className="text-[#72806B] font-bold">{score}% match</span>
@@ -704,8 +701,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                       )}
                     </div>
 
-                    {/* Grinder & Dial Setting Card */}
-                    <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5] space-y-1">
+                    {/* Grinder & Dial Setting */}
+                    <div className="p-3 space-y-1.5">
                       <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
                         <span>{t('drink.grinder_setting_label') || 'Grinder & Setting'}</span>
                         <span className="text-[#C26D52] font-bold">
@@ -983,13 +980,15 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                         handleSelectDrinkWithScroll(drink);
                         setIsCustomizeModalOpen(false);
                       }}
-                      className="flex items-center gap-2.5 flex-1 min-w-0 text-left group cursor-pointer"
+                      className="flex items-center gap-3 flex-1 min-w-0 text-left group cursor-pointer"
                       title={`Select ${drink.name} for brewing`}
                     >
-                      <ArchitecturalCup drink={drink} size="sm" />
+                      <div className="w-11 h-12 flex items-center justify-center shrink-0">
+                        <ArchitecturalCup drink={drink} size="sm" />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-[#2C2018] font-serif group-hover:text-[#C26D52] transition truncate">
+                          <span className="text-xs sm:text-sm font-bold text-[#2C2018] font-serif group-hover:text-[#C26D52] transition truncate">
                             {drink.name}
                           </span>
                           {isSelected && (
@@ -998,8 +997,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-[#7A6E65] font-mono mt-0.5 truncate">
-                          {drink.cupVolumeMl}ml • {drink.category} • 1:{drink.targetRatio} ratio
+                        <div className="text-xs text-[#7A6E65] font-sans mt-0.5 truncate">
+                          {drink.cupVolumeMl}ml • {drink.category.charAt(0).toUpperCase() + drink.category.slice(1)} • 1:{drink.targetRatio}
                         </div>
                       </div>
                     </button>

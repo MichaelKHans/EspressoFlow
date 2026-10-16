@@ -235,7 +235,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 28,
     cupVolumeMl: 180,
-    glassStyle: 'cup',
+    glassStyle: 'glass',
     isDefaultActive: true,
     idealRoastLevels: ['medium', 'medium-dark'],
     waterGuide: {
@@ -245,9 +245,9 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
       techniqueDescription: 'Steam 110ml filtered water in pitcher to ~78°C with steam wand before pulling espresso on top',
     },
     layers: [
-      { name: 'Espresso Crema', percentage: 15, color: '#C26D52', description: 'Intact, silky crema preserved by aerated water surface tension', volumeMl: 25 },
-      { name: 'Espresso Body', percentage: 25, color: '#2C2018', description: 'Full-bodied 36g double extraction', volumeMl: 45 },
-      { name: 'Steamed Hot Water', percentage: 60, color: '#D2C6B6', description: '110ml filtered water aerated with steam wand at ~78°C', volumeMl: 110 },
+      { name: 'Espresso Crema', percentage: 15, color: '#C87A51', description: 'Intact, silky crema preserved by aerated water surface tension', volumeMl: 25 },
+      { name: 'Espresso Body', percentage: 25, color: '#3B2314', description: 'Full-bodied 36g double extraction', volumeMl: 45 },
+      { name: 'Steamed Hot Water', percentage: 60, color: '#C49A76', description: '110ml filtered water aerated with steam wand at ~78°C', volumeMl: 110 },
     ],
     description: 'Specialty Long Black with steamed water. Steaming the water with your steam wand introduces gentle micro-aeration and thermal stability, softening mineral harshness and preserving a silky, intact crema crown.',
     dialInTip: 'Barista Steamed Water Technique: Steam 110ml filtered water in your pitcher to ~78°C using the steam wand. Pour into cup first, then extract double espresso directly on top for silky mouthfeel and crema longevity.',
@@ -329,7 +329,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'standard',
     expectedTimeSeconds: 28,
     cupVolumeMl: 240,
-    glassStyle: 'tall-glass',
+    glassStyle: 'cup',
     isDefaultActive: false,
     idealRoastLevels: ['medium-dark', 'dark'],
     milkGuide: {
@@ -546,7 +546,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'custom',
     expectedTimeSeconds: 240,
     cupVolumeMl: 500,
-    glassStyle: 'server',
+    glassStyle: 'chemex',
     isDefaultActive: true,
     idealRoastLevels: ['light', 'medium'],
     pourOverGuide: {
@@ -579,7 +579,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'custom',
     expectedTimeSeconds: 165,
     cupVolumeMl: 240,
-    glassStyle: 'server',
+    glassStyle: 'kalita',
     isDefaultActive: false,
     idealRoastLevels: ['light', 'medium', 'medium-dark'],
     pourOverGuide: {
@@ -614,7 +614,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'custom',
     expectedTimeSeconds: 120,
     cupVolumeMl: 200,
-    glassStyle: 'press',
+    glassStyle: 'aeropress',
     isDefaultActive: true,
     idealRoastLevels: ['light', 'medium', 'medium-dark'],
     pourOverGuide: {
@@ -649,7 +649,7 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
     ratioStyle: 'custom',
     expectedTimeSeconds: 240,
     cupVolumeMl: 500,
-    glassStyle: 'press',
+    glassStyle: 'french-press',
     isDefaultActive: false,
     idealRoastLevels: ['medium', 'medium-dark', 'dark'],
     pourOverGuide: {

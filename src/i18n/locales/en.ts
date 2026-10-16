@@ -283,6 +283,8 @@ export const en = {
   'logbook.flow_abbr': 'Flow',
   'logbook.channeling': 'Channeling',
   'logbook.balanced': 'Balanced',
+  'logbook.share_card': 'Share Card',
+  'logbook.telemetry_points': '{count} telemetry points',
 
   // Roast Level Details & Chemistry
   'roast.light_label': 'Light Roast',

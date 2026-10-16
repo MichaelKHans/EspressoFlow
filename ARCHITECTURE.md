@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.11.1 (Nativ Android/iOS Deling via Capacitor Share/Filesystem & Canvas Graf-Afgrænsning)  
+> **Gældende version:** v1.12.0 (Visuel Overhaling af Kopper/Glas, Digital Barista Deck, Logbog & Det Ultimative Specialty Share Card)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -329,7 +329,8 @@ graph TD
     App --> AdminTab[AdminPortal.tsx<br/>Curator Studio & Godkendelsespult]
 
     %% Ikoner & UI Assets
-    App --> CustomIcons[CustomCoffeeIcons.tsx<br/>Professionelle Vector Line-Art Ikoner: CoffeeBean & Dripper]
+    App --> CustomIcons[CustomCoffeeIcons.tsx<br/>Vector Line-Art Ikoner: CoffeeBean & Dripper]
+    App --> CupEngine[ArchitecturalCup.tsx<br/>SVG Beholder-Motor: Keramikkant, Sham Glas, Isterninger, Desserter & Pour Over]
 
     %% Modaler & Overlays (Teleporteret til document.body med z-[60] - Starter under Header ved --app-header-height + 0.5rem)
     App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]
