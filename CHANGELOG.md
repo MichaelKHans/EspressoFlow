@@ -2,6 +2,30 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.15.0] - 2026-10-16
+### Etape 51: Kaffepose Livscyklus, Tømte Posers Arkiv & Kommerciel B2B Markedsviden i Admin Hub
+- **1. Livscyklus & Kaffekirkegård / Arkiv (`BeandexView.tsx`):**
+  - **Faneopdelt lager:** Elegant skift mellem `[ ☕ Aktive Poser ({count}) ]` og `[ 📜 Tømte Poser / Arkiv ({count}) ]`.
+  - **1-Klik Tømning (`[ 📦 Tømt ]`):** Hurtig registrering, når den sidste bønne er kværnet, uden at slette posens historik eller opskrift.
+- **2. Barista Exit Verdict (`FinishBeanModal.tsx`):**
+  - Modal med 1–5 stjerner, Exit-smagsnoter og det afgørende forretningsspørgsmål: *"Vil du købe dette kaffeparti igen?"*
+  - 🟢 **Vil købe igen** • 🟡 **Måske / Neutral** • 🔴 **Vil ikke købe igen**.
+  - Automatisk tidsberegning for forbrugshastighed: Antal dage det tog at drikke posen fra åbning til tømning.
+  - Dynamisk **Genkøbsrate Badge** (`🟢 {percent}% Genkøbsrate`) på arkivfanen.
+- **3. Genkøb & Pose-Tæller (`Pose #X` & Dial-In Genbrug):**
+  - Registrering af genkøb: Når en tidligere nydt bønne genkøbes eller klones via `[ 🔁 Køb Igen ]`, inkrementeres `bagCount` (`Pose #2`, `Pose #3` osv.).
+  - Bevarer 100% af de finjusterede kværnindstillinger, dosis, temperatur og yield, så baristaen ikke skal starte forfra med dial-in.
+  - På arkiverede kort: Genkøbte bønner kan åbnes for at inspicere den historiske dial-in opskrift.
+- **4. Kommerciel Markedsviden i Admin Hub (`AdminPortal.tsx`):**
+  - Nyt B2B & Retail overblik i Admin Hub (`Commercial Bean Market Intelligence & Consumer Behavior Hub`):
+    - **Repurchase Satisfaction Rate:** Procentdel af brugere, der vil genkøbe kaffebønnen.
+    - **Consumption Speed (Forbrugshastighed):** Gennemsnitligt antal dage det tager kaffeentusiaster at tømme en pose.
+    - **Stock Dynamics:** Forholdet mellem aktive poser i omløb og afsluttede poser.
+    - **Multi-Bag Loyalty:** Antal bønner med genkøb (`bagCount >= 2`).
+  - Strategisk forretningsramme for risteripartnerskaber, datadrevne genkøbs-notifikationer på dag ~18, hylde-intelligens i detailhandlen og crowdsourcede kværnindstillinger.
+- **5. Supabase Sky-Synkronisering (`supabase.ts`):**
+  - `syncBeanRepurchaseVerdict` synkroniserer anonyme genkøbsbedømmelser (`repurchase_buy_again_count`, `repurchase_neutral_count`, `repurchase_never_again_count`) til den globale bønnehvælving.
+
 ## [1.14.0] - 2026-10-16
 ### Etape 50: Freshness Radar™ (Lynhurtig Butiks- & Hyldescanner med Trafiklys-HUD)
 - **1. Zero-Tap Kontinuerlig Hyldescanner (`FreshnessRadarModal.tsx`):**

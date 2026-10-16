@@ -37,6 +37,8 @@ export interface ExtractionTelemetrySummary {
   puckAnomaly: ChannelingEvent;
 }
 
+export type RepurchaseVerdict = 'buy_again' | 'neutral' | 'never_again';
+
 export interface CoffeeBeanProfile {
   id: string;
   name: string;
@@ -50,6 +52,12 @@ export interface CoffeeBeanProfile {
   grinderName: string;
   brewTempC?: number; // Target brew temperature in Celsius (e.g. 93)
   dateOpened?: string; // ISO date string (YYYY-MM-DD) when the bag was unsealed
+  dateFinished?: string; // ISO date string (YYYY-MM-DD) when the bag was emptied
+  isFinished?: boolean; // True if archived / emptied
+  repurchaseVerdict?: RepurchaseVerdict; // Barista repurchase recommendation
+  finishNotes?: string; // Final thoughts / tasting note upon finishing the bag
+  bagCount?: number; // Total number of times this specific coffee has been purchased/enjoyed (1, 2, 3...)
+  shotsCount?: number; // Number of shots brewed on this specific bag
   notes?: string;
   barcode?: string;
   rating?: number; // 1 to 5 stars

@@ -36,6 +36,9 @@ import {
   ArrowUpDown,
   Store,
   Radio,
+  Archive,
+  ThumbsUp,
+  RotateCcw,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, UserAccessState } from '../types/espresso';
 import { isTelemetryEnabled, setTelemetryEnabled } from '../lib/scaleTelemetry';
@@ -607,6 +610,32 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const totalRevenueUsd = (realPaidUsers * priceUsd).toFixed(2);
   const conversionRate = realPaidUsers > 0 ? '100.0' : '0.0';
 
+  // Commercial Bean Market Intelligence Metrics
+  const finishedBags = useMemo(() => beans.filter((b) => b.isFinished), [beans]);
+  const activeBags = useMemo(() => beans.filter((b) => !b.isFinished), [beans]);
+  const repeatBags = useMemo(() => beans.filter((b) => (b.bagCount || 1) > 1), [beans]);
+
+  const repurchaseMetrics = useMemo(() => {
+    const rated = finishedBags.filter((b) => b.repurchaseVerdict);
+    const buyAgain = rated.filter((b) => b.repurchaseVerdict === 'buy_again').length;
+    const neutral = rated.filter((b) => b.repurchaseVerdict === 'neutral').length;
+    const neverAgain = rated.filter((b) => b.repurchaseVerdict === 'never_again').length;
+    const percent = rated.length > 0 ? Math.round((buyAgain / rated.length) * 100) : null;
+    return { ratedCount: rated.length, buyAgain, neutral, neverAgain, percent };
+  }, [finishedBags]);
+
+  const avgConsumptionDays = useMemo(() => {
+    const withDuration = finishedBags.filter((b) => b.dateOpened && b.dateFinished);
+    if (withDuration.length === 0) return null;
+    const totalDays = withDuration.reduce((acc, b) => {
+      const start = new Date(b.dateOpened!).getTime();
+      const end = new Date(b.dateFinished!).getTime();
+      const diff = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+      return acc + diff;
+    }, 0);
+    return Math.round(totalDays / withDuration.length);
+  }, [finishedBags]);
+
   // Handle PIN unlock
   const handleUnlock = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -1029,6 +1058,103 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <span>espresso_flow_lifetime ($4.99)</span>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Commercial Bean Market Intelligence Card */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4 font-sans">
+              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2.5 font-mono">
+                <div className="flex items-center gap-2">
+                  <Archive className="w-4 h-4 text-[#C26D52]" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
+                    Commercial Bean Market Intelligence & Consumer Behavior
+                  </h3>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                  B2B & Retail Ready
+                </span>
+              </div>
+
+              <p className="text-xs text-[#7A6E65] leading-relaxed">
+                Live aggregated telemetry from user bean bag lifecycles: exit verdicts (repurchase satisfaction), consumption velocity, and multi-bag loyalty retention.
+              </p>
+
+              {/* 4 Intelligence Metric Pillars */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
+                <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1">
+                  <span className="text-[9.5px] uppercase font-bold text-[#7A6E65] block">
+                    Repurchase Rate
+                  </span>
+                  <div className="text-xl font-bold text-emerald-700 flex items-center gap-1.5">
+                    <ThumbsUp className="w-4 h-4 text-emerald-600" />
+                    <span>{repurchaseMetrics.percent !== null ? `${repurchaseMetrics.percent}%` : 'N/A'}</span>
+                  </div>
+                  <span className="text-[9.5px] text-[#7A6E65] block">
+                    {repurchaseMetrics.buyAgain} of {repurchaseMetrics.ratedCount} finished bags
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1">
+                  <span className="text-[9.5px] uppercase font-bold text-[#7A6E65] block">
+                    Consumption Speed
+                  </span>
+                  <div className="text-xl font-bold text-[#2C2018]">
+                    {avgConsumptionDays !== null ? `${avgConsumptionDays}d` : 'N/A'}
+                  </div>
+                  <span className="text-[9.5px] text-[#7A6E65] block">
+                    Avg. days to empty bag
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1">
+                  <span className="text-[9.5px] uppercase font-bold text-[#7A6E65] block">
+                    Stock Dynamics
+                  </span>
+                  <div className="text-xl font-bold text-[#C26D52]">
+                    {finishedBags.length} / {activeBags.length}
+                  </div>
+                  <span className="text-[9.5px] text-[#7A6E65] block">
+                    Finished vs. Active bags
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-1">
+                  <span className="text-[9.5px] uppercase font-bold text-[#7A6E65] block">
+                    Repeat Purchases
+                  </span>
+                  <div className="text-xl font-bold text-[#2C2018] flex items-center gap-1.5">
+                    <RotateCcw className="w-4 h-4 text-[#C26D52]" />
+                    <span>{repeatBags.length}</span>
+                  </div>
+                  <span className="text-[9.5px] text-[#7A6E65] block">
+                    Bags with multi-purchase (Bag #2+)
+                  </span>
+                </div>
+              </div>
+
+              {/* Company Data Value Framework */}
+              <div className="p-3.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] text-xs space-y-2">
+                <span className="font-bold text-[#C26D52] font-mono text-[11px] block uppercase tracking-wider">
+                  Company Insights & Monetization Avenues:
+                </span>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-[#FAF7F2]/80 font-sans">
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#C26D52] font-bold">•</span>
+                    <span><strong>Roaster Partnerships:</strong> Identify beans with &gt;90% repurchase rates to pitch roasters for direct in-app promotions or affiliate reorder links.</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#C26D52] font-bold">•</span>
+                    <span><strong>Smart Reorder Alerts:</strong> Trigger push reminders on day ~18 based on average 21-day velocity so users receive new beans before running out.</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#C26D52] font-bold">•</span>
+                    <span><strong>Retail Shelf Intelligence:</strong> Track which supermarket beans fail repurchase verdicts (e.g. stale shelf life) vs. fresh micro-lots.</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-[#C26D52] font-bold">•</span>
+                    <span><strong>Crowdsourced Dial-In Presets:</strong> Aggregate grinder settings per bean model to auto-suggest recipes to new buyers.</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>

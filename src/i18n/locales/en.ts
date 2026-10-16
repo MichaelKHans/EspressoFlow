@@ -571,6 +571,33 @@ export const en = {
   'radar.days_ago': '{days} days ago',
   'radar.estimated_from_bbd': 'Estimated from Best Before date',
   'radar.ready_standby': 'Live Optical Radar Active',
+
+  // Beandex Archive, Emptied Bags & Repurchase
+  'beandex.tab_active_bags': 'Active Stock ({count})',
+  'beandex.tab_finished_archive': 'Archive / Finished ({count})',
+  'beandex.mark_finished_btn': 'Mark Finished',
+  'beandex.mark_finished_confirm_title': 'Mark Bag as Finished & Emptied',
+  'beandex.mark_finished_confirm_subtitle': 'Record your final barista verdict and repurchase score',
+  'beandex.repurchase_question': 'Would you buy this coffee bean lot again?',
+  'beandex.repurchase_buy_again': 'Will Buy Again',
+  'beandex.repurchase_neutral': 'Maybe / Neutral',
+  'beandex.repurchase_never_again': 'Will Not Buy Again',
+  'beandex.repurchase_rate_badge': '{percent}% Repurchase Rate',
+  'beandex.finish_days_taken': 'Finished in {days} days',
+  'beandex.finish_note_placeholder': 'Final tasting notes or milk drink impressions (optional)...',
+  'beandex.finish_archive_btn': 'Archive Bag to History',
+  'beandex.restore_active_btn': 'Restore to Active',
+  'beandex.buy_again_new_bag_btn': 'Buy Again (New Bag)',
+  'beandex.empty_archive_title': 'No Finished Bags in Archive Yet',
+  'beandex.empty_archive_subtitle': 'When you finish a coffee bag, tap "Mark Finished" to preserve your dial-in, rating, and tasting history.',
+  'beandex.repeat_bag_badge': 'Bag #{count}',
+  'beandex.repeat_bag_welcome': 'Welcome back! Bag #{count} of this lot',
+  'beandex.repeat_bag_reuse_dialin': 'Use previous dial-in ({grinder} @ {setting})',
+  'beandex.calibrated_gear': 'Last Dial-In Profile',
+  'beandex.consumption_time': 'Consumption Duration',
+  'beandex.stats_total_bags': '{count} Bags Enjoyed',
+  'beandex.stats_total_kg': '{kg} kg Specialty Coffee',
+  'beandex.stats_top_roaster': 'Top Roaster: {roaster}',
 } as const;
 
 export type TranslationKeys = keyof typeof en;

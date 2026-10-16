@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.14.0 (Freshness Radar™ Butiks- & Hyldescanner med Trafiklys-HUD, Beandex Bag Vision™ Pose AI & Brand Purity)  
+> **Gældende version:** v1.15.0 (Kaffepose Livscyklus, Tømte Posers Arkiv & Kommerciel B2B Markedsviden i Admin Hub)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -57,16 +57,25 @@ flowchart TD
     RecommendRatio --> SetTemp[Vælg Bryggetemperatur i °C el. °F]
     SetTemp --> ReadyToBrew[Klar til Brygning: Gå til Scale Cam]
 
-    %% Bønnehåndtering / Beandex
+    %% Bønnehåndtering / Beandex & Livscyklus
     NavTabs -- Bønnesamling (Beandex) --> Beandex[Beandex Kaffehvælving]
-    Beandex --> BeanActions{Handling i Beandex}
+    Beandex --> BeandexTabs{Vælg Fane}
+    BeandexTabs -- Aktive Poser --> ActiveBags[Aktive Poser i Omløb]
+    BeandexTabs -- Tømte Poser / Arkiv --> FinishedArchive[Tømte Posers Arkiv & Historik]
+    ActiveBags --> BeanActions{Handling i Beandex}
     BeanActions -- Scan Pose --> BagScanner[Bean Scanner Modal<br/>Stregkode + Etiket Vision OCR]
     BeanActions -- Manuel Oprettelse --> CreateBean[Opret Ny Bønne Formular<br/>Med Beandex-Autocomplete & Smagsnoter]
     BeanActions -- Udforsk Fællesskab --> CloudVault[Central Cloud Bean Vault Modal]
+    BeanActions -- Markér som Tømt --> FinishModal[FinishBeanModal:<br/>Star Rating, Exit Notes & Genkøbsdom]
+    FinishModal --> ArchiveBean[Flyt til Tømte Posers Arkiv & Sync Repurchase]
+    FinishedArchive --> ArchiveActions{Arkiv Handling}
+    ArchiveActions -- Køb Igen --> RepeatPurchase[Genkøb: Inkrementer Pose #X & Genbrug Dial-In]
+    ArchiveActions -- Gendan --> ActiveBags
     BagScanner --> FuzzyCheck[Fuzzy Matcher: Undgå 'Coffee 3019'<br/>og 'Mente du...?']
     CreateBean --> FuzzyCheck
     CloudVault --> ImportBean[Importer verificeret bønne til lokalt arkiv]
     FuzzyCheck --> SaveLocalBean[Gem i LocalStorage: espresso_beans]
+    RepeatPurchase --> SaveLocalBean
 
     %% Brygning & Telemetri
     ReadyToBrew --> ScaleCam[Scale Cam Monitor<br/>1:1 Uforvrænget Kamera-visning over vægtdisplay]

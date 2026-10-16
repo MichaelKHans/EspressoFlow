@@ -5,6 +5,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { sanitizeBeanInput } from './beanCatalogMatcher';
+import type { RepurchaseVerdict, CoffeeBeanProfile } from '../types/espresso';
 
 export interface GlobalCoffeeBean {
   id?: string;
@@ -23,6 +24,9 @@ export interface GlobalCoffeeBean {
   is_verified: boolean;
   expert_score?: number; // 0-100 scale (e.g. 94.0)
   expert_source?: string; // e.g. 'Coffee Review' | 'SCA Cupping' | 'Cup of Excellence'
+  repurchase_buy_again_count?: number;
+  repurchase_neutral_count?: number;
+  repurchase_never_again_count?: number;
   image_url?: string;
   created_at?: string;
 }
@@ -389,6 +393,50 @@ export async function submitDrinkRating(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };
+  }
+}
+
+/**
+ * Synchronizes anonymous barista repurchase verdict to Supabase Global Vault (Fire-and-forget)
+ */
+export async function syncBeanRepurchaseVerdict(
+  bean: CoffeeBeanProfile,
+  verdict: RepurchaseVerdict
+): Promise<void> {
+  const client = getSupabaseClient();
+  if (!client || !bean.name) return;
+
+  try {
+    let query = client
+      .from('global_coffee_beans')
+      .select('id, barcode, roaster, name, repurchase_buy_again_count, repurchase_neutral_count, repurchase_never_again_count');
+
+    if (bean.barcode) {
+      query = query.eq('barcode', bean.barcode);
+    } else if (bean.roaster) {
+      query = query.ilike('roaster', bean.roaster).ilike('name', bean.name);
+    } else {
+      query = query.ilike('name', bean.name);
+    }
+
+    const { data } = await query.limit(1);
+    if (data && data.length > 0) {
+      const match = data[0];
+      const buyAgain = (match.repurchase_buy_again_count || 0) + (verdict === 'buy_again' ? 1 : 0);
+      const neutral = (match.repurchase_neutral_count || 0) + (verdict === 'neutral' ? 1 : 0);
+      const neverAgain = (match.repurchase_never_again_count || 0) + (verdict === 'never_again' ? 1 : 0);
+
+      await client
+        .from('global_coffee_beans')
+        .update({
+          repurchase_buy_again_count: buyAgain,
+          repurchase_neutral_count: neutral,
+          repurchase_never_again_count: neverAgain,
+        })
+        .eq('id', match.id);
+    }
+  } catch (err) {
+    console.debug('Failed to sync repurchase verdict to Supabase (offline fallback):', err);
   }
 }
 

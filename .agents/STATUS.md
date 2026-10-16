@@ -11,6 +11,27 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-16 -- Kaffepose Livscyklus, Tømte Posers Arkiv & Kommerciel B2B Markedsviden i Admin Hub (v1.15.0)
+- **Faneopdelt Bønnebank (`BeandexView.tsx`):**
+  - Tilføjet fanevælger mellem `[ ☕ Aktive Poser ({count}) ]` og `[ 📜 Tømte Poser / Arkiv ({count}) ]`.
+  - Tilføjet `[ 📦 Tømt ]` knap på alle aktive poser, så baristaen med ét tryk kan markere en pose som tømt, når den sidste espresso er brygget.
+- **Barista Exit Verdict Modal (`FinishBeanModal.tsx`):**
+  - Indfanger slutdom med 1–5 stjerner, Exit-smagsnoter og det afgørende genkøbsspørgsmål: 🟢 Vil købe igen, 🟡 Måske, 🔴 Vil ikke købe igen.
+  - Beregner automatisk forbrugshastighed (`daysTaken` fra åbning til tømning).
+  - Viser dynamisk Genkøbsrate Badge (`🟢 {percent}% Genkøbsrate`) på arkivfanen.
+- **Gentagne Køb & Kværngenbrug (`Pose #X`):**
+  - Automatisk sporing af genkøb: Knappen `[ 🔁 Køb Igen ]` kloner posen til en ny aktiv pose med inkrementeret `bagCount` (`Pose #2`, `Pose #3` osv.).
+  - Bevarer 100% af kværnkalibreringen (grinder, setting, dosis, yield, temp), så brugeren slipper for forfra dial-in.
+- **Kommerciel Markedsviden i Admin Hub (`AdminPortal.tsx`):**
+  - Implementeret B2B & Retail overblik i Admin Hub (`Commercial Bean Market Intelligence & Consumer Behavior Hub`):
+    - **Repurchase Satisfaction Rate:** Procentdel af kaffenyderne, der vil genkøbe kaffen.
+    - **Consumption Speed (Forbrugshastighed):** Gennemsnitligt antal dage det tager at tømme en kaffepose.
+    - **Stock Dynamics:** Forholdet mellem aktive poser i brug og afsluttede poser.
+    - **Multi-Bag Loyalty:** Antal bønner med genkøb (`bagCount >= 2`).
+  - Strategisk model for risteripartnerskaber, datadrevne genkøbs-notifikationer på dag ~18, hylde-intelligens for detailhandlen og crowdsourcede kværnindstillinger.
+- **Bygget, Synkroniseret & Installeret på Forbundet Android Enhed:**
+  - `npm run build` passeret fejlfrit på 455 ms, `npx cap sync` synkroniseret og APK installeret direkte på telefonen via ADB.
+
 ### 2026-10-16 -- Freshness Radar™ Butiks- & Hyldescanner med Trafiklys-HUD (v1.14.0)
 - **Zero-Tap Kontinuerlig Hyldescanner (`FreshnessRadarModal.tsx`):** Hurtig realtids-optisk datoafkodning optimeret til supermarkeder og risterier. Beskærer automatisk til centrum-reticle med 10x pixel-reduktion for ultra-lav latenstid.
 - **Trafiklys HUD & Barista Diagnose:** 🟢 Peak Frisk (5–30 dage), 🟡 Acceptabel / Efter Peak (31–55 dage), 🔴 For Gammel / Oxideret (>55 dage eller gammel BBD), og 💨 Afgasser CO₂ (<5 dage).

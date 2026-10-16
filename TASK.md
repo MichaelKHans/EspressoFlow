@@ -213,18 +213,34 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 
 ---
 
-## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)
-- [ ] **Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags):**
-  - Tilføj mulighed for at markere en kaffepose som "Opbrugt" / "Arkiveret" i stedet for bare at slette den.
-  - Opret sektionering i Beandex: "Aktive kaffer" vs. "Arkiv / Kaffekirkegård" med fold-ud historik.
-- [ ] **Personlige Genkøbs-Labels (Barista Repurchase Intent):**
-  - Knapper / badges på arkiverede poser:
+## 📦 FASE 11: Kaffepose Livscyklus, Tømte Posers Arkiv & Kommerciel B2B Markedsviden (v1.15.0 AFSLUTTET)
+- [x] **Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags):**
+  - [x] Fanevælger i Beandex: `[ ☕ Aktive Poser ({count}) ]` vs. `[ 📜 Tømte Poser / Arkiv ({count}) ]`.
+  - [x] 1-klik `[ 📦 Tømt ]` på aktive poser, som åbner Barista Exit Verdict modalen i stedet for at slette posen.
+- [x] **Barista Exit Verdict Modal (`FinishBeanModal.tsx`):**
+  - [x] 1–5 stjerner bedømmelse og afsluttende smagsnoter/indtryk.
+  - [x] Det afgørende genkøbsspørgsmål:
     - 🟢 "Vil købe igen" (`buy_again`)
     - 🟡 "Måske / Neutral" (`neutral`)
     - 🔴 "Vil ikke købe igen" (`never_again`)
-  - Mulighed for en kort afsluttende dom/notat (fx "God med havremælk, for mørk til ren espresso").
-- [ ] **Anonymiseret Markedsindsigt & Trends:**
-  - Forberede anonym aggregering (fx *"84% af baristaer ville købe denne bønne igen"* i Central Bean Vault) uden personhenførbare data.
+  - [x] Automatisk beregning af forbrugshastighed (`daysTaken` fra åbningsdato til tømningsdato).
+  - [x] Dynamisk Genkøbsrate Badge (`🟢 {percent}% Genkøbsrate`) på arkivfanen.
+- [x] **Gentagne Køb & Kværn-Genbrug (`Pose #X`):**
+  - [x] Når en pose genkøbes (via `[ 🔁 Køb Igen ]` i arkivet eller scanning af samme bønne), inkrementeres `bagCount` (`Pose #2`, `Pose #3` osv.).
+  - [x] Bevarer 100% af kværnens dial-in data (kværn, indstilling, dosis, yield, temp).
+- [x] **Kommerciel Markedsviden i Admin Hub (`AdminPortal.tsx`):**
+  - [x] Tilføjet "Commercial Bean Market Intelligence & Consumer Behavior Hub" til Admin Hub:
+    - Repurchase Satisfaction Rate (% der vil genkøbe kaffebønnen).
+    - Consumption Speed (gennemsnitligt antal dage om en pose).
+    - Stock Dynamics (aktive poser i omløb vs tømte poser).
+    - Multi-Bag Loyalty (antal poser med genkøb `bagCount >= 2`).
+  - [x] Kommerciel model til risteripartnerskaber, datadrevne genkøbs-påmindelser, hylde-intelligens og community presets.
+- [x] **Supabase Sky-Synkronisering (`supabase.ts`):**
+  - [x] `syncBeanRepurchaseVerdict` synkroniserer anonyme genkøbsbedømmelser direkte til Supabase.
+
+---
+
+## 📌 Næste Opgaver
 - [ ] **Opdatering af Vilkår & Privatlivspolitik (`LegalModal.tsx`):**
   - Ajourføre Privacy Policy og Terms of Service til 100% at afspejle den aktuelle arkitektur:
     - 100% on-device OCR uden videostreaming til eksterne servere.

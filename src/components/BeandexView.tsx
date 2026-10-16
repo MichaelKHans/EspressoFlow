@@ -22,12 +22,18 @@ import {
   AlertCircle,
   ShieldCheck,
   Zap,
+  Archive,
+  ThumbsUp,
+  ThumbsDown,
+  HelpCircle,
+  RotateCcw,
 } from 'lucide-react';
-import type { CoffeeBeanProfile, GrinderProfile, RoastLevel } from '../types/espresso';
-import { fetchAllGlobalBeans, type GlobalCoffeeBean } from '../lib/supabase';
+import type { CoffeeBeanProfile, GrinderProfile, RoastLevel, RepurchaseVerdict } from '../types/espresso';
+import { fetchAllGlobalBeans, syncBeanRepurchaseVerdict, type GlobalCoffeeBean } from '../lib/supabase';
 import { resolveGrinder } from '../lib/storage';
 import { calculateBeanFreshness } from '../lib/espressoMath';
 import { FreshnessInfoModal } from './FreshnessInfoModal';
+import { FinishBeanModal } from './FinishBeanModal';
 import { useTranslation } from '../i18n';
 import {
   POPULAR_FLAVOR_TAGS,
@@ -85,6 +91,8 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [roastFilter, setRoastFilter] = useState<string>('all');
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
+  const [inventoryTab, setInventoryTab] = useState<'active' | 'archive'>('active');
+  const [finishingBean, setFinishingBean] = useState<CoffeeBeanProfile | null>(null);
 
   // Inline custom bag form state
   const [isAddingCustomBag, setIsAddingCustomBag] = useState<boolean>(false);
@@ -161,15 +169,29 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     };
   }, []);
 
-  // Filtered personal bags
+  // Active vs Finished bags
+  const activeBags = useMemo(() => beans.filter((b) => !b.isFinished), [beans]);
+  const finishedBags = useMemo(() => beans.filter((b) => b.isFinished), [beans]);
+
+  // Calculate Repurchase Satisfaction percentage for finished bags
+  const repurchaseRate = useMemo(() => {
+    const rated = finishedBags.filter((b) => b.repurchaseVerdict);
+    if (rated.length === 0) return null;
+    const buyAgainCount = rated.filter((b) => b.repurchaseVerdict === 'buy_again').length;
+    return Math.round((buyAgainCount / rated.length) * 100);
+  }, [finishedBags]);
+
+  // Filtered personal bags according to active/archive inventory tab
   const filteredBags = useMemo(() => {
-    return beans.filter((b) => {
+    const targetPool = inventoryTab === 'active' ? activeBags : finishedBags;
+    return targetPool.filter((b) => {
       const q = searchQuery.toLowerCase().trim();
       if (q) {
         const matchesName = b.name.toLowerCase().includes(q);
         const matchesRoaster = b.roaster?.toLowerCase().includes(q) || false;
         const matchesNotes = b.notes?.toLowerCase().includes(q) || false;
-        if (!matchesName && !matchesRoaster && !matchesNotes) return false;
+        const matchesFinishNotes = b.finishNotes?.toLowerCase().includes(q) || false;
+        if (!matchesName && !matchesRoaster && !matchesNotes && !matchesFinishNotes) return false;
       }
 
       if (roastFilter !== 'all' && b.roastLevel !== roastFilter) {
@@ -182,7 +204,73 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
 
       return true;
     });
-  }, [beans, searchQuery, roastFilter, favoritesOnly]);
+  }, [inventoryTab, activeBags, finishedBags, searchQuery, roastFilter, favoritesOnly]);
+
+  // Handle finishing / archiving a bag
+  const handleConfirmFinish = (
+    beanId: string,
+    details: {
+      rating: number;
+      repurchaseVerdict: RepurchaseVerdict;
+      finishNotes?: string;
+      dateFinished: string;
+    }
+  ) => {
+    const targetBean = beans.find((b) => b.id === beanId);
+    if (targetBean) {
+      onUpdateBean(beanId, {
+        isFinished: true,
+        rating: details.rating,
+        repurchaseVerdict: details.repurchaseVerdict,
+        finishNotes: details.finishNotes,
+        dateFinished: details.dateFinished,
+      });
+
+      // Fire-and-forget sync to Supabase global intelligence
+      syncBeanRepurchaseVerdict(targetBean, details.repurchaseVerdict);
+    }
+    setFinishingBean(null);
+  };
+
+  // Restore archived bag back to active rotation
+  const handleRestoreBag = (beanId: string) => {
+    onUpdateBean(beanId, {
+      isFinished: false,
+    });
+  };
+
+  // Repeat purchase / Buy Again clone: increments bagCount, preserves dial-in, creates new active bag
+  const handleRepeatPurchase = (bean: CoffeeBeanProfile) => {
+    const nextCount = (bean.bagCount || 1) + 1;
+    onCreateBean({
+      name: bean.name,
+      roaster: bean.roaster,
+      roastDate: new Date().toISOString().split('T')[0],
+      roastLevel: bean.roastLevel,
+      doseGrams: bean.doseGrams,
+      ratioStyle: bean.ratioStyle,
+      targetYieldGrams: bean.targetYieldGrams,
+      grindSetting: bean.grindSetting,
+      grinderName: bean.grinderName,
+      brewTempC: bean.brewTempC,
+      notes: bean.notes,
+      barcode: bean.barcode,
+      rating: bean.rating,
+      isFavorite: bean.isFavorite,
+      purchaseCountry: bean.purchaseCountry,
+      purchaseLocation: bean.purchaseLocation,
+      suitableFor: bean.suitableFor,
+      imageUrl: bean.imageUrl,
+      flavorNotes: bean.flavorNotes,
+      originCountry: bean.originCountry,
+      pourOverGrindSetting: bean.pourOverGrindSetting,
+      pourOverDoseGrams: bean.pourOverDoseGrams,
+      pourOverTargetYieldGrams: bean.pourOverTargetYieldGrams,
+      bagCount: nextCount,
+      isFinished: false,
+    });
+    setInventoryTab('active');
+  };
 
   // Filtered global beans
   const filteredGlobalBeans = useMemo(() => {
@@ -723,7 +811,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
         </form>
       )}
 
-      {/* 3. Section: Mine Kaffeposer (Personal Fresh Bean Inventory) */}
+      {/* 3. Section: Mine Kaffeposer (Personal Fresh Bean Inventory & Finished Archive) */}
       <div className="space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -779,41 +867,117 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
           </div>
         </div>
 
+        {/* Inventory Mode Selector: Active Bags vs Finished Archive */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+          <div className="flex items-center gap-1.5 p-1 bg-[#FAF7F2] border border-[#DECFC0] rounded-xl self-start">
+            <button
+              type="button"
+              onClick={() => setInventoryTab('active')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                inventoryTab === 'active'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                  : 'text-[#7A6E65] hover:text-[#2C2018]'
+              }`}
+            >
+              <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
+              <span>{t('beandex.tab_active_bags')}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  inventoryTab === 'active' ? 'bg-[#C26D52] text-white' : 'bg-[#DECFC0]/50 text-[#7A6E65]'
+                }`}
+              >
+                {activeBags.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setInventoryTab('archive')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                inventoryTab === 'archive'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                  : 'text-[#7A6E65] hover:text-[#2C2018]'
+              }`}
+            >
+              <Archive className="w-3.5 h-3.5 text-[#72806B]" />
+              <span>{t('beandex.tab_finished_archive')}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  inventoryTab === 'archive' ? 'bg-[#72806B] text-white' : 'bg-[#DECFC0]/50 text-[#7A6E65]'
+                }`}
+              >
+                {finishedBags.length}
+              </span>
+            </button>
+          </div>
+
+          {/* Archive Repurchase Satisfaction Summary Pill */}
+          {inventoryTab === 'archive' && repurchaseRate !== null && (
+            <div className="flex items-center gap-2 text-xs font-mono px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 self-start sm:self-auto shadow-2xs">
+              <ThumbsUp className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="font-bold">{repurchaseRate}%</span>
+              <span>{t('beandex.repurchase_rate_badge')}</span>
+            </div>
+          )}
+        </div>
+
         {/* Bags Grid */}
         {filteredBags.length === 0 ? (
           <div className="p-8 rounded-2xl border border-dashed border-[#DECFC0] bg-[#FFFDF9] text-center space-y-3">
-            <Coffee className="w-8 h-8 text-[#C26D52]/50 mx-auto" />
-            <p className="text-xs text-[#7A6E65] font-sans max-w-md mx-auto">
-              {t('beandex.empty_vault')}
-            </p>
-            <div className="flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={onOpenScanner}
-                className="px-3.5 py-2 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-semibold flex items-center gap-1.5 transition"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <span>{t('beandex.scan_bag_btn')}</span>
-              </button>
-              {onOpenRadar && (
+            {inventoryTab === 'archive' ? (
+              <>
+                <Archive className="w-8 h-8 text-[#72806B]/50 mx-auto" />
+                <h4 className="text-xs font-bold uppercase font-mono text-[#2C2018]">
+                  {t('beandex.empty_archive_title')}
+                </h4>
+                <p className="text-xs text-[#7A6E65] font-sans max-w-md mx-auto">
+                  {t('beandex.empty_archive_subtitle')}
+                </p>
                 <button
                   type="button"
-                  onClick={onOpenRadar}
-                  className="px-3.5 py-2 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition"
+                  onClick={() => setInventoryTab('active')}
+                  className="px-3.5 py-2 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer"
                 >
-                  <Zap className="w-3.5 h-3.5 text-[#C26D52] fill-[#C26D52]" />
-                  <span>{t('radar.btn')}</span>
+                  <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>{t('beandex.tab_active_bags')}</span>
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsAddingCustomBag(true)}
-                className="px-3.5 py-2 rounded-xl border border-[#E8DFD5] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t('beandex.add_bag_btn')}</span>
-              </button>
-            </div>
+              </>
+            ) : (
+              <>
+                <Coffee className="w-8 h-8 text-[#C26D52]/50 mx-auto" />
+                <p className="text-xs text-[#7A6E65] font-sans max-w-md mx-auto">
+                  {t('beandex.empty_vault')}
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={onOpenScanner}
+                    className="px-3.5 py-2 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>{t('beandex.scan_bag_btn')}</span>
+                  </button>
+                  {onOpenRadar && (
+                    <button
+                      type="button"
+                      onClick={onOpenRadar}
+                      className="px-3.5 py-2 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Zap className="w-3.5 h-3.5 text-[#C26D52] fill-[#C26D52]" />
+                      <span>{t('radar.btn')}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingCustomBag(true)}
+                    className="px-3.5 py-2 rounded-xl border border-[#E8DFD5] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{t('beandex.add_bag_btn')}</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -827,15 +991,17 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 <div
                   key={bean.id}
                   className={`p-4 rounded-2xl border transition flex flex-col justify-between gap-3 shadow-xs ${
-                    isActiveInFlow
+                    bean.isFinished
+                      ? 'border-[#DECFC0] bg-[#FAF7F2]/60 opacity-90'
+                      : isActiveInFlow
                       ? 'border-[#C26D52] bg-[#FFFDF9] ring-2 ring-[#C26D52] shadow-md'
                       : 'border-[#E8DFD5] bg-white hover:border-[#DECFC0]'
                   }`}
                 >
-                  {/* Card Header: Roast Badge + Active State + Delete */}
+                  {/* Card Header: Roast Badge + Bag Count + Active/Archive State + Actions */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span
                           className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${
                             bean.roastLevel === 'light'
@@ -850,6 +1016,13 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                           {bean.roastLevel}
                         </span>
 
+                        {bean.bagCount && bean.bagCount > 1 && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-[#2C2018] text-[#FAF7F2] font-mono flex items-center gap-0.5 shadow-2xs">
+                            <RotateCcw className="w-2.5 h-2.5 text-[#C26D52]" />
+                            <span>{t('beandex.repeat_bag_badge', { count: bean.bagCount })}</span>
+                          </span>
+                        )}
+
                         {bean.expertScore && (
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-0.5">
                             <Award className="w-2.5 h-2.5 text-amber-600" />
@@ -859,24 +1032,60 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       </div>
 
                       <div className="flex items-center gap-1.5">
-                        {isActiveInFlow ? (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 flex items-center gap-1">
-                            <Check className="w-2.5 h-2.5" />
-                            <span>{t('beandex.active_in_flow')}</span>
-                          </span>
+                        {!bean.isFinished ? (
+                          <>
+                            {isActiveInFlow ? (
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 flex items-center gap-1">
+                                <Check className="w-2.5 h-2.5" />
+                                <span>{t('beandex.active_in_flow')}</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onSelectBean(bean.id);
+                                  onSwitchToFlow();
+                                }}
+                                className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] transition flex items-center gap-1 cursor-pointer"
+                                title="Set as active bean and go to Coffee Bar"
+                              >
+                                <span>{t('beandex.set_active_btn')}</span>
+                                <ArrowRight className="w-2.5 h-2.5 text-[#C26D52]" />
+                              </button>
+                            )}
+
+                            {/* Mark As Finished / Emptied Button */}
+                            <button
+                              type="button"
+                              onClick={() => setFinishingBean(bean)}
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] transition flex items-center gap-1 cursor-pointer"
+                              title={t('beandex.mark_finished_btn')}
+                            >
+                              <Archive className="w-2.5 h-2.5 text-[#72806B]" />
+                              <span>{t('beandex.mark_finished_btn')}</span>
+                            </button>
+                          </>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelectBean(bean.id);
-                              onSwitchToFlow();
-                            }}
-                            className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] transition flex items-center gap-1"
-                            title="Set as active bean and go to Coffee Bar"
-                          >
-                            <span>{t('beandex.set_active_btn')}</span>
-                            <ArrowRight className="w-2.5 h-2.5 text-[#C26D52]" />
-                          </button>
+                          /* Archive Bag Actions */
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleRepeatPurchase(bean)}
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52] hover:text-white text-[#C26D52] transition flex items-center gap-1 cursor-pointer"
+                              title={t('beandex.buy_again_new_bag_btn')}
+                            >
+                              <RotateCcw className="w-2.5 h-2.5" />
+                              <span>{t('beandex.buy_again_new_bag_btn')}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRestoreBag(bean.id)}
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] transition flex items-center gap-1 cursor-pointer"
+                              title={t('beandex.restore_active_btn')}
+                            >
+                              <span>{t('beandex.restore_active_btn')}</span>
+                            </button>
+                          </div>
                         )}
 
                         {beans.length > 1 && (
@@ -887,7 +1096,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                                 onDeleteBean(bean.id);
                               }
                             }}
-                            className="w-6 h-6 rounded-md flex items-center justify-center text-[#7A6E65]/50 hover:text-red-600 hover:bg-red-50 transition"
+                            className="w-6 h-6 rounded-md flex items-center justify-center text-[#7A6E65]/50 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                             title="Delete bean"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1069,6 +1278,44 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       )}
                     </div>
 
+                    {/* Finished Bag Exit Verdict (if bag is finished) */}
+                    {bean.isFinished && (
+                      <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#DECFC0] space-y-1.5 text-xs shadow-2xs">
+                        <div className="flex items-center justify-between text-[10.5px] font-mono">
+                          <span className="text-[#7A6E65]">Tømt:</span>
+                          <span className="font-bold text-[#2C2018]">{bean.dateFinished || 'Arkiveret'}</span>
+                        </div>
+                        {bean.repurchaseVerdict && (
+                          <div className="flex items-center justify-between text-[10.5px] font-mono pt-1 border-t border-[#DECFC0]/50">
+                            <span className="text-[#7A6E65]">Genkøb:</span>
+                            {bean.repurchaseVerdict === 'buy_again' && (
+                              <span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold flex items-center gap-1">
+                                <ThumbsUp className="w-3 h-3 text-emerald-600" />
+                                <span>{t('beandex.repurchase_buy_again')}</span>
+                              </span>
+                            )}
+                            {bean.repurchaseVerdict === 'neutral' && (
+                              <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-amber-800 font-bold flex items-center gap-1">
+                                <HelpCircle className="w-3 h-3 text-amber-600" />
+                                <span>{t('beandex.repurchase_neutral')}</span>
+                              </span>
+                            )}
+                            {bean.repurchaseVerdict === 'never_again' && (
+                              <span className="px-2 py-0.5 rounded-md bg-stone-100 border border-stone-300 text-stone-700 font-bold flex items-center gap-1">
+                                <ThumbsDown className="w-3 h-3 text-stone-500" />
+                                <span>{t('beandex.repurchase_never_again')}</span>
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {bean.finishNotes && (
+                          <p className="text-[10px] text-[#7A6E65] italic font-sans pt-1 border-t border-[#DECFC0]/50">
+                            "{bean.finishNotes}"
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Sensory Flavor Notes Pills (Beandex style) */}
                     <div className="space-y-1 pt-1 border-t border-[#E8DFD5]/50">
                       <div className="flex items-center justify-between">
@@ -1229,16 +1476,39 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       </span>
                     </div>
 
-                    {/* Direct Dial-In Studio Shortcut Button */}
-                    <button
-                      type="button"
-                      onClick={() => onOpenDialInForBean(bean.id)}
-                      className="px-2.5 py-1.5 rounded-xl border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs"
-                      title="Open 4-step Dial-In Studio for this bean"
-                    >
-                      <Sliders className="w-3 h-3" />
-                      <span>{t('beandex.dial_in_btn')}</span>
-                    </button>
+                    {/* Action button: Buy Again clone or Dial-In Studio */}
+                    {bean.isFinished ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => onOpenDialInForBean(bean.id)}
+                          className="px-2 py-1 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] text-[10px] flex items-center gap-1 transition cursor-pointer"
+                          title="Se gemt opskrift og kværnindstilling"
+                        >
+                          <Sliders className="w-3 h-3 text-[#C26D52]" />
+                          <span>Dial-In</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRepeatPurchase(bean)}
+                          className="px-2.5 py-1.5 rounded-xl border border-[#C26D52] bg-[#C26D52] hover:bg-[#b05d43] text-white font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                          title={t('beandex.buy_again_new_bag_btn')}
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>{t('beandex.buy_again_new_bag_btn')}</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onOpenDialInForBean(bean.id)}
+                        className="px-2.5 py-1.5 rounded-xl border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                        title="Open 4-step Dial-In Studio for this bean"
+                      >
+                        <Sliders className="w-3 h-3" />
+                        <span>{t('beandex.dial_in_btn')}</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -1396,6 +1666,14 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
         isOpen={isFreshnessInfoOpen}
         onClose={handleCloseFreshness}
         activeRoastLevel={activeFreshnessRoast}
+      />
+
+      {/* Finish Bean / Emptied Bag Exit Verdict Modal */}
+      <FinishBeanModal
+        isOpen={finishingBean !== null}
+        onClose={() => setFinishingBean(null)}
+        bean={finishingBean}
+        onConfirmFinish={handleConfirmFinish}
       />
     </div>
   );
