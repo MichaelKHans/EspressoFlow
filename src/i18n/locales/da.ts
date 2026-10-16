@@ -616,8 +616,8 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'radar.ready_standby': 'Optisk Radar er klar',
 
   // Beandex Archive, Emptied Bags & Repurchase
-  'beandex.tab_active_bags': 'Aktive Poser ({count})',
-  'beandex.tab_finished_archive': 'Arkiv / Tømte ({count})',
+  'beandex.tab_active_bags': 'Aktive Poser',
+  'beandex.tab_finished_archive': 'Arkiv / Tømte',
   'beandex.mark_finished_btn': 'Markér som Tømt',
   'beandex.mark_finished_confirm_title': 'Markér Kaffepose som Tømt',
   'beandex.mark_finished_confirm_subtitle': 'Gem din samlede barista-slutvurdering og genkøbsdom',

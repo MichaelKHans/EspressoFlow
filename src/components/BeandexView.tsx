@@ -916,7 +916,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               className="px-2 py-1.5 rounded-xl border border-[#E8DFD5] bg-white text-[11px] font-semibold text-[#2C2018] focus:outline-none"
               title={t('beandex.filter_price_tier')}
             >
-              <option value="all">{t('beandex.filter_price_tier')}: {t('beandex.filter_all')}</option>
+              <option value="all">{t('beandex.filter_price_tier')}: {t('beandex.price_all')}</option>
               <option value="budget">{PRICE_TIERS.budget.symbol} {t('beandex.price_budget')}</option>
               <option value="standard">{PRICE_TIERS.standard.symbol} {t('beandex.price_standard')}</option>
               <option value="premium">{PRICE_TIERS.premium.symbol} {t('beandex.price_premium')}</option>
@@ -1014,48 +1014,17 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 </button>
               </>
             ) : (
-              <>
-                <Coffee className="w-8 h-8 text-[#C26D52]/50 mx-auto" />
-                <p className="text-xs text-[#7A6E65] font-sans max-w-md mx-auto">
-                  {t('beandex.empty_vault')}
+              <div className="py-6 px-4 rounded-xl space-y-2 max-w-sm mx-auto">
+                <Coffee className="w-8 h-8 text-[#C26D52]/70 mx-auto" />
+                <h4 className="text-xs font-bold uppercase font-mono text-[#2C2018]">
+                  {language === 'da' ? 'Bønnehylden er tom' : 'Coffee Shelf is Empty'}
+                </h4>
+                <p className="text-xs text-[#7A6E65] font-sans leading-relaxed">
+                  {language === 'da'
+                    ? 'Brug handlingsknapperne foroven i Beandex-kortet til at scanne en pose, tjekke ristedato eller finde dit kaffematch.'
+                    : 'Use the action buttons in the card above to scan a bag, check roast dates, or find your coffee match.'}
                 </p>
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setIsMatchmakerOpen(true)}
-                    className="px-3.5 py-2 rounded-xl bg-linear-to-r from-[#D4A373] to-[#C26D52] hover:brightness-110 text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-xs"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
-                    <span>{t('beandex.matchmaker_btn')}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onOpenScanner}
-                    className="px-3.5 py-2 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>{t('beandex.scan_bag_btn')}</span>
-                  </button>
-                  {onOpenRadar && (
-                    <button
-                      type="button"
-                      onClick={onOpenRadar}
-                      className="px-3.5 py-2 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
-                    >
-                      <Zap className="w-3.5 h-3.5 text-[#C26D52] fill-[#C26D52]" />
-                      <span>{t('radar.btn')}</span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setIsAddingCustomBag(true)}
-                    className="px-3.5 py-2 rounded-xl border border-[#E8DFD5] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{t('beandex.add_bag_btn')}</span>
-                  </button>
-                </div>
-              </>
+              </div>
             )}
           </div>
         ) : (

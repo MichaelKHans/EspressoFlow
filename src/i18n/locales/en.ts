@@ -614,8 +614,8 @@ export const en = {
   'radar.ready_standby': 'Live Optical Radar Active',
 
   // Beandex Archive, Emptied Bags & Repurchase
-  'beandex.tab_active_bags': 'Active Stock ({count})',
-  'beandex.tab_finished_archive': 'Archive / Finished ({count})',
+  'beandex.tab_active_bags': 'Active Stock',
+  'beandex.tab_finished_archive': 'Archive / Finished',
   'beandex.mark_finished_btn': 'Mark Finished',
   'beandex.mark_finished_confirm_title': 'Mark Bag as Finished & Emptied',
   'beandex.mark_finished_confirm_subtitle': 'Record your final barista verdict and repurchase score',
