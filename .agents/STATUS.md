@@ -29,8 +29,8 @@
   - *Beandex Hero Banner:* Mørkristede specialty bønner med gylden rav-rimlight (`coffee-beans-macro.jpg`).
   - *Barista Deck Hero Banner:* Nærbillede af espresso-dråbe med koncentriske ringe og fløjlsblød crema (`crema-ripple-macro.jpg`).
   - *Paywall Pricing Card:* Luksuskort i mørk kaffeglans med ravfarvet dybde.
-- **Oprydning af Gentagelse på Tom Bønnehylde:**
-  - Fjernet de 4 overflødige gentagne knapper nede i den tomme bønnekasse, så Hero-banneret forbliver det eneste klare kommandocenter.
+- **Brugervenlig Tom Bønnehylde:**
+  - Bevaret en hurtig og intuitiv `[ 📷 Scan Kaffepose ]` CTA direkte på den tomme hylde flankeret af `[ ⚡ Radar ]` og `[ + Tilføj ]`, så brugeren straks kan scanne en pose fra hylden, når kartoteket er tomt.
   - Rettet pris-filtertekst til `Price Tier: All Prices` og fjernet rå `({count})` strenge fra fane-knapperne.
 - **Testet og Verificeret:**
   - `npm run build` passeret 100% fejlfrit, `npx cap sync` synkroniseret.
