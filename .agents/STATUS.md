@@ -11,6 +11,14 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-16 -- Freshness Radar™ Butiks- & Hyldescanner med Trafiklys-HUD (v1.14.0)
+- **Zero-Tap Kontinuerlig Hyldescanner (`FreshnessRadarModal.tsx`):** Hurtig realtids-optisk datoafkodning optimeret til supermarkeder og risterier. Beskærer automatisk til centrum-reticle med 10x pixel-reduktion for ultra-lav latenstid.
+- **Trafiklys HUD & Barista Diagnose:** 🟢 Peak Frisk (5–30 dage), 🟡 Acceptabel / Efter Peak (31–55 dage), 🔴 For Gammel / Oxideret (>55 dage eller gammel BBD), og 💨 Afgasser CO₂ (<5 dage).
+- **Haptisk & Akustisk Feedback:** Dobbelt-chime (587Hz $\rightarrow$ 880Hz) + kraftig haptik for peak bønner; advarselstone + haptisk vibration for oxideret kaffe.
+- **Butiks-Lommelygte (Hardware Torch Toggle):** Direkte tænd/sluk af mobilens kameradiode via WebRTC constraints for at oplyse mørke butikshylder.
+- **Auto-Reset & Beandex Integration:** 4s progress bar nedtæller før næste scanning, tryk-hvor-som-helst nulstiller straks. 1-klik `[ + Gem i Beandex ]` overfører dato til bønnekataloget.
+- **Bygget & Installeret på Forbundet Android Enhed:** `npm run build` (467 ms), `npx cap sync` og streamet installation til forbundet enhed via ADB.
+
 ### 2026-10-16 -- Synlig Barista Friskhedsnote i Beandex & Scan Kaffepose Knap-Renhed (v1.13.1)
 - **Opdateret Scan Pose Knap:** Fjernet "/stregkode" så knappen stolt fremstår som `[ 📸 Scan Kaffepose ]` med kamera-ikon på tværs af hero og tomt lager i `BeandexView.tsx`.
 - **Dynamisk Barista Friskhedsnote:** Indsat synlig, farvekodet Barista Intelligence boks på hvert kaffekort i Beandex, der dynamisk skifter med bønnernes alder (Oxideret 🥛 Bedst med mælk, Efter peak ⏱️ Kværn finere, Peak vindue ✨ Ren espresso, Afgasning 💨 Hviler).

@@ -21,6 +21,7 @@ import {
   Tag,
   AlertCircle,
   ShieldCheck,
+  Zap,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, GrinderProfile, RoastLevel } from '../types/espresso';
 import { fetchAllGlobalBeans, type GlobalCoffeeBean } from '../lib/supabase';
@@ -47,6 +48,7 @@ export interface BeandexViewProps {
   onDeleteBean: (id: string) => void;
   onCreateBean: (bean: Omit<CoffeeBeanProfile, 'id'>) => void;
   onOpenScanner: () => void;
+  onOpenRadar?: () => void;
   onOpenCentralVault: () => void;
   onOpenDialInForBean: (beanId: string) => void;
   onSwitchToFlow: () => void;
@@ -66,6 +68,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   onDeleteBean,
   onCreateBean,
   onOpenScanner,
+  onOpenRadar,
   onOpenCentralVault,
   onOpenDialInForBean,
   onSwitchToFlow,
@@ -402,6 +405,17 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               <Camera className="w-3.5 h-3.5" />
               <span>{t('beandex.scan_bag_btn')}</span>
             </button>
+            {onOpenRadar && (
+              <button
+                type="button"
+                onClick={onOpenRadar}
+                className="px-3.5 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15] hover:bg-[#38271C] text-[#FFFDF9] font-semibold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs"
+                title="Lynhurtig Butiks- & Hyldescanner"
+              >
+                <Zap className="w-3.5 h-3.5 text-[#E58367] fill-[#E58367]" />
+                <span>{t('radar.btn')}</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setIsAddingCustomBag(!isAddingCustomBag)}
@@ -781,6 +795,16 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 <Camera className="w-3.5 h-3.5" />
                 <span>{t('beandex.scan_bag_btn')}</span>
               </button>
+              {onOpenRadar && (
+                <button
+                  type="button"
+                  onClick={onOpenRadar}
+                  className="px-3.5 py-2 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-semibold flex items-center gap-1.5 transition"
+                >
+                  <Zap className="w-3.5 h-3.5 text-[#C26D52] fill-[#C26D52]" />
+                  <span>{t('radar.btn')}</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setIsAddingCustomBag(true)}

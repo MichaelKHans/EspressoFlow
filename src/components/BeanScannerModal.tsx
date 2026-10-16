@@ -18,6 +18,7 @@ import {
   Globe,
   Tag,
   Image as ImageIcon,
+  Zap,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, RoastLevel, RatioStyle, GrinderProfile } from '../types/espresso';
 import { useTranslation } from '../i18n';
@@ -52,6 +53,8 @@ interface BeanScannerModalProps {
   currentGrinderName: string;
   grinders?: GrinderProfile[];
   onOpenCentralVault?: () => void;
+  onOpenRadar?: () => void;
+  initialRoastDate?: string;
 }
 
 type ScanMode = 'bag_vision' | 'barcode' | 'label_date';
@@ -63,6 +66,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   currentGrinderName,
   grinders = [],
   onOpenCentralVault,
+  onOpenRadar,
+  initialRoastDate,
 }) => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<ScanMode>('bag_vision');
@@ -235,6 +240,9 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       setEditImageUrl(undefined);
       setShowRoasterSuggestions(false);
       setShowNameSuggestions(false);
+      if (initialRoastDate) {
+        setEditRoastDate(initialRoastDate);
+      }
       startCamera();
     } else {
       stopCamera();
@@ -242,7 +250,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     return () => {
       stopCamera();
     };
-  }, [isOpen, startCamera, stopCamera]);
+  }, [isOpen, initialRoastDate, startCamera, stopCamera]);
 
   useEffect(() => {
     if (isOpen && isCameraActive && !scannedResult) {
@@ -764,13 +772,39 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
             </div>
           )}
 
-          {/* Date Scanning Heuristics Info */}
+          {/* Date Scanning Heuristics & Live Freshness Radar Link */}
           {!scannedResult && mode === 'label_date' && (
-            <div className="p-3 rounded-xl bg-white border border-[#E8DFD5] space-y-2 text-xs text-[#7A6E65]">
-              <div className="flex items-center gap-1.5 font-bold text-[#2C2018] uppercase text-[10px]">
-                <Info className="w-3.5 h-3.5 text-[#72806B]" />
-                <span>Multi-Format Date Recognition Engine</span>
-              </div>
+            <div className="space-y-2.5">
+              {onOpenRadar && (
+                <div className="p-3 rounded-xl bg-linear-to-r from-[#241A14] to-[#18110D] border border-[#C26D52]/40 text-white flex items-center justify-between gap-3 shadow-md">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-[#E58367] font-mono">
+                      <Zap className="w-3.5 h-3.5 fill-[#E58367]" />
+                      <span>{t('radar.title')}</span>
+                    </div>
+                    <p className="text-[10.5px] text-[#C2B5A8] font-sans">
+                      Lynhurtig zero-tap hyldescanning med trafiklys-HUD mod ristedatoer & BBD.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenRadar();
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-[#C26D52] hover:bg-[#A95840] active:scale-95 text-white text-xs font-bold transition flex items-center gap-1 shrink-0 shadow-sm cursor-pointer"
+                  >
+                    <Zap className="w-3 h-3 fill-white" />
+                    <span>Start Radar</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="p-3 rounded-xl bg-white border border-[#E8DFD5] space-y-2 text-xs text-[#7A6E65]">
+                <div className="flex items-center gap-1.5 font-bold text-[#2C2018] uppercase text-[10px]">
+                  <Info className="w-3.5 h-3.5 text-[#72806B]" />
+                  <span>Multi-Format Date Recognition Engine</span>
+                </div>
               <p className="text-[11px] leading-relaxed">
                 Coffee roasters use diverse date stamps. Flowbean's optical parser decodes:
               </p>
@@ -788,7 +822,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                 💡 If a commercial bag only has "Best Before / Bedst Før", our engine calculates the estimated roast date (~12 months prior).
               </p>
             </div>
-          )}
+          </div>
+        )}
 
           {/* Feedback or Error Message */}
           {feedbackMessage && !scannedResult && (

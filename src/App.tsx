@@ -10,6 +10,7 @@ import { DrinkSelector } from './components/DrinkSelector';
 import { DialInWizardModal } from './components/DialInWizardModal';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { BeanScannerModal } from './components/BeanScannerModal';
+import { FreshnessRadarModal } from './components/FreshnessRadarModal';
 import { AdminPortal } from './components/AdminPortal';
 import { TrialCountdownBanner } from './components/TrialCountdownBanner';
 import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
@@ -77,6 +78,8 @@ export function App() {
   const [activeBeanId, setActiveBeanId] = useState<string>(() => loadBeans()[0]?.id || 'bean-ethiopia');
   const [grinders, setGrinders] = useState<GrinderProfile[]>(() => loadGrinders());
   const [isBeanScannerOpen, setIsBeanScannerOpen] = useState<boolean>(false);
+  const [isRadarOpen, setIsRadarOpen] = useState<boolean>(false);
+  const [radarScannedDate, setRadarScannedDate] = useState<string | undefined>(undefined);
 
   // Active Bean derived
   const currentBean = beans.find((b) => b.id === activeBeanId) || beans[0] || {
@@ -141,6 +144,7 @@ export function App() {
     setIsSettingsOpen(false);
     setIsDialInWizardOpen(false);
     setIsBeanScannerOpen(false);
+    setIsRadarOpen(false);
     setIsCentralVaultOpen(false);
     setIsPaywallOpen(false);
     setLegalModalTab(null);
@@ -187,6 +191,7 @@ export function App() {
       { name: 'shotSummary', isOpen: isShotSummaryOpen, close: () => setIsShotSummaryOpen(false) },
       { name: 'dialin', isOpen: isDialInWizardOpen, close: () => setIsDialInWizardOpen(false) },
       { name: 'scanner', isOpen: isBeanScannerOpen, close: () => setIsBeanScannerOpen(false) },
+      { name: 'radar', isOpen: isRadarOpen, close: () => setIsRadarOpen(false) },
       { name: 'vault', isOpen: isCentralVaultOpen, close: () => setIsCentralVaultOpen(false) },
       { name: 'paywall', isOpen: isPaywallOpen, close: () => setIsPaywallOpen(false) },
       { name: 'legal', isOpen: legalModalTab !== null, close: () => setLegalModalTab(null) },
@@ -897,6 +902,7 @@ export function App() {
               handleSelectBean(newBean.id);
             }}
             onOpenScanner={() => setIsBeanScannerOpen(true)}
+            onOpenRadar={() => setIsRadarOpen(true)}
             onOpenCentralVault={() => setIsCentralVaultOpen(true)}
             onOpenDialInForBean={(beanId) => {
               handleSelectBean(beanId);
@@ -1662,11 +1668,29 @@ export function App() {
       {/* Bean Bag & Barcode Vision Scanner Modal */}
       <BeanScannerModal
         isOpen={isBeanScannerOpen}
-        onClose={() => setIsBeanScannerOpen(false)}
+        onClose={() => {
+          setIsBeanScannerOpen(false);
+          setRadarScannedDate(undefined);
+        }}
         onSaveBean={handleSaveBeanFromScanner}
         currentGrinderName={currentGrinder.name}
         grinders={grinders}
         onOpenCentralVault={() => setIsCentralVaultOpen(true)}
+        onOpenRadar={() => setIsRadarOpen(true)}
+        initialRoastDate={radarScannedDate}
+      />
+
+      {/* Freshness Radar Supermarket & Shelf Date Scanner Modal */}
+      <FreshnessRadarModal
+        isOpen={isRadarOpen}
+        onClose={() => setIsRadarOpen(false)}
+        onSaveToVault={(scannedDate) => {
+          setRadarScannedDate(scannedDate);
+          setIsBeanScannerOpen(true);
+        }}
+        onOpenFullBagScanner={() => {
+          setIsBeanScannerOpen(true);
+        }}
       />
 
       {/* Central Cloud Bean Vault Directory Modal */}

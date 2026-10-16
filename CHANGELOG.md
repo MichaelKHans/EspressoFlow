@@ -2,6 +2,26 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.14.0] - 2026-10-16
+### Etape 50: Freshness Radar™ (Lynhurtig Butiks- & Hyldescanner med Trafiklys-HUD)
+- **1. Zero-Tap Kontinuerlig Hyldescanner (`FreshnessRadarModal.tsx`):**
+  - Udviklet en dedikeret live radar-modal skræddersyet til supermarkeder, kaffebarer og risterier.
+  - Optisk scanning kører i en flydende realtids-loop uden tryk på knapper: Ret blot kameraet mod ristedato eller "Bedst Før" (BBD) stempel.
+  - Optimeret centrum-crop (`bagImageUtil.ts`), der reducerer pixelantallet med 10x for ultra-lav latenstid og nul unødigt batteriforbrug.
+- **2. Trafiklys HUD & Barista Diagnose:**
+  - 🟢 **✨ GODKENDT • PEAK VINDUET (5–30 dage):** Reticle lyser smaragdgrønt med haptisk puls og behagelig dobbelt-chime (D5 $\rightarrow$ A5). *"Maksimal sødme og fyldig crema."*
+  - 🟡 **🟡 ACCEPTABEL • EFTER PEAK (31–55 dage):** Reticle skifter til varm rav/gul. *"Kværn 0.5–1 trin finere – fremragende til mælk."*
+  - 🔴 **🔴 ADVARSEL • FOR GAMMEL (>55 dage eller gammel BBD):** Rødt advarsels-reticle med taktil advarsels-vibration og lav tone. *"Oxiderede olier og flad smag."*
+  - 💨 **💨 FRISKRISTET • AFGASSER CO₂ (<5 dage):** Terracotta glød. *"Lad hvile 3-5 dage for renere ekstraktion."*
+- **3. Butiks-Ergonomi & Lommelygte (Hardware Torch Toggle):**
+  - Integreret 1-klik hardware lommelygte (`[ 🔦 Lys Til / Fra ]`) via MediaStream constraints, så mørke butikshylder og skyggefulde poser let oplyses.
+  - 4-sekunders auto-reset progress bar, der automatisk re-armer scanneren til den næste pose på hylden.
+  - Tryk-hvor-som-helst eller `[ ⚡ Scan Næste Pose ]` for omgående nulstilling i 0 ms.
+- **4. 1-Klik Integration til Beandex & Bag Vision AI:**
+  - `[ + Gem i Beandex ]` overfører automatisk den verificerede ristedato direkte til bønne-editoren.
+  - `[ 📸 Scan Kaffepose (Forside) ]` skifter direkte til Beandex Bag Vision AI for at udtrække risteri og kaffenavn.
+  - Fremtrædende knap `[ ⚡ Friskheds-Radar ]` i Beandex hero, empty-state og i `BeanScannerModal.tsx` under Ristedato.
+
 ## [1.13.1] - 2026-10-16
 ### Etape 49: Synlig Barista Friskhedsnote i Beandex & Scan Kaffepose Knap-Renhed
 - **1. Beandex "Scan Kaffepose" Knap-Opdatering:**

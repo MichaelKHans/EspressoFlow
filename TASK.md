@@ -202,13 +202,14 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 
 ---
 
-## ⚡ Aktuel Opgave: Freshness Radar (Supermarked & Hylde-Scanner)
-- [ ] **Freshness Radar (Supermarket Shelf Zero-Tap Date Scanner):**
-  - Lynhurtig kontinuerlig OCR-scanning for ristedatoer og holdbarhedsdatoer på supermarkedshylder.
-  - Trafiklys HUD: 🟢 Peak Frisk / 🟡 Acceptabel / 🔴 Gammel / 💨 Afgasser.
-  - Flashlight / Torch toggle til mørke butikshylder.
-  - Taktil haptik-vibration ved godkendt fund og øjeblikkelig genaktivering til næste pose.
-  - 1-tap "Opret i Beandex" med auto-udfyldt dato.
+## ⚡ FASE 10: Freshness Radar™ (Butiks- & Hyldescanner - v1.14.0 AFSLUTTET)
+- [x] **Freshness Radar (Supermarket Shelf Zero-Tap Date Scanner):**
+  - [x] Lynhurtig kontinuerlig OCR-scanning for ristedatoer og holdbarhedsdatoer på supermarkedshylder.
+  - [x] Trafiklys HUD: 🟢 Peak Frisk (5–30d) / 🟡 Acceptabel (31–55d) / 🔴 Gammel (>55d) / 💨 Afgasser (<5d).
+  - [x] Hardware Flashlight / Torch toggle til mørke butikshylder.
+  - [x] Taktil haptik-vibration og syntetiseret audio-chime ved godkendt fund.
+  - [x] 4s auto-reset progress bar og øjeblikkelig 1-tap genaktivering til næste pose.
+  - [x] 1-tap "Gem i Beandex" med auto-udfyldt dato samt direkte genvej til Beandex Bag Vision AI.
 
 ---
 

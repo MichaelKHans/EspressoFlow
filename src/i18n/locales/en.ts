@@ -552,6 +552,25 @@ export const en = {
   'beandex.no_flavor_notes': 'No flavor notes logged yet',
   'bean.future_date_title': 'Future Date',
   'bean.future_date_warning': 'Roast date cannot be in the future. Please check the date or year above.',
+
+  // Freshness Radar
+  'radar.title': 'Freshness Radar™',
+  'radar.subtitle': 'Instant Supermarket & Shelf Date Scanner',
+  'radar.btn': '⚡ Freshness Radar',
+  'radar.aim_hint': 'Aim reticle at roast date or Best Before stamp',
+  'radar.torch_on': 'Torch On',
+  'radar.torch_off': 'Torch Off',
+  'radar.scan_next': 'Scan Next Bag',
+  'radar.save_to_beandex': 'Save to Beandex',
+  'radar.open_full_scanner': 'Scan Coffee Bag',
+  'radar.auto_reset_in': 'Ready for next bag in {s}s...',
+  'radar.status_peak': '✨ APPROVED: PEAK WINDOW',
+  'radar.status_past_peak': '🟡 ACCEPTABLE: PAST PEAK',
+  'radar.status_stale': '🔴 WARNING: TOO OLD',
+  'radar.status_degassing': '💨 FRESH ROAST: DEGASSING',
+  'radar.days_ago': '{days} days ago',
+  'radar.estimated_from_bbd': 'Estimated from Best Before date',
+  'radar.ready_standby': 'Live Optical Radar Active',
 } as const;
 
 export type TranslationKeys = keyof typeof en;

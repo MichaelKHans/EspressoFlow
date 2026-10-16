@@ -554,5 +554,24 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'beandex.no_flavor_notes': 'Ingen smagsnoter registreret endnu',
   'bean.future_date_title': 'Dato i fremtiden',
   'bean.future_date_warning': 'Kaffe kan ikke være ristet ude i fremtiden. Tjek venligst datoen eller årstallet ovenfor.',
+
+  // Freshness Radar
+  'radar.title': 'Friskheds-Radar™',
+  'radar.subtitle': 'Lynhurtig Butiks- & Hyldescanner',
+  'radar.btn': '⚡ Friskheds-Radar',
+  'radar.aim_hint': 'Ret søgeren mod ristedato eller Bedst Før',
+  'radar.torch_on': 'Lys Til',
+  'radar.torch_off': 'Lys Fra',
+  'radar.scan_next': 'Scan Næste Pose',
+  'radar.save_to_beandex': 'Gem i Beandex',
+  'radar.open_full_scanner': 'Scan Kaffepose (Forside)',
+  'radar.auto_reset_in': 'Klar til næste pose om {s}s...',
+  'radar.status_peak': '✨ GODKENDT: PEAK VINDUET',
+  'radar.status_past_peak': '🟡 ACCEPTABEL: EFTER PEAK',
+  'radar.status_stale': '🔴 ADVARSEL: FOR GAMMEL',
+  'radar.status_degassing': '💨 FRISKRISTET: AFGASSER',
+  'radar.days_ago': '{days} dage siden',
+  'radar.estimated_from_bbd': 'Beregnet ud fra Bedst Før dato',
+  'radar.ready_standby': 'Optisk Radar er klar',
 };
 

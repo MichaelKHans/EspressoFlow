@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.13.1 (Synlig Barista Friskhedsnote, Scan Kaffepose Knap-Renhed & Freshness Radar Arkitektur)  
+> **Gældende version:** v1.14.0 (Freshness Radar™ Butiks- & Hyldescanner med Trafiklys-HUD, Beandex Bag Vision™ Pose AI & Brand Purity)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -216,7 +216,16 @@ flowchart TD
     LocalDB -- Ja --> FillMeta
     LocalDB -- Nej --> QueryCloud[Slå op i Supabase Central Vault]
 
-    ScanType -- Poseetiket & Dato --> OCRBag[OCR Tekstgenkendelse]
+    ScanType -- Freshness Radar™ (Hyldescanner) --> ReticleCrop[bagImageUtil: 10x Center-Crop 70%x32% Canvas]
+    ReticleCrop --> FastDetect[Native TextDetector / bagScanner Date Parser]
+    FastDetect --> VerdictCheck{Dato Genkendt?}
+    VerdictCheck -- Ja --> TrafficHUD[Trafiklys HUD: 🟢 Peak / 🟡 Efter Peak / 🔴 Gammel / 💨 Afgasser]
+    TrafficHUD --> HapticFeedback[Haptik & Dual-Tone Chime D5->A5]
+    TrafficHUD --> AutoResetTimer[4s Auto-Reset Countdown Bar]
+    TrafficHUD --> OneTapSave[1-Tap: Gem Dato i Beandex el. Åbn Pose AI]
+    VerdictCheck -- Nej --> FastDetect
+
+    ScanType -- Poseetiket & Dato (Manuel) --> OCRBag[OCR Tekstgenkendelse]
     OCRBag --> DateParser[Dansk Ristedato- & MHD Heuristik]
     DateParser --> DateCheck{Er dato fundet?}
     DateCheck -- Nordisk Ristedato (fx 02/03-26) --> ExtractRoastDate[Sæt Ristedato]
