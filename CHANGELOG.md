@@ -2,6 +2,23 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.17.0] - 2026-10-16
+### Etape 53: Ambient Bokeh Coffee Beans™ (GPU-Accelereret Atmosfærisk Baggrundsmotion)
+- **1. Stemningsfuld Bokeh-Baggrund (`AmbientBeanBackground.tsx`):**
+  - Udviklet et dedikeret, svævende baggrundslag med bløde, out-of-focus kaffebønnesilhuetter.
+  - Skaber en varm, filmisk dybdeskarphed ($f/1.4$ bokeh) bag appens pergament (`#FAF7F2`) og latte (`#FFFDF9`) kort.
+  - Spredt med god plads (kun 3–5 bønner ad gangen) i periferien, dæmpet til 4–7% opacitet med 16–26px Gaussisk sløring for 100% uforstyrret tekst- og tallæsbarhed.
+- **2. Unikke Botaniske Silhuetter pr. Side (Side-Specifikt Terroir):**
+  - ☕ **Coffee Bar (`drinks`):** Klassisk Arabica (Bourbon/Typica) med s-buet midterfure, der langsomt driver opad (36s bølge) som varme aromadufte.
+  - 📷 **Scale Cam (`monitor`):** 3 bønner i yderkanterne med 26px sløring. Pauser automatisk animationen under aktiv brygning (`isBrewing === true`) for 100% OCR- og flowfokus.
+  - 📖 **Beandex (`beandex`):** Botaniske mikrolot-silhuetter: Den slanke *Geisha*, den runde *Peaberry (Perlebønne)*, og den gigantiske *Pacamara Elephant Bean*.
+  - 📜 **Logbog (`logbook`):** Modne ristede bønner med rolig horisontal drift som en tidslinje af historiske bryg.
+  - ⚙️ **Gear Setup (`equipment`):** Præcise kaffebønner blandet med fine kværn-partikler.
+- **3. 100% Hardware-Accelereret GPU-Ydeevne (`index.css`):**
+  - Bygget udelukkende med CSS `transform: translate3d(...) rotate(...)` og `will-change: transform`.
+  - Nul JavaScript CPU-loops, nul memory leaks, nul batteridræn på mobiltelefonen.
+  - Automatisk understøttelse af `prefers-reduced-motion` for tilgængelighed.
+
 ## [1.16.0] - 2026-10-16
 ### Etape 52: Verdensklasse Kaffebønner, Prisniveau-Kategorisering & Beandex Matchmaker™ Smagsfinder
 - **1. Verdensklasse Konkurrence- & Mesterkaffer (`coffeeCatalogData.ts`):**

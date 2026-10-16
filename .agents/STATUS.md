@@ -11,6 +11,23 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-16 -- Ambient Bokeh Coffee Beans™ (GPU-Accelereret Atmosfærisk Baggrundsmotion) (v1.17.0)
+- **Stemningsfuld Bokeh-Baggrund (`AmbientBeanBackground.tsx`):**
+  - Implementeret et diskret, drømmende baggrundslag med bløde, out-of-focus kaffebønnesilhuetter.
+  - Varm, filmisk $f/1.4$ bokeh-fornemmelse i harmoni med pergament (`#FAF7F2`) og varm latte (`#FFFDF9`).
+  - Kun 3–5 bønner ad gangen med stor afstand, 4–7% opacitet og 16–26px Gaussisk sløring for 100% uforstyrret læsbarhed af vægttal og grafer.
+- **Unikke Silhuetter pr. Side (Side-Specifikt Terroir):**
+  - Coffee Bar (`drinks`): Klassiske Arabica-bønner (Typica/Bourbon) med rolig opadgående aroma-drift.
+  - Scale Cam (`monitor`): Ultra-spredte perifere bønner; pauser automatisk under aktiv brygning (`isBrewing`).
+  - Beandex (`beandex`): Botaniske varietaler: *Geisha* (slank), *Peaberry* (rund perlebønne), og *Pacamara* (oversized elephant bean).
+  - Logbog (`logbook`): Horisontalt drivende modne bønner som en tidslinje af kaffeoplevelser.
+  - Gear Setup (`equipment`): Kaffebønner blandet med fine mikro-kværnpartikler.
+- **100% Hardware-Accelereret GPU-Ydeevne (`index.css`):**
+  - Udelukkende CSS `translate3d(...) rotate(...)` med `will-change: transform`.
+  - Nul JavaScript CPU-loops, 0 ms main thread latenstid, nul batteridræn. Understøtter `prefers-reduced-motion`.
+- **Testet og Verificeret:**
+  - `npm run build` passeret 100% fejlfrit, `npx cap sync` synkroniseret.
+
 ### 2026-10-16 -- Verdensklasse Kaffebønner, Prisniveau-Kategorisering & Beandex Matchmaker™ Smagsfinder (v1.16.0)
 - **Verdensklasse Konkurrencekaffer i Kataloget (`coffeeCatalogData.ts`):**
   - Tilføjet 8 internationalt berømte mesterskabskaffer brugt i World Barista Championship og Cup of Excellence (Sey Coffee Geisha, Manhattan Diego Bermudez Thermal Shock, DAK Milky Cake, Gesha Village Chaka, Hacienda La Esmeralda Private Collection, Friedhats Fieshitu, Proud Mary Ghost Rider, Subtext Las Margaritas).

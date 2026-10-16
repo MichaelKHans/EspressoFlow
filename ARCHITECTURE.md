@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.16.0 (Verdensklasse Kaffebønner, Prisniveau-Kategorisering & Beandex Matchmaker™ Smagsfinder)  
+> **Gældende version:** v1.17.0 (Ambient Bokeh Coffee Beans™ - GPU-Accelereret Atmosfærisk Baggrundsmotion)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -353,6 +353,7 @@ graph TD
     App --> AdminTab[AdminPortal.tsx<br/>Curator Studio & Godkendelsespult]
 
     %% Ikoner & UI Assets
+    App --> AmbientLayer[AmbientBeanBackground.tsx<br/>100% GPU-accelereret atmosfærisk bokeh bønnebaggrund]
     App --> CustomIcons[CustomCoffeeIcons.tsx<br/>Vector Line-Art Ikoner: CoffeeBean & Dripper]
     App --> CupEngine[ArchitecturalCup.tsx<br/>SVG Beholder-Motor: Keramikkant, Sham Glas, Isterninger, Desserter & Pour Over]
 

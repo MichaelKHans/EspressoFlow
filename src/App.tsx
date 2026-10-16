@@ -19,6 +19,7 @@ import { ShotSummaryModal } from './components/ShotSummaryModal';
 import { PreBrewCoachBanner } from './components/PreBrewCoachBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { CoffeeBeanIcon } from './components/CustomCoffeeIcons';
+import { AmbientBeanBackground } from './components/AmbientBeanBackground';
 import { useMobileBackHandler } from './lib/useMobileBackHandler';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
@@ -654,7 +655,14 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#2C2018] flex flex-col font-sans relative">
+      {/* Ambient Bokeh Coffee Beans Background (100% GPU-accelerated atmospheric silhouettes) */}
+      <AmbientBeanBackground
+        activeTab={activeTab}
+        activeMode={activeMode}
+        isBrewing={isBrewing}
+      />
+
       {/* Top Header - Always Elevated at z-[70] so Flowbean Brand Banner Remains 100% Visible */}
       <header
         id="app-header"
