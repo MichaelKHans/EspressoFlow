@@ -1238,9 +1238,11 @@
   - Desserter: Affogato fior di latte gelato-kugle, Con Panna skulpturel flødeskumstop.
   - Unikke Pour Over silhuetter: Chemex timeglas med trækrave og lædersnor, V60 med 60° spiralriller, Kalita med flad bund og bølgekant, AeroPress uden hank med måleskala og bajonethætte, French Press med stålgitter og stempel.
 - **Etape 3: `DrinkSelector.tsx` (Digital Barista Deck & Typografi):**
-  - Symmetrisk 2-kolonne Quick Deck (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`) med forstørrede kopper (`w-10 h-11`).
-  - Master-kort: Runde farveprikker i lag-forklaringen (ikke afkrydsningsfelter), samlet Grinder & Bean calibration card uden box-in-box tunghed.
-  - Specialty Menu Modal tekst-afkortnings fix (`font-sans text-xs` `${ml}ml • ${category} • 1:${ratio}`) og forstørret kop (`w-11 h-12`).
+  - Vertikale Barista Fliser på Quick Deck: Omlagt til et vertikalt flise-layout (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`), hvor koppen er over dobbelt så stor (`size="sm"` i `h-14` container) og drikketitlen har fuld bredde uden afskæring ('Cappuccino' og 'Double Espresso' fremstår 100% ubeskåret).
+  - Ingrediens-Swatches i Cup Anatomy: Erstattet de cirkulære prikker med stilrene rektangulære recept-swatches (`w-3.5 h-2.5 rounded-xs border border-[#CBB8A3]`), så mælkeskum ikke længere forveksles med en ikke-valgt radioknap.
+  - Fuld Læsbarhed i Master Card: Fjernet `line-clamp-2` fra drikkebeskrivelsen for at undgå hårde sætningsafskæringer med `...`.
+  - Opstrammet Master-kort: Forenklet samlet Grinder & Bean-kort med `divide-y / divide-x` uden "box-in-box" tunghed.
+  - Specialty Menu Modal tekst-afkortnings fix: Undgår afskæring af ratio på mobiler (`font-sans text-xs` `${ml}ml • ${category} • 1:${ratio}`), og prominent forstørret kop (`w-11 h-12`).
 - **Etape 4: `FlowChart.tsx`, `Logbook.tsx`, `ShotShareModal.tsx` & i18n:**
   - `FlowChart.tsx`: Strikt SVG `<clipPath id="chart-area-clip">` og clamping forhindrer udbrud; responsiv header (`flex-col sm:flex-row gap-1.5`) holder kurveoverskrift på én linje på mobil.
   - `Logbook.tsx`: Fjernet det store tomme venstre kvadrat (~80px sparet pr. kort), miniature cup indsat direkte i headeren ved siden af `#130` og kaffenavnet, `whitespace-nowrap` på alle badges, i18n konsistens (`Share Card`, `telemetry_points`).

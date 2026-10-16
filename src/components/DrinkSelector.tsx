@@ -366,22 +366,25 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
         {/* 2. Active Bar Deck Ribbon & Customizer */}
         <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/10">
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="text-[10px] sm:text-[11px] font-sans text-[#E8DFD5]/80 uppercase tracking-wider font-bold">
-              {methodFilter === 'espresso' ? 'Espresso Deck' : 'Pour Over Deck'} ({displayDeckDrinks.length} pinned):
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[11px] font-sans text-[#E8DFD5]/90 uppercase tracking-wider font-bold flex items-center gap-1.5">
+              <span>{methodFilter === 'espresso' ? 'Espresso Deck' : 'Pour Over Deck'}</span>
+              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-white/10 text-[#FAF7F2]">
+                {displayDeckDrinks.length} pinned
+              </span>
             </div>
             <button
               type="button"
               onClick={() => setIsCustomizeModalOpen(true)}
-              className="text-[11px] font-sans font-medium text-[#FAF7F2] hover:text-[#FFFDF9] bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              className="text-xs font-sans font-semibold text-[#FAF7F2] hover:text-white bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1 rounded-full flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98"
               title="Browse all drinks or customize quick deck"
             >
-              <Settings2 className="w-3.5 h-3.5 text-[#C26D52]" />
+              <Settings2 className="w-3 h-3 text-[#E08A70]" />
               <span>All Drinks & Pin ({DRINK_RECIPES.filter((d) => (d.method || 'espresso') === methodFilter).length})</span>
             </button>
           </div>
 
-          {/* Symmetrical 2-Column Grid (3 clean rows of 2 on mobile, 3-cols on tablet) */}
+          {/* Symmetrical 2-Column Grid (Responsive Vertical Barista Tiles) */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {displayDeckDrinks.map((drink) => {
               const isSelected = drink.id === selectedDrink.id;
@@ -394,23 +397,33 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   key={drink.id}
                   type="button"
                   onClick={() => handleSelectDrinkWithScroll(drink)}
-                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all text-left cursor-pointer ${
+                  className={`flex flex-col items-center text-center p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
                     isSelected
-                      ? 'bg-[#B85D43] border-[#E08A70] text-[#FFFDF9] shadow-md ring-2 ring-white/20 scale-[1.01]'
+                      ? 'bg-[#B85D43] border-[#E08A70] text-[#FFFDF9] shadow-lg ring-2 ring-white/30 scale-[1.02]'
                       : 'bg-[#241A14]/95 border-[#4A382C] text-[#FAF7F2] hover:border-[#7A5C48] hover:bg-[#2C2018]'
                   }`}
                 >
-                  <div className="w-10 h-11 shrink-0 flex items-center justify-center p-0.5 rounded-lg bg-black/20 border border-white/10">
-                    <ArchitecturalCup drink={drink} size="xs" variant="dark" />
+                  {/* Generous Cup Showcase */}
+                  <div className="w-full h-13 sm:h-14 flex items-center justify-center mb-1.5 transition-transform group-hover:scale-105">
+                    <ArchitecturalCup drink={drink} size="sm" variant="dark" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h5 className="font-serif text-[13px] sm:text-[14px] font-semibold leading-tight truncate">
-                      {shortName}
-                    </h5>
-                    <p className="font-sans text-[11px] opacity-80 truncate mt-0.5">
-                      {volumeDisplay} • {ratioDisplay}
-                    </p>
-                  </div>
+
+                  {/* Drink Name - Full Width Without Ugly Truncation */}
+                  <h5
+                    className="w-full font-serif text-[13px] sm:text-[14px] font-bold leading-tight line-clamp-2 px-0.5 min-h-[2.2em] flex items-center justify-center"
+                    title={drink.name}
+                  >
+                    {shortName}
+                  </h5>
+
+                  {/* Subtitle / Volume & Ratio */}
+                  <p
+                    className={`w-full font-sans text-[11px] mt-0.5 font-medium ${
+                      isSelected ? 'text-[#FAF7F2]/90' : 'text-[#A39589]'
+                    }`}
+                  >
+                    {volumeDisplay} • {ratioDisplay}
+                  </p>
                 </button>
               );
             })}
@@ -471,7 +484,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                 <ChevronRight className="w-3 h-3" />
               </button>
             </div>
-            <p className="text-xs text-[#7A6E65] font-sans leading-relaxed line-clamp-2 sm:line-clamp-none">
+            <p className="text-xs text-[#7A6E65] font-sans leading-relaxed">
               {selectedDrink.description}
             </p>
           </div>
@@ -518,14 +531,17 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               <ArchitecturalCup drink={selectedDrink} size="lg" showLabels={false} />
             </div>
 
-            {/* Layer Legend Breakdown with Round Colored Dots */}
+            {/* Layer Legend Breakdown with Architectural Ingredient Swatches */}
             <div className="w-full mt-3 pt-2.5 border-t border-[#E8DFD5] space-y-1.5">
               {selectedDrink.layers.map((layer, idx) => (
                 <div key={idx} className="flex items-center justify-between text-[11px]">
-                  <div className="flex items-center gap-2 truncate">
+                  <div className="flex items-center gap-2.5 truncate">
                     <span
-                      className="w-2.5 h-2.5 rounded-full border border-black/15 shrink-0 shadow-2xs"
-                      style={{ backgroundColor: layer.color }}
+                      className="w-3.5 h-2.5 rounded-xs border border-[#CBB8A3] shrink-0 shadow-2xs"
+                      style={{
+                        backgroundColor: layer.color,
+                        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.06)',
+                      }}
                     />
                     <span className="text-[#2C2018] font-sans font-medium truncate">{layer.name}</span>
                   </div>

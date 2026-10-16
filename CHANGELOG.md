@@ -19,8 +19,10 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
     - AeroPress: Cylindrisk ekstraktionskammer UDEN hank, med millimeter-måleskala (1-4) og perforeret bajonet-filterhætte.
     - French Press: Bodum-stil stempelkande med forkromet stålgitter, lodret stempelstang og spiralformet trådnet.
 - **Etape 3: `DrinkSelector.tsx` (Digital Barista Deck & Typografi):**
-  - Symmetrisk 2-kolonne Quick Deck (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`) med forstørrede kopper (`w-10 h-11`).
-  - Opstrammet Master-kort: Runde farveprikker i lag-forklaringen (erstatter firkanter der lignede tomme afkrydsningsfelter), forenklet samlet Grinder & Bean-kort med `divide-y / divide-x` uden "box-i-box" tunghed.
+  - Vertikale Barista Fliser på Quick Deck: Omlagt til et vertikalt flise-layout (`grid grid-cols-2 sm:grid-cols-3 gap-2.5`), hvor koppen er over dobbelt så stor (`size="sm"` i `h-14` container) og drikketitlen har fuld bredde uden afskæring ('Cappuccino' og 'Double Espresso' fremstår 100% ubeskåret).
+  - Ingrediens-Swatches i Cup Anatomy: Erstattet de cirkulære prikker med stilrene rektangulære recept-swatches (`w-3.5 h-2.5 rounded-xs border border-[#CBB8A3]`), så mælkeskum ikke længere forveksles med en ikke-valgt radioknap.
+  - Fuld Læsbarhed i Master Card: Fjernet `line-clamp-2` fra drikkebeskrivelsen for at undgå hårde sætningsafskæringer med `...`.
+  - Opstrammet Master-kort: Forenklet samlet Grinder & Bean-kort med `divide-y / divide-x` uden "box-i-box" tunghed.
   - Specialty Menu Modal tekst-afkortnings fix: Undgår afskæring af ratio på mobiler (`font-sans text-xs` `${ml}ml • ${category} • 1:${ratio}`), og prominent forstørret kop (`w-11 h-12`).
 - **Etape 4: `FlowChart.tsx`, `Logbook.tsx`, `ShotShareModal.tsx` & i18n:**
   - `FlowChart.tsx`: Strikt SVG `<clipPath id="chart-area-clip">` og matematisk clamping (`Math.max(padTop, Math.min(padTop + chartH, y))`) forhindrer kurver i at overlappe akser eller overskrifter. Responsiv header (`flex-col sm:flex-row gap-1.5`) holder kurveoverskriften på én linje på smalle mobiler.
