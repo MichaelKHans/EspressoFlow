@@ -436,6 +436,14 @@ export const en = {
   'shotsummary.verdict_channeling': 'Channeling Spike Detected',
   'shotsummary.apply_grind': 'Set Grinder to {setting}',
   'shotsummary.applied_grind': '✓ Grinder Updated',
+  'shotsummary.share_shot': 'Share Shot Card',
+
+  // Shot Card Sharing & Viral Promo
+  'share.card_title': 'Share Barista Shot Card',
+  'share.btn_share': 'Share Shot Card',
+  'share.btn_download': 'Download Image',
+  'share.btn_copy': 'Copy Text & Link',
+  'share.copied': 'Copied!',
 
   // Pre-Brew Coach (Memory & Proactive Dial-in)
   'coach.pre_brew_title': 'Barista Coach',

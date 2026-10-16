@@ -1,4 +1,13 @@
-import type { ShotDataPoint, TasteRating, ChannelingEvent, RoastLevel, RatioStyle, TempUnit } from '../types/espresso';
+import type {
+  ShotDataPoint,
+  TasteRating,
+  ChannelingEvent,
+  RoastLevel,
+  RatioStyle,
+  TempUnit,
+  FlowProfileType,
+  ExtractionTelemetrySummary,
+} from '../types/espresso';
 
 /**
  * Specialty Coffee Golden Zone Parameters
@@ -73,89 +82,272 @@ export const ROAST_PRESETS: Record<RoastLevel, { label: string; defaultRatio: Ra
 };
 
 /**
- * Calculates smoothed flow rate using moving average and robust physical clamping over recent samples
+ * 1. Staircase-Aware Smoothed Flow Rate (Eliminates 3Hz Scale vs 10Hz Sampling Aliasing)
+ * Instead of differentiating duplicate sample-and-hold points over a rigid window,
+ * this extracts distinct scale weight transitions within the window and computes an
+ * Ordinary Least Squares (OLS) slope anchored to actual display updates.
  */
 export function calculateSmoothedFlowRate(
   points: ShotDataPoint[],
-  windowSizeSeconds: number = 0.9,
+  windowSizeSeconds: number = 1.6,
   maxAllowedRateGps: number = 6.0
 ): number {
   if (points.length < 2) return 0;
-  
+
   const lastPoint = points[points.length - 1];
+
+  // Ignore pre-tare cup weight plateaus (if weight hasn't moved for > 1.4s, flow is 0.0 g/s)
+  let lastChangeIdx = points.length - 1;
+  while (
+    lastChangeIdx > 0 &&
+    Math.abs(points[lastChangeIdx].weightGrams - points[lastChangeIdx - 1].weightGrams) < 0.05
+  ) {
+    lastChangeIdx--;
+  }
+  const timeSinceLastStep = lastPoint.timeSeconds - points[lastChangeIdx].timeSeconds;
+  if (timeSinceLastStep > 1.4) return 0.0;
+
+  // Collect only distinct scale transition points (plus window boundaries) over windowSizeSeconds
+  // A 1.6s window spans ~5 physical 3Hz scale updates, suppressing staircase sawtooth.
   const cutoffTime = Math.max(0, lastPoint.timeSeconds - windowSizeSeconds);
-  const recentPoints = points.filter(p => p.timeSeconds >= cutoffTime);
+  const transitions: ShotDataPoint[] = [];
 
-  if (recentPoints.length < 2) return 0;
+  for (let i = 0; i < points.length; i++) {
+    const pt = points[i];
+    if (pt.timeSeconds < cutoffTime) continue;
 
-  const firstRecent = recentPoints[0];
-  const deltaWeight = lastPoint.weightGrams - firstRecent.weightGrams;
-  const deltaTime = lastPoint.timeSeconds - firstRecent.timeSeconds;
+    // Reset transition history if a mid-shot tare occurred (weight dropped to ~0g)
+    if (
+      transitions.length > 0 &&
+      pt.weightGrams <= 0.4 &&
+      transitions[transitions.length - 1].weightGrams > 5.0
+    ) {
+      transitions.length = 0;
+    }
 
-  // Protect against division by micro-time step
-  if (deltaTime <= 0.08) return 0;
-  if (deltaWeight < 0) return 0; // Liquid does not flow backwards
+    if (
+      transitions.length === 0 ||
+      Math.abs(pt.weightGrams - transitions[transitions.length - 1].weightGrams) >= 0.09 ||
+      i === points.length - 1
+    ) {
+      transitions.push(pt);
+    }
+  }
 
-  const rate = deltaWeight / deltaTime;
-  // Physical maximum clamp: Even catastrophic channeling in espresso cannot exceed 6.0 g/s
-  const clamped = Math.min(maxAllowedRateGps, Math.max(0, rate));
+  if (transitions.length < 2) return 0.0;
+
+  // Ordinary Least Squares (OLS) slope dW/dt across the window's scale transitions
+  let sumT = 0;
+  let sumW = 0;
+  const n = transitions.length;
+  const t0 = transitions[0].timeSeconds;
+
+  for (let i = 0; i < n; i++) {
+    sumT += transitions[i].timeSeconds - t0;
+    sumW += transitions[i].weightGrams;
+  }
+
+  const meanT = sumT / n;
+  const meanW = sumW / n;
+  let num = 0;
+  let den = 0;
+
+  for (let i = 0; i < n; i++) {
+    const dt = transitions[i].timeSeconds - t0 - meanT;
+    const dw = transitions[i].weightGrams - meanW;
+    num += dt * dw;
+    den += dt * dt;
+  }
+
+  if (den <= 0.04) return 0.0;
+  const rawRate = num / den;
+  if (rawRate <= 0.05) return 0.0;
+
+  // Blend with previous point's flowRateGps (EMA alpha = 0.45) to remove residual 0.1g step jitter
+  const prevFlow = points[points.length - 2]?.flowRateGps || rawRate;
+  const smoothed = prevFlow > 0.1 ? prevFlow * 0.55 + rawRate * 0.45 : rawRate;
+
+  const clamped = Math.min(maxAllowedRateGps, Math.max(0, smoothed));
   return Math.round(clamped * 10) / 10;
 }
 
 /**
- * In-depth channeling detection with exact timestamp and magnitude
+ * 2. Phase-Isolated Extraction & Puck Integrity Analyzer
+ * Automatically detects the true First Drip (even after mid-shot tares),
+ * skips the 3.5s stream-coalescence onset window, and evaluates steady-state flow dynamics.
  */
-export function analyzeChanneling(points: ShotDataPoint[]): ChannelingEvent {
-  if (points.length < 6) {
-    return { detected: false, severity: 'none' };
+export function analyzeExtractionDynamics(
+  points: ShotDataPoint[]
+): ExtractionTelemetrySummary {
+  if (points.length < 8) {
+    return {
+      preInfusionSeconds: 0,
+      activeFlowSeconds: 0,
+      finalYieldGrams: points[points.length - 1]?.weightGrams || 0,
+      steadyFlowGps: 0,
+      peakMidShotFlowGps: 0,
+      flowSlopeGps2: 0,
+      flowStabilityPercent: 100,
+      flowProfile: 'flat',
+      puckAnomaly: { detected: false, severity: 'none' },
+    };
   }
 
-  // Scan mid-extraction period (after initial saturation at 6s)
-  let maxSpike = 0;
-  let spikeTimestamp = 0;
+  // Locate the last Tare-Zero baseline (handles cases where user tared cup mid-shot at 16s!)
+  let tareBaselineIdx = 0;
+  for (let i = 1; i < points.length; i++) {
+    if (points[i].weightGrams <= 0.3 && points[i - 1].weightGrams > 5.0) {
+      tareBaselineIdx = i;
+    }
+  }
 
-  for (let i = 2; i < points.length; i++) {
-    const pt = points[i];
-    if (pt.timeSeconds >= 7 && pt.timeSeconds <= 30) {
-      // Check for abrupt flow acceleration (> 2.8 g/s or sudden jump of +1.5 g/s)
-      const prev = points[i - 2];
-      const jump = pt.flowRateGps - prev.flowRateGps;
+  // Locate true First Drip (first sustained weight >= 0.4g after tare baseline)
+  let firstDripIdx = tareBaselineIdx;
+  for (let i = tareBaselineIdx; i < points.length; i++) {
+    if (points[i].weightGrams >= 0.4) {
+      firstDripIdx = i;
+      break;
+    }
+  }
 
-      if (pt.flowRateGps >= 3.0 || jump >= 1.4) {
-        if (pt.flowRateGps > maxSpike) {
-          maxSpike = pt.flowRateGps;
-          spikeTimestamp = pt.timeSeconds;
+  const firstDripTime = points[firstDripIdx].timeSeconds;
+  const lastTime = points[points.length - 1].timeSeconds;
+  const finalYield = points[points.length - 1].weightGrams;
+
+  // Isolate Phase 3: Main Extraction Phase
+  // Strictly starts >= 3.5s AFTER first drip AND after >= 4.5g of liquid is in the cup
+  // (completely immune to the 20.1s onset surge in Record_2026-10-16!)
+  const mainPhasePoints = points.filter(
+    (p, idx) =>
+      idx > firstDripIdx &&
+      p.timeSeconds >= firstDripTime + 3.5 &&
+      p.weightGrams >= 4.5 &&
+      p.weightGrams <= finalYield - 0.5 &&
+      p.flowRateGps >= 0.25
+  );
+
+  const activeFlowSeconds = Math.max(0, Math.round((lastTime - firstDripTime) * 10) / 10);
+
+  if (mainPhasePoints.length < 5) {
+    return {
+      preInfusionSeconds: firstDripTime,
+      activeFlowSeconds,
+      finalYieldGrams: finalYield,
+      steadyFlowGps: activeFlowSeconds > 0 ? +(finalYield / activeFlowSeconds).toFixed(2) : 0,
+      peakMidShotFlowGps: 0,
+      flowSlopeGps2: 0,
+      flowStabilityPercent: 95,
+      flowProfile: 'flat',
+      puckAnomaly: { detected: false, severity: 'none' },
+    };
+  }
+
+  // Compute Steady-State Flow Rate (Median of Phase 3) & MAD Stability Index
+  const sortedFlows = mainPhasePoints.map((p) => p.flowRateGps).sort((a, b) => a - b);
+  const steadyFlowGps = sortedFlows[Math.floor(sortedFlows.length / 2)];
+  const absDevs = sortedFlows.map((f) => Math.abs(f - steadyFlowGps)).sort((a, b) => a - b);
+  const madFlow = absDevs[Math.floor(absDevs.length / 2)];
+  const robustCv = steadyFlowGps > 0.2 ? (1.4826 * madFlow) / steadyFlowGps : 0;
+  const flowStabilityPercent = Math.round(Math.max(0, Math.min(100, (1 - robustCv) * 100)));
+
+  // Linear Regression of Flow Rate vs. Time during Phase 3 (Slope in g/s^2)
+  const tStart = mainPhasePoints[0].timeSeconds;
+  let sumT = 0;
+  let sumF = 0;
+  const n = mainPhasePoints.length;
+  for (let i = 0; i < n; i++) {
+    sumT += mainPhasePoints[i].timeSeconds - tStart;
+    sumF += mainPhasePoints[i].flowRateGps;
+  }
+  const meanT = sumT / n;
+  const meanF = sumF / n;
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i++) {
+    const dt = mainPhasePoints[i].timeSeconds - tStart - meanT;
+    num += dt * (mainPhasePoints[i].flowRateGps - meanF);
+    den += dt * dt;
+  }
+  const flowSlopeGps2 = den > 0.5 ? +(num / den).toFixed(3) : 0;
+
+  // Classify Flow Profile
+  let flowProfile: FlowProfileType = 'flat';
+  if (steadyFlowGps >= 2.8) flowProfile = 'gushing';
+  else if (steadyFlowGps <= 0.75) flowProfile = 'choked';
+  else if (flowSlopeGps2 <= -0.015) flowProfile = 'declining';
+  else if (flowSlopeGps2 >= 0.035) flowProfile = 'accelerating';
+
+  // Sustained Mid-Shot Surge Detector (Replaces brittle 2-sample analyzeChanneling)
+  // Requires a sustained 2.0-second mass gain (avg >= 3.5 g/s) AND >= 1.85x steadyFlowGps
+  // strictly inside Phase 3 (after firstDripTime + 3.5s).
+  let maxSustainedRate = 0;
+  let surgeTime = 0;
+
+  for (let i = 0; i < mainPhasePoints.length; i++) {
+    const pStart = mainPhasePoints[i];
+    for (let j = i + 4; j < mainPhasePoints.length; j++) {
+      const pEnd = mainPhasePoints[j];
+      const dt = pEnd.timeSeconds - pStart.timeSeconds;
+      if (dt >= 2.0 && dt <= 2.8) {
+        const dw = pEnd.weightGrams - pStart.weightGrams;
+        const sustainedRate = dw / dt;
+        if (sustainedRate > maxSustainedRate) {
+          maxSustainedRate = sustainedRate;
+          surgeTime = pEnd.timeSeconds;
         }
+        break;
       }
     }
   }
 
-  if (maxSpike >= 3.8) {
-    return {
+  let puckAnomaly: ChannelingEvent = { detected: false, severity: 'none' };
+  const surgeRatio = steadyFlowGps > 0.4 ? maxSustainedRate / steadyFlowGps : 1.0;
+
+  if (maxSustainedRate >= 3.8 && surgeRatio >= 1.9) {
+    puckAnomaly = {
       detected: true,
-      timestampSeconds: Math.round(spikeTimestamp * 10) / 10,
-      flowSpikeGps: Math.round(maxSpike * 10) / 10,
       severity: 'severe',
-      message: `Severe channeling spike (${maxSpike.toFixed(1)} g/s at ${spikeTimestamp.toFixed(1)}s). Water broke through puck.`,
+      timestampSeconds: Math.round(surgeTime * 10) / 10,
+      flowSpikeGps: +maxSustainedRate.toFixed(1),
+      reason: 'sustained_midshot_surge',
+      message: `Mid-shot flow surge (${maxSustainedRate.toFixed(1)} g/s at ${surgeTime.toFixed(1)}s).`,
     };
-  } else if (maxSpike >= 2.9) {
-    return {
+  } else if (flowSlopeGps2 >= 0.055 && maxSustainedRate >= 3.0) {
+    puckAnomaly = {
       detected: true,
-      timestampSeconds: Math.round(spikeTimestamp * 10) / 10,
-      flowSpikeGps: Math.round(maxSpike * 10) / 10,
       severity: 'mild',
-      message: `Mild channeling detected (${maxSpike.toFixed(1)} g/s at ${spikeTimestamp.toFixed(1)}s).`,
+      timestampSeconds: Math.round(surgeTime * 10) / 10,
+      flowSpikeGps: +maxSustainedRate.toFixed(1),
+      reason: 'rapid_puck_erosion',
+      message: `Puck erosion / accelerating flow detected (${maxSustainedRate.toFixed(1)} g/s at ${surgeTime.toFixed(1)}s).`,
     };
   }
 
-  return { detected: false, severity: 'none' };
+  return {
+    preInfusionSeconds: Math.round(firstDripTime * 10) / 10,
+    activeFlowSeconds,
+    finalYieldGrams: finalYield,
+    steadyFlowGps: +steadyFlowGps.toFixed(2),
+    peakMidShotFlowGps: +maxSustainedRate.toFixed(1),
+    flowSlopeGps2,
+    flowStabilityPercent,
+    flowProfile,
+    puckAnomaly,
+  };
+}
+
+/**
+ * Backward compatible wrapper for existing callers of analyzeChanneling()
+ */
+export function analyzeChanneling(points: ShotDataPoint[]): ChannelingEvent {
+  return analyzeExtractionDynamics(points).puckAnomaly;
 }
 
 /**
  * Backward compatible boolean detector
  */
 export function detectChanneling(points: ShotDataPoint[]): boolean {
-  return analyzeChanneling(points).detected;
+  return analyzeExtractionDynamics(points).puckAnomaly.detected;
 }
 
 export const GRINDER_CALIBRATIONS: Record<string, { secondsPerStep: number; unitName: string }> = {
@@ -214,18 +406,13 @@ export function generateDialInAdvice(
   const channelingEvent = typeof channeling === 'object' ? channeling : undefined;
   const ratio = doseGrams > 0 ? (yieldGrams / doseGrams).toFixed(1) : '2.0';
 
-  // 1. Channeling takes primary priority because grinder adjustments are invalid if water channeled
+  // 1. Informative Puck Anomaly Note (never blocks grinder dial advice!)
+  let puckPrepAdvice: string | undefined;
   if (isChanneling) {
     const spikeInfo = channelingEvent?.timestampSeconds
       ? ` at ${channelingEvent.timestampSeconds}s (${channelingEvent.flowSpikeGps} g/s)`
       : '';
-    return {
-      summary: `Channeling Spike Detected${spikeInfo}`,
-      grindAdvice: 'keep',
-      grindDeltaSteps: 0,
-      puckAdvice: 'Do not adjust grinder yet. Use WDT needles to break clumps, tamp level, and ensure uniform puck density.',
-      rationale: `Water broke a high-velocity channel through the puck mid-shot. Adjusting the grind now will not fix channeling; focus on puck preparation first.`,
-    };
+    puckPrepAdvice = `Mid-shot flow surge detected${spikeInfo}. Focus on thorough WDT needle distribution and flat, level tamping to prevent water bypass.`;
   }
 
   // 2. Pre-infusion saturation check (choked puck vs. rushed water)
@@ -280,7 +467,7 @@ export function generateDialInAdvice(
       grindAdvice: 'finer',
       grindDeltaSteps: 0.5,
       grinderSpecificAdvice: grinderAdvice,
-      puckAdvice: 'Ensure even distribution before tamping.',
+      puckAdvice: puckPrepAdvice || 'Ensure even distribution before tamping.',
       preInfusionAdvice: preAdvice,
       roastAdvice: roastNotice,
       rationale: `The shot ran fast (${totalTimeSeconds.toFixed(1)}s for ${ratio}x ratio). Water rushed through too quickly.${extra} Grind finer to increase puck resistance.`,
@@ -296,7 +483,7 @@ export function generateDialInAdvice(
       grindAdvice: 'coarser',
       grindDeltaSteps: 0.5,
       grinderSpecificAdvice: grinderAdvice,
-      puckAdvice: 'Verify puck headspace and basket capacity.',
+      puckAdvice: puckPrepAdvice || 'Verify puck headspace and basket capacity.',
       preInfusionAdvice: preAdvice,
       roastAdvice: roastNotice,
       rationale: `The shot choked or dragged on (${totalTimeSeconds.toFixed(1)}s). The puck was too dense, extracting bitter tannins.${extra} Grind coarser for a smoother flow.`,
@@ -309,7 +496,7 @@ export function generateDialInAdvice(
       grindAdvice: 'finer',
       grindDeltaSteps: 0.5,
       grinderSpecificAdvice: grinderAdvice,
-      puckAdvice: 'Increase dry dose by 0.5g while keeping target yield constant.',
+      puckAdvice: puckPrepAdvice || 'Increase dry dose by 0.5g while keeping target yield constant.',
       preInfusionAdvice: preAdvice,
       roastAdvice: roastNotice,
       rationale: `Extraction lacked body and crema thickness. Grind slightly finer or increase dry dose to boost brew concentration.`,
@@ -317,12 +504,15 @@ export function generateDialInAdvice(
   }
 
   return {
-    summary: 'Balanced & Sweet (Dial-In Sweet Spot)',
+    summary: puckPrepAdvice ? 'Puck Surge Detected — Check Prep' : 'Balanced & Sweet (Dial-In Sweet Spot)',
     grindAdvice: 'keep',
     grindDeltaSteps: 0,
+    puckAdvice: puckPrepAdvice,
     preInfusionAdvice: preAdvice || `First drip at ${preInfusionSeconds ? preInfusionSeconds.toFixed(1) + 's' : 'optimal time'}.`,
     roastAdvice: roastNotice,
-    rationale: `Superb extraction! ${yieldGrams.toFixed(1)}g yield in ${totalTimeSeconds.toFixed(1)}s with optimal flow rate in the Golden Zone (1.2–1.6 g/s).`,
+    rationale: puckPrepAdvice
+      ? `Ekstraktionen var tidsmæssigt fin (${totalTimeSeconds.toFixed(1)}s for ${yieldGrams.toFixed(1)}g), men der opstod et flow-spring undervejs. Behold kværnindstillingen og fokusér på puck preparation (WDT).`
+      : `Superb extraction! ${yieldGrams.toFixed(1)}g yield in ${totalTimeSeconds.toFixed(1)}s with optimal flow rate in the Golden Zone (1.2–1.6 g/s).`,
   };
 }
 

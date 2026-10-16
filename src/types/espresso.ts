@@ -15,6 +15,26 @@ export interface ChannelingEvent {
   flowSpikeGps?: number;
   severity: 'none' | 'mild' | 'severe';
   message?: string;
+  reason?: 'sustained_midshot_surge' | 'rapid_puck_erosion';
+}
+
+export type FlowProfileType =
+  | 'declining'      // Ideal lever / healthy puck compression (flow tapers gently)
+  | 'flat'           // Steady 9-bar pump extraction
+  | 'accelerating'   // Late-shot puck erosion / soluble washout
+  | 'gushing'        // Coarse grind / low resistance throughout
+  | 'choked';        // Overly fine grind / restricted dripping
+
+export interface ExtractionTelemetrySummary {
+  preInfusionSeconds: number;
+  activeFlowSeconds: number;
+  finalYieldGrams: number;
+  steadyFlowGps: number;
+  peakMidShotFlowGps: number;
+  flowSlopeGps2: number;
+  flowStabilityPercent: number;
+  flowProfile: FlowProfileType;
+  puckAnomaly: ChannelingEvent;
 }
 
 export interface CoffeeBeanProfile {
@@ -71,6 +91,8 @@ export interface ShotRecord {
   peakFlowGps: number;
   channeling: ChannelingEvent;
   channelingDetected: boolean;
+  flowProfile?: FlowProfileType;
+  flowStabilityPercent?: number;
   grinderName: string;
   grindSetting: string;
   machineName?: string;

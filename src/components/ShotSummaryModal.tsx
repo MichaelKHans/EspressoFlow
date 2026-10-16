@@ -12,8 +12,10 @@ import {
   Target,
   Sparkles,
   Flame,
+  Share2,
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
+import { ShotShareModal } from './ShotShareModal';
 
 interface ShotSummaryModalProps {
   isOpen: boolean;
@@ -38,6 +40,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   const [selectedTaste, setSelectedTaste] = useState<TasteRating | null>(null);
   const [notes, setNotes] = useState<string>('');
   const [appliedGrind, setAppliedGrind] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (shot) {
@@ -120,9 +123,10 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   ];
 
   const isChanneling = Boolean(shot.channelingDetected || (typeof shot.channeling === 'object' && shot.channeling.detected));
-  const isFast = !isChanneling && (shot.totalTimeSeconds < 24.0 || advice.grindAdvice === 'finer');
-  const isSlow = !isChanneling && (shot.totalTimeSeconds > 32.0 || advice.grindAdvice === 'coarser');
-  const isGood = !isChanneling && !isFast && !isSlow;
+  const isFast = shot.totalTimeSeconds < 24.0 || advice.grindAdvice === 'finer';
+  const isSlow = !isFast && (shot.totalTimeSeconds > 32.0 || advice.grindAdvice === 'coarser');
+  const isSurgeOnly = isChanneling && !isFast && !isSlow;
+  const isGood = !isFast && !isSlow && !isSurgeOnly;
 
   const currentGrindNum = parseFloat(shot.grindSetting);
   let nextSettingStr: string | null = null;
@@ -182,14 +186,25 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-[#E8DFD5] text-[#7A6E65] transition"
-            title="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#C26D52] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98"
+              title={t('shotsummary.share_shot')}
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('shotsummary.share_shot')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-[#E8DFD5] text-[#7A6E65] transition"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Content Body */}
@@ -476,6 +491,16 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
         >
           <button
             type="button"
+            onClick={() => setIsShareModalOpen(true)}
+            className="py-3 px-3.5 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#C26D52] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-98 shrink-0"
+            title={t('shotsummary.share_shot')}
+          >
+            <Share2 className="w-4 h-4" />
+            <span className="hidden sm:inline">{t('shotsummary.share_shot')}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={onViewInLogbook}
             className="flex-1 py-3 px-4 rounded-xl bg-[#2C2018] hover:bg-[#3D2C22] text-[#FAF7F2] font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer active:scale-98"
           >
@@ -492,6 +517,12 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
             <span>{t('shotsummary.pull_new_shot')}</span>
           </button>
         </div>
+
+        <ShotShareModal
+          isOpen={isShareModalOpen}
+          shot={shot}
+          onClose={() => setIsShareModalOpen(false)}
+        />
       </div>
     </div>
   );

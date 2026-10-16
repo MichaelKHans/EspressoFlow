@@ -13,11 +13,13 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  Share2,
 } from 'lucide-react';
 import { DRINK_RECIPES } from '../data/drinkRecipes';
 import { ArchitecturalCup } from './ArchitecturalCup';
 import { FlowChart } from './FlowChart';
 import { useTranslation } from '../i18n';
+import { ShotShareModal } from './ShotShareModal';
 
 interface LogbookProps {
   shots: ShotRecord[];
@@ -38,6 +40,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
   const [expandedShotId, setExpandedShotId] = useState<string | null>(
     initialExpandedShotId || (shots.length > 0 ? shots[0].id : null)
   );
+  const [sharingShot, setSharingShot] = useState<ShotRecord | null>(null);
 
   React.useEffect(() => {
     if (initialExpandedShotId) {
@@ -452,6 +455,16 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                           )}
                         </button>
 
+                        <button
+                          type="button"
+                          onClick={() => setSharingShot(shot)}
+                          className="px-2.5 py-1 rounded-lg bg-[#FAF7F2] hover:bg-[#E8DFD5] border border-[#DECFC0] text-[#C26D52] text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer active:scale-98"
+                          title="Del Barista Shot Card"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                          <span>Del Card</span>
+                        </button>
+
                         <span className="text-[10px] text-[#7A6E65]">
                           {shot.dataPoints && shot.dataPoints.length > 0
                             ? `${shot.dataPoints.length} telemetri punkter`
@@ -489,6 +502,12 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
           ))}
         </div>
       )}
+      {/* Shot Share Modal */}
+      <ShotShareModal
+        isOpen={sharingShot !== null}
+        shot={sharingShot}
+        onClose={() => setSharingShot(null)}
+      />
     </div>
   );
 };

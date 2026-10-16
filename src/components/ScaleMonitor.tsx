@@ -19,9 +19,9 @@ import {
   Radio,
   X,
 } from 'lucide-react';
-import { DripperIcon } from './CustomCoffeeIcons';
 import type { ShotDataPoint } from '../types/espresso';
-import { calculateSmoothedFlowRate } from '../lib/espressoMath';
+import { DripperIcon } from './CustomCoffeeIcons';
+import { calculateSmoothedFlowRate, analyzeExtractionDynamics } from '../lib/espressoMath';
 import { recognizeScaleDigits, ScaleReadingFilter, type OCRResult } from '../lib/ocr7segment';
 import { ScaleTelemetryCollector, isTelemetryEnabled } from '../lib/scaleTelemetry';
 import { broadcastLiveFrame, isAntiLiveSyncEnabled, setAntiLiveSyncEnabled, triggerRemoteScenario, subscribeToRemoteCommands } from '../lib/antiLiveSync';
@@ -148,6 +148,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   const currentFlowRef = useRef<number>(0.0);
   const startTimeRef = useRef<number>(0);
   const firstDropTimeRef = useRef<number | null>(null);
+  const dripConfirmationCountRef = useRef<number>(0);
   const fpsCountRef = useRef<number>(0);
   const lastFpsCalcTimeRef = useRef<number>(Date.now());
   const hasVibratedTargetRef = useRef<boolean>(false);
@@ -779,19 +780,30 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         currentWeightRef.current = weight;
       }
 
-      // Check for First Drip with vibration filter (≥ 0.4g ensures only real drops trigger flow phase)
+      // If weight drops back to zero/tare (e.g. barista tared scale mid-shot), reset first drip
+      if (weight <= 0.3 && firstDropTimeRef.current !== null) {
+        firstDropTimeRef.current = null;
+        setFirstDropTime(null);
+        dripConfirmationCountRef.current = 0;
+      }
+
+      // Check for First Drip with 2-frame confirmation (≥ 0.4g ensures only real sustained drops trigger flow phase)
       if (weight >= 0.4) {
-        if (firstDropTimeRef.current === null) {
+        dripConfirmationCountRef.current++;
+        if (firstDropTimeRef.current === null && dripConfirmationCountRef.current >= 2) {
           firstDropTimeRef.current = roundedSeconds;
           setFirstDropTime(roundedSeconds);
           setPreInfusionDuration(roundedSeconds);
-        } else {
+        } else if (firstDropTimeRef.current !== null) {
           const flowSec = Math.max(0, roundedSeconds - firstDropTimeRef.current);
           setActiveFlowDuration(Math.round(flowSec * 10) / 10);
         }
       } else {
-        // Still in pre-infusion phase
-        setPreInfusionDuration(roundedSeconds);
+        dripConfirmationCountRef.current = 0;
+        // Still in pre-infusion phase if first drop hasn't occurred
+        if (firstDropTimeRef.current === null) {
+          setPreInfusionDuration(roundedSeconds);
+        }
       }
 
       const newPoint: ShotDataPoint = {
@@ -802,7 +814,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
       pointsRef.current.push(newPoint);
       const maxFlowRate = activeMethod === 'pour_over' ? 15.0 : 6.0;
-      const flow = calculateSmoothedFlowRate(pointsRef.current, 0.9, maxFlowRate);
+      const flow = calculateSmoothedFlowRate(pointsRef.current, 1.6, maxFlowRate);
       newPoint.flowRateGps = flow;
       currentFlowRef.current = flow;
       setCurrentFlow(flow);
@@ -854,6 +866,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setPreInfusionDuration(0.0);
     setActiveFlowDuration(0.0);
     pointsRef.current = [];
+    dripConfirmationCountRef.current = 0;
     onBrewStart();
   };
 
@@ -905,8 +918,13 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     lockedRoiCenterRef.current = null;
     const finalWeight = currentWeightRef.current;
     const finalTime = startTimeRef.current > 0 ? Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10 : elapsedTime;
-    const finalPre = firstDropTimeRef.current !== null ? firstDropTimeRef.current : (machinePreInfusionRef.current || 5.0);
-    const finalFlow = Math.max(0, Math.round((finalTime - finalPre) * 10) / 10);
+    const dynSummary = pointsRef.current.length >= 8 ? analyzeExtractionDynamics(pointsRef.current) : null;
+    const finalPre = dynSummary && dynSummary.preInfusionSeconds > 0
+      ? dynSummary.preInfusionSeconds
+      : (firstDropTimeRef.current !== null ? firstDropTimeRef.current : (machinePreInfusionRef.current || 5.0));
+    const finalFlow = dynSummary && dynSummary.activeFlowSeconds > 0
+      ? dynSummary.activeFlowSeconds
+      : Math.max(0, Math.round((finalTime - finalPre) * 10) / 10);
 
     if (isTelemetryEnabled() && telemetryCollectorRef.current) {
       if (canvasRef.current) {

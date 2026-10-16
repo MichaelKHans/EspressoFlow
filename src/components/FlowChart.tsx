@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ShotDataPoint, ChannelingEvent } from '../types/espresso';
+import type { ShotDataPoint, ChannelingEvent, FlowProfileType } from '../types/espresso';
 import { AlertCircle, TrendingUp, Gauge, Sparkles } from 'lucide-react';
 import { THE_GOLDEN_ZONE } from '../lib/espressoMath';
 import { useTranslation } from '../i18n';
@@ -13,6 +13,8 @@ interface FlowChartProps {
   isLive?: boolean;
   method?: 'espresso' | 'pour_over';
   averageFlowGps?: number;
+  flowProfile?: FlowProfileType;
+  flowStabilityPercent?: number;
 }
 
 export const FlowChart: React.FC<FlowChartProps> = ({
@@ -24,6 +26,8 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   isLive = false,
   method = 'espresso',
   averageFlowGps,
+  flowProfile,
+  flowStabilityPercent,
 }) => {
   const { t } = useTranslation();
 
@@ -47,10 +51,10 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const maxFlow = isPourOver ? 8.0 : 4.0; // max scale for g/s
 
   const width = 600;
-  const height = 200;
+  const height = 210;
   const padLeft = 45;
-  const padRight = 20;
-  const padTop = 20;
+  const padRight = 44; // Room for right-side flow axis
+  const padTop = 22;
   const padBottom = 25;
 
   const chartW = width - padLeft - padRight;
@@ -99,8 +103,8 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             <span>LIVE {isPourOver ? 'POUR OVER' : 'FLOW'} CURVE</span>
           </div>
         ) : !isPourOver && channelingEvent?.detected ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#B85B48]/10 text-[#B85B48] text-xs font-mono font-semibold border border-[#B85B48]/30">
-            <AlertCircle className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-semibold border border-[#C26D52]/30">
+            <AlertCircle className="w-3.5 h-3.5 text-[#C26D52]" />
             <span>
               {t('chart.channeling_spike', {
                 time: channelingEvent.timestampSeconds ?? 0,
@@ -116,31 +120,65 @@ export const FlowChart: React.FC<FlowChartProps> = ({
         )}
       </div>
 
-      {/* SVG Canvas */}
+      {/* SVG Canvas with Dual Y-Axis */}
       <div className="w-full overflow-x-auto">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto select-none font-mono text-[10px]">
-          {/* Flow Zone Band (Pacing 4-6 g/s for pour over; Golden Zone 1.2-1.8 g/s for espresso) */}
+          {/* Golden / Pacing Target Flow Band */}
           <rect
             x={padLeft}
             y={yGoldenTop}
             width={chartW}
-            height={yGoldenBottom - yGoldenTop}
-            fill="#72806B"
-            fillOpacity="0.12"
+            height={Math.max(4, yGoldenBottom - yGoldenTop)}
+            fill="#D4A373"
+            fillOpacity="0.20"
           />
-          <text
-            x={width - padRight - 6}
-            y={yGoldenTop + 10}
-            textAnchor="end"
-            fill="#72806B"
-            fontSize="9"
-            fontWeight="bold"
-            opacity="0.8"
-          >
-            {isPourOver ? 'PACING ZONE (4–6 g/s)' : t('chart.golden_zone')}
-          </text>
+          {/* Dashed boundary lines on target flow band */}
+          <line
+            x1={padLeft}
+            y1={yGoldenTop}
+            x2={width - padRight}
+            y2={yGoldenTop}
+            stroke="#D4A373"
+            strokeWidth="1"
+            strokeDasharray="4 3"
+            strokeOpacity="0.8"
+          />
+          <line
+            x1={padLeft}
+            y1={yGoldenBottom}
+            x2={width - padRight}
+            y2={yGoldenBottom}
+            stroke="#D4A373"
+            strokeWidth="1"
+            strokeDasharray="4 3"
+            strokeOpacity="0.8"
+          />
 
-          {/* Horizontal grid lines */}
+          {/* Crisp Target Zone Badge */}
+          <g>
+            <rect
+              x={padLeft + 8}
+              y={yGoldenTop + 4}
+              width={isPourOver ? 135 : 124}
+              height="15"
+              rx="4"
+              fill="#FFFDF9"
+              fillOpacity="0.94"
+              stroke="#D4A373"
+              strokeWidth="0.8"
+            />
+            <text
+              x={padLeft + 14}
+              y={yGoldenTop + 15}
+              fill="#8A5A2B"
+              fontSize="9"
+              fontWeight="bold"
+            >
+              {isPourOver ? '🎯 PACING (4–6 g/s)' : '🎯 MÅL: 1.2–1.8 g/s'}
+            </text>
+          </g>
+
+          {/* Left Y-Axis: Weight in grams (Dark Roast #2C2018) */}
           {(isPourOver ? [0, 100, 200, 300, 400] : [0, 15, 30, 45])
             .filter((w) => w <= maxWeight)
             .map((w) => {
@@ -154,16 +192,47 @@ export const FlowChart: React.FC<FlowChartProps> = ({
                     y2={y}
                     stroke="#E8DFD5"
                     strokeDasharray="3 3"
+                    strokeOpacity={0.7}
                   />
-                  <text x={padLeft - 6} y={y + 3} textAnchor="end" fill="#7A6E65">
+                  <text x={padLeft - 6} y={y + 3} textAnchor="end" fill="#2C2018" fontSize="9">
                     {w}g
                   </text>
                 </g>
               );
             })}
+          {/* Left Y-axis label */}
+          <text x={padLeft - 6} y={padTop - 8} textAnchor="end" fill="#7A6E65" fontSize="8" fontWeight="bold">
+            VÆGT
+          </text>
 
-          {/* Time markings */}
-          {(isPourOver ? [0, 60, 120, 180, 240] : [0, 10, 20, 30])
+          {/* Right Y-Axis: Flow Rate in g/s (Terracotta #C26D52) */}
+          {(isPourOver ? [0, 2, 4, 6, 8] : [0, 1, 2, 3, 4])
+            .filter((f) => f <= maxFlow)
+            .map((f) => {
+              const y = getYFlow(f);
+              return (
+                <g key={`f-tick-${f}`}>
+                  <line
+                    x1={width - padRight}
+                    y1={y}
+                    x2={width - padRight + 4}
+                    y2={y}
+                    stroke="#C26D52"
+                    strokeWidth="1.2"
+                  />
+                  <text x={width - padRight + 6} y={y + 3} textAnchor="start" fill="#C26D52" fontSize="9" fontWeight="bold">
+                    {f}
+                  </text>
+                </g>
+              );
+            })}
+          {/* Right Y-axis label */}
+          <text x={width - padRight + 6} y={padTop - 8} textAnchor="start" fill="#C26D52" fontSize="8" fontWeight="bold">
+            FLOW g/s
+          </text>
+
+          {/* Time markings along bottom */}
+          {(isPourOver ? [0, 60, 120, 180, 240] : [0, 10, 20, 30, 40])
             .filter((t) => t <= maxTime)
             .map((t) => {
               const x = getX(t);
@@ -178,7 +247,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
                     stroke="#E8DFD5"
                     strokeOpacity={0.6}
                   />
-                  <text x={x} y={height - 6} textAnchor="middle" fill="#7A6E65">
+                  <text x={x} y={height - 6} textAnchor="middle" fill="#7A6E65" fontSize="9">
                     {label}
                   </text>
                 </g>
@@ -209,7 +278,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             </g>
           )}
 
-          {/* Channeling Marker on Curve (Only for espresso) */}
+          {/* Channeling / Surge Marker on Curve (Only for espresso) */}
           {!isPourOver &&
             channelingEvent?.detected &&
             channelingEvent.timestampSeconds &&
@@ -285,8 +354,8 @@ export const FlowChart: React.FC<FlowChartProps> = ({
       </div>
 
       {/* Legend & Stats */}
-      <div className="mt-3 pt-3 border-t border-[#E8DFD5] flex flex-wrap items-center justify-between text-xs font-mono text-[#7A6E65]">
-        <div className="flex items-center gap-4">
+      <div className="mt-3 pt-3 border-t border-[#E8DFD5] flex flex-wrap items-center justify-between text-xs font-mono text-[#7A6E65] gap-2">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-1 bg-[#2C2018] rounded-full inline-block" />
             <span>{t('chart.yield')}: {lastPoint?.weightGrams.toFixed(1) || '0.0'}g</span>
@@ -309,9 +378,18 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             </span>
           </div>
           <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 bg-[#D4A373]/50 border border-[#D4A373] rounded-xs inline-block" />
+            <span className="text-[#8A5A2B]">1.2–1.8</span>
+          </div>
+          <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 bg-[#72806B]/30 rounded-xs inline-block" />
             <span className="text-[#72806B]">{t('chart.ratio')}: 1:{currentRatio}</span>
           </div>
+          {flowProfile && (
+            <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#FAF7F2] border border-[#DECFC0] text-[#2C2018] uppercase tracking-wider font-bold">
+              {flowProfile} {flowStabilityPercent !== undefined ? `(${flowStabilityPercent}%)` : ''}
+            </span>
+          )}
         </div>
         <div className="text-[11px]">
           {t('chart.target_dose_yield', { yield: targetYield, dose: doseGrams })}

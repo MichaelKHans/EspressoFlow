@@ -57,7 +57,7 @@ import {
   saveTempUnit,
   getMachineTempProfile,
 } from './lib/storage';
-import { analyzeChanneling, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
+import { analyzeChanneling, analyzeExtractionDynamics, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
 import { subscribeToRemoteCommands, broadcastShotVerdict } from './lib/antiLiveSync';
 
 export function App() {
@@ -496,8 +496,12 @@ export function App() {
     setIsBrewing(false);
     setCurrentPoints(points);
 
-    const channelingEvent = analyzeChanneling(points);
-    const avgFlow = timeSeconds > 0 ? Math.round((finalWeight / timeSeconds) * 100) / 100 : 0;
+    const dyn = points.length >= 8 ? analyzeExtractionDynamics(points) : null;
+    const channelingEvent = dyn ? dyn.puckAnomaly : analyzeChanneling(points);
+    const effectiveFlowTime = flowTimeSeconds > 0 ? flowTimeSeconds : Math.max(1, timeSeconds - preInfusionSeconds);
+    const avgFlow = dyn && dyn.steadyFlowGps > 0
+      ? dyn.steadyFlowGps
+      : Math.round((finalWeight / effectiveFlowTime) * 100) / 100;
     const peakFlow = points.reduce((max, p) => Math.max(max, p.flowRateGps), 0);
 
     const activeDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId);
@@ -521,6 +525,8 @@ export function App() {
       peakFlowGps: peakFlow,
       channeling: channelingEvent,
       channelingDetected: channelingEvent.detected,
+      flowProfile: dyn?.flowProfile,
+      flowStabilityPercent: dyn?.flowStabilityPercent,
       grinderName: grinderName,
       grindSetting: grindSetting,
       machineName: machineName,

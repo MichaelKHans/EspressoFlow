@@ -121,6 +121,29 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] **7. 1D Kinematisk Alpha-Beta Kalman Filter & Auto-Healing af Tabt Prik:**
   - `ScaleReadingFilter` med kontinuert tilstandsvektor $[w, v]^T$, adaptiv støjfiltrering baseret på OCR-konfidens, automatisk $\times 10$ korrektion ved tabt decimalpunkt og parallel hypotese-tracker ved hurtige vægtspring.
 
+## 🌊 FASE 14: Gemini 4 Argon Væskemekanik, Udryddelse af Falsk Kanalisering, Dobbelt Y-Akse & Shot Card Deling (v1.11.0 - AFSLUTTET)
+- [x] **1. Trappetrins-Støj & 3Hz/10Hz Beat Aliasing Udryddet (`espressoMath.ts`):**
+  - Implementeret OLS (Ordinary Least Squares) over reelle vægttrin i glidende 1.6s tidsvindue med EMA-dæmpning i `calculateSmoothedFlowRate`. Eliminerer den savtakkede savtak-flowbølge ($0.3 \leftrightarrow 2.4\text{ g/s}$).
+- [x] **2. 3-Faset Ekstraktionsisolering & Udryddelse af Falsk Kanaliseringsalarm (`espressoMath.ts`):**
+  - Ekstraktionen er opdelt i Fysisk Fase 1 ($0 \le t < T_{\text{drip}}$), Fase 2 Onset ($T_{\text{drip}} \le t < T_{\text{drip}} + 3.5\text{s}$) og Fase 3 Steady-State.
+  - Væskestigning ved First Drip kan aldrig mere udløse en kanaliseringsalarm.
+  - Den binære kanaliserings-veto er fjernet; kværnjusteringer blokeres aldrig af falske alarmer.
+  - Tilføjet Flow Stability Index (FSI %) og Flow Profil (`declining`, `flat`, `accelerating`, `gushing`, `choked`).
+- [x] **3. Udryddelse af 42.7g -> 12.0g Slutvægt-Kollaps (`ocr7segment.ts`):**
+  - `validBrewStepsCount >= 8` lås forhindrer nedadgående selv-heling under aktiv brygning (kaffe kan ikke fordampe fra koppen).
+  - Ciffer '4' -> '1' (+30g korruption) opdages og heles prompte under aktiv ekstraktion.
+- [x] **4. First Drip (0.2s) Stabilitet & Mid-Shot Tare Nulstilling (`ScaleMonitor.tsx`):**
+  - Hvis brugeren tærer vægten undervejs i skuddet ($W \le 0.3\text{g}$), nulstilles `firstDropTimeRef` øjeblikkeligt.
+  - 2-frame konfirmation mod 1-frame mikrovibrationer ved skudstart.
+  - Gennemsnitligt flow beregnes nu udelukkende på den reelle flowfase ($T_{\text{flow}}$), så pre-infusion ikke trækker gns. flow ned på 0.24 g/s.
+- [x] **5. Flow-Graf med Dobbelt Y-Akse & Gylden Crema Målzone (`FlowChart.tsx`):**
+  - Venstre Y-akse: Vægt i koppen ($0\text{g}, 15\text{g}, 30\text{g}, 45\text{g}$).
+  - Højre Y-akse: Flowhastighed ($0, 1, 2, 3, 4\text{ g/s}$) i terracotta.
+  - The Golden Zone (1.2–1.8 g/s) restylet fra svag grå til varm gylden crema med stiplede linjer og tydelig målemblem (`🎯 MÅL: 1.2–1.8 g/s`).
+- [x] **6. Barista Shot Card Deling & Viral Promotion (`ShotShareModal.tsx`, `ShotSummaryModal.tsx`, `Logbook.tsx`):**
+  - 1080x1350 Canvas Shot Card med Flowbean branding, nøgletal, udstyr, smuk kurve og link (`espressoflow.vercel.app`).
+  - Native mobil Web Share API (`navigator.share`) på iOS og Android samt fallback download/kopiering.
+
 ---
 
 ## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)

@@ -2,6 +2,30 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.11.0] - 2026-10-16
+### Etape 45: Gemini 4 Argon Væskemekanik, Udryddelse af Falsk Kanalisering, Dobbelt Y-Akse & Barista Shot Card Deling
+- **Staircase-Aware OLS Flow Rate Beregning (`espressoMath.ts`):**
+  - Elimineret 3Hz/10Hz beat-aliasing og savtakket støj i `calculateSmoothedFlowRate` via Ordinary Least Squares regression over reelle vægttrins-transitioner i et 1.6s vindue med EMA-dæmpning.
+- **3-Faset Væskemekanisk Ekstraktionsisolering (`espressoMath.ts`):**
+  - Opdelt ekstraktionen i Fase 1 (Pre-infusion), Fase 2 (First Drip Onset $T_{\text{drip}} \le t < T_{\text{drip}} + 3.5\text{s}$) og Fase 3 (Steady-State).
+  - First Drip acceleration udløser aldrig mere falske kanaliserings-alarmer.
+  - Den binære kanaliserings-veto er fjernet fra Dial-In Coachen; kværnråd overstyres ikke længere blindt.
+  - Tilføjet Flow Stability Index (FSI %) og Flow Profil (`declining`, `flat`, `accelerating`, `gushing`, `choked`).
+- **Udryddelse af 42.7g -> 12.0g Slutvægt-Kollaps (`ocr7segment.ts`):**
+  - Tilføjet `validBrewStepsCount >= 8` beskyttelse i `ScaleReadingFilter`, så vægt aldrig kan tabes under aktiv brygning medmindre vægten tæres.
+  - Automatisk healer for ciffer '4' -> '1' (+30g) korruption på displayet.
+- **First Drip (0.2s) Stabilitet & Mid-Shot Tare Nulstilling (`ScaleMonitor.tsx`, `App.tsx`):**
+  - Mid-shot tare ($W \le 0.3\text{g}$) nulstiller omgående `firstDropTimeRef`.
+  - 2-frame konfirmation mod 1-frame mikrovibrationer ved skudstart.
+  - Gennemsnitligt flow beregnes nu korrekt på den aktive flowfase ($T_{\text{flow}}$).
+- **Flow-Graf med Dobbelt Y-Akse & Gylden Crema Målzone (`FlowChart.tsx`):**
+  - Venstre Y-akse: Vægt i koppen ($0\text{g}, 15\text{g}, 30\text{g}, 45\text{g}$).
+  - Højre Y-akse: Flowhastighed ($0, 1, 2, 3, 4\text{ g/s}$) i terracotta.
+  - The Golden Zone restylet fra svag grå til varm gylden crema med stiplede linjer og tydelig `🎯 MÅL: 1.2–1.8 g/s` badge.
+- **Barista Shot Card Deling & Viral Markedsføring (`ShotShareModal.tsx`, `ShotSummaryModal.tsx`, `Logbook.tsx`):**
+  - Elegant 1080x1350 Canvas Shot Card med Flowbean branding, nøgletal, udstyr, kurve og link (`espressoflow.vercel.app`).
+  - Native Web Share API på iOS og Android samt fallback download/kopiering.
+
 ## [1.10.8] - 2026-10-15
 ### Etape 44: Deep Computer Vision Overhaul (Zero-GC Memory Pool, 7-Bit Bitmask Probing, Kroma-Boost, Sheared Radon Projektion, Topologisk Fused Split & Kinematisk Alpha-Beta Filter)
 - **Zero-GC Static Memory Pool (`OCRScratchPool` i `ocr7segment.ts`):**

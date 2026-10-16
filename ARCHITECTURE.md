@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.10.8 (Deep Computer Vision Overhaul: Zero-GC, 7-Bit Bitmask, Kroma-Boost, Sheared Radon, Topologisk Split & Kinematisk Filter)  
+> **Gældende version:** v1.11.0 (Gemini 4 Argon Væskemekanik: 3-Faset Ekstraktion, OLS Flow-Smoothing, Dobbelt Y-Akse & Barista Shot Card Deling)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -144,19 +144,27 @@ flowchart LR
         ValidWeight --> KinematicFilter[1D Kinematisk Alpha-Beta Kalman Filter]
         KinematicFilter --> DecHeal{Tabt Decimalpunkt? 10x Glitch Auto-Heal}
         DecHeal -- Ja (f.eks. 142g ved 14.0g) --> HealDot[Auto-Heal til 14.2g]
-        DecHeal -- Nej --> InnovationGate[Asymmetrisk Væskemekanisk Innovation Gate]
-        HealDot --> InnovationGate
+        DecHeal -- Nej --> TensHeal{Ciffer '4'->'1' Fald? +30g Healer}
+        HealDot --> TensHeal
+        TensHeal -- Ja (12.4g ved 42.4g) --> HealTens[Auto-Heal til 42.4g]
+        TensHeal -- Nej --> InnovationGate[Asymmetrisk Væskemekanisk Innovation Gate]
+        HealTens --> InnovationGate
         InnovationGate --> StepTracker{Pludseligt Vægtspring? Parallel Hypotese Tracker}
-        StepTracker -- Konsensus bekræftet --> UpdateValid[Acceptér Vægt & Opdater Tilstandsvektor]
+        StepTracker -- Konsensus bekræftet & validBrewSteps >= 8 --> GuardDrop[Bloker Nedadgående Fald: Masse fordamper ikke]
+        StepTracker -- Konsensus bekræftet & Tare <= 0.4g --> UpdateValid[Acceptér Tare & Opdater Tilstandsvektor]
         StepTracker -- Enkeltframe Outlier --> RejectDrop[Afvis som Outlier: Fasthold Estimator]
-        UpdateValid --> RateCalc[Kontinuerlig Flow Rate V_k og Tidsdifferentiale]
+        GuardDrop --> RejectDrop
+        UpdateValid --> RateCalc[Staircase-Aware OLS Flow Rate dW/dt over 1.6s Transitionsvindue]
         RejectDrop --> RateCalc
         RateCalc --> ClampFlow[Clamp Flow: Espresso <= 6.5 g/s, Pour-Over <= 15.0 g/s]
-        ClampFlow --> SpikeDetector{ΔF > 1.2 g/s?}
-        SpikeDetector -- Ja --> ChannelingAlert[Registrer Kanaliserings-Spike]
-        SpikeDetector -- Nej --> SmoothCurve[Normal Ekstraktion]
-        ChannelingAlert --> DataPoint[ShotDataPoint: time, weight, flow, isChanneling]
-        SmoothCurve --> DataPoint
+        ClampFlow --> PhaseIsolation{3-Faset Ekstraktion: T < T_drip + 3.5s?}
+        PhaseIsolation -- Ja (Fase 1 Pre & Fase 2 Onset) --> SuppressSpike[Ignorer Startacceleration & Dråbeimpuls]
+        PhaseIsolation -- Nej (Fase 3 Steady-State) --> SurgeDetector{Sustained Surge >= 3.5 g/s & 1.85x Steady?}
+        SurgeDetector -- Ja --> NonBlockingSurge[Informativ Puck Surge Note (Ingen Kværn-Veto)]
+        SurgeDetector -- Nej --> SteadyExtraction[Normal Steady Flow & FSI Beregning]
+        SuppressSpike --> DataPoint[ShotDataPoint: time, weight, flow]
+        NonBlockingSurge --> DataPoint
+        SteadyExtraction --> DataPoint
     end
 
     subgraph Black Box Telemetry & HIL Testbed
@@ -328,6 +336,7 @@ graph TD
     App --> ScannerModal[BeanScannerModal.tsx<br/>Stregkode + Etiket OCR Scanner]
     App --> VaultModal[CentralBeanVaultModal.tsx<br/>Fællesskabs-katalog fra Supabase]
     App --> SummaryModal[ShotSummaryModal.tsx<br/>Hero Decision Card: God/For hurtig/For langsom & 1-klik kværnjustering]
+    App --> ShareModal[ShotShareModal.tsx<br/>1080x1350 Canvas Barista Shot Card & Native Web Share]
     App --> SettingsModal[SettingsModal.tsx<br/>Sprog, Enhed °C/°F, Pro & Kurator link]
     App --> PaywallModal[PaywallModal.tsx<br/>RevenueCat $4.99 Lifetime Unlock]
     App --> LegalModal[LegalModal.tsx<br/>Privacy Policy, Terms of Service, Support]

@@ -1830,6 +1830,7 @@ export class ScaleReadingFilter {
   private weight: number = 0.0;
   private flowRate: number = 0.0;
   private timeSinceValidSec: number = 0.0;
+  private validBrewStepsCount: number = 0; // Tracks genuine incremental flow steps
 
   // Parallel hypothesis state (zero-allocation replacement for recentWindow[])
   private altWeight: number = 0.0;
@@ -1857,6 +1858,7 @@ export class ScaleReadingFilter {
       this.weight = 0.0;
       this.flowRate = 0.0;
       this.altCount = 0;
+      this.validBrewStepsCount = 0;
       this.timeSinceValidSec = 0.0;
       return { weight: 0.0, flowRate: 0.0, isOutlier: false };
     }
@@ -1883,6 +1885,15 @@ export class ScaleReadingFilter {
       measurement = Math.round(measurement) * 0.1;
     }
 
+    // 3b. Leading-Digit OCR Corruption Healer ('4' -> '1' turning 42.4g into 12.4g, or '7' -> '1'):
+    // If tens digit dropped by ~30g (4x -> 1x) while weight trajectory was already at 38–52g:
+    if (isBrewing && this.weight >= 35.0 && measurement >= 10.0 && measurement < 25.0) {
+      const healedPlus30 = Math.round((measurement + 30.0) * 10) / 10;
+      if (Math.abs(healedPlus30 - this.weight) <= 2.5) {
+        measurement = healedPlus30;
+      }
+    }
+
     // Hard ceiling during active espresso brewing (prevents unhealed 10x spikes from 0.x)
     if (isBrewing && measurement > 150.0 && this.weight < 65.0) {
       return { weight: this.weight, flowRate: this.flowRate, isOutlier: true };
@@ -1899,6 +1910,10 @@ export class ScaleReadingFilter {
 
     if (rawDelta >= maxReverseDelta && (innovation <= maxForwardDelta || rawDelta <= maxForwardDelta)) {
       // Measurement is physically consistent with continuous fluid extraction!
+      if (isBrewing && rawDelta > 0.05) {
+        this.validBrewStepsCount++;
+      }
+
       // Adaptive Kalman gains weighted by OCR confidence
       const confScale = Math.max(0.5, Math.min(1.0, ocrConfidence));
       const alpha = isBrewing ? 0.72 * confScale : 0.85 * confScale;
@@ -1927,14 +1942,23 @@ export class ScaleReadingFilter {
       this.altCount++;
       this.altWeight = measurement;
 
+      // Rule: NEVER allow downward "self-heal" if the current weight was built up gradually
+      // over >= 8 genuine incremental flow steps (liquid cannot evaporate from the cup!),
+      // UNLESS the barista explicitly tared the scale back to 0.0g (measurement <= 0.4g).
+      const isManualMidShotTare = measurement <= 0.4;
+      const canSelfHealDownward = !isBrewing || this.validBrewStepsCount < 8 || isManualMidShotTare;
+
       // Require 5 consecutive frames to self-heal downward during brewing; 2 frames for forward jumps
       const requiredConsensus = isBrewing && measurement < this.weight - 0.4 ? 5 : 2;
-      if (this.altCount >= requiredConsensus) {
+      if (this.altCount >= requiredConsensus && canSelfHealDownward) {
         const jumpVel = (measurement - this.weight) / Math.max(0.1, effDt);
         this.weight = measurement;
         this.flowRate = isBrewing ? Math.max(0, Math.min(maxPhysicalFlow, jumpVel)) : 0;
         this.altCount = 0;
         this.timeSinceValidSec = 0.0;
+        if (isManualMidShotTare) {
+          this.validBrewStepsCount = 0;
+        }
         return { weight: this.weight, flowRate: this.flowRate, isOutlier: false };
       }
     } else {
@@ -1950,6 +1974,7 @@ export class ScaleReadingFilter {
     this.weight = initialWeight;
     this.flowRate = 0.0;
     this.timeSinceValidSec = 0.0;
+    this.validBrewStepsCount = 0;
     this.altWeight = 0.0;
     this.altCount = 0;
   }

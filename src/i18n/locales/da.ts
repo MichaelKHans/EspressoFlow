@@ -438,6 +438,14 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'shotsummary.verdict_channeling': 'Kanalisering Registreret',
   'shotsummary.apply_grind': 'Sæt Kværn til {setting}',
   'shotsummary.applied_grind': '✓ Kværn Opdateret',
+  'shotsummary.share_shot': 'Del Shot Card',
+
+  // Shot Card Sharing & Viral Promo
+  'share.card_title': 'Del Barista Shot Card',
+  'share.btn_share': 'Del Shot Card',
+  'share.btn_download': 'Hent Billede',
+  'share.btn_copy': 'Kopiér Tekst & Link',
+  'share.copied': 'Kopieret!',
 
   // Pre-Brew Coach (Hukommelse & Proaktiv Dial-in)
   'coach.pre_brew_title': 'Barista Coach',
