@@ -440,10 +440,14 @@ export const en = {
 
   // Shot Card Sharing & Viral Promo
   'share.card_title': 'Share Barista Shot Card',
+  'share.card_subtitle': 'The card includes your extraction curve, key metrics, and Flowbean branding with an app link.',
   'share.btn_share': 'Share Shot Card',
-  'share.btn_download': 'Download Image',
-  'share.btn_copy': 'Copy Text & Link',
-  'share.copied': 'Copied!',
+  'share.btn_download': 'Save Image',
+  'share.btn_copy': 'Copy Text',
+  'share.copied': 'Copied to clipboard!',
+  'share.saved_toast': 'Image ready to share!',
+  'share.sharing': 'Opening share...',
+  'share.generating': 'Generating shot card...',
 
   // Pre-Brew Coach (Memory & Proactive Dial-in)
   'coach.pre_brew_title': 'Barista Coach',

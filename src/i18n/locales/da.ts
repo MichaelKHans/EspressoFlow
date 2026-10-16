@@ -442,10 +442,14 @@ export const da: Partial<Record<TranslationKeys, string>> = {
 
   // Shot Card Sharing & Viral Promo
   'share.card_title': 'Del Barista Shot Card',
+  'share.card_subtitle': 'Kortet indeholder din ekstraktionskurve, nøgletal og Flowbean-branding med link til appen.',
   'share.btn_share': 'Del Shot Card',
-  'share.btn_download': 'Hent Billede',
-  'share.btn_copy': 'Kopiér Tekst & Link',
-  'share.copied': 'Kopieret!',
+  'share.btn_download': 'Gem Billede',
+  'share.btn_copy': 'Kopiér Tekst',
+  'share.copied': 'Kopieret til udklipsholder!',
+  'share.saved_toast': 'Billede gjort klar til deling!',
+  'share.sharing': 'Åbner deling...',
+  'share.generating': 'Genererer shot-kort...',
 
   // Pre-Brew Coach (Hukommelse & Proaktiv Dial-in)
   'coach.pre_brew_title': 'Barista Coach',

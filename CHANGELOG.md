@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.11.1] - 2026-10-16
+### Etape 46: Nativ Android/iOS Shot Card Deling via Capacitor Plugins & Canvas Graf-Afgrænsning
+- **Nativ Deling via `@capacitor/share` & `@capacitor/filesystem` (`ShotShareModal.tsx`):**
+  - Fixet bug hvor deling ikke reagerede på Android, fordi standard `navigator.share` i Android WebView ikke understøtter fil-objekter uden nativ bro.
+  - Installeret og konfigureret `@capacitor/share` og `@capacitor/filesystem`. Billedet skrives til enhedens native Cache (`Directory.Cache`), hvorefter Androids `FileProvider` aktiverer det fulde native Android Share Intent med billedforhåndsvisning til Instagram, WhatsApp, Messenger, Google Drev og Fotos.
+- **Canvas Clipping Path (`ctx.clip()`) mod Graf-Overlap:**
+  - Fixet visuel fejl hvor vægtkurven overskred graframmen og skar igennem KPI-tallene (Dose/Yield/Ratio).
+  - Indført `ctx.save() / ctx.clip() / ctx.restore()` på plot-rektanglet, så kurver aldrig kan lække ud over rammen.
+- **Mid-Shot Tare Isolering på Delingskortet:**
+  - Registrerer automatisk hvis brugeren har haft en utaret kop stående på vægten før start, og klipper grafen ved tare-øjeblikket. Fjerner uønskede 65g plateauer og lodrette styrtdyk.
+- **Glat Flow-Kurve på Delingskortet (Moving Average):**
+  - Rå savtakket trappetrins-støj på gemte skud udglattes med en 3-punkts moving average på kortet for et knivskarpt og professionelt udtryk.
+- **Mobil Ergonomi & Toast-Feedback:**
+  - Tilføjet flydende toast-notifikation ("Kopieret til udklipsholder!", "Billede gjort klar til deling!").
+  - 2-kolonne knap-layout for Gem Billede og Kopiér Tekst på smartphones.
+
 ## [1.11.0] - 2026-10-16
 ### Etape 45: Gemini 4 Argon Væskemekanik, Udryddelse af Falsk Kanalisering, Dobbelt Y-Akse & Barista Shot Card Deling
 - **Staircase-Aware OLS Flow Rate Beregning (`espressoMath.ts`):**

@@ -144,6 +144,22 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
   - 1080x1350 Canvas Shot Card med Flowbean branding, nøgletal, udstyr, smuk kurve og link (`espressoflow.vercel.app`).
   - Native mobil Web Share API (`navigator.share`) på iOS og Android samt fallback download/kopiering.
 
+## 📱 FASE 15: Nativ Android/iOS Shot Card Deling via Capacitor Plugins & Graf-Afgrænsning (v1.11.1 - AFSLUTTET)
+- [x] **Nativ Android/iOS Share Bridge (`@capacitor/share` & `@capacitor/filesystem`):**
+  - Installeret og synkroniseret `@capacitor/share` og `@capacitor/filesystem` til Android og iOS.
+  - Billedet skrives direkte til enhedens native Cache-mappe via `Filesystem.writeFile`, så Androids `FileProvider` kan udlevere filen til systemets delingsmenu.
+  - Åbner Androids native Share Intent, hvor brugeren kan vælge Instagram Stories, WhatsApp, Messenger, Google Fotos eller gemme lokalt.
+- [x] **Canvas Clipping Path (`ctx.clip()`) & Udryddelse af Graf-Overlap:**
+  - Tilføjet streng canvas-clipping (`ctx.save() / ctx.clip() / ctx.restore()`) på grafområdet i `ShotShareModal.tsx`.
+  - Vægtkurven kan under ingen omstændigheder tegne uden for grafkassen eller kollidere med KPI-tallene ovenover.
+- [x] **Mid-Shot Tare Isolering på Delingskortet:**
+  - Registrerer automatisk hvis koppen stod utaret på vægten før start og klipper grafen ved tare-tidspunktet. Fjerner det uønskede 65g plateau og lodrette fald.
+- [x] **Glat Flow-Kurve på Kortet (Moving Average):**
+  - Ujævn trappetrins-støj på gemte skud udglattes med en 3-punkts glidende gennemsnitskurve på delingskortet for et flot, professionelt look.
+- [x] **Mobil Ergonomi & Toast-Feedback:**
+  - Tilføjet flydende toast-notifikation ("Kopieret til udklipsholder!", "Billede gjort klar til deling!").
+  - 2-kolonne knap-layout i bunden med fuld tekst og ikoner på mobilen.
+
 ---
 
 ## 📌 Næste Opgaver: Bønne-Arkivering i Beandex ("Brugt op" / Finished Bags)

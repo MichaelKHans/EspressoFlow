@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.11.0 (Gemini 4 Argon Væskemekanik: 3-Faset Ekstraktion, OLS Flow-Smoothing, Dobbelt Y-Akse & Barista Shot Card Deling)  
+> **Gældende version:** v1.11.1 (Nativ Android/iOS Deling via Capacitor Share/Filesystem & Canvas Graf-Afgrænsning)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---

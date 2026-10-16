@@ -1,8 +1,11 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import type { ShotRecord } from '../types/espresso';
-import { X, Share2, Download, Copy, Check, Sparkles } from 'lucide-react';
+import { X, Share2, Download, Copy, Check, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { THE_GOLDEN_ZONE } from '../lib/espressoMath';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 interface ShotShareModalProps {
   isOpen: boolean;
@@ -16,6 +19,12 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
   const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [isSharing, setIsSharing] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   const drawCard = useCallback(() => {
     if (!shot || !canvasRef.current) return;
@@ -68,7 +77,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.font = 'bold 16px "Courier Prime", monospace';
     ctx.fillText('ESPRESSO LAB TELEMETRY', 132, 118);
 
-    // Date
+    // Date & Time
     const shotDate = new Date(shot.timestamp);
     const dateStr = shotDate.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
     const timeStr = shotDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -78,7 +87,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.fillText(`${dateStr} • ${timeStr}`, W - 60, 105);
     ctx.textAlign = 'left';
 
-    // Divider
+    // Header Divider
     ctx.strokeStyle = '#3D2D22';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -113,10 +122,11 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     const cardH = 130;
     const cardW = (W - 120 - 45) / 4;
 
+    const ratioDisplay = shot.doseGrams > 0 ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1) : '2.0';
     const kpis = [
       { label: 'DOSE', val: `${shot.doseGrams.toFixed(1)}g`, sub: 'in' },
       { label: 'YIELD', val: `${shot.actualYieldGrams.toFixed(1)}g`, sub: 'out' },
-      { label: 'RATIO', val: `1:${(shot.doseGrams > 0 ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1) : '2.0')}`, sub: 'ratio' },
+      { label: 'RATIO', val: `1:${ratioDisplay}`, sub: 'ratio' },
       { label: 'TIME', val: `${shot.totalTimeSeconds.toFixed(1)}s`, sub: `${shot.preInfusionSeconds.toFixed(1)}s pre` },
     ];
 
@@ -167,8 +177,22 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.font = 'bold 22px "Courier Prime", monospace';
     ctx.fillText('EXTRACTION DYNAMICS & FLOW RATE', chartX + 24, chartY + 40);
 
-    const points = shot.dataPoints || [];
-    if (points.length >= 2) {
+    const rawPoints = shot.dataPoints || [];
+
+    // Mid-Shot Tare Isolation:
+    // If barista tared the cup mid-shot (weight dropped from >5g to <=0.3g),
+    // anchor chart data cleanly at the tare baseline so untared cup weight doesn't corrupt the card.
+    let tareBaselineIdx = 0;
+    for (let i = 1; i < rawPoints.length; i++) {
+      if (rawPoints[i].weightGrams <= 0.3 && rawPoints[i - 1].weightGrams > 5.0) {
+        tareBaselineIdx = i;
+      }
+    }
+
+    const displayPoints = tareBaselineIdx > 0 ? rawPoints.slice(tareBaselineIdx) : rawPoints;
+    const timeOffset = tareBaselineIdx > 0 ? displayPoints[0].timeSeconds : 0;
+
+    if (displayPoints.length >= 2) {
       const pLeft = chartX + 70;
       const pRight = chartX + chartW - 70;
       const pTop = chartY + 65;
@@ -176,13 +200,21 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
       const pW = pRight - pLeft;
       const pH = pBottom - pTop;
 
-      const maxT = Math.max(30, points[points.length - 1].timeSeconds);
-      const maxW = Math.max(shot.targetYieldGrams * 1.15, 45);
+      const lastPtTime = displayPoints[displayPoints.length - 1].timeSeconds - timeOffset;
+      const maxT = Math.max(25, lastPtTime);
+      const maxObservedWeight = displayPoints.reduce((m, p) => Math.max(m, p.weightGrams), 0);
+      const maxW = Math.max(shot.targetYieldGrams * 1.15, 45, Math.ceil(maxObservedWeight / 5) * 5);
       const maxF = 4.0;
 
-      const mapX = (t: number) => pLeft + (t / maxT) * pW;
-      const mapYWeight = (w: number) => pBottom - (w / maxW) * pH;
-      const mapYFlow = (f: number) => pBottom - (Math.min(f, maxF) / maxF) * pH;
+      const mapX = (t: number) => pLeft + (Math.max(0, t) / maxT) * pW;
+      const mapYWeight = (w: number) => pBottom - (Math.max(0, Math.min(w, maxW)) / maxW) * pH;
+      const mapYFlow = (f: number) => pBottom - (Math.max(0, Math.min(f, maxF)) / maxF) * pH;
+
+      // 5.1 CLIPPED REGION FOR PLOTTING (Ensures curves CANNOT escape into KPI cards!)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pLeft, pTop, pW, pH);
+      ctx.clip();
 
       // Golden Zone Band (1.2 to 1.8 g/s)
       const gzTop = mapYFlow(THE_GOLDEN_ZONE.MAX_FLOW_GPS);
@@ -201,19 +233,69 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
       ctx.stroke();
       ctx.setLineDash([]);
 
+      // First drip line (adjusted for mid-shot tare offset if present)
+      const adjustedPre = Math.max(0, shot.preInfusionSeconds - timeOffset);
+      if (adjustedPre > 0 && adjustedPre < maxT) {
+        const xPre = mapX(adjustedPre);
+        ctx.strokeStyle = '#C26D52';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xPre, pTop);
+        ctx.lineTo(xPre, pBottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#C26D52';
+        ctx.font = 'bold 12px "Courier Prime", monospace';
+        ctx.fillText(`First Drip (${adjustedPre.toFixed(1)}s)`, xPre + 6, pTop + 16);
+      }
+
+      // Draw Weight curve
+      ctx.strokeStyle = '#FAF7F2';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      displayPoints.forEach((p, i) => {
+        const x = mapX(p.timeSeconds - timeOffset);
+        const y = mapYWeight(p.weightGrams);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Draw Flow curve with 3-sample moving average for silky smooth telemetry
+      ctx.strokeStyle = '#C26D52';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([6, 3]);
+      ctx.beginPath();
+      displayPoints.forEach((p, i) => {
+        const x = mapX(p.timeSeconds - timeOffset);
+        // Smooth 3-sample moving window to remove quantization jitter on card
+        const startIdx = Math.max(0, i - 2);
+        const windowSlice = displayPoints.slice(startIdx, i + 1);
+        const smoothFlow = windowSlice.reduce((sum, item) => sum + item.flowRateGps, 0) / windowSlice.length;
+        const y = mapYFlow(smoothFlow);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.restore(); // Restore unclipped context for axis labels & badges
+
       // Golden zone badge
+      const gzBadgeTop = mapYFlow(THE_GOLDEN_ZONE.MAX_FLOW_GPS);
       ctx.fillStyle = 'rgba(255, 253, 249, 0.95)';
       ctx.beginPath();
-      ctx.roundRect(pLeft + 12, gzTop + 4, 160, 22, 4);
+      ctx.roundRect(pLeft + 12, gzBadgeTop + 4, 160, 22, 4);
       ctx.fill();
       ctx.fillStyle = '#8A5A2B';
       ctx.font = 'bold 12px "Courier Prime", monospace';
-      ctx.fillText('🎯 MÅL: 1.2–1.8 g/s', pLeft + 20, gzTop + 19);
+      ctx.fillText('🎯 MÅL: 1.2–1.8 g/s', pLeft + 20, gzBadgeTop + 19);
 
       // Y-axis grid (Weight left)
       ctx.fillStyle = '#A39589';
       ctx.font = '14px "Courier Prime", monospace';
-      [0, 15, 30, 45].filter(w => w <= maxW).forEach(w => {
+      [0, 15, 30, 45, 60].filter(w => w <= maxW).forEach(w => {
         const y = mapYWeight(w);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
         ctx.lineWidth = 1;
@@ -233,48 +315,6 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
         ctx.fillText(`${f} g/s`, pRight + 10, y + 5);
       });
       ctx.textAlign = 'left';
-
-      // First drip line
-      if (shot.preInfusionSeconds > 0 && shot.preInfusionSeconds < maxT) {
-        const xPre = mapX(shot.preInfusionSeconds);
-        ctx.strokeStyle = '#C26D52';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(xPre, pTop);
-        ctx.lineTo(xPre, pBottom);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#C26D52';
-        ctx.font = 'bold 12px "Courier Prime", monospace';
-        ctx.fillText(`First Drip (${shot.preInfusionSeconds.toFixed(1)}s)`, xPre + 6, pTop + 16);
-      }
-
-      // Draw Weight curve
-      ctx.strokeStyle = '#FAF7F2';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      points.forEach((p, i) => {
-        const x = mapX(p.timeSeconds);
-        const y = mapYWeight(p.weightGrams);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Draw Flow curve
-      ctx.strokeStyle = '#C26D52';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([6, 3]);
-      ctx.beginPath();
-      points.forEach((p, i) => {
-        const x = mapX(p.timeSeconds);
-        const y = mapYFlow(p.flowRateGps);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-      ctx.setLineDash([]);
     }
 
     // 6. Extraction Summary Metrics Bar
@@ -287,9 +327,17 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    // Active flow calculation
+    const activeFlowSec = shot.flowTimeSeconds > 0
+      ? shot.flowTimeSeconds
+      : Math.max(1, shot.totalTimeSeconds - (shot.preInfusionSeconds || 0));
+    const effectiveAvgFlow = activeFlowSec > 0 && shot.actualYieldGrams > 0
+      ? +(shot.actualYieldGrams / activeFlowSec).toFixed(2)
+      : (shot.averageFlowGps || 0);
+
     ctx.fillStyle = '#FAF7F2';
     ctx.font = 'bold 20px "Courier Prime", monospace';
-    const avgFlowText = `Gns. Flow: ${(shot.averageFlowGps || 0).toFixed(2)} g/s`;
+    const avgFlowText = `Gns. Flow: ${effectiveAvgFlow.toFixed(2)} g/s`;
     ctx.fillText(avgFlowText, 90, statsY + 46);
 
     ctx.fillStyle = '#D4A373';
@@ -337,75 +385,159 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
 
   if (!isOpen || !shot) return null;
 
+  const getBase64Data = (): string | null => {
+    if (!canvasRef.current) return null;
+    return canvasRef.current.toDataURL('image/png').replace(/^data:image\/png;base64,/, '');
+  };
+
   const handleShare = async () => {
     if (!canvasRef.current) return;
     setIsSharing(true);
 
+    const shareTitle = `Mit Espresso Shot: ${shot.drinkName || 'Espresso'}`;
+    const ratioVal = shot.doseGrams > 0 ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1) : '2.0';
+    const shareText = `☕ ${shot.coffeeName || 'Espresso'} • ${shot.doseGrams}g ➔ ${shot.actualYieldGrams.toFixed(1)}g i ${shot.totalTimeSeconds}s (Ratio 1:${ratioVal}). Målt med Flowbean! 👉 https://espressoflow.vercel.app`;
+    const fileName = `flowbean-shot-${Date.now()}.png`;
+
     try {
-      const canvas = canvasRef.current;
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          setIsSharing(false);
-          return;
-        }
+      if (Capacitor.isNativePlatform()) {
+        const base64Data = getBase64Data();
+        if (!base64Data) throw new Error('Canvas rendering not ready');
 
-        const fileName = `flowbean-shot-${shot.drinkName ? shot.drinkName.toLowerCase().replace(/\s+/g, '-') : 'shot'}.png`;
-        const file = new File([blob], fileName, { type: 'image/png' });
-        const shareData = {
-          title: `Mit Espresso Shot: ${shot.drinkName || 'Espresso'}`,
-          text: `☕ ${shot.coffeeName || 'Espresso'} • ${shot.doseGrams}g ➔ ${shot.actualYieldGrams.toFixed(1)}g i ${shot.totalTimeSeconds}s (Ratio 1:${(shot.actualYieldGrams / shot.doseGrams).toFixed(1)}). Målt med Flowbean!`,
+        // Write image file to Native Cache directory so FileProvider can serve it
+        const saveResult = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache,
+        });
+
+        // Trigger native Android / iOS share dialog
+        await Share.share({
+          title: shareTitle,
+          text: shareText,
           url: 'https://espressoflow.vercel.app',
-          files: [file],
-        };
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share(shareData);
-          } catch (err) {
-            // User cancelled or share failed
-            console.debug('Share cancelled or unsupported:', err);
+          files: [saveResult.uri],
+          dialogTitle: t('share.card_title') || 'Del Barista Shot Card',
+        });
+      } else {
+        // Web Share API fallback
+        const canvas = canvasRef.current;
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            handleDownload();
+            return;
           }
-        } else {
-          // Fallback: download the file
-          handleDownload();
+          const file = new File([blob], fileName, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: shareTitle,
+                text: shareText,
+                url: 'https://espressoflow.vercel.app',
+                files: [file],
+              });
+            } catch (err: any) {
+              if (err?.name !== 'AbortError') {
+                handleDownload();
+              }
+            }
+          } else {
+            handleDownload();
+          }
+        }, 'image/png');
+      }
+    } catch (err: any) {
+      console.warn('Native Share failed or cancelled:', err);
+      // If user cancelled, don't fallback to download
+      if (err?.message !== 'Share canceled') {
+        // Fallback: share text/link only or copy to clipboard
+        try {
+          if (Capacitor.isNativePlatform()) {
+            await Share.share({
+              title: shareTitle,
+              text: shareText,
+              url: 'https://espressoflow.vercel.app',
+              dialogTitle: t('share.card_title') || 'Del Barista Shot Card',
+            });
+          } else {
+            handleCopyText();
+          }
+        } catch {
+          handleCopyText();
         }
-        setIsSharing(false);
-      }, 'image/png');
-    } catch {
+      }
+    } finally {
       setIsSharing(false);
     }
   };
 
-  const handleDownload = () => {
-    if (!cardImageUrl) return;
-    const a = document.createElement('a');
-    a.href = cardImageUrl;
-    a.download = `flowbean-shot-${Date.now()}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = async () => {
+    if (!canvasRef.current) return;
+    const fileName = `flowbean-shot-${Date.now()}.png`;
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const base64Data = getBase64Data();
+        if (!base64Data) return;
+
+        const saveResult = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache,
+        });
+
+        // On mobile, opening the share sheet with the file lets user save to gallery or drive
+        await Share.share({
+          title: 'Gem Shot Card',
+          files: [saveResult.uri],
+          dialogTitle: 'Gem eller send shot-kort',
+        });
+        showToast(t('share.saved_toast') || 'Billede gjort klar til deling!');
+      } else {
+        if (!cardImageUrl) return;
+        const a = document.createElement('a');
+        a.href = cardImageUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast(t('share.saved_toast') || 'Billede downloadet!');
+      }
+    } catch (err) {
+      console.warn('Download error:', err);
+    }
   };
 
   const handleCopyText = async () => {
+    const ratioVal = shot.doseGrams > 0 ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1) : '2.0';
     const text = `☕ ${shot.drinkName || 'Espresso'} — ${shot.coffeeName || 'Coffee Blend'}\n` +
-      `📊 Dosis: ${shot.doseGrams}g ➔ Yield: ${shot.actualYieldGrams.toFixed(1)}g (Ratio 1:${(shot.actualYieldGrams / shot.doseGrams).toFixed(1)})\n` +
-      `⏱ Tid: ${shot.totalTimeSeconds}s (Pre: ${shot.preInfusionSeconds}s, Flow: ${shot.flowTimeSeconds}s)\n` +
-      `⚙️ Kværn: ${shot.grinderName} @ ${shot.grindSetting}\n` +
-      `🌊 Gns. flow: ${shot.averageFlowGps} g/s\n\n` +
+      `📊 Dosis: ${shot.doseGrams.toFixed(1)}g ➔ Yield: ${shot.actualYieldGrams.toFixed(1)}g (Ratio 1:${ratioVal})\n` +
+      `⏱ Tid: ${shot.totalTimeSeconds.toFixed(1)}s (Pre: ${shot.preInfusionSeconds.toFixed(1)}s)\n` +
+      `⚙️ Kværn: ${shot.grinderName || 'Grinder'} @ ${shot.grindSetting || '–'}\n` +
+      `🌊 Gns. flow: ${(shot.averageFlowGps || 0).toFixed(2)} g/s\n\n` +
       `Analyseret med Flowbean: https://espressoflow.vercel.app`;
 
     try {
       await navigator.clipboard.writeText(text);
       setIsCopied(true);
+      showToast(t('share.copied') || 'Kopieret til udklipsholder!');
       setTimeout(() => setIsCopied(false), 2500);
     } catch {
-      // Fallback
+      // Clipboard fallback
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg max-h-[92vh] flex flex-col rounded-3xl bg-[#FFFDF9] border border-[#E8DFD5] shadow-2xl overflow-hidden font-mono">
+        {/* Toast Notification Banner */}
+        {toastMessage && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-full bg-[#2C2018] text-[#FAF7F2] text-xs font-bold shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[#E8DFD5] flex items-center justify-between bg-[#FAF7F2] shrink-0">
           <div className="flex items-center gap-2">
@@ -425,7 +557,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
 
         {/* Scrollable Preview Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center bg-[#FAF7F2]">
-          {/* Hidden Canvas used for rendering */}
+          {/* Hidden Canvas used for high-res rendering */}
           <canvas ref={canvasRef} className="hidden" />
 
           {/* Rendered Preview Card */}
@@ -439,50 +571,52 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
             </div>
           ) : (
             <div className="w-full h-80 flex items-center justify-center text-xs text-[#7A6E65]">
-              Genererer shot-kort...
+              {t('share.generating') || 'Genererer shot-kort...'}
             </div>
           )}
 
-          <p className="text-[11px] text-[#7A6E65] text-center mt-3 max-w-xs">
-            Kortet indeholder din ekstraktionskurve, nøgletal og Flowbean-branding med link til appen.
+          <p className="text-[11px] text-[#7A6E65] text-center mt-3 max-w-xs leading-relaxed">
+            {t('share.card_subtitle') || 'Kortet indeholder din ekstraktionskurve, nøgletal og Flowbean-branding med link til appen.'}
           </p>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-[#E8DFD5] bg-[#FFFDF9] flex flex-col sm:flex-row gap-2 shrink-0">
+        <div className="p-4 border-t border-[#E8DFD5] bg-[#FFFDF9] flex flex-col gap-2.5 shrink-0">
+          {/* Primary Share Action */}
           <button
             type="button"
             onClick={handleShare}
             disabled={isSharing}
-            className="flex-1 py-3 px-4 rounded-xl bg-[#C26D52] hover:bg-[#A85840] text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-sm cursor-pointer active:scale-98 disabled:opacity-50"
+            className="w-full py-3.5 px-4 rounded-xl bg-[#C26D52] hover:bg-[#A85840] active:scale-98 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md cursor-pointer disabled:opacity-50"
           >
             <Share2 className="w-4 h-4" />
-            <span>{isSharing ? 'Åbner...' : (t('share.btn_share') || 'Del Shot Card')}</span>
+            <span>{isSharing ? (t('share.sharing') || 'Åbner deling...') : (t('share.btn_share') || 'Del Shot Card')}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="py-3 px-3.5 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-98"
-            title="Download PNG"
-          >
-            <Download className="w-4 h-4 text-[#7A6E65]" />
-            <span className="hidden sm:inline">Hent</span>
-          </button>
+          {/* Secondary Actions Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="py-2.5 px-3 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] active:scale-98 text-[#2C2018] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-[#7A6E65]" />
+              <span>{t('share.btn_download') || 'Gem Billede'}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleCopyText}
-            className="py-3 px-3.5 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-98"
-            title="Kopiér opskrift og link"
-          >
-            {isCopied ? (
-              <Check className="w-4 h-4 text-emerald-600" />
-            ) : (
-              <Copy className="w-4 h-4 text-[#7A6E65]" />
-            )}
-            <span className="hidden sm:inline">{isCopied ? 'Kopieret' : 'Tekst'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleCopyText}
+              className="py-2.5 px-3 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] active:scale-98 text-[#2C2018] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              {isCopied ? (
+                <Check className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <Copy className="w-4 h-4 text-[#7A6E65]" />
+              )}
+              <span>{isCopied ? (t('share.copied') || 'Kopieret!') : (t('share.btn_copy') || 'Kopiér Tekst')}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
