@@ -484,10 +484,10 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
           <img
             src="/images/coffee-beans-macro.jpg"
             alt=""
-            className="w-full h-full object-cover object-center opacity-35 mix-blend-luminosity scale-105"
+            className="w-full h-full object-cover object-right sm:object-center opacity-65 scale-105"
           />
-          <div className="absolute inset-0 bg-linear-to-r from-[#140D09]/95 via-[#1E1510]/80 to-[#140D09]/65" />
-          <div className="absolute inset-0 bg-radial from-transparent via-[#140D09]/50 to-[#140D09]/90" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#140D09] via-[#140D09]/85 to-[#140D09]/30" />
+          <div className="absolute inset-0 bg-linear-to-t from-[#140D09]/85 via-transparent to-transparent" />
         </div>
 
         <div className="absolute -right-8 -top-8 w-40 h-40 bg-[#C26D52]/15 rounded-full blur-2xl pointer-events-none" />

@@ -309,10 +309,11 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
           <img
             src="/images/crema-ripple-macro.jpg"
             alt=""
-            className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity scale-105"
+            className="w-full h-full object-cover object-right sm:object-center opacity-70 scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/95 via-[#1E130D]/80 to-[#140C08]/65" />
-          <div className="absolute inset-0 bg-radial from-transparent via-[#140C08]/50 to-[#140C08]/90" />
+          {/* Directional vignette protecting text readability on left while keeping droplet and crema rings clearly visible on right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/85 via-transparent to-transparent" />
         </div>
 
         {/* Subtle background ambient glow */}
@@ -336,7 +337,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         </div>
 
         {/* Thumb-Friendly Brew Method Toggle (Keeps Top Mobile Header Clean) */}
-        <div className="mt-4 grid grid-cols-2 gap-1.5 p-1 bg-black/30 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 text-xs font-mono">
+        <div className="mt-4 grid grid-cols-2 gap-1.5 p-1 bg-black/30 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 text-xs font-mono relative z-10">
           <button
             type="button"
             onClick={() => {
@@ -376,21 +377,21 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         </div>
 
         {/* 2. Active Bar Deck Ribbon & Customizer */}
-        <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/10">
+        <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/15 relative z-10">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-[11px] font-sans text-[#E8DFD5]/90 uppercase tracking-wider font-bold flex items-center gap-1.5">
+            <div className="text-[11px] font-sans text-stone-200 uppercase tracking-wider font-bold flex items-center gap-1.5">
               <span>{methodFilter === 'espresso' ? 'Espresso Deck' : 'Pour Over Deck'}</span>
-              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-white/10 text-[#FAF7F2]">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/20 border border-white/20 text-white">
                 {displayDeckDrinks.length} pinned
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsCustomizeModalOpen(true)}
-              className="text-xs font-sans font-semibold text-[#FAF7F2] hover:text-white bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1 rounded-full flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98"
+              className="text-xs font-sans font-semibold text-white hover:text-white bg-white/15 hover:bg-white/25 border border-white/25 px-3 py-1 rounded-full flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98"
               title="Browse all drinks or customize quick deck"
             >
-              <Settings2 className="w-3 h-3 text-[#E08A70]" />
+              <Settings2 className="w-3.5 h-3.5 text-[#E58367]" />
               <span>All Drinks & Pin ({DRINK_RECIPES.filter((d) => (d.method || 'espresso') === methodFilter).length})</span>
             </button>
           </div>

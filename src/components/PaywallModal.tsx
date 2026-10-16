@@ -79,9 +79,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
             <img
               src="/images/coffee-beans-macro.jpg"
               alt=""
-              className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity scale-110"
+              className="w-full h-full object-cover object-center opacity-50 scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#140D09]/95 via-[#1E1510]/80 to-[#140D09]/60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#140D09]/95 via-[#1E1510]/80 to-[#140D09]/50" />
           </div>
           <div className="relative z-10">
             <div className="text-3xl font-extrabold text-[#FFFDF9] font-mono tracking-tight">

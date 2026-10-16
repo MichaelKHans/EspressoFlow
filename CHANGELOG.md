@@ -2,6 +2,21 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.17.1] - 2026-10-16
+### Etape 54: Raffineret Fotorealistisk Makrografik på Kort & Fjernelse af Baggrundsbønner
+- **Fjernelse af Baggrundsbønner (Ren & Rolig Pergament-Baggrund):**
+  - Baggrundsbønnerne fjernet fuldstændigt efter barista-feedback. Appens baggrund fremstår nu 100% ren, rolig og minimalistisk på det varme pergament (`#FAF7F2`) uden smuds- eller pleteffekt.
+- **Løst Tekstkontrast & Læsbarhed i DrinkSelector:**
+  - `Espresso Deck`, `3 pinned` og `All Drinks & Pin` rettet med eksplicitte hvide utility-farver (`text-white`, `text-stone-200`, `bg-white/15`, `border-white/20`, `relative z-10`), så teksten altid er knivskarp og 100% læsbar på det mørke kort uanset systemtema.
+- **Autentisk Fotorealistisk Makrografik på Mørke Kort:**
+  - Fjernet `mix-blend-luminosity`, der tidligere udvaskede billederne til en mudret monokrom brun farve.
+  - Genereret og implementeret nye, knivskarpe 16:9 fotorealistiske makrobilleder i fulde naturlige kaffefarver:
+    - *Barista Deck:* Nærbillede af espressodråbe, kronesplash og koncentriske gyldne cremarillinger (`crema-ripple-macro.jpg`).
+    - *Beandex & Paywall:* Glinsende friskristede kaffebønner med synlige sprækker, dyb chokolade og gylden risteglans (`coffee-beans-macro.jpg`).
+  - Retningsbestemt blød gradient fra venstre beskytter læsbarheden af knapper og tekst, mens den krystalklare makrografik træder tydeligt og genkendeligt frem til højre.
+- **Brugervenlig Tom Bønnehylde:**
+  - Bevaret hurtig `[ 📷 Scan Kaffepose ]` CTA direkte på den tomme hylde flankeret af `[ ⚡ Radar ]` og `[ + Tilføj ]`.
+
 ## [1.17.0] - 2026-10-16
 ### Etape 53: Ambient Bokeh Coffee Beans™ (GPU-Accelereret Atmosfærisk Baggrundsmotion)
 - **1. Stemningsfuld Bokeh-Baggrund (`AmbientBeanBackground.tsx`):**

@@ -11,29 +11,21 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
-### 2026-10-16 -- Ambient Bokeh Coffee Beans™ (GPU-Accelereret Atmosfærisk Baggrundsmotion) (v1.17.0)
-- **Stemningsfuld Bokeh-Baggrund (`AmbientBeanBackground.tsx`):**
-  - Implementeret et diskret, drømmende baggrundslag med bløde, out-of-focus kaffebønnesilhuetter.
-  - Varm, filmisk $f/1.4$ bokeh-fornemmelse i harmoni med pergament (`#FAF7F2`) og varm latte (`#FFFDF9`).
-  - Kun 3–5 bønner ad gangen med stor afstand, 4–7% opacitet og 16–26px Gaussisk sløring for 100% uforstyrret læsbarhed af vægttal og grafer.
-- **Unikke Silhuetter pr. Side (Side-Specifikt Terroir):**
-  - Coffee Bar (`drinks`): Klassiske Arabica-bønner (Typica/Bourbon) med rolig opadgående aroma-drift.
-  - Scale Cam (`monitor`): Ultra-spredte perifere bønner; pauser automatisk under aktiv brygning (`isBrewing`).
-  - Beandex (`beandex`): Botaniske varietaler: *Geisha* (slank), *Peaberry* (rund perlebønne), og *Pacamara* (oversized elephant bean).
-  - Logbog (`logbook`): Horisontalt drivende modne bønner som en tidslinje af kaffeoplevelser.
-  - Gear Setup (`equipment`): Kaffebønner blandet med fine mikro-kværnpartikler.
-- **100% Hardware-Accelereret GPU-Ydeevne (`index.css`):**
-  - Udelukkende CSS `translate3d(...) rotate(...)` med `will-change: transform`.
-  - Nul JavaScript CPU-loops, 0 ms main thread latenstid, nul batteridræn. Understøtter `prefers-reduced-motion`.
-- **Vivino-Style Makrografik på Mørke Kort (`DrinkSelector.tsx`, `BeandexView.tsx`, `PaywallModal.tsx`):**
-  - *Beandex Hero Banner:* Mørkristede specialty bønner med gylden rav-rimlight (`coffee-beans-macro.jpg`).
-  - *Barista Deck Hero Banner:* Nærbillede af espresso-dråbe med koncentriske ringe og fløjlsblød crema (`crema-ripple-macro.jpg`).
-  - *Paywall Pricing Card:* Luksuskort i mørk kaffeglans med ravfarvet dybde.
+### 2026-10-16 -- Raffineret Fotorealistisk Makrografik på Kort & Fjernelse af Baggrundsbønner (v1.17.1)
+- **Fjernelse af Baggrundssilhuetter (Ren & Rolig Pergament-Baggrund):**
+  - Baggrundsbønnerne fjernet helt efter brugerfeedback, så Flowbean fremstår 100% ren, rolig og minimalistisk med pergament (`#FAF7F2`) og varm latte (`#FFFDF9`) uden plet- eller smudseffekt.
+- **Løst Tekstkontrast & Læsbarhed i DrinkSelector:**
+  - `Espresso Deck`, `3 pinned` og `All Drinks & Pin` rettet med eksplicitte hvide utility-farver (`text-white`, `text-stone-200`, `bg-white/15`, `border-white/20`, `relative z-10`), så teksten altid er knivskarp og 100% læsbar på det mørke kort.
+- **Autentisk Fotorealistisk Makrografik på Mørke Kort:**
+  - Fjernet `mix-blend-luminosity`, der tidligere udvaskede billederne til en mudret monokrom brun farve.
+  - Genereret og indsat nye, knivskarpe 16:9 fotorealistiske makrobilleder i fulde naturlige kaffefarver:
+    - *Barista Deck:* Nærbillede af espressodråbe, kronesplash og koncentriske gyldne cremarillinger (`crema-ripple-macro.jpg`).
+    - *Beandex & Paywall:* Glinsende friskristede kaffebønner med synlige sprækker, dyb chokolade og gylden risteglans (`coffee-beans-macro.jpg`).
+  - Retningsbestemt blød gradient fra venstre beskytter læsbarheden af knapper og tekst, mens den krystalklare makrografik træder tydeligt og genkendeligt frem til højre.
 - **Brugervenlig Tom Bønnehylde:**
-  - Bevaret en hurtig og intuitiv `[ 📷 Scan Kaffepose ]` CTA direkte på den tomme hylde flankeret af `[ ⚡ Radar ]` og `[ + Tilføj ]`, så brugeren straks kan scanne en pose fra hylden, når kartoteket er tomt.
-  - Rettet pris-filtertekst til `Price Tier: All Prices` og fjernet rå `({count})` strenge fra fane-knapperne.
+  - Bevaret hurtig `[ 📷 Scan Kaffepose ]` CTA direkte på den tomme hylde flankeret af `[ ⚡ Radar ]` og `[ + Tilføj ]`.
 - **Testet og Verificeret:**
-  - `npm run build` passeret 100% fejlfrit, `npx cap sync` synkroniseret.
+  - `npm run build` passeret fejlfrit, `npx cap sync` synkroniseret til Android og iOS.
 
 ### 2026-10-16 -- Verdensklasse Kaffebønner, Prisniveau-Kategorisering & Beandex Matchmaker™ Smagsfinder (v1.16.0)
 - **Verdensklasse Konkurrencekaffer i Kataloget (`coffeeCatalogData.ts`):**
