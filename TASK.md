@@ -196,6 +196,19 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
   - Verificeret med ægte billede via Supabase Edge Function med succesfuldt metadata-udtræk.
 - [x] **5. Database & Schema Forbedringer:**
   - Rettet duplikat-fejl i Supabase for kaffeindekser; oprettet `idx_beans_roaster_name_search` og slået `pg_trgm` til for fuzzy-søgning.
+- [x] **6. Beandex Knap-Renhed & Synlig Barista Friskhedsnote (v1.13.1):**
+  - Opdateret hero og empty-state knap i Beandex til `[ 📸 Scan Kaffepose ]` med kamera-ikon i stedet for stregkode.
+  - Tilføjet permanent synlig Barista Freshness Note boks på hvert bønnekort, der dynamisk opdaterer rådgivning og brygge-fokus (Oxideret 🥛 Bedst med mælk, Efter peak ⏱️ Kværn finere, Peak vindue ✨ Ren espresso, Afgasning 💨 Hviler).
+
+---
+
+## ⚡ Aktuel Opgave: Freshness Radar (Supermarked & Hylde-Scanner)
+- [ ] **Freshness Radar (Supermarket Shelf Zero-Tap Date Scanner):**
+  - Lynhurtig kontinuerlig OCR-scanning for ristedatoer og holdbarhedsdatoer på supermarkedshylder.
+  - Trafiklys HUD: 🟢 Peak Frisk / 🟡 Acceptabel / 🔴 Gammel / 💨 Afgasser.
+  - Flashlight / Torch toggle til mørke butikshylder.
+  - Taktil haptik-vibration ved godkendt fund og øjeblikkelig genaktivering til næste pose.
+  - 1-tap "Opret i Beandex" med auto-udfyldt dato.
 
 ---
 

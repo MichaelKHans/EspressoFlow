@@ -387,7 +387,7 @@ export const en = {
   'beandex.my_bags': 'My Coffee Bags',
   'beandex.my_bags_count': '{count} Bags In Stock',
   'beandex.my_bags_subtitle': 'Rate, bookmark, and organize your specialty coffee inventory',
-  'beandex.scan_bag_btn': 'Scan Bag / Barcode',
+  'beandex.scan_bag_btn': 'Scan Coffee Bag',
   'beandex.add_bag_btn': 'Add Custom Bag',
   'beandex.explore_global_btn': 'Global Index',
   'beandex.active_in_flow': 'ACTIVE IN FLOW',

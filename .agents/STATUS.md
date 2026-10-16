@@ -11,6 +11,11 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-16 -- Synlig Barista Friskhedsnote i Beandex & Scan Kaffepose Knap-Renhed (v1.13.1)
+- **Opdateret Scan Pose Knap:** Fjernet "/stregkode" så knappen stolt fremstår som `[ 📸 Scan Kaffepose ]` med kamera-ikon på tværs af hero og tomt lager i `BeandexView.tsx`.
+- **Dynamisk Barista Friskhedsnote:** Indsat synlig, farvekodet Barista Intelligence boks på hvert kaffekort i Beandex, der dynamisk skifter med bønnernes alder (Oxideret 🥛 Bedst med mælk, Efter peak ⏱️ Kværn finere, Peak vindue ✨ Ren espresso, Afgasning 💨 Hviler).
+- **Bygget, Synkroniseret & Testet:** `npm run build` verificeret på 440 ms, APK bygget og verificeret.
+
 ### 2026-10-16 -- Beandex Bag Vision™ (Pose AI), Brand Purity & Sikker Supabase Edge Function (v1.13.0)
 - **Bekræftet Google Gemini Model-Status i 2026:**
   - Bekræftet pensionering af `gemini-1.5-flash` (sunset sept. 2025) og `gemini-2.0-flash` (udfaset juni 2026).

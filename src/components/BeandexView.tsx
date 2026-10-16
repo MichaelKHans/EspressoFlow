@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Coffee,
   Star,
-  Barcode,
   Plus,
   Sliders,
   Check,
@@ -400,7 +399,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               onClick={onOpenScanner}
               className="px-3.5 py-2 rounded-xl bg-linear-to-r from-[#C26D52] to-[#A85840] hover:brightness-110 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md transition active:scale-95"
             >
-              <Barcode className="w-3.5 h-3.5" />
+              <Camera className="w-3.5 h-3.5" />
               <span>{t('beandex.scan_bag_btn')}</span>
             </button>
             <button
@@ -779,7 +778,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 onClick={onOpenScanner}
                 className="px-3.5 py-2 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-semibold flex items-center gap-1.5 transition"
               >
-                <Barcode className="w-3.5 h-3.5" />
+                <Camera className="w-3.5 h-3.5" />
                 <span>{t('beandex.scan_bag_btn')}</span>
               </button>
               <button
@@ -969,6 +968,42 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                         </span>
                         <strong className="text-[#C26D52] font-bold">{bean.grindSetting}</strong>
                       </span>
+                    </div>
+
+                    {/* Barista Freshness Intelligence Note */}
+                    <div
+                      className={`p-2 rounded-xl border text-[10.5px] leading-snug transition-all ${
+                        freshness.phase === 'stale'
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-950'
+                          : freshness.phase === 'past_peak'
+                          ? 'bg-stone-500/10 border-stone-400/30 text-stone-900'
+                          : freshness.phase === 'degassing'
+                          ? 'bg-[#C26D52]/10 border-[#C26D52]/30 text-[#8C3D26]'
+                          : 'bg-[#72806B]/10 border-[#72806B]/30 text-[#2E3C2B]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1 font-bold font-mono text-[9.5px] uppercase tracking-wide">
+                        <span>
+                          {freshness.phase === 'stale'
+                            ? '🥛 Bedst med mælk / Cortado'
+                            : freshness.phase === 'past_peak'
+                            ? '⏱️ Efter Peak • Kværn Finere'
+                            : freshness.phase === 'degassing'
+                            ? '💨 Hviler • Afgasser CO₂'
+                            : '✨ Peak Vindue • Ren Espresso'}
+                        </span>
+                      </div>
+                      <p className="font-sans text-[10px] opacity-90 mt-0.5 leading-tight">
+                        {language === 'da'
+                          ? freshness.phase === 'stale'
+                            ? 'Kaffeolierne er oxideret. Cremaen er tyndere – smager skønt med mælk (Flat White / Latte) eller som kort Ristretto.'
+                            : freshness.phase === 'past_peak'
+                            ? 'Aromaerne er blødere. Kværn et halvt trin finere for at bevare sødme og fylde.'
+                            : freshness.phase === 'degassing'
+                            ? 'Friskristet med højt CO₂. Lad hvile et par dage for renere smag uden boblende crema.'
+                            : 'Maksimal aromaintensitet og tyk crema. Helt i top til ren espresso eller pour over!'
+                          : freshness.baristaTip}
+                      </p>
                     </div>
 
                     {/* Bag Opened Status Row */}

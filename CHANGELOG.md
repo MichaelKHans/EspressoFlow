@@ -2,6 +2,19 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.13.1] - 2026-10-16
+### Etape 49: Synlig Barista Friskhedsnote i Beandex & Scan Kaffepose Knap-Renhed
+- **1. Beandex "Scan Kaffepose" Knap-Opdatering:**
+  - Opdateret scan-knappen i hero og tomt lager (`BeandexView.tsx`) til `[ 📸 Scan Kaffepose ]` (`Scan Coffee Bag`) med `<Camera />` ikon.
+  - Omlagt i18n nøgler `beandex.scan_bag_btn` i `src/i18n/locales/en.ts` og `src/i18n/locales/da.ts`.
+- **2. Dynamisk Barista Friskhedsnote på Bønnekort:**
+  - Integreret en permanent synlig, farvekodet Barista Friskhedsnote direkte på hvert kaffekort i Beandex.
+  - Opdateres automatisk i realtid efter kaffens alder:
+    - 🥛 **Oxideret / Gammel:** *"🥛 Bedst med mælk / Cortado — Kaffeolierne er oxideret. Cremaen er tyndere – smager skønt med mælk (Flat White / Latte) eller som kort Ristretto."*
+    - ⏱️ **Efter Peak:** *"⏱️ Efter Peak • Kværn Finere — Aromaerne er blødere. Kværn et halvt trin finere for at bevare sødme og fylde."*
+    - ✨ **Peak Vindue:** *"✨ Peak Vindue • Ren Espresso — Maksimal aromaintensitet og tyk crema. Helt i top til ren espresso eller pour over!"*
+    - 💨 **Afgasning:** *"💨 Hviler • Afgasser CO₂ — Friskristet med højt CO₂. Lad hvile et par dage for renere smag uden boblende crema."*
+
 ## [1.13.0] - 2026-10-16
 ### Etape 48: Beandex Bag Vision™ (Optisk Kaffepose AI), 100% Brand Purity & Sikker Supabase Edge Function
 - **1. Grundig Model-Undersøgelse & 2026 Gemini AI Integration:**

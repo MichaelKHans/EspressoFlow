@@ -389,7 +389,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'beandex.my_bags': 'Mine Kaffeposer',
   'beandex.my_bags_count': '{count} Poser på Lager',
   'beandex.my_bags_subtitle': 'Bedøm med stjerner, gem favoritter og hold styr på friskheden',
-  'beandex.scan_bag_btn': 'Scan Pose / Stregkode',
+  'beandex.scan_bag_btn': 'Scan Kaffepose',
   'beandex.add_bag_btn': 'Opret Ny Bønne',
   'beandex.explore_global_btn': 'Globalt Indeks',
   'beandex.active_in_flow': 'AKTIV I FLOW',
