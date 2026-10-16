@@ -119,12 +119,12 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.stroke();
 
     ctx.fillStyle = '#FAF7F2';
-    ctx.font = 'bold 34px "Courier Prime", monospace';
-    ctx.fillText('FLOWBEAN', 142, 94);
+    ctx.font = 'bold 36px "Courier Prime", monospace';
+    ctx.fillText('FLOWBEAN', 144, 95);
 
     ctx.fillStyle = '#C26D52';
-    ctx.font = 'bold 15px "Courier Prime", monospace';
-    ctx.fillText('DIGITAL BARISTA EXTRACTION FLOW', 144, 118);
+    ctx.font = 'bold 17px "Courier Prime", monospace';
+    ctx.fillText('DIGITAL BARISTA EXTRACTION FLOW', 146, 120);
 
     // Date & Time
     const shotDate = new Date(shot.timestamp);
@@ -202,7 +202,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.fill();
     ctx.fillStyle = '#FAF7F2';
     ctx.font = 'bold 18px "Courier Prime", monospace';
-    ctx.fillText(drinkNameUpper, 124, 205);
+    ctx.fillText(drinkNameUpper, 126, 205);
 
     // Bean name
     ctx.fillStyle = '#FAF7F2';
@@ -273,27 +273,46 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Chart Header inside box with visual legend
+    // Chart Header inside box with visual clean vector legend (NO EMOJIS)
     ctx.fillStyle = '#FAF7F2';
     ctx.font = 'bold 20px "Courier Prime", monospace';
     ctx.fillText('EXTRACTION DYNAMICS & FLOW RATE', chartX + 24, chartY + 38);
 
-    // Legend on the right side of chart header
+    // Vector Legend on the right side of chart header (Clean typography & swatches)
     const legendRight = chartX + chartW - 24;
     ctx.textAlign = 'right';
-    ctx.font = '13px "Courier Prime", monospace';
+    ctx.font = 'bold 14px "Courier Prime", monospace';
 
-    // Golden zone
+    // Golden target zone swatch & text
+    ctx.fillStyle = 'rgba(212, 163, 115, 0.35)';
+    ctx.fillRect(legendRight - 150, chartY + 26, 14, 12);
+    ctx.strokeStyle = '#D4A373';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(legendRight - 150, chartY + 26, 14, 12);
     ctx.fillStyle = '#D4A373';
-    ctx.fillText('🟨 Target (1.2-1.8)', legendRight, chartY + 38);
+    ctx.fillText('Target (1.2-1.8)', legendRight, chartY + 37);
 
-    // Flow
+    // Flow dashed vector line & text
+    ctx.strokeStyle = '#C26D52';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(legendRight - 280, chartY + 32);
+    ctx.lineTo(legendRight - 262, chartY + 32);
+    ctx.stroke();
+    ctx.setLineDash([]);
     ctx.fillStyle = '#C26D52';
-    ctx.fillText('╌ Flow (g/s)', legendRight - 180, chartY + 38);
+    ctx.fillText('Flow (g/s)', legendRight - 195, chartY + 37);
 
-    // Yield
+    // Yield solid vector line & text
+    ctx.strokeStyle = '#FAF7F2';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(legendRight - 395, chartY + 32);
+    ctx.lineTo(legendRight - 377, chartY + 32);
+    ctx.stroke();
     ctx.fillStyle = '#FAF7F2';
-    ctx.fillText('─ Yield (g)', legendRight - 310, chartY + 38);
+    ctx.fillText('Yield (g)', legendRight - 315, chartY + 37);
     ctx.textAlign = 'left';
 
     const rawPoints = shot.dataPoints || [];
@@ -486,14 +505,14 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     // Status pill
     ctx.fillStyle = isChanneling ? 'rgba(194, 109, 82, 0.18)' : 'rgba(114, 128, 107, 0.18)';
     ctx.beginPath();
-    ctx.roundRect(85, footY + 20, 370, 36, 8);
+    ctx.roundRect(85, footY + 18, 380, 40, 8);
     ctx.fill();
     ctx.strokeStyle = isChanneling ? '#C26D52' : '#72806B';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = isChanneling ? '#E08B73' : '#A3B899';
-    ctx.font = 'bold 16px "Courier Prime", monospace';
+    ctx.font = 'bold 18px "Courier Prime", monospace';
     const statusText = isChanneling
       ? `STATUS: CHANNELING (${spikeVal > 0 ? spikeVal.toFixed(1) : '3.2'} g/s)`
       : `STATUS: GOLDEN ZONE (1:${ratioDisplay} in ${shot.totalTimeSeconds.toFixed(0)}s)`;
@@ -501,27 +520,22 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
 
     // App Branding next to status pill
     ctx.fillStyle = '#FAF7F2';
-    ctx.font = 'bold 20px "Courier Prime", monospace';
-    ctx.fillText('POWERED BY FLOWBEAN', 480, footY + 44);
+    ctx.font = 'bold 22px "Courier Prime", monospace';
+    ctx.fillText('POWERED BY FLOWBEAN', 490, footY + 44);
 
-    // Feature highlights line (Clean, punchy, high contrast)
+    // Clean, short & professional advertisement (ZERO emojis, high contrast, readable)
+    ctx.fillStyle = '#FFFDF9';
+    ctx.font = 'bold 24px "Courier Prime", monospace';
+    ctx.fillText('DIAL IN YOUR PERFECT EXTRACTION', 85, footY + 88);
+
     ctx.fillStyle = '#D4A373';
-    ctx.font = 'bold 16px "Courier Prime", monospace';
-    ctx.fillText('📷 SCALE OCR CAM   •   📈 FLOW DYNAMICS   •   🫘 BEANDEX VAULT', 85, footY + 86);
-
-    // Supporting targeted tagline
-    ctx.fillStyle = '#A39589';
-    ctx.font = '15px "Courier Prime", monospace';
-    ctx.fillText('Turn any digital scale into a precision espresso monitor.', 85, footY + 118);
+    ctx.font = 'bold 17px "Courier Prime", monospace';
+    ctx.fillText('Scan beans with Beandex & turn any scale smart with Flowbean.', 85, footY + 120);
 
     // Website Link
     ctx.fillStyle = '#C26D52';
-    ctx.font = 'bold 20px "Courier Prime", monospace';
-    ctx.fillText('FLOWBEAN.APP', 85, footY + 154);
-
-    ctx.fillStyle = '#7A6E65';
-    ctx.font = '14px "Courier Prime", monospace';
-    ctx.fillText('• Precision Specialty Extraction Suite', 235, footY + 154);
+    ctx.font = 'bold 22px "Courier Prime", monospace';
+    ctx.fillText('GET THE APP AT FLOWBEAN.APP', 85, footY + 154);
 
     // --- QR CODE DISPLAY (Right side of banner) ---
     const qrCardX = W - 60 - 155;

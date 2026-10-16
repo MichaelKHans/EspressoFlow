@@ -11,6 +11,20 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-16 -- Visuel Overhaling af Kopper/Glas, Deck, Logbog & Share Card (v1.12.0)
+- **Arkitektoniske Kopper & Glas (`ArchitecturalCup.tsx`):** Fotorealistiske SVG gradienter for espresso, crema, mikroskum og vand. Porcelænskant med skygge, barista-glas uden hank med tyk krystalbund (Cortado, Piccolo, Americano), isterninger og bobler til kolde drikke, samt skulpturelle silhuetter for de 6 pour over metoder (Chemex, V60, Kalita, AeroPress, French Press).
+- **Digital Barista Quick Deck (`DrinkSelector.tsx`):** Vertikalt flise-layout med forstørrede 104x75px kopper, minimeret død kantplads, fulde ubeskårne drikketitler, og recept-swatches.
+- **Logbog & Kurverammen (`Logbook.tsx` & `FlowChart.tsx`):**
+  - Fjernet den grimme dobbeltlinje omkring ekstraktionskurven i logbogen.
+  - Fikset tekst-overflow i `TASTE / FLOW` (`truncate`), så f.eks. "Bitter / Astringent" holdes inden for kortet.
+  - Fikset afskæring i `TIME & FLOW` (`Pre 9.3s` og `Flow 31.8s` i ren to-sidet flex), så sekunder aldrig trunkeres med `...`.
+  - Højre akse i `FlowChart.tsx` (`FLOW g/s`) højrestillet med `textAnchor="end"` ved `width - 4`, hvilket forhindrer afskæring uden at stjæle grafbredde eller tilføje unødig tom luft på små skærme.
+- **Det Ultimative Shot Share Card (`ShotShareModal.tsx`):**
+  - Emojis fuldstændig fjernet fra canvas for at undgå sort-hvide firkanter på Android.
+  - Større, ultra-læsbar typografi for header, badges og telemetry.
+  - Officielt Flowbean-logo i keramikkant og skarp QR-kode til `https://flowbean.app`.
+  - Ren og professionel annonce: `DIAL IN YOUR PERFECT EXTRACTION`, `Scan beans with Beandex & turn any scale smart with Flowbean.` og `GET THE APP AT FLOWBEAN.APP`.
+
 ### 2026-10-15 -- Deep Computer Vision Overhaul (v1.10.8)
 - **Zero-GC Static Memory Pool (`OCRScratchPool` i `ocr7segment.ts`):** Pre-allokerer `gray`, `binary`, `integral`, `histogram`, `rowCounts`, `colCounts`, og `morphScratchRow`. Sænker memory churn fra ~42 MB/s til **0 Bytes/frame**, hvilket eliminerer V8/WebKit GC-pauser.
 - **7-Bit Hardware Bitmask Matching med `POPCNT_7BIT` (`ocr7segment.ts`):** 128-byte lookup-tabel og flade 7-bit bitmasker eliminerer `Object.entries(PATTERN_VARIANTS)` allokeringer. Digit probing eksekverer på ~40 ns.
@@ -1247,13 +1261,18 @@
   - `FlowChart.tsx`: Strikt SVG `<clipPath id="chart-area-clip">` og clamping forhindrer udbrud; responsiv header (`flex-col sm:flex-row gap-1.5`) holder kurveoverskrift på én linje på mobil.
   - `Logbook.tsx`: Fjernet det store tomme venstre kvadrat (~80px sparet pr. kort), miniature cup indsat direkte i headeren ved siden af `#130` og kaffenavnet, `whitespace-nowrap` på alle badges, i18n konsistens (`Share Card`, `telemetry_points`).
   - `ShotShareModal.tsx`: Det ultimative specialty share card med kop-silhuet ved siden af titel, renset udstyrsstreng (parenteser fjernet), sandfærdig dynamisk bundstatus (`Status: Channeling (X.X g/s)` eller `Status: Golden Zone`), ingen uformelle emojis, og rent `flowbean.app` domæne.
-- **Etape 6: Visuel Perfektion af Share Shot Card (`ShotShareModal.tsx`):**
-  - **Officielt Flowbean Logo:** Erstattet den primitive håndtegnede cirkel med det officielle `flowbean-logo.png` (bønne med gyldne crema-bølger) i en skarp 64x64px badge med keramikkant.
-  - **Opgraderet Subtitle:** Rettet 'ESPRESSO LAB TELEMETRY' til det slagkraftige barista-brand 'DIGITAL BARISTA EXTRACTION FLOW'.
-  - **Graf Forklaring & Sprog-ensretning:** Tilføjet en ren signaturforklaring (⚪ Yield, ╌ Flow, 🟨 Target Zone) i toppen af kurven; rettet 'MÅL' til '🎯 TARGET: 1.2–1.8 g/s' og 'Gns. Flow' til 'AVG FLOW' for international standard.
-  - **Målrettet Feature-Showcase & QR-Kode:** Fjernet unødig spildtekst og indført en integreret scanning-badge med offline 25x25 QR-kode (`https://flowbean.app`) samt fremhævning af kerneteknologier: `Scale OCR Cam`, `Flow Dynamics` og `Beandex Vault`.
+- **Etape 6: Visuel Perfektion af Share Shot Card & Logbog (`ShotShareModal.tsx` & `Logbook.tsx`):**
+  - **Share Card Reklame & Typografi Uden Emojis:**
+    - Fjernet alle emojier fra canvas for at undgå sort-hvide firkanter på Android.
+    - Stor, skarp og professionel reklame: `PERFECT YOUR ESPRESSO EXTRACTION` (24px fed), `Scan beans with Beandex & turn any scale smart with Flowbean.` (17px), og `GET THE APP AT FLOWBEAN.APP` (22px).
+    - Opgraderet status-pill og header med større skrift for maksimal læsbarhed på mobiler og sociale medier.
+    - Ren vektor-legend på grafen (hvid fast streg, terracotta stiplet streg, gylden mål-swatch) uden emojier.
+  - **Logbogs-opstramning (`Logbook.tsx`):**
+    - **Fjernet dobbeltlinjen:** Fjernet den redundante ydre `border` omkring `FlowChart`, så kurven står i én ren ramme.
+    - **Fix af tekst-overflow:** `whitespace-nowrap` fjernet i `TASTE / FLOW` til fordel for `truncate`, så lange smagsnoter (`Bitter / Astringent`) holdes pænt inden for kortkanten.
+    - **Fix af sekund-afskæring:** `TIME & FLOW` omlagt til `flex justify-between` layout (`Pre 9.3s` og `Flow 31.8s`), så tider aldrig afskæres med `...`.
 - **Lokal Verifikation & Android Studio Synkronisering:**
-  - `npm run build` testet og bekræftet 100% fejlfri (0 fejl, 492ms).
+  - `npm run build` testet og bekræftet 100% fejlfri (0 fejl, 463ms).
   - `npm run mobile:sync` synkroniseret web assets til Android og iOS.
   - APK-bygning med gradlew gennemført på 5 sekunder, installeret og startet via ADB på OnePlus enhed.
 

@@ -362,9 +362,9 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                               {shot.totalTimeSeconds}s @ {shot.averageFlowGps}g/s
                             </div>
                             {shot.preInfusionSeconds !== undefined && (
-                              <div className="text-[10px] text-[#7A6E65] mt-0.5 truncate">
-                                {t('logbook.pre_abbr')}: {shot.preInfusionSeconds}s •{' '}
-                                {t('logbook.flow_abbr')}: {shot.flowTimeSeconds}s
+                              <div className="text-[9.5px] text-[#7A6E65] mt-0.5 flex items-center justify-between">
+                                <span>Pre {shot.preInfusionSeconds}s</span>
+                                <span>Flow {shot.flowTimeSeconds}s</span>
                               </div>
                             )}
                           </div>
@@ -384,31 +384,33 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                             )}
                           </div>
 
-                          <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">
+                          <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70 overflow-hidden">
                             <div className="text-[9px] text-[#7A6E65] uppercase font-bold tracking-wider">
                               {t('logbook.taste_flow')}
                             </div>
-                            <div className="flex items-center gap-1 font-semibold capitalize text-[#2C2018] mt-0.5">
+                            <div className="flex items-center gap-1 font-semibold capitalize text-[#2C2018] mt-0.5 min-w-0">
                               {shot.channelingDetected ? (
-                                <span className="text-[#B85B48] flex items-center gap-1 text-[11px] font-bold whitespace-nowrap">
+                                <span className="text-[#B85B48] flex items-center gap-1 text-[10.5px] font-bold truncate">
                                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />{' '}
-                                  {t('logbook.channeling')}
+                                  <span className="truncate">{t('logbook.channeling')}</span>
                                   {shot.channeling?.flowSpikeGps
                                     ? ` (${shot.channeling.flowSpikeGps} g/s)`
                                     : ''}
                                 </span>
                               ) : (
-                                <span className="text-[#72806B] flex items-center gap-1 text-[11px] font-bold whitespace-nowrap">
+                                <span className="text-[#72806B] flex items-center gap-1 text-[10.5px] font-bold min-w-0">
                                   <CheckCircle className="w-3.5 h-3.5 shrink-0" />{' '}
-                                  {shot.tasteRating
-                                    ? shot.tasteRating === 'sour'
-                                      ? t('taste.sour_label')
-                                      : shot.tasteRating === 'bitter'
-                                      ? t('taste.bitter_label')
-                                      : shot.tasteRating === 'watery'
-                                      ? t('taste.watery_label')
-                                      : t('taste.balanced_label')
-                                    : t('logbook.balanced')}
+                                  <span className="truncate">
+                                    {shot.tasteRating
+                                      ? shot.tasteRating === 'sour'
+                                        ? t('taste.sour_label')
+                                        : shot.tasteRating === 'bitter'
+                                        ? t('taste.bitter_label')
+                                        : shot.tasteRating === 'watery'
+                                        ? t('taste.watery_label')
+                                        : t('taste.balanced_label')
+                                      : t('logbook.balanced')}
+                                  </span>
                                 </span>
                               )}
                             </div>
@@ -465,11 +467,11 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                         </span>
                       </div>
 
-                      {/* Expandable Flow Curve Container */}
+                      {/* Expandable Flow Curve Container (Seamless, no redundant double border) */}
                       {isExpanded && (
                         <div className="pt-2 animate-in fade-in duration-200">
                           {shot.dataPoints && shot.dataPoints.length > 0 ? (
-                            <div className="rounded-xl border border-[#E8DFD5] overflow-hidden">
+                            <div className="rounded-2xl overflow-hidden">
                               <FlowChart
                                 points={shot.dataPoints}
                                 targetYield={shot.targetYieldGrams || shot.actualYieldGrams}

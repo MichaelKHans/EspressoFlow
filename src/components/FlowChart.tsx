@@ -233,7 +233,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
               );
             })}
           {/* Right Y-axis label */}
-          <text x={width - padRight + 6} y={padTop - 8} textAnchor="start" fill="#C26D52" fontSize="8" fontWeight="bold">
+          <text x={width - 4} y={padTop - 8} textAnchor="end" fill="#C26D52" fontSize="8" fontWeight="bold">
             FLOW g/s
           </text>
 
