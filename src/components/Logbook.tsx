@@ -14,12 +14,15 @@ import {
   ChevronUp,
   Clock,
   Share2,
+  Sparkles,
+  Sliders,
 } from 'lucide-react';
 import { DRINK_RECIPES } from '../data/drinkRecipes';
 import { ArchitecturalCup } from './ArchitecturalCup';
 import { FlowChart } from './FlowChart';
 import { useTranslation } from '../i18n';
 import { ShotShareModal } from './ShotShareModal';
+import { generateDialInAdvice } from '../lib/espressoMath';
 
 interface LogbookProps {
   shots: ShotRecord[];
@@ -252,6 +255,32 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                     shot.tasteRating === 'sour' || shot.tasteRating === 'watery';
                   const isBitter = shot.tasteRating === 'bitter';
 
+                  const advice = generateDialInAdvice(
+                    shot.totalTimeSeconds,
+                    shot.doseGrams,
+                    shot.actualYieldGrams,
+                    shot.channelingDetected || shot.channeling,
+                    shot.tasteRating,
+                    shot.preInfusionSeconds,
+                    shot.roastLevel,
+                    shot.grinderName,
+                    shot.grindSetting
+                  );
+
+                  const isSweetSpot = advice.grindAdvice === 'keep' && !shot.channelingDetected;
+                  const isFiner = advice.grindAdvice === 'finer';
+                  const isCoarser = advice.grindAdvice === 'coarser';
+
+                  const currentGrindNum = parseFloat(shot.grindSetting);
+                  let nextSettingStr: string | null = null;
+                  if (!isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
+                    if (isFiner) {
+                      nextSettingStr = String(Math.max(0, currentGrindNum - advice.grindDeltaSteps));
+                    } else if (isCoarser) {
+                      nextSettingStr = String(currentGrindNum + advice.grindDeltaSteps);
+                    }
+                  }
+
                   const statusBorder = isChanneling
                     ? 'border-l-4 border-l-red-500 hover:border-l-red-600'
                     : isSourOrWatery
@@ -428,6 +457,59 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                             </span>
                           </div>
                         )}
+
+                        {/* Barista Dial-In Recommendation Banner */}
+                        <div
+                          className={`p-2.5 rounded-xl border flex items-center justify-between gap-2.5 text-xs font-mono transition-all ${
+                            isSweetSpot
+                              ? 'bg-[#72806B]/12 border-[#72806B]/30 text-[#43523E]'
+                              : shot.channelingDetected
+                              ? 'bg-[#C26D52]/12 border-[#C26D52]/30 text-[#8C3A24]'
+                              : isFiner
+                              ? 'bg-[#D4A373]/20 border-[#D4A373]/40 text-[#7A4B1A]'
+                              : 'bg-[#C26D52]/12 border-[#C26D52]/30 text-[#8C3A24]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {isSweetSpot ? (
+                              <div className="w-6 h-6 rounded-full bg-[#72806B]/20 flex items-center justify-center shrink-0 text-[#72806B]">
+                                <Sparkles className="w-3.5 h-3.5" />
+                              </div>
+                            ) : shot.channelingDetected ? (
+                              <div className="w-6 h-6 rounded-full bg-[#C26D52]/20 flex items-center justify-center shrink-0 text-[#C26D52]">
+                                <AlertCircle className="w-3.5 h-3.5" />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-[#C26D52]/20 flex items-center justify-center shrink-0 text-[#C26D52]">
+                                <Sliders className="w-3.5 h-3.5" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <div className="text-[10px] uppercase font-bold tracking-wider leading-tight flex items-center gap-1.5">
+                                <span>
+                                  {isSweetSpot
+                                    ? 'SWEET SPOT (PERFEKT)'
+                                    : shot.channelingDetected
+                                    ? 'KANALISERING OPDAGET'
+                                    : isFiner
+                                    ? 'FOR HURTIGT FLOW (UNDER-EXTRACTED)'
+                                    : 'FOR LANGSOMT FLOW (OVER-EXTRACTED)'}
+                                </span>
+                              </div>
+                              <div className="text-xs font-bold truncate mt-0.5 text-[#2C2018]">
+                                {isSweetSpot
+                                  ? `Behold kværn på ${shot.grindSetting} (optimal ekstraktion)`
+                                  : isFiner && nextSettingStr
+                                  ? `Drej kværn FINERE: ${shot.grindSetting} ➔ ${nextSettingStr}`
+                                  : isCoarser && nextSettingStr
+                                  ? `Drej kværn GROVERE: ${shot.grindSetting} ➔ ${nextSettingStr}`
+                                  : shot.channelingDetected
+                                  ? 'Behold kværn • Forbedr puck prep (WDT & jævnt stamp)'
+                                  : advice.grinderSpecificAdvice || advice.summary}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Expandable Flow Curve Action Button & Share Card */}
@@ -469,7 +551,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
 
                       {/* Expandable Flow Curve Container (Seamless, no redundant double border) */}
                       {isExpanded && (
-                        <div className="pt-2 animate-in fade-in duration-200">
+                        <div className="pt-2 animate-in fade-in duration-200 space-y-2">
                           {shot.dataPoints && shot.dataPoints.length > 0 ? (
                             <div className="rounded-2xl overflow-hidden">
                               <FlowChart
@@ -487,6 +569,52 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                               {t('logbook.no_curve_data')}
                             </div>
                           )}
+
+                          {/* Full Barista Diagnosis Details in Expanded View */}
+                          <div className="mt-3 p-3 rounded-2xl bg-[#FAF7F2] border border-[#DECFC0] space-y-2 text-xs font-mono">
+                            <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2">
+                              <div className="flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6E65]">
+                                  BARISTA TECH FORBEDRINGSFORSLAG
+                                </span>
+                              </div>
+                              <span
+                                className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                                  isSweetSpot
+                                    ? 'bg-[#72806B]/15 text-[#43523E] border border-[#72806B]/30'
+                                    : 'bg-[#C26D52]/15 text-[#8C3A24] border border-[#C26D52]/30'
+                                }`}
+                              >
+                                {advice.summary}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-[#2C2018]/90 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-[#E8DFD5]">
+                              {advice.rationale}
+                            </p>
+
+                            {advice.grinderSpecificAdvice && (
+                              <div className="text-[11px] font-bold text-[#C26D52] bg-white/80 p-2.5 rounded-xl border border-[#E8DFD5] flex items-center gap-2">
+                                <Sliders className="w-3.5 h-3.5 shrink-0" />
+                                <span>{advice.grinderSpecificAdvice}</span>
+                              </div>
+                            )}
+
+                            {advice.puckAdvice && (
+                              <div className="text-[11px] text-[#7A6E65] bg-white/80 p-2.5 rounded-xl border border-[#E8DFD5]">
+                                <strong className="text-[#2C2018]">Puck Prep: </strong>
+                                {advice.puckAdvice}
+                              </div>
+                            )}
+
+                            {advice.preInfusionAdvice && (
+                              <div className="text-[11px] text-[#7A6E65] bg-white/80 p-2.5 rounded-xl border border-[#E8DFD5]">
+                                <strong className="text-[#2C2018]">Pre-Infusion: </strong>
+                                {advice.preInfusionAdvice}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

@@ -116,11 +116,11 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
             <stop offset="100%" stopColor="#4A2511" />
           </linearGradient>
 
-          {/* 2. Filterkaffe Gradient: Radiant, translucent red-golden amber (#521E0C to #8C3B1E) */}
+          {/* 2. Filterkaffe Gradient: Radiant, translucent red-golden amber (#6E2B12 to #D47738) */}
           <linearGradient id={`${clipId}-grad-filter`} x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor="#521E0C" />
-            <stop offset="70%" stopColor="#7A3018" />
-            <stop offset="100%" stopColor="#8C3B1E" />
+            <stop offset="0%" stopColor="#6E2B12" />
+            <stop offset="60%" stopColor="#A84820" />
+            <stop offset="100%" stopColor="#D47738" />
           </linearGradient>
 
           {/* 3. Americano Steamed Water Gradient: Warm crystal amber (#B88B68 to #DFD3C3) */}
@@ -149,11 +149,12 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
             <stop offset="100%" stopColor="#7A4D27" />
           </linearGradient>
 
-          {/* 7. Steel Metal Gradient (French Press) */}
+          {/* 7. Steel Metal Gradient (French Press - Gleaming Polished Chrome) */}
           <linearGradient id={`${clipId}-grad-steel`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#9C958D" />
-            <stop offset="50%" stopColor="#D8D2C9" />
-            <stop offset="100%" stopColor="#7E766D" />
+            <stop offset="0%" stopColor="#CBD5E1" />
+            <stop offset="35%" stopColor="#FFFFFF" />
+            <stop offset="70%" stopColor="#E2E8F0" />
+            <stop offset="100%" stopColor="#94A3B8" />
           </linearGradient>
 
           {/* Clip path for Standard Ceramic Cup */}
@@ -291,7 +292,7 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
             {drink.id === 'cappuccino' && (
               <path
                 d="M 22 16 Q 60 8 98 16 Z"
-                fill="url(#${clipId}-grad-milk)"
+                fill={`url(#${clipId}-grad-milk)`}
                 stroke="#2C2018"
                 strokeWidth="1.2"
               />
@@ -896,12 +897,12 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
         {/* --- CASE 9: FRENCH PRESS (Cafetière with Spout, Steel Cage, Plunger & Mesh Filter) --- */}
         {(glassStyle === 'french-press' || glassStyle === 'press') && (
           <g>
-            {/* Plunger Knob & Steel Rod */}
-            <circle cx="60" cy="8" r="4.5" fill="#2C2018" />
-            <line x1="60" y1="12" x2="60" y2="28" stroke="url(#${clipId}-grad-steel)" strokeWidth="3" />
+            {/* Plunger Knob & Steel Rod (Gleaming Chrome) */}
+            <circle cx="60" cy="8" r="4.5" fill={`url(#${clipId}-grad-steel)`} stroke="#FFFFFF" strokeWidth="1" />
+            <line x1="60" y1="12" x2="60" y2="28" stroke={`url(#${clipId}-grad-steel)`} strokeWidth="3" />
 
             {/* Domed Steel Lid */}
-            <path d="M 32 26 Q 60 20 88 26 Z" fill="url(#${clipId}-grad-steel)" stroke="#2C2018" strokeWidth="2" />
+            <path d="M 32 26 Q 60 20 88 26 Z" fill={`url(#${clipId}-grad-steel)`} stroke="#FFFFFF" strokeWidth="1" />
 
             {/* Glass Beaker Body */}
             <rect x="34" y="28" width="52" height="54" fill="#FFFDF9" stroke={porcelainOutline} strokeWidth="1.5" rx="1" />
@@ -921,29 +922,47 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
 
               {/* Transverse Metal Mesh Filter Coil */}
               <line x1="34" y1="36" x2="86" y2="36" stroke="#2C2018" strokeWidth="2.5" />
-              <line x1="34" y1="38" x2="86" y2="38" stroke="url(#${clipId}-grad-steel)" strokeWidth="1.5" strokeDasharray="3 1.5" />
+              <line x1="34" y1="38" x2="86" y2="38" stroke={`url(#${clipId}-grad-steel)`} strokeWidth="2" strokeDasharray="3 1.5" />
+
+              {/* Vertical Glass Specular Highlight Line on Left */}
+              <line
+                x1="38"
+                y1="30"
+                x2="38"
+                y2="80"
+                stroke="rgba(255, 255, 255, 0.75)"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
             </g>
 
-            {/* Curved Steel Handle */}
+            {/* Curved Steel Handle with High-Contrast Outer Shell */}
             <path
-              d="M 86 36 C 112 36, 112 72, 86 72"
+              d="M 86 36 C 114 36, 114 74, 86 74"
               fill="none"
-              stroke="#2C2018"
-              strokeWidth="5"
+              stroke={porcelainOutline}
+              strokeWidth="7"
               strokeLinecap="round"
             />
             <path
-              d="M 86 36 C 112 36, 112 72, 86 72"
+              d="M 86 36 C 114 36, 114 74, 86 74"
               fill="none"
-              stroke="url(#${clipId}-grad-steel)"
+              stroke="#2C2018"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 86 36 C 114 36, 114 74, 86 74"
+              fill="none"
+              stroke={`url(#${clipId}-grad-steel)`}
               strokeWidth="2.5"
               strokeLinecap="round"
             />
 
             {/* Steel Cage Bands (Top, Vertical & Bottom) */}
-            <line x1="34" y1="30" x2="86" y2="30" stroke="url(#${clipId}-grad-steel)" strokeWidth="2" />
-            <line x1="36" y1="30" x2="36" y2="82" stroke="url(#${clipId}-grad-steel)" strokeWidth="2" />
-            <line x1="84" y1="30" x2="84" y2="82" stroke="url(#${clipId}-grad-steel)" strokeWidth="2" />
+            <line x1="34" y1="30" x2="86" y2="30" stroke={`url(#${clipId}-grad-steel)`} strokeWidth="2.5" />
+            <line x1="36" y1="30" x2="36" y2="82" stroke={`url(#${clipId}-grad-steel)`} strokeWidth="2.5" />
+            <line x1="84" y1="30" x2="84" y2="82" stroke={`url(#${clipId}-grad-steel)`} strokeWidth="2.5" />
 
             {/* Outer Beaker Stroke & Spout */}
             <rect
@@ -957,12 +976,12 @@ export const ArchitecturalCup: React.FC<ArchitecturalCupProps> = ({
               rx="1"
             />
             {/* Small Pour Spout */}
-            <path d="M 34 28 L 29 25 L 32 31 Z" fill="#2C2018" />
+            <path d="M 34 28 L 29 25 L 32 31 Z" fill={`url(#${clipId}-grad-steel)`} stroke="#2C2018" strokeWidth="1" />
 
-            {/* Steel Stand Base with Little Feet */}
-            <path d="M 30 82 L 90 82 L 88 88 L 32 88 Z" fill="#2C2018" />
-            <circle cx="36" cy="88" r="2" fill="#2C2018" />
-            <circle cx="84" cy="88" r="2" fill="#2C2018" />
+            {/* Steel Stand Base with Chrome Feet */}
+            <path d="M 30 82 L 90 82 L 88 88 L 32 88 Z" fill={`url(#${clipId}-grad-steel)`} stroke="#2C2018" strokeWidth="1" />
+            <circle cx="36" cy="88" r="2.5" fill={`url(#${clipId}-grad-steel)`} stroke="#2C2018" strokeWidth="1" />
+            <circle cx="84" cy="88" r="2.5" fill={`url(#${clipId}-grad-steel)`} stroke="#2C2018" strokeWidth="1" />
           </g>
         )}
 

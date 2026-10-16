@@ -14,16 +14,14 @@
 ### 2026-10-16 -- Visuel Overhaling af Kopper/Glas, Deck, Logbog & Share Card (v1.12.0)
 - **Arkitektoniske Kopper & Glas (`ArchitecturalCup.tsx`):** Fotorealistiske SVG gradienter for espresso, crema, mikroskum og vand. Porcelænskant med skygge, barista-glas uden hank med tyk krystalbund (Cortado, Piccolo, Americano), isterninger og bobler til kolde drikke, samt skulpturelle silhuetter for de 6 pour over metoder (Chemex, V60, Kalita, AeroPress, French Press).
 - **Digital Barista Quick Deck (`DrinkSelector.tsx`):** Vertikalt flise-layout med forstørrede 104x75px kopper, minimeret død kantplads, fulde ubeskårne drikketitler, og recept-swatches.
-- **Logbog & Kurverammen (`Logbook.tsx` & `FlowChart.tsx`):**
-  - Fjernet den grimme dobbeltlinje omkring ekstraktionskurven i logbogen.
-  - Fikset tekst-overflow i `TASTE / FLOW` (`truncate`), så f.eks. "Bitter / Astringent" holdes inden for kortet.
-  - Fikset afskæring i `TIME & FLOW` (`Pre 9.3s` og `Flow 31.8s` i ren to-sidet flex), så sekunder aldrig trunkeres med `...`.
-  - Højre akse i `FlowChart.tsx` (`FLOW g/s`) højrestillet med `textAnchor="end"` ved `width - 4`, hvilket forhindrer afskæring uden at stjæle grafbredde eller tilføje unødig tom luft på små skærme.
-- **Det Ultimative Shot Share Card (`ShotShareModal.tsx`):**
-  - Emojis fuldstændig fjernet fra canvas for at undgå sort-hvide firkanter på Android.
-  - Større, ultra-læsbar typografi for header, badges og telemetry.
-  - Officielt Flowbean-logo i keramikkant og skarp QR-kode til `https://flowbean.app`.
-  - Ren og professionel annonce: `DIAL IN YOUR PERFECT EXTRACTION`, `Scan beans with Beandex & turn any scale smart with Flowbean.` og `GET THE APP AT FLOWBEAN.APP`.
+- **Barista Dial-In Forbedringsforslag & Rådgivning (`Logbook.tsx` & `ShotShareModal.tsx`):**
+  - **Logbog:** Hvert shot-kort har nu en synlig Dial-In Banner med diagnose og kværntip (`Sweet Spot / Behold 27.5`, `Drej Finere ➔ 25.5`, `Drej Grovere ➔ 29.5`, eller `Kanalisering / Puck Prep`). I udfoldet tilstand vises fuld begrundelse, kværntip, puck prep- og pre-infusion-råd.
+  - **Delingskort:** Status-pillen i bunden og telemetribjælken under kurven viser den konkrete diagnose (`SWEET SPOT • KEEP GRIND @ 27.5` osv.), og målet på kurven er renset for emojier.
+- **Lysende Høj Kontrast for Mørke Drikke & Fransk Presse (`ArchitecturalCup.tsx` & `DrinkSelector.tsx`):**
+  - Rettet JSX-syntaksfejl for `grad-steel` (skinnende højglans krom for stempel, låg, stang og filter).
+  - Krystalklart glas med hvide lysreflekser og varm ravgylden filterkaffefarve.
+  - Hurtigdæk-fliserne har fået et ambient radialt varmt spotlight bag koppen, der fremhæver silhuetten med høj kontrast mod den mørke baggrund.
+  - Renset parenteser fra dæk-flisetitler (`V60`, `French Press`), så navne aldrig trunkeres med `...`.
 
 ### 2026-10-15 -- Deep Computer Vision Overhaul (v1.10.8)
 - **Zero-GC Static Memory Pool (`OCRScratchPool` i `ocr7segment.ts`):** Pre-allokerer `gray`, `binary`, `integral`, `histogram`, `rowCounts`, `colCounts`, og `morphScratchRow`. Sænker memory churn fra ~42 MB/s til **0 Bytes/frame**, hvilket eliminerer V8/WebKit GC-pauser.

@@ -36,8 +36,14 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
     - Ren vektor-legend på grafen (hvid fast streg, terracotta stiplet streg, gylden mål-swatch) uden emojier.
   - **Logbogs-opstramning (`Logbook.tsx`):**
     - **Fjernet dobbeltlinjen:** Elimineret den redundante ydre `border` omkring `FlowChart`, så ekstraktionskurven står i én ren, harmonisk ramme.
-    - **Fix af tekst-overflow:** I `TASTE / FLOW` er `whitespace-nowrap` fjernet og erstattet med kontrolleret `truncate`, så lange smagsnoter (`Bitter / Astringent`) aldrig stikker ud over kortkanten.
-    - **Fix af sekund-afskæring:** `TIME & FLOW` omlagt til et fleksibelt `flex justify-between` layout (`Pre 9.3s` og `Flow 31.8s`), så tider aldrig afskæres med `...`.
+  - **Etape 7: Barista Dial-In Rådgivning i Logbog/Deling & Høj Kontrast på Quick Deck (`Logbook.tsx`, `ShotShareModal.tsx`, `ArchitecturalCup.tsx`, `DrinkSelector.tsx`):**
+    - **Synlig Barista Dial-In Diagnose i Logbog:** Hvert kort i logbogen viser nu en fremtrædende status-banner (Sweet Spot / Drej Finere / Drej Grovere / Kanalisering) med konkret kværnjustering (f.eks. `27.5 ➔ 29.5`). I udfoldet visning præsenteres den fulde begrundelse, kværntip, puck prep- og pre-infusion-råd.
+    - **Barista Dial-In på Delingskortet:** Status-pillen i bunden og telemetribjælken under grafen viser nu den præcise diagnose (`SWEET SPOT • KEEP GRIND @ 27.5` eller `SLOW FLOW • GRIND COARSER ➔ 29.5`), og målet på kurven er renset for emojier.
+    - **Lysende Høj Kontrast for Mørke Drikke & Fransk Presse:**
+      - Rettet JSX-syntaksfejl for `grad-steel`, så stålet på stempelkanden opgraderes til spejlblankt, strålende rustfrit stål/krom (`#FFFFFF` til `#94A3B8`).
+      - Tilføjet vertikal hvid lysreflekslinje på glaskolben og varm ravgylden farvetranslucens i filterkaffe.
+      - Hurtigdæk-fliserne (`DrinkSelector.tsx`) har fået et ambient radialt varmt spotlight bag koppen, der fremhæver silhuetten med høj kontrast mod den mørke baggrund.
+      - Fjernet parenteser fra flise-titler (`V60`, `French Press`), så navne aldrig afskæres med `...`.
 
 
 ## [1.11.1] - 2026-10-16

@@ -388,7 +388,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
             {displayDeckDrinks.map((drink) => {
               const isSelected = drink.id === selectedDrink.id;
-              const shortName = drink.name.split('/')[0].trim();
+              // Clean out parenthesis clutter for deck tiles (e.g. 'V60 (Standard 1-Cup)' -> 'V60', 'French Press (Cafetière)' -> 'French Press')
+              const shortName = drink.name.replace(/\s*\([^)]*\)/g, '').split('/')[0].trim();
               const ratioDisplay = `1:${drink.targetRatio}`;
               const volumeDisplay = drink.cupVolumeMl ? `${drink.cupVolumeMl}ml` : `${Math.round(drink.targetYieldGrams)}g`;
 
@@ -400,17 +401,27 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   className={`flex flex-col items-center text-center p-1.5 pt-2 pb-2.5 sm:p-2.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
                     isSelected
                       ? 'bg-[#B85D43] border-[#E08A70] text-[#FFFDF9] shadow-lg scale-[1.01]'
-                      : 'bg-[#241A14]/95 border-[#3D2D22] text-[#FAF7F2] hover:border-[#7A5C48] hover:bg-[#2C2018]'
+                      : 'bg-gradient-to-b from-[#34241B] to-[#20150F] border-[#523A2C] text-[#FAF7F2] hover:border-[#8C644E] hover:from-[#3D2C20]'
                   }`}
                 >
+                  {/* Ambient luminous spotlight behind cup for high contrast */}
+                  <div
+                    className="absolute inset-0 pointer-events-none transition-opacity"
+                    style={{
+                      background: isSelected
+                        ? 'radial-gradient(circle at 50% 38%, rgba(255,255,255,0.22) 0%, transparent 68%)'
+                        : 'radial-gradient(circle at 50% 38%, rgba(212,163,115,0.32) 0%, transparent 68%)',
+                    }}
+                  />
+
                   {/* Generous Hero Cup Showcase */}
-                  <div className="w-full h-20 flex items-center justify-center transition-transform group-hover:scale-105">
+                  <div className="w-full h-20 flex items-center justify-center transition-transform group-hover:scale-105 relative z-10">
                     <ArchitecturalCup drink={drink} size="md" variant="dark" />
                   </div>
 
                   {/* Drink Name - Full Width Without Ugly Truncation */}
                   <h5
-                    className="w-full font-serif text-[13px] sm:text-[14px] font-bold leading-tight truncate px-1 mt-1"
+                    className="w-full font-serif text-[13px] sm:text-[14px] font-bold leading-tight truncate px-1 mt-1 relative z-10"
                     title={drink.name}
                   >
                     {shortName}
@@ -418,8 +429,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
                   {/* Subtitle / Volume & Ratio */}
                   <p
-                    className={`w-full font-sans text-[10.5px] sm:text-[11px] mt-0.5 font-medium ${
-                      isSelected ? 'text-[#FAF7F2]/90' : 'text-[#A39589]'
+                    className={`w-full font-sans text-[10.5px] sm:text-[11px] mt-0.5 font-medium relative z-10 ${
+                      isSelected ? 'text-[#FAF7F2]/90' : 'text-[#D4A373]'
                     }`}
                   >
                     {volumeDisplay} • {ratioDisplay}

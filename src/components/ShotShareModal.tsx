@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import type { ShotRecord } from '../types/espresso';
 import { X, Share2, Download, Copy, Check, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from '../i18n';
-import { THE_GOLDEN_ZONE } from '../lib/espressoMath';
+import { THE_GOLDEN_ZONE, generateDialInAdvice } from '../lib/espressoMath';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -427,8 +427,8 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
       ctx.roundRect(pLeft + 12, gzBadgeTop + 4, 175, 22, 4);
       ctx.fill();
       ctx.fillStyle = '#8A5A2B';
-      ctx.font = 'bold 12px "Courier Prime", monospace';
-      ctx.fillText('🎯 TARGET: 1.2–1.8 g/s', pLeft + 18, gzBadgeTop + 19);
+      ctx.font = 'bold 13px "Courier Prime", monospace';
+      ctx.fillText('TARGET: 1.2–1.8 g/s', pLeft + 18, gzBadgeTop + 19);
 
       // Y-axis grid (Weight left)
       ctx.fillStyle = '#A39589';
@@ -473,6 +473,35 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
       ? +(shot.actualYieldGrams / activeFlowSec).toFixed(2)
       : (shot.averageFlowGps || 0);
 
+    // Barista Tech Dial-In Derivation for Share Card
+    const advice = generateDialInAdvice(
+      shot.totalTimeSeconds,
+      shot.doseGrams,
+      shot.actualYieldGrams,
+      shot.channelingDetected || shot.channeling,
+      shot.tasteRating,
+      shot.preInfusionSeconds,
+      shot.roastLevel,
+      shot.grinderName,
+      shot.grindSetting
+    );
+
+    const isChanneling = shot.channelingDetected || (shot.channeling && shot.channeling.detected);
+    const spikeVal = shot.channeling?.flowSpikeGps || 0;
+    const isSweetSpot = advice.grindAdvice === 'keep' && !isChanneling;
+    const isFiner = advice.grindAdvice === 'finer';
+    const isCoarser = advice.grindAdvice === 'coarser';
+
+    const currentGrindNum = parseFloat(shot.grindSetting);
+    let nextSettingStr: string | null = null;
+    if (!isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
+      if (isFiner) {
+        nextSettingStr = String(Math.max(0, currentGrindNum - advice.grindDeltaSteps));
+      } else if (isCoarser) {
+        nextSettingStr = String(currentGrindNum + advice.grindDeltaSteps);
+      }
+    }
+
     ctx.fillStyle = '#FAF7F2';
     ctx.font = 'bold 20px "Courier Prime", monospace';
     const avgFlowText = `AVG FLOW: ${effectiveAvgFlow.toFixed(2)} g/s`;
@@ -480,11 +509,21 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
 
     ctx.fillStyle = '#D4A373';
     const profileText = `PROFILE: ${shot.flowProfile ? shot.flowProfile.toUpperCase() : 'STEADY'}`;
-    ctx.fillText(profileText, 450, statsY + 46);
+    ctx.fillText(profileText, 390, statsY + 46);
 
-    ctx.fillStyle = '#72806B';
-    const stabText = `STABILITY: ${shot.flowStabilityPercent || 92}%`;
-    ctx.fillText(stabText, 780, statsY + 46);
+    // Dynamic Dial-In Verdict in Stats Bar
+    const dialInBadgeText = isSweetSpot
+      ? 'DIAL-IN: SWEET SPOT'
+      : isChanneling
+      ? 'DIAL-IN: CHECK PREP'
+      : isFiner && nextSettingStr
+      ? `DIAL-IN: FINER (${shot.grindSetting}➔${nextSettingStr})`
+      : isCoarser && nextSettingStr
+      ? `DIAL-IN: COARSER (${shot.grindSetting}➔${nextSettingStr})`
+      : `DIAL-IN: ${advice.grindAdvice.toUpperCase()}`;
+
+    ctx.fillStyle = isSweetSpot ? '#A3B899' : '#E08B73';
+    ctx.fillText(dialInBadgeText, 660, statsY + 46);
 
     // 7. Dynamic Status & Promotion Banner with QR Code
     const footY = 1105;
@@ -494,34 +533,37 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.roundRect(60, footY, W - 120, footH, 16);
     ctx.fill();
 
-    const isChanneling = shot.channelingDetected || (shot.channeling && shot.channeling.detected);
-    const spikeVal = shot.channeling?.flowSpikeGps || 0;
-
-    // Status border color: Terracotta if channeling, Sage green if Golden Zone
-    ctx.strokeStyle = isChanneling ? '#C26D52' : '#72806B';
+    // Status border color: Terracotta if channeling/grind needed, Sage green if Sweet Spot
+    ctx.strokeStyle = isSweetSpot ? '#72806B' : '#C26D52';
     ctx.lineWidth = 2;
     ctx.stroke();
 
     // Status pill
-    ctx.fillStyle = isChanneling ? 'rgba(194, 109, 82, 0.18)' : 'rgba(114, 128, 107, 0.18)';
+    ctx.fillStyle = isSweetSpot ? 'rgba(114, 128, 107, 0.18)' : 'rgba(194, 109, 82, 0.18)';
     ctx.beginPath();
-    ctx.roundRect(85, footY + 18, 380, 40, 8);
+    ctx.roundRect(85, footY + 18, 500, 40, 8);
     ctx.fill();
-    ctx.strokeStyle = isChanneling ? '#C26D52' : '#72806B';
+    ctx.strokeStyle = isSweetSpot ? '#72806B' : '#C26D52';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    ctx.fillStyle = isChanneling ? '#E08B73' : '#A3B899';
-    ctx.font = 'bold 18px "Courier Prime", monospace';
-    const statusText = isChanneling
-      ? `STATUS: CHANNELING (${spikeVal > 0 ? spikeVal.toFixed(1) : '3.2'} g/s)`
-      : `STATUS: GOLDEN ZONE (1:${ratioDisplay} in ${shot.totalTimeSeconds.toFixed(0)}s)`;
+    ctx.fillStyle = isSweetSpot ? '#A3B899' : '#E08B73';
+    ctx.font = 'bold 17px "Courier Prime", monospace';
+    const statusText = isSweetSpot
+      ? `SWEET SPOT • KEEP GRIND @ ${shot.grindSetting}`
+      : isChanneling
+      ? `CHANNELING (${spikeVal > 0 ? spikeVal.toFixed(1) : '3.2'} g/s) • CHECK PREP`
+      : isFiner && nextSettingStr
+      ? `FAST FLOW (${shot.totalTimeSeconds.toFixed(0)}s) • GRIND FINER ➔ ${nextSettingStr}`
+      : isCoarser && nextSettingStr
+      ? `SLOW FLOW (${shot.totalTimeSeconds.toFixed(0)}s) • GRIND COARSER ➔ ${nextSettingStr}`
+      : `DIAL-IN: ${advice.summary.toUpperCase()}`;
     ctx.fillText(statusText, 98, footY + 44);
 
     // App Branding next to status pill
     ctx.fillStyle = '#FAF7F2';
     ctx.font = 'bold 22px "Courier Prime", monospace';
-    ctx.fillText('POWERED BY FLOWBEAN', 490, footY + 44);
+    ctx.fillText('POWERED BY FLOWBEAN', 610, footY + 44);
 
     // Clean, short & professional advertisement (ZERO emojis, high contrast, readable)
     ctx.fillStyle = '#FFFDF9';

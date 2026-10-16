@@ -663,8 +663,8 @@ export const DRINK_RECIPES: DrinkRecipe[] = [
       waterTempC: 94,
     },
     layers: [
-      { name: 'Aromatic Coffee Lipids', percentage: 10, color: '#D48C62', description: 'Unfiltered natural oils for heavy mouthfeel', volumeMl: 50 },
-      { name: 'Full Immersion Body', percentage: 90, color: '#2A1C14', description: 'Deep, comforting, full-bodied coffee', volumeMl: 450 },
+      { name: 'Aromatic Coffee Lipids', percentage: 12, color: '#E5A96A', description: 'Unfiltered natural golden oils for heavy mouthfeel', volumeMl: 60 },
+      { name: 'Full Immersion Body', percentage: 88, color: '#6E2B12', description: 'Deep, comforting, warm chestnut-amber brew', volumeMl: 440 },
     ],
     description: 'Traditional full immersion brewing. Metal mesh filter retains natural coffee oils and rich body.',
     dialInTip: 'Pour 500g at once. At 4:00, gently break the crust with a spoon, scoop floating foam, then press the plunger down smoothly.',
