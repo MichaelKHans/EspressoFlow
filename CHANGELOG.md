@@ -28,6 +28,10 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
   - `FlowChart.tsx`: Strikt SVG `<clipPath id="chart-area-clip">` og matematisk clamping (`Math.max(padTop, Math.min(padTop + chartH, y))`) forhindrer kurver i at overlappe akser eller overskrifter. Responsiv header (`flex-col sm:flex-row gap-1.5`) holder kurveoverskriften på én linje på smalle mobiler.
   - `Logbook.tsx`: Fjernet det store tomme venstre kvadrat (~80px sparet pr. kort), og indsat miniature `<ArchitecturalCup size="xs" />` direkte i shot-headeren ved siden af `#130` og kaffenavnet. Alle status-badges har fået `whitespace-nowrap`, og sprogkonsistens (`Share Card`, `telemetry_points`).
   - `ShotShareModal.tsx`: Det ultimative specialty delingskort med kop-silhuet ved siden af drikketitel, renset udstyrsstreng (fjerner interne parenteskoder), sandfærdig dynamisk bundstatus (`Status: Channeling (X.X g/s)` eller `Status: Golden Zone (1:2.0 in 28s)`), fjernelse af uformelle emojis til fordel for minimalistisk typografi og rent `flowbean.app` domæne.
+- **Etape 5: APK Slankekur & Lynhurtig Wireless ADB Deploy (Android Studio Fix):**
+  - Flyttet 3 ukomprimerede videooptagelser (1.31 GB MP4) ud af `public/` og over i `diagnostics/recordings/`.
+  - APK-filstørrelsen (`app-debug.apk`) faldt fra 1.32 GB til **5.49 MB** (99,6% reduktion).
+  - Elimineret problemet med uendelig "Launching on devices" i Android Studio, da overførslen over trådløs ADB nu tager under 4 sekunder mod tidligere timeouts.
 
 ## [1.11.1] - 2026-10-16
 ### Etape 46: Nativ Android/iOS Shot Card Deling via Capacitor Plugins & Canvas Graf-Afgrænsning

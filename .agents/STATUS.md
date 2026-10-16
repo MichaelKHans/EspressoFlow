@@ -1248,5 +1248,6 @@
   - `Logbook.tsx`: Fjernet det store tomme venstre kvadrat (~80px sparet pr. kort), miniature cup indsat direkte i headeren ved siden af `#130` og kaffenavnet, `whitespace-nowrap` på alle badges, i18n konsistens (`Share Card`, `telemetry_points`).
   - `ShotShareModal.tsx`: Det ultimative specialty share card med kop-silhuet ved siden af titel, renset udstyrsstreng (parenteser fjernet), sandfærdig dynamisk bundstatus (`Status: Channeling (X.X g/s)` eller `Status: Golden Zone`), ingen uformelle emojis, og rent `flowbean.app` domæne.
 - **Lokal Verifikation & Android Studio Synkronisering:**
-  - `npm run build` testet og bekræftet 100% fejlfri (0 fejl, 1.30s).
+  - `npm run build` testet og bekræftet 100% fejlfri (0 fejl, 554ms).
   - `npm run mobile:sync` synkroniseret web assets til Android og iOS.
+  - **Kritisk Fix af Android Studio Launch Hang:** Flyttet 3 store skærmoptagelser (1.31 GB MP4) ud af `public/` og ind i `diagnostics/recordings/`. APK-størrelsen blev reduceret med 99,6% fra 1.32 GB til kun 5.49 MB, hvilket fik Wireless ADB installationen og launch til at gennemføre lynhurtigt på under 4 sekunder.
