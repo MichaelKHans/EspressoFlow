@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Star,
@@ -47,6 +48,7 @@ export const FinishBeanModal: React.FC<FinishBeanModalProps> = ({
   }, [bean]);
 
   if (!isOpen || !bean) return null;
+  if (typeof document === 'undefined') return null;
 
   // Calculate days to finish if dateOpened is available
   const getDaysToFinish = (): number | null => {
@@ -86,9 +88,9 @@ export const FinishBeanModal: React.FC<FinishBeanModalProps> = ({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs select-none">
-      <div className="w-full max-w-md bg-[#FFFDF9] rounded-3xl border border-[#E8DFD5] shadow-2xl overflow-hidden animate-fadeIn flex flex-col max-h-[90vh]">
+  return createPortal(
+    <div className="fixed inset-0 z-[85] flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs select-none animate-fadeIn">
+      <div className="w-full max-w-md bg-[#FFFDF9] rounded-3xl border border-[#E8DFD5] shadow-2xl overflow-hidden animate-modal-pop-in flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-5 py-4 bg-linear-to-r from-[#2C2018] to-[#1C1410] text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -279,6 +281,7 @@ export const FinishBeanModal: React.FC<FinishBeanModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

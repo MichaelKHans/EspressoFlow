@@ -22,6 +22,10 @@
     - *Barista Deck:* Nærbillede af espressodråbe, kronesplash og koncentriske gyldne cremarillinger (`crema-ripple-macro.jpg`).
     - *Beandex & Paywall:* Glinsende friskristede kaffebønner med synlige sprækker, dyb chokolade og gylden risteglans (`coffee-beans-macro.jpg`).
   - Retningsbestemt blød gradient fra venstre beskytter læsbarheden af knapper og tekst, mens den krystalklare makrografik træder tydeligt og genkendeligt frem til højre.
+- **Beandex Matchmaker™ Mobil Scroll & Pinned Footer Fix (createPortal):**
+  - Flyttet `BeanMatchmakerModal` (og `FinishBeanModal`) ud af `BeandexView`s lokale stacking context via `createPortal(..., document.body)` med `z-[85]`.
+  - Løst fejlen hvor modalens handlingsknapper (`[ ← Tilbage ]` og `[ ✨ Find Kaffe Match ]`) blev dækket og blokeret af appens mobile bundnavigationsbar (`z-40`).
+  - Modalens højde er tilpasset mobilskærme (`max-h-[92dvh]`) med `shrink-0` på den fastforankrede bundlinje og `overflow-y-auto pb-8 overscroll-contain` på indholdet, så brugeren altid har 100% adgang til at scrolle ned og vælge alle frugtsyre- og prisniveauer.
 - **Brugervenlig Tom Bønnehylde:**
   - Bevaret hurtig `[ 📷 Scan Kaffepose ]` CTA direkte på den tomme hylde flankeret af `[ ⚡ Radar ]` og `[ + Tilføj ]`.
 - **Testet og Verificeret:**

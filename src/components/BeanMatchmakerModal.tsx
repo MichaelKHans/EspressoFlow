@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Sparkles,
   X,
@@ -68,6 +69,7 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
   }, [preferences]);
 
   if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
   const toggleFlavorTag = (tagId: string) => {
     setSelectedFlavorTags((prev) => {
@@ -120,25 +122,24 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
     setPriceTier('all');
   };
 
-  return (
+  return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-[65] flex items-start justify-center p-3 sm:p-4 bg-black/65 backdrop-blur-sm animate-fadeIn overflow-hidden"
+      className="fixed inset-0 z-[85] flex items-center justify-center p-2.5 sm:p-4 bg-black/75 backdrop-blur-sm animate-fadeIn"
       style={{
-        paddingTop: 'calc(var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) + 0.5rem)',
-        paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))',
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))',
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))',
       }}
     >
       <div
-        className="relative w-full max-w-lg bg-[#FAF7F2] border border-[#DECFC0] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-modal-pop-in"
-        style={{
-          maxHeight: 'calc(100dvh - var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem)) - max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem)))',
-        }}
+        className="relative w-full max-w-lg bg-[#FAF7F2] border border-[#DECFC0] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-modal-pop-in max-h-[92dvh]"
       >
         {/* Header */}
-        <div className="p-4 bg-[#FFFDF9] border-b border-[#E8DFD5] flex items-center justify-between">
+        <div className="p-4 bg-[#FFFDF9] border-b border-[#E8DFD5] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-linear-to-br from-[#C26D52] to-[#A85840] flex items-center justify-center text-white shadow-xs">
               <Sparkles className="w-4 h-4" />
@@ -168,7 +169,7 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
         </div>
 
         {/* Step Indicator Bar */}
-        <div className="px-5 py-2.5 bg-[#FAF7F2] border-b border-[#E8DFD5] flex items-center justify-between text-[11px] font-mono">
+        <div className="px-5 py-2.5 bg-[#FAF7F2] border-b border-[#E8DFD5] flex items-center justify-between text-[11px] font-mono shrink-0">
           <div className="flex items-center gap-1.5">
             <span
               className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
@@ -215,7 +216,7 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4 pb-8 overscroll-contain">
           {/* ============================================================== */}
           {/* STEP 1: DRINK & BREW METHOD */}
           {/* ============================================================== */}
@@ -537,7 +538,7 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
         </div>
 
         {/* Modal Navigation Footer */}
-        <div className="p-3.5 bg-[#FFFDF9] border-t border-[#E8DFD5] flex items-center justify-between gap-2">
+        <div className="p-3.5 sm:p-4 bg-[#FFFDF9] border-t border-[#E8DFD5] flex items-center justify-between gap-2 shrink-0">
           {step > 1 && step < 4 && (
             <button
               type="button"
@@ -591,6 +592,7 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
