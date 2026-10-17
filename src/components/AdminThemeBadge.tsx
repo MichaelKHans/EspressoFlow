@@ -7,7 +7,14 @@ import {
 } from '../lib/cardThemes';
 
 interface AdminThemeBadgeProps {
-  cardKey: 'barista_deck' | 'beandex_banner' | 'grinder_fleet' | 'espresso_machine' | 'filter_gear';
+  cardKey:
+    | 'barista_deck'
+    | 'barista_deck_espresso'
+    | 'barista_deck_pourover'
+    | 'beandex_banner'
+    | 'grinder_fleet'
+    | 'espresso_machine'
+    | 'filter_gear';
   currentTheme: CardThemePreset;
   isAdminEditMode: boolean;
   onThemeChanged: (next: CardThemePreset) => void;

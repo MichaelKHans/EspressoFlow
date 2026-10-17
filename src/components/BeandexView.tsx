@@ -501,10 +501,10 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             <img
               src={cardTheme.src}
               alt=""
-              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} opacity-65 scale-105 transition-all duration-300`}
+              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
             />
-            <div className="absolute inset-0 bg-linear-to-r from-[#140D09] via-[#140D09]/85 to-[#140D09]/30" />
-            <div className="absolute inset-0 bg-linear-to-t from-[#140D09]/85 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-r from-[#140D09]/85 via-[#140D09]/50 to-[#140D09]/20" />
+            <div className="absolute inset-0 bg-linear-to-t from-[#140D09]/75 via-transparent to-transparent" />
           </div>
         )}
 

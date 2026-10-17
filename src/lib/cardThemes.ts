@@ -23,6 +23,96 @@ const STORAGE_KEY_THEMES = 'flowbean_card_themes_v1';
 const STORAGE_KEY_ADMIN_EDIT = 'flowbean_admin_edit_mode_v1';
 
 export const CARD_THEME_REGISTRY: Record<string, CardThemePreset[]> = {
+  barista_deck_espresso: [
+    {
+      id: 'crema-ripple',
+      label: 'Crema Ripple Splash',
+      src: '/images/crema-ripple-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#C26D52',
+    },
+    {
+      id: 'portafilter-gauge',
+      label: 'Naked Portafilter & 9-Bar Manometer',
+      src: '/images/portafilter-gauge-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#D4A373',
+    },
+    {
+      id: 'portafilter-flow',
+      label: 'Naked Portafilter Flow',
+      src: '/images/portafilter-flow-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#D4A373',
+    },
+    {
+      id: 'grinder-chute',
+      label: 'Kværn & Portafilter Udløb',
+      src: '/images/grinder-chute-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#C26D52',
+    },
+    {
+      id: 'espresso-gauge',
+      label: '9-Bar Analog Manometer',
+      src: '/images/espresso-gauge-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#A8BFA0',
+    },
+    {
+      id: 'flat-burrs',
+      label: 'Titanium Kværnknive',
+      src: '/images/flat-burrs-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#C26D52',
+    },
+    {
+      id: 'minimal-gradient',
+      label: 'Klassisk Mørk Gradient (Uden foto)',
+      src: '',
+      position: 'none',
+      accent: '#C26D52',
+    },
+  ],
+
+  barista_deck_pourover: [
+    {
+      id: 'pourover-bloom',
+      label: 'Hario V60 Bloom & Kedel',
+      src: '/images/pourover-bloom-macro.jpg',
+      position: 'object-center',
+      accent: '#D4A373',
+    },
+    {
+      id: 'frenchpress',
+      label: 'French Press Stempelkande',
+      src: '/images/frenchpress-macro.jpg',
+      position: 'object-center',
+      accent: '#C26D52',
+    },
+    {
+      id: 'coffee-beans',
+      label: 'Friske Filterristede Bønner',
+      src: '/images/coffee-beans-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#C26D52',
+    },
+    {
+      id: 'grinder-chute',
+      label: 'Kværnudløb & Kaffe',
+      src: '/images/grinder-chute-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#C26D52',
+    },
+    {
+      id: 'minimal-gradient',
+      label: 'Klassisk Mørk Gradient (Uden foto)',
+      src: '',
+      position: 'none',
+      accent: '#C26D52',
+    },
+  ],
+
   barista_deck: [
     {
       id: 'crema-ripple',
@@ -60,15 +150,8 @@ export const CARD_THEME_REGISTRY: Record<string, CardThemePreset[]> = {
       accent: '#A8BFA0',
     },
     {
-      id: 'flat-burrs',
-      label: 'Titanium Kværnknive',
-      src: '/images/flat-burrs-macro.jpg',
-      position: 'object-right sm:object-center',
-      accent: '#C26D52',
-    },
-    {
       id: 'pourover-bloom',
-      label: 'V60 Pour Over & Svanehalskedel',
+      label: 'Hario V60 Bloom & Kedel',
       src: '/images/pourover-bloom-macro.jpg',
       position: 'object-center',
       accent: '#D4A373',

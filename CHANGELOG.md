@@ -2,6 +2,23 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.18.3] - 2026-10-17
+### Etape 58: Adskilte Baggrundstemaer (Espresso vs. Pour Over), Lysere & Skarpere Makroer, Foldbare Gear-Kort og Glassmorphism
+- **Metode-Specifikke Baggrundstemaer for Barista Deck (`src/lib/cardThemes.ts` & `DrinkSelector.tsx`):**
+  - Oprettet `barista_deck_espresso` og `barista_deck_pourover` registre.
+  - Når baristaen vælger **Espresso**, vises dedikerede espressotemaer (*Naked Portafilter Flow*, *Crema Ripple*, *9-Bar Manometer*, *Kværnudløb*).
+  - Når baristaen skifter til **Pour Over**, skifter baggrunden automatisk til dedikerede filter- og brygtemaer (*Hario V60 Bloom & Kedel*, *French Press Stempelkande*, *Friske Filterristede Bønner*).
+  - Admin-tema-knappen cykler nu uafhængigt inden for den valgte bryggemetodes billedkatalog.
+- **Forbedret Billedklarhed & Lysstyrke:**
+  - Hævet billedernes synlighed fra 65-70% til 85-90% på tværs af Barista Deck, Kværnflåde, Espressomaskine, Filter Gear og Beandex Bønnehvælv.
+  - Blødgjort de tunge sorte gradienter markant (`to-[#140C08]/20` og `from-[#140C08]/75 via-transparent`), så kromrefleksioner, kværnknive, manometer og damp fremstår sprøde og levende i stedet for mudrede og mørke.
+- **Translucent Glassmorphism:**
+  - Udskiftet massive, uigennemsigtige sorte kasser med moderne, semi-transparente paneler med `backdrop-blur-md` og diskrete hvid/gyldne kanter (`border-white/10` / `border-[#FAF7F2]/15`), så baggrundens varme kaffetoner ånder igennem UI-elementerne.
+- **Foldbare Udstyrskort (Accordion) i Gear-fanen (`App.tsx`):**
+  - Tilføjet minimer/fold-ud knapper for *Grinder Fleet*, *Espresso Machine* og *Filter & Manuel Bryg*.
+  - Husker foldetilstanden i `localStorage` (`flowbean_gear_grinders_collapsed`, `flowbean_gear_machine_collapsed`, `flowbean_gear_filter_collapsed`).
+  - Når et kort er minimeret, fylder det kun en slank overskrift med aktivt udstyrsnavn, hvilket fjerner rod og giver fuldt fokus på mobilen.
+
 ## [1.18.2] - 2026-10-17
 ### Etape 57: Bruger-Inspirerede Makro-Baggrunde (Kværn-Udløb & Naked Portafilter med 9-Bar Manometer) og Oprydning
 - **Nye Fotorealistiske 16:9 Makro-Baggrundstemaer (`src/lib/cardThemes.ts` & `public/images/`):**

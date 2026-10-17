@@ -90,9 +90,33 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onCloseAllDrinksModal,
   isAdminEditMode,
 }) => {
+  const { t } = useTranslation();
+  const selectedDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0];
+  const [methodFilter, setMethodFilter] = useState<'espresso' | 'pour_over'>(() =>
+    selectedDrink.method === 'pour_over' ? 'pour_over' : 'espresso'
+  );
+  const currentCardKey = methodFilter === 'pour_over' ? 'barista_deck_pourover' : 'barista_deck_espresso';
+  const [cardTheme, setCardTheme] = useState<CardThemePreset>(() => getCardTheme(currentCardKey));
+
+  useEffect(() => {
+    const key = methodFilter === 'pour_over' ? 'barista_deck_pourover' : 'barista_deck_espresso';
+    setCardTheme(getCardTheme(key));
+  }, [methodFilter]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const key = methodFilter === 'pour_over' ? 'barista_deck_pourover' : 'barista_deck_espresso';
+      if (detail && detail.cardKey === key) {
+        setCardTheme(getCardTheme(key));
+      }
+    };
+    window.addEventListener('flowbean_card_theme_changed', handler);
+    return () => window.removeEventListener('flowbean_card_theme_changed', handler);
+  }, [methodFilter]);
+
   const [activeDeckIds, setActiveDeckIds] = useState<string[]>(() => loadActiveBarDrinkIds());
   const [internalModalOpen, setInternalModalOpen] = useState<boolean>(false);
-  const [cardTheme, setCardTheme] = useState<CardThemePreset>(() => getCardTheme('barista_deck'));
   const isCustomizeModalOpen = isAllDrinksModalOpen !== undefined ? isAllDrinksModalOpen : internalModalOpen;
   const setIsCustomizeModalOpen = (open: boolean) => {
     if (open) {
@@ -138,12 +162,6 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
       }, 50);
     });
   };
-
-  const { t } = useTranslation();
-  const selectedDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0];
-  const [methodFilter, setMethodFilter] = useState<'espresso' | 'pour_over'>(() =>
-    selectedDrink.method === 'pour_over' ? 'pour_over' : 'espresso'
-  );
 
   useEffect(() => {
     if (selectedDrink.method === 'pour_over') {
@@ -317,11 +335,11 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             <img
               src={cardTheme.src}
               alt=""
-              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} opacity-70 scale-105 transition-all duration-300`}
+              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
             />
             {/* Directional vignette protecting text readability on left while keeping droplet and crema rings clearly visible on right */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/85 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/85 via-[#140C08]/50 to-[#140C08]/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/75 via-transparent to-transparent" />
           </div>
         )}
 
@@ -344,9 +362,9 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             </p>
           </div>
 
-          {/* Admin Live Theme Switcher Badge */}
+          {/* Admin Live Theme Switcher Badge (Auto-switches between Espresso and Pour Over Presets) */}
           <AdminThemeBadge
-            cardKey="barista_deck"
+            cardKey={methodFilter === 'pour_over' ? 'barista_deck_pourover' : 'barista_deck_espresso'}
             currentTheme={cardTheme}
             isAdminEditMode={Boolean(isAdminEditMode)}
             onThemeChanged={setCardTheme}
@@ -354,11 +372,12 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         </div>
 
         {/* Thumb-Friendly Brew Method Toggle (Keeps Top Mobile Header Clean) */}
-        <div className="mt-4 grid grid-cols-2 gap-1.5 p-1 bg-black/30 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 text-xs font-mono relative z-10">
+        <div className="mt-4 grid grid-cols-2 gap-1.5 p-1 bg-black/35 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 text-xs font-mono relative z-10">
           <button
             type="button"
             onClick={() => {
               setMethodFilter('espresso');
+              setCardTheme(getCardTheme('barista_deck_espresso'));
               const firstEspresso = DRINK_RECIPES.find((d) => (d.method || 'espresso') === 'espresso');
               if (selectedDrink.method === 'pour_over' && firstEspresso) {
                 onSelectDrink(firstEspresso);
@@ -377,6 +396,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             type="button"
             onClick={() => {
               setMethodFilter('pour_over');
+              setCardTheme(getCardTheme('barista_deck_pourover'));
               const firstFilter = DRINK_RECIPES.find((d) => d.method === 'pour_over');
               if (selectedDrink.method !== 'pour_over' && firstFilter) {
                 onSelectDrink(firstFilter);
@@ -432,7 +452,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   className={`flex flex-col items-center text-center p-1.5 pt-2 pb-2.5 sm:p-2.5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
                     isSelected
                       ? 'bg-[#B85D43] border-[#E08A70] text-[#FFFDF9] shadow-lg scale-[1.01]'
-                      : 'bg-gradient-to-b from-[#34241B] to-[#20150F] border-[#523A2C] text-[#FAF7F2] hover:border-[#8C644E] hover:from-[#3D2C20]'
+                      : 'bg-[#180E09]/70 backdrop-blur-md border border-[#FAF7F2]/15 text-[#FAF7F2] hover:border-[#D4A373]/60 hover:bg-[#20150F]/85'
                   }`}
                 >
                   {/* Ambient luminous spotlight behind cup for high contrast */}

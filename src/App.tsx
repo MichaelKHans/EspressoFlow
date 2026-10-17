@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Plus, Check, Trash2, Layers, Camera, Globe, Settings, Thermometer } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Plus, Check, Trash2, Layers, Camera, Globe, Settings, Thermometer, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
@@ -95,6 +95,41 @@ export function App() {
   const [kettleName, setKettleName] = useState<string>(() => loadKettle());
   const [isRadarOpen, setIsRadarOpen] = useState<boolean>(false);
   const [radarScannedDate, setRadarScannedDate] = useState<string | undefined>(undefined);
+
+  // Collapsible Gear Accordion States (Saved in localStorage for clean zero-clutter mobile experience)
+  const [isGrinderFleetCollapsed, setIsGrinderFleetCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('flowbean_gear_grinders_collapsed') === 'true';
+  });
+  const [isMachineCollapsed, setIsMachineCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('flowbean_gear_machine_collapsed') === 'true';
+  });
+  const [isFilterCollapsed, setIsFilterCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('flowbean_gear_filter_collapsed') === 'true';
+  });
+
+  const toggleGrinderFleetCollapsed = () => {
+    setIsGrinderFleetCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('flowbean_gear_grinders_collapsed', String(next));
+      return next;
+    });
+  };
+
+  const toggleMachineCollapsed = () => {
+    setIsMachineCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('flowbean_gear_machine_collapsed', String(next));
+      return next;
+    });
+  };
+
+  const toggleFilterCollapsed = () => {
+    setIsFilterCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('flowbean_gear_filter_collapsed', String(next));
+      return next;
+    });
+  };
 
   // Active (non-finished) Beans pool
   const activeBeans = beans.filter((b) => !b.isFinished);
@@ -1196,33 +1231,43 @@ export function App() {
             </div>
 
             {/* Equipment: Grinder Setup & Personal Fleet (Mine Kværne i Kaffehjørnet) */}
-            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden">
-              {/* Dynamic Macro Grinder Backdrop */}
+            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden transition-all duration-300">
+              {/* Dynamic Macro Grinder Backdrop (Brightened for rich visual clarity) */}
               {grinderTheme.src && (
                 <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
                   <img
                     src={grinderTheme.src}
                     alt=""
-                    className={`w-full h-full object-cover ${grinderTheme.position || 'object-right sm:object-center'} opacity-65 scale-105 transition-all duration-300`}
+                    className={`w-full h-full object-cover ${grinderTheme.position || 'object-right sm:object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/90 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/85 via-[#140C08]/50 to-[#140C08]/20" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/75 via-transparent to-transparent" />
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22] pb-2.5 gap-2 relative z-10">
-                <div className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-[#D4A373]" />
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
-                      Grinder Fleet & Bar Setup
-                    </h3>
-                    <p className="text-[10px] text-[#A6998E] font-sans">
-                      Manage your home bar grinders and select which grinder is active on your station.
-                    </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22]/80 pb-2.5 gap-2 relative z-10">
+                <div className="flex items-center justify-between w-full sm:w-auto">
+                  <div className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-[#D4A373]" />
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
+                        Grinder Fleet & Bar Setup
+                      </h3>
+                      <p className="text-[10px] text-[#A6998E] font-sans">
+                        {isGrinderFleetCollapsed ? `Aktiv på bar: ${grinderName}` : 'Manage your home bar grinders and select which grinder is active on your station.'}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={toggleGrinderFleetCollapsed}
+                    className="sm:hidden px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] flex items-center gap-1 cursor-pointer active:scale-95 transition"
+                  >
+                    <span>{isGrinderFleetCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    {isGrinderFleetCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
                   <AdminThemeBadge
                     cardKey="grinder_fleet"
                     currentTheme={grinderTheme}
@@ -1232,177 +1277,199 @@ export function App() {
                   <span className="text-[10px] font-bold text-[#A8BFA0] bg-[#72806B]/20 border border-[#72806B]/40 px-2.5 py-0.5 rounded-full shrink-0">
                     ● {grinders.filter((g) => g.inSetup).length} in your setup
                   </span>
+                  <button
+                    type="button"
+                    onClick={toggleGrinderFleetCollapsed}
+                    className="hidden sm:flex px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] items-center gap-1 cursor-pointer hover:bg-black/60 active:scale-95 transition"
+                  >
+                    <span>{isGrinderFleetCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    {isGrinderFleetCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
               </div>
 
-              {/* Grinders currently in user's setup */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative z-10">
-                {grinders
-                  .filter((g) => g.inSetup)
-                  .map((g) => {
-                    const isActive = g.name === grinderName;
-                    return (
-                      <div
-                        key={g.id}
-                        className={`p-3 rounded-xl border transition flex flex-col justify-between gap-2.5 ${
-                          isActive
-                            ? 'bg-[#2F221B] border-[#72806B] ring-1 ring-[#72806B] shadow-inner text-[#FAF7F2]'
-                            : 'bg-[#1C1410] border-[#3D2D22] text-[#D8CDC4] hover:border-[#D4A373]/50'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className={`text-xs font-bold ${isActive ? 'text-white' : 'text-[#E8DFD5]'}`}>{g.name}</span>
-                              <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#241A14] border border-[#3D2D22] text-[#A6998E] uppercase">
-                                {g.type === 'stepless' ? 'Stepless' : 'Stepped'}
-                              </span>
-                            </div>
-                            <span className="text-[10px] text-[#8C7E74] block mt-0.5">
-                              Scale: {g.stepUnit || 'steps'}
-                            </span>
-                          </div>
-
-                          {isActive ? (
-                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/25 text-[#A8BFA0] border border-[#72806B]/40 flex items-center gap-1 shrink-0">
-                              <Check className="w-3 h-3" /> Active on Bar
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setGrinderName(g.name);
-                                handleUpdateBeanField({ grinderName: g.name });
-                              }}
-                              className="text-[10px] font-bold text-[#D4A373] hover:text-[#E8C29D] hover:underline shrink-0"
-                            >
-                              Set Active
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Card footer: info & remove button if more than 1 in setup */}
-                        <div className="flex items-center justify-between pt-1 border-t border-[#3D2D22]/60 text-[10px]">
-                          <span className="text-[#8C7E74]">
-                            Default: {g.defaultSetting || '15'}
-                          </span>
-                          {grinders.filter((gr) => gr.inSetup).length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const remaining = grinders.map((gr) =>
-                                  gr.id === g.id ? { ...gr, inSetup: false } : gr
-                                );
-                                setGrinders(remaining);
-                                saveGrinders(remaining);
-                                if (isActive) {
-                                  const fallback = remaining.find((gr) => gr.inSetup) || remaining[0];
-                                  setGrinderName(fallback.name);
-                                  handleUpdateBeanField({ grinderName: fallback.name });
-                                }
-                              }}
-                              className="text-[#8C7E74] hover:text-red-400 transition flex items-center gap-1"
-                              title="Remove this grinder from your active setup"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              <span>Remove from setup</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-
-              {/* Add Grinder to Setup from Library or Custom */}
-              <div className="pt-2 border-t border-[#3D2D22]/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                {grinders.filter((g) => !g.inSetup).length > 0 && (
-                  <select
-                    defaultValue=""
-                    onChange={(e) => {
-                      const selectedId = e.target.value;
-                      if (!selectedId) return;
-                      const updated = grinders.map((g) =>
-                        g.id === selectedId ? { ...g, inSetup: true } : g
-                      );
-                      setGrinders(updated);
-                      saveGrinders(updated);
-                      const added = updated.find((g) => g.id === selectedId);
-                      if (added) {
-                        setGrinderName(added.name);
-                        handleUpdateBeanField({ grinderName: added.name });
-                      }
-                      e.target.value = '';
-                    }}
-                    className="flex-1 px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#1C1410] text-xs font-mono text-[#FAF7F2] focus:outline-hidden"
-                  >
-                    <option value="" disabled>+ Add grinder from library to your setup...</option>
+              {!isGrinderFleetCollapsed && (
+                <>
+                  {/* Grinders currently in user's setup */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative z-10">
                     {grinders
-                      .filter((g) => !g.inSetup)
-                      .map((g) => (
-                        <option key={g.id} value={g.id} className="bg-[#1C1410] text-[#FAF7F2]">
-                          + {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'}, {g.stepUnit})
-                        </option>
-                      ))}
-                  </select>
-                )}
+                      .filter((g) => g.inSetup)
+                      .map((g) => {
+                        const isActive = g.name === grinderName;
+                        return (
+                          <div
+                            key={g.id}
+                            className={`p-3 rounded-xl border transition flex flex-col justify-between gap-2.5 ${
+                              isActive
+                                ? 'bg-[#2F221B]/85 backdrop-blur-md border-[#72806B] ring-1 ring-[#72806B] shadow-inner text-[#FAF7F2]'
+                                : 'bg-[#180E09]/75 backdrop-blur-md border border-[#FAF7F2]/10 text-[#D8CDC4] hover:border-[#D4A373]/50'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className={`text-xs font-bold ${isActive ? 'text-white' : 'text-[#E8DFD5]'}`}>{g.name}</span>
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#241A14]/80 border border-[#3D2D22] text-[#A6998E] uppercase">
+                                    {g.type === 'stepless' ? 'Stepless' : 'Stepped'}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-[#8C7E74] block mt-0.5">
+                                  Scale: {g.stepUnit || 'steps'}
+                                </span>
+                              </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    const customName = prompt('Enter grinder model name (e.g. Niche Duo, Lagom P64, Kinu M47):');
-                    if (customName && customName.trim()) {
-                      const newG: GrinderProfile = {
-                        id: `grinder-${Date.now()}`,
-                        name: customName.trim(),
-                        type: 'stepless',
-                        defaultSetting: '2.0',
-                        stepUnit: 'steps / marks',
-                        inSetup: true,
-                      };
-                      const updated = [...grinders, newG];
-                      setGrinders(updated);
-                      saveGrinders(updated);
-                      setGrinderName(newG.name);
-                      handleUpdateBeanField({ grinderName: newG.name });
-                    }
-                  }}
-                  className="px-3 py-2 rounded-xl border border-[#4D382B] bg-[#35251C] hover:bg-[#422F24] text-[#D4A373] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>+ Add Custom Grinder</span>
-                </button>
-              </div>
+                              {isActive ? (
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/25 text-[#A8BFA0] border border-[#72806B]/40 flex items-center gap-1 shrink-0">
+                                  <Check className="w-3 h-3" /> Active on Bar
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setGrinderName(g.name);
+                                    handleUpdateBeanField({ grinderName: g.name });
+                                  }}
+                                  className="text-[10px] font-bold text-[#D4A373] hover:text-[#E8C29D] hover:underline shrink-0"
+                                >
+                                  Set Active
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Card footer: info & remove button if more than 1 in setup */}
+                            <div className="flex items-center justify-between pt-1 border-t border-[#3D2D22]/60 text-[10px]">
+                              <span className="text-[#8C7E74]">
+                                Default: {g.defaultSetting || '15'}
+                              </span>
+                              {grinders.filter((gr) => gr.inSetup).length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const remaining = grinders.map((gr) =>
+                                      gr.id === g.id ? { ...gr, inSetup: false } : gr
+                                    );
+                                    setGrinders(remaining);
+                                    saveGrinders(remaining);
+                                    if (isActive) {
+                                      const fallback = remaining.find((gr) => gr.inSetup) || remaining[0];
+                                      setGrinderName(fallback.name);
+                                      handleUpdateBeanField({ grinderName: fallback.name });
+                                    }
+                                  }}
+                                  className="text-[#8C7E74] hover:text-red-400 transition flex items-center gap-1"
+                                  title="Remove this grinder from your active setup"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  <span>Remove from setup</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Add Grinder to Setup from Library or Custom */}
+                  <div className="pt-2 border-t border-[#3D2D22]/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 relative z-10">
+                    {grinders.filter((g) => !g.inSetup).length > 0 && (
+                      <select
+                        defaultValue=""
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          if (!selectedId) return;
+                          const updated = grinders.map((g) =>
+                            g.id === selectedId ? { ...g, inSetup: true } : g
+                          );
+                          setGrinders(updated);
+                          saveGrinders(updated);
+                          const added = updated.find((g) => g.id === selectedId);
+                          if (added) {
+                            setGrinderName(added.name);
+                            handleUpdateBeanField({ grinderName: added.name });
+                          }
+                          e.target.value = '';
+                        }}
+                        className="flex-1 px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#180E09]/80 backdrop-blur-md text-xs font-mono text-[#FAF7F2] focus:outline-hidden"
+                      >
+                        <option value="" disabled>+ Add grinder from library to your setup...</option>
+                        {grinders
+                          .filter((g) => !g.inSetup)
+                          .map((g) => (
+                            <option key={g.id} value={g.id} className="bg-[#1C1410] text-[#FAF7F2]">
+                              + {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'}, {g.stepUnit})
+                            </option>
+                          ))}
+                      </select>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const customName = prompt('Enter grinder model name (e.g. Niche Duo, Lagom P64, Kinu M47):');
+                        if (customName && customName.trim()) {
+                          const newG: GrinderProfile = {
+                            id: `grinder-${Date.now()}`,
+                            name: customName.trim(),
+                            type: 'stepless',
+                            defaultSetting: '2.0',
+                            stepUnit: 'steps / marks',
+                            inSetup: true,
+                          };
+                          const updated = [...grinders, newG];
+                          setGrinders(updated);
+                          saveGrinders(updated);
+                          setGrinderName(newG.name);
+                          handleUpdateBeanField({ grinderName: newG.name });
+                        }
+                      }}
+                      className="px-3 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15]/80 hover:bg-[#422F24] text-[#D4A373] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition shrink-0 backdrop-blur-md cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Add Custom Grinder</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Equipment: Espresso Machine & Pump Setup */}
-            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden">
-              {/* Dynamic Macro Machine Backdrop */}
+            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden transition-all duration-300">
+              {/* Dynamic Macro Machine Backdrop (Brightened for rich visual clarity) */}
               {machineTheme.src && (
                 <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
                   <img
                     src={machineTheme.src}
                     alt=""
-                    className={`w-full h-full object-cover ${machineTheme.position || 'object-right sm:object-center'} opacity-65 scale-105 transition-all duration-300`}
+                    className={`w-full h-full object-cover ${machineTheme.position || 'object-right sm:object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/90 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/85 via-[#140C08]/50 to-[#140C08]/20" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/75 via-transparent to-transparent" />
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22] pb-2.5 gap-2 relative z-10">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#D4A373]" />
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
-                      Espresso Machine & Pump Setup
-                    </h3>
-                    <p className="text-[10px] text-[#A6998E] font-sans">
-                      Select your espresso machine or all-in-one combo unit.
-                    </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22]/80 pb-2.5 gap-2 relative z-10">
+                <div className="flex items-center justify-between w-full sm:w-auto">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#D4A373]" />
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
+                        Espresso Machine & Pump Setup
+                      </h3>
+                      <p className="text-[10px] text-[#A6998E] font-sans">
+                        {isMachineCollapsed ? `Aktiv: ${machineName.split('(')[0].trim()}` : 'Select your espresso machine or all-in-one combo unit.'}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={toggleMachineCollapsed}
+                    className="sm:hidden px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] flex items-center gap-1 cursor-pointer active:scale-95 transition"
+                  >
+                    <span>{isMachineCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    {isMachineCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
                   <AdminThemeBadge
                     cardKey="espresso_machine"
                     currentTheme={machineTheme}
@@ -1412,206 +1479,228 @@ export function App() {
                   <span className="text-[10px] font-bold text-[#A8BFA0] bg-[#72806B]/20 border border-[#72806B]/40 px-2.5 py-0.5 rounded-full shrink-0">
                     Pump Dynamics
                   </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-[#A6998E] uppercase font-bold">Espresso Machine</label>
-                  <select
-                    value={machineName}
-                    onChange={(e) => {
-                      const selected = e.target.value;
-                      setMachineName(selected);
-                      saveMachineName(selected);
-                      if (selected.includes('Dedica')) setMachinePreInfusion(2.0);
-                      else if (selected.includes('Dual Boiler')) setMachinePreInfusion(6.0);
-                      else if (selected.includes('Barista')) setMachinePreInfusion(7.0);
-                      else if (selected.includes('Ninja')) setMachinePreInfusion(4.0);
-                      else if (selected.includes('Bambino')) setMachinePreInfusion(5.0);
-                      else if (selected.includes('Flow Control')) setMachinePreInfusion(8.0);
-                      else if (selected.includes('Micra') || selected.includes('Mini')) setMachinePreInfusion(4.0);
-                      else if (selected.includes('Straight 9-Bar') || selected.includes('Gaggia') || selected.includes('Silvia')) setMachinePreInfusion(0.0);
-                      else if (selected.includes('Decent')) setMachinePreInfusion(6.0);
-                      else if (selected.includes('Jura') || selected.includes('Philips') || selected.includes('Magnifica')) setMachinePreInfusion(2.0);
-                    }}
-                    className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#1C1410] font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
+                  <button
+                    type="button"
+                    onClick={toggleMachineCollapsed}
+                    className="hidden sm:flex px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] items-center gap-1 cursor-pointer hover:bg-black/60 active:scale-95 transition"
                   >
-                    <optgroup label="⚡ Kombimaskiner (Integreret Kværn)">
-                      <option value="Ninja Luxe Café / Ninja Pro">Ninja Luxe Café / Ninja Pro (15-step Conical Grinder)</option>
-                      <option value="Sage / Breville Barista Touch/Express">Sage / Breville Barista Series (30-step Conical)</option>
-                      <option value="De'Longhi La Specialista">De'Longhi La Specialista (Sensor Grinder & Dual Thermo)</option>
-                    </optgroup>
-                    <optgroup label="🤖 Bønne-til-Kop Fuldautomatiske">
-                      <option value="Jura Z10 / E8 (Super-Automatic)">Jura Z10 / E8 (PRG Electronic Grinder)</option>
-                      <option value="Philips LatteGo 5400 / 3200">Philips LatteGo Series (12-step Ceramic Burrs)</option>
-                      <option value="De'Longhi Magnifica / Eletta">De'Longhi Magnifica / Eletta (13-step Conical)</option>
-                    </optgroup>
-                    <optgroup label="☕ Semi-Automatiske & Manuelle (Separat Kværn)">
-                      <option value="De'Longhi Dedica (EC680 / EC685 / EC885)">De'Longhi Dedica EC685 (15-Bar, 2s Pulse)</option>
-                      <option value="Sage Bambino / Bambino Plus">Sage Bambino / Bambino Plus (Default 5s)</option>
-                      <option value="Sage / Breville Dual Boiler">Sage / Breville Dual Boiler (Default 6s)</option>
-                      <option value="Gaggia Classic Pro / Evo">Gaggia Classic Pro (Straight 9-Bar / 0s)</option>
-                      <option value="Rancilio Silvia / Silvia Pro X">Rancilio Silvia (Straight 9-Bar / 0s)</option>
-                      <option value="E61 Manual Flow Control">E61 Manual Flow Control (Default 8s)</option>
-                      <option value="La Marzocco Linea Micra / Mini">La Marzocco Linea Micra/Mini (Default 4s)</option>
-                      <option value="Decent DE1 (Profiling)">Decent DE1 (Adaptive Profiling)</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] text-[#A6998E] uppercase font-bold">Pre-Infusion Target (Seconds)</label>
-                    <span className="font-bold text-[#D4A373]">{machinePreInfusion.toFixed(1)}s</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="15"
-                    step="0.5"
-                    value={machinePreInfusion}
-                    onChange={(e) => setMachinePreInfusion(parseFloat(e.target.value) || 0)}
-                    className="w-full accent-[#D4A373] cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[10px] text-[#8C7E74]">
-                    <span>0s (Direct 9 bar)</span>
-                    <span>5-8s (Standard specialty)</span>
-                    <span>15s (Long soak)</span>
-                  </div>
+                    <span>{isMachineCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    {isMachineCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
               </div>
 
-              {/* Smart Combo & Super-Automatic Intelligent Badges */}
-              {(() => {
-                const profile = getMachineTempProfile(machineName);
-                if (profile.category === 'combo') {
-                  return (
-                    <div className="p-3 rounded-xl bg-[#2A1D15] border border-[#D4A373]/50 text-xs font-mono space-y-1.5 relative z-10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[#D4A373] font-bold flex items-center gap-1.5 text-[11px]">
-                          ⚡ All-In-One Kombimaskine Aktiv
-                        </span>
-                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#D4A373]/20 text-[#D4A373] border border-[#D4A373]/30 font-bold uppercase">
-                          Integreret Kværn
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#D8CDC4] font-sans leading-relaxed">
-                        Denne maskine har indbygget kaffekværn (<strong className="text-white font-mono">{profile.builtInGrinderName}</strong>).
-                        Du kan bruge den indbyggede kværn direkte via maskinens drejehjul (<span className="text-[#D4A373]">{profile.builtInGrinderSteps}</span>) — eller frit vælge/tilføje en separat ekstern kværn i <strong className="text-white font-mono">Grinder Fleet</strong> ovenfor. Flowbean husker og logger automatisk begge dele pr. bønne.
-                      </p>
-                    </div>
-                  );
-                }
-                if (profile.category === 'super_automatic') {
-                  return (
-                    <div className="p-3 rounded-xl bg-[#1A2418] border border-[#72806B]/50 text-xs font-mono space-y-1.5 relative z-10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[#A8BFA0] font-bold flex items-center gap-1.5 text-[11px]">
-                          🤖 Bønne-til-Kop Fuldautomatisk
-                        </span>
-                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#72806B]/25 text-[#A8BFA0] border border-[#72806B]/40 font-bold uppercase">
-                          Telemetri & Vægt
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#D8CDC4] font-sans leading-relaxed">
-                        Kværning og brygning sker automatisk internt i maskinen. Flowbean måler det reelle flow og koppeudbytte i realtid via vægten på drypbakken, så du nemt kan finjustere bønner, kværntrin og dosering til den perfekte smag.
-                      </p>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-
-              {/* Machine Temperature & PID Capabilities */}
-              {(() => {
-                const profile = getMachineTempProfile(machineName);
-                const minTemp = profile.minTempC ?? 88;
-                const maxTemp = profile.maxTempC ?? 96;
-                const defaultTemp = profile.defaultTempC ?? 93;
-                return (
-                  <div className="pt-3 border-t border-[#3D2D22] space-y-2.5 relative z-10">
-                    <div className="flex items-center justify-between text-[11px] font-mono">
-                      <span className="text-[#A6998E] uppercase font-bold flex items-center gap-1.5">
-                        <Thermometer className="w-3.5 h-3.5 text-[#D4A373]" /> {t('gear.machine_temp_section')}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setIsSettingsOpen(true)}
-                        className="text-[10px] text-[#D4A373] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+              {!isMachineCollapsed && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-[#A6998E] uppercase font-bold">Espresso Machine</label>
+                      <select
+                        value={machineName}
+                        onChange={(e) => {
+                          const selected = e.target.value;
+                          setMachineName(selected);
+                          saveMachineName(selected);
+                          if (selected.includes('Dedica')) setMachinePreInfusion(2.0);
+                          else if (selected.includes('Dual Boiler')) setMachinePreInfusion(6.0);
+                          else if (selected.includes('Barista')) setMachinePreInfusion(7.0);
+                          else if (selected.includes('Ninja')) setMachinePreInfusion(4.0);
+                          else if (selected.includes('Bambino')) setMachinePreInfusion(5.0);
+                          else if (selected.includes('Flow Control')) setMachinePreInfusion(8.0);
+                          else if (selected.includes('Micra') || selected.includes('Mini')) setMachinePreInfusion(4.0);
+                          else if (selected.includes('Straight 9-Bar') || selected.includes('Gaggia') || selected.includes('Silvia')) setMachinePreInfusion(0.0);
+                          else if (selected.includes('Decent')) setMachinePreInfusion(6.0);
+                          else if (selected.includes('Jura') || selected.includes('Philips') || selected.includes('Magnifica')) setMachinePreInfusion(2.0);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#180E09]/80 backdrop-blur-md font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
                       >
-                        <span>Unit: °{tempUnit} (Settings ⚙️)</span>
-                      </button>
+                        <optgroup label="⚡ Kombimaskiner (Integreret Kværn)">
+                          <option value="Ninja Luxe Café / Ninja Pro">Ninja Luxe Café / Ninja Pro (15-step Conical Grinder)</option>
+                          <option value="Sage / Breville Barista Touch/Express">Sage / Breville Barista Series (30-step Conical)</option>
+                          <option value="De'Longhi La Specialista">De'Longhi La Specialista (Sensor Grinder & Dual Thermo)</option>
+                        </optgroup>
+                        <optgroup label="🤖 Bønne-til-Kop Fuldautomatiske">
+                          <option value="Jura Z10 / E8 (Super-Automatic)">Jura Z10 / E8 (PRG Electronic Grinder)</option>
+                          <option value="Philips LatteGo 5400 / 3200">Philips LatteGo Series (12-step Ceramic Burrs)</option>
+                          <option value="De'Longhi Magnifica / Eletta">De'Longhi Magnifica / Eletta (13-step Conical)</option>
+                        </optgroup>
+                        <optgroup label="☕ Semi-Automatiske & Manuelle (Separat Kværn)">
+                          <option value="De'Longhi Dedica (EC680 / EC685 / EC885)">De'Longhi Dedica EC685 (15-Bar, 2s Pulse)</option>
+                          <option value="Sage Bambino / Bambino Plus">Sage Bambino / Bambino Plus (Default 5s)</option>
+                          <option value="Sage / Breville Dual Boiler">Sage / Breville Dual Boiler (Default 6s)</option>
+                          <option value="Gaggia Classic Pro / Evo">Gaggia Classic Pro (Straight 9-Bar / 0s)</option>
+                          <option value="Rancilio Silvia / Silvia Pro X">Rancilio Silvia (Straight 9-Bar / 0s)</option>
+                          <option value="E61 Manual Flow Control">E61 Manual Flow Control (Default 8s)</option>
+                          <option value="La Marzocco Linea Micra / Mini">La Marzocco Linea Micra/Mini (Default 4s)</option>
+                          <option value="Decent DE1 (Profiling)">Decent DE1 (Adaptive Profiling)</option>
+                        </optgroup>
+                      </select>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-mono">
-                      <div className="p-2.5 rounded-xl bg-[#1C1410] border border-[#3D2D22]">
-                        <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">{t('gear.machine_temp_mode')}</span>
-                        <span className="font-bold text-[#FAF7F2] text-[11px] mt-0.5 block truncate">
-                          {profile.tempControl === 'pid'
-                            ? t('gear.machine_temp_pid')
-                            : profile.tempControl === 'stepped'
-                            ? t('gear.machine_temp_stepped')
-                            : t('gear.machine_temp_fixed')}
-                        </span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] text-[#A6998E] uppercase font-bold">Pre-Infusion Target (Seconds)</label>
+                        <span className="font-bold text-[#D4A373]">{machinePreInfusion.toFixed(1)}s</span>
                       </div>
-
-                      <div className="p-2.5 rounded-xl bg-[#1C1410] border border-[#3D2D22]">
-                        <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">
-                          {t('gear.machine_temp_range', {
-                            min: formatTemperature(minTemp, tempUnit),
-                            max: formatTemperature(maxTemp, tempUnit),
-                          })}
-                        </span>
-                        <span className="font-bold text-[#FAF7F2] text-[11px] mt-0.5 block">
-                          {profile.tempControl === 'fixed' ? 'Fixed Boiler' : `${formatTemperature(minTemp, tempUnit)} – ${formatTemperature(maxTemp, tempUnit)}`}
-                        </span>
-                      </div>
-
-                      <div className="p-2.5 rounded-xl bg-[#1C1410] border border-[#3D2D22]">
-                        <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">
-                          {t('gear.machine_temp_baseline', {
-                            temp: formatTemperature(defaultTemp, tempUnit),
-                          })}
-                        </span>
-                        <span className="font-bold text-[#D4A373] text-[11px] mt-0.5 block">
-                          {formatTemperature(defaultTemp, tempUnit)} (Specialty standard)
-                        </span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="15"
+                        step="0.5"
+                        value={machinePreInfusion}
+                        onChange={(e) => setMachinePreInfusion(parseFloat(e.target.value) || 0)}
+                        className="w-full accent-[#D4A373] cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[10px] text-[#8C7E74]">
+                        <span>0s (Direct 9 bar)</span>
+                        <span>5-8s (Standard specialty)</span>
+                        <span>15s (Long soak)</span>
                       </div>
                     </div>
                   </div>
-                );
-              })()}
+
+                  {/* Smart Combo & Super-Automatic Intelligent Badges */}
+                  {(() => {
+                    const profile = getMachineTempProfile(machineName);
+                    if (profile.category === 'combo') {
+                      return (
+                        <div className="p-3 rounded-xl bg-[#2A1D15]/85 backdrop-blur-md border border-[#D4A373]/50 text-xs font-mono space-y-1.5 relative z-10">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#D4A373] font-bold flex items-center gap-1.5 text-[11px]">
+                              ⚡ All-In-One Kombimaskine Aktiv
+                            </span>
+                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#D4A373]/20 text-[#D4A373] border border-[#D4A373]/30 font-bold uppercase">
+                              Integreret Kværn
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#D8CDC4] font-sans leading-relaxed">
+                            Denne maskine har indbygget kaffekværn (<strong className="text-white font-mono">{profile.builtInGrinderName}</strong>).
+                            Du kan bruge den indbyggede kværn direkte via maskinens drejehjul (<span className="text-[#D4A373]">{profile.builtInGrinderSteps}</span>) — eller frit vælge/tilføje en separat ekstern kværn i <strong className="text-white font-mono">Grinder Fleet</strong> ovenfor. Flowbean husker og logger automatisk begge dele pr. bønne.
+                          </p>
+                        </div>
+                      );
+                    }
+                    if (profile.category === 'super_automatic') {
+                      return (
+                        <div className="p-3 rounded-xl bg-[#1A2418]/85 backdrop-blur-md border border-[#72806B]/50 text-xs font-mono space-y-1.5 relative z-10">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#A8BFA0] font-bold flex items-center gap-1.5 text-[11px]">
+                              🤖 Bønne-til-Kop Fuldautomatisk
+                            </span>
+                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#72806B]/25 text-[#A8BFA0] border border-[#72806B]/40 font-bold uppercase">
+                              Telemetri & Vægt
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#D8CDC4] font-sans leading-relaxed">
+                            Kværning og brygning sker automatisk internt i maskinen. Flowbean måler det reelle flow og koppeudbytte i realtid via vægten på drypbakken, så du nemt kan finjustere bønner, kværntrin og dosering til den perfekte smag.
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Machine Temperature & PID Capabilities */}
+                  {(() => {
+                    const profile = getMachineTempProfile(machineName);
+                    const minTemp = profile.minTempC ?? 88;
+                    const maxTemp = profile.maxTempC ?? 96;
+                    const defaultTemp = profile.defaultTempC ?? 93;
+                    return (
+                      <div className="pt-3 border-t border-[#3D2D22]/80 space-y-2.5 relative z-10">
+                        <div className="flex items-center justify-between text-[11px] font-mono">
+                          <span className="text-[#A6998E] uppercase font-bold flex items-center gap-1.5">
+                            <Thermometer className="w-3.5 h-3.5 text-[#D4A373]" /> {t('gear.machine_temp_section')}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="text-[10px] text-[#D4A373] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>Unit: °{tempUnit} (Settings ⚙️)</span>
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-mono">
+                          <div className="p-2.5 rounded-xl bg-[#180E09]/75 backdrop-blur-md border border-[#FAF7F2]/10">
+                            <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">{t('gear.machine_temp_mode')}</span>
+                            <span className="font-bold text-[#FAF7F2] text-[11px] mt-0.5 block truncate">
+                              {profile.tempControl === 'pid'
+                                ? t('gear.machine_temp_pid')
+                                : profile.tempControl === 'stepped'
+                                ? t('gear.machine_temp_stepped')
+                                : t('gear.machine_temp_fixed')}
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-[#180E09]/75 backdrop-blur-md border border-[#FAF7F2]/10">
+                            <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">
+                              {t('gear.machine_temp_range', {
+                                min: formatTemperature(minTemp, tempUnit),
+                                max: formatTemperature(maxTemp, tempUnit),
+                              })}
+                            </span>
+                            <span className="font-bold text-[#FAF7F2] text-[11px] mt-0.5 block">
+                              {profile.tempControl === 'fixed' ? 'Fixed Boiler' : `${formatTemperature(minTemp, tempUnit)} – ${formatTemperature(maxTemp, tempUnit)}`}
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-[#180E09]/75 backdrop-blur-md border border-[#FAF7F2]/10">
+                            <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">
+                              {t('gear.machine_temp_baseline', {
+                                temp: formatTemperature(defaultTemp, tempUnit),
+                              })}
+                            </span>
+                            <span className="font-bold text-[#D4A373] text-[11px] mt-0.5 block">
+                              {formatTemperature(defaultTemp, tempUnit)} (Specialty standard)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
             </div>
 
             {/* Equipment: Filter & Manuelt Bryggeudstyr (Pour Over, V60 & Stempel) */}
-            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden">
-              {/* Dynamic Macro Filter Backdrop */}
+            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden transition-all duration-300">
+              {/* Dynamic Macro Filter Backdrop (Brightened for rich visual clarity) */}
               {filterTheme.src && (
                 <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
                   <img
                     src={filterTheme.src}
                     alt=""
-                    className={`w-full h-full object-cover ${filterTheme.position || 'object-center'} opacity-65 scale-105 transition-all duration-300`}
+                    className={`w-full h-full object-cover ${filterTheme.position || 'object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/90 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/85 via-[#140C08]/50 to-[#140C08]/20" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/75 via-transparent to-transparent" />
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22] pb-2.5 gap-2 relative z-10">
-                <div className="flex items-center gap-2">
-                  <Coffee className="w-4 h-4 text-[#D4A373]" />
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
-                      Filter & Manuel Bryg (V60 & Stempel)
-                    </h3>
-                    <p className="text-[10px] text-[#A6998E] font-sans">
-                      Dine manuelle dryppere, stempelkander og svanehals elkedler til Pour Over.
-                    </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22]/80 pb-2.5 gap-2 relative z-10">
+                <div className="flex items-center justify-between w-full sm:w-auto">
+                  <div className="flex items-center gap-2">
+                    <Coffee className="w-4 h-4 text-[#D4A373]" />
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
+                        Filter & Manuel Bryg (V60 & Stempel)
+                      </h3>
+                      <p className="text-[10px] text-[#A6998E] font-sans">
+                        {isFilterCollapsed ? `Aktiv: ${filterBrewer.split('(')[0].trim()}` : 'Dine manuelle dryppere, stempelkander og svanehals elkedler til Pour Over.'}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={toggleFilterCollapsed}
+                    className="sm:hidden px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] flex items-center gap-1 cursor-pointer active:scale-95 transition"
+                  >
+                    <span>{isFilterCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    {isFilterCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
                   <AdminThemeBadge
                     cardKey="filter_gear"
                     currentTheme={filterTheme}
@@ -1621,58 +1710,70 @@ export function App() {
                   <span className="text-[10px] font-bold text-[#E5A96A] bg-[#E5A96A]/20 border border-[#E5A96A]/40 px-2.5 py-0.5 rounded-full shrink-0">
                     Filter & Drip
                   </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-[#A6998E] uppercase font-bold">Manuel Drypper / Brygger</label>
-                  <select
-                    value={filterBrewer}
-                    onChange={(e) => {
-                      const selected = e.target.value;
-                      setFilterBrewer(selected);
-                      saveFilterBrewer(selected);
-                    }}
-                    className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#1C1410] font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
+                  <button
+                    type="button"
+                    onClick={toggleFilterCollapsed}
+                    className="hidden sm:flex px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] items-center gap-1 cursor-pointer hover:bg-black/60 active:scale-95 transition"
                   >
-                    {FILTER_BREWER_PRESETS.map((fb) => (
-                      <option key={fb} value={fb} className="bg-[#1C1410] text-[#FAF7F2]">
-                        {fb}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-[#A6998E] uppercase font-bold">Svanehals Kedel / Vandtemperatur</label>
-                  <select
-                    value={kettleName}
-                    onChange={(e) => {
-                      const selected = e.target.value;
-                      setKettleName(selected);
-                      saveKettle(selected);
-                    }}
-                    className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#1C1410] font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
-                  >
-                    {KETTLE_PRESETS.map((k) => (
-                      <option key={k} value={k} className="bg-[#1C1410] text-[#FAF7F2]">
-                        {k}
-                      </option>
-                    ))}
-                  </select>
+                    <span>{isFilterCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    {isFilterCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
               </div>
 
-              {/* Informative Filter Pairing Note */}
-              <div className="p-3 rounded-xl bg-[#1C1410] border border-[#3D2D22] text-xs font-mono space-y-1 relative z-10">
-                <div className="flex items-center gap-1.5 text-[#D4A373] text-[11px] font-bold">
-                  <span>☕ Automatisk Kværnsynkronisering for Filter</span>
-                </div>
-                <p className="text-[11px] text-[#A6998E] font-sans leading-relaxed">
-                  Når du på <strong className="text-[#FAF7F2]">Kaffebar (Bar)</strong> skifter til <strong className="text-[#D4A373]">Pour Over</strong>, bruger appen automatisk dit valgte filterudstyr (<span className="text-white font-mono">{filterBrewer.split('(')[0].trim()}</span>) og forbinder det med din aktive barkværn ({grinderName}) med grove formalingsgrader.
-                </p>
-              </div>
+              {!isFilterCollapsed && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-[#A6998E] uppercase font-bold">Manuel Drypper / Brygger</label>
+                      <select
+                        value={filterBrewer}
+                        onChange={(e) => {
+                          const selected = e.target.value;
+                          setFilterBrewer(selected);
+                          saveFilterBrewer(selected);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#180E09]/80 backdrop-blur-md font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
+                      >
+                        {FILTER_BREWER_PRESETS.map((fb) => (
+                          <option key={fb} value={fb} className="bg-[#1C1410] text-[#FAF7F2]">
+                            {fb}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-[#A6998E] uppercase font-bold">Svanehals Kedel / Vandtemperatur</label>
+                      <select
+                        value={kettleName}
+                        onChange={(e) => {
+                          const selected = e.target.value;
+                          setKettleName(selected);
+                          saveKettle(selected);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#180E09]/80 backdrop-blur-md font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
+                      >
+                        {KETTLE_PRESETS.map((k) => (
+                          <option key={k} value={k} className="bg-[#1C1410] text-[#FAF7F2]">
+                            {k}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Informative Filter Pairing Note */}
+                  <div className="p-3 rounded-xl bg-[#180E09]/75 backdrop-blur-md border border-[#FAF7F2]/10 text-xs font-mono space-y-1 relative z-10">
+                    <div className="flex items-center gap-1.5 text-[#D4A373] text-[11px] font-bold">
+                      <span>☕ Automatisk Kværnsynkronisering for Filter</span>
+                    </div>
+                    <p className="text-[11px] text-[#A6998E] font-sans leading-relaxed">
+                      Når du på <strong className="text-[#FAF7F2]">Kaffebar (Bar)</strong> skifter til <strong className="text-[#D4A373]">Pour Over</strong>, bruger appen automatisk dit valgte filterudstyr (<span className="text-white font-mono">{filterBrewer.split('(')[0].trim()}</span>) og forbinder det med din aktive barkværn ({grinderName}) med grove formalingsgrader.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* App Membership & Lifetime License (Separate Dedicated Card for Apple App Store Review Compliance) */}

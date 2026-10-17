@@ -9,6 +9,20 @@
 
 ---
 
+### 2026-10-17 -- Adskilte Espresso/Pour Over Temaer, Oplyste Makroer & Foldbare Gear-Kort (v1.18.3)
+- **Adskilte Baggrundstemaer for Espresso vs. Pour Over:**
+  - Barista Deck skifter nu automatisk tema alt efter om baristaen har valgt *Espresso* eller *Pour Over*.
+  - `barista_deck_espresso`: Crema Ripple, Naked Portafilter, 9-Bar Manometer, Kværnudløb, Titanium Kværnknive.
+  - `barista_deck_pourover`: Hario V60 Bloom, French Press, Friske Filterbønner, Kværnudløb.
+- **Forbedret Billedkvalitet & Lys:**
+  - Opacitet øget fra 65-70% til 85-90% på alle fotobaggrunde.
+  - Sorte gradient-overlays dæmpet, så metalkrom, kaffedråber og kaffeknive popper skarpt frem.
+  - Glassmorphism (`backdrop-blur-md bg-black/40` og `bg-[#180E09]/75`) på indre bokse.
+- **Foldbare Udstyrskort (Accordion):**
+  - Grinder Fleet, Espresso Machine og Filter & Manuel Bryg har nu 1-klik fold-ud/minimer knapper, der huskes i `localStorage`.
+- **Kvalitetssikring:**
+  - `npm run build` passeret 100% fejlfrit, `npx cap sync` synkroniseret.
+
 ### 2026-10-17 -- Bruger-Inspirerede Makro-Baggrunde (Kværnudløb & Portafilter/Manometer) samt Oprydning (v1.18.2)
 - **Nye Makro-Baggrundstemaer i CARD_THEME_REGISTRY:**
   - `grinder-chute-macro.jpg` (*Kværn & Portafilter Udløb*): Inspireret af brugerens referencer i `public/midlertidig/`. Kommercielt kværnudløb der dispenserer luftigt formalet kaffe i portafilter-kurven på gaflen.
