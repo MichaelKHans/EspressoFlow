@@ -1375,12 +1375,12 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       <div className="flex items-center gap-1 font-bold font-mono text-[9.5px] uppercase tracking-wide">
                         <span>
                           {freshness.phase === 'stale'
-                            ? '🥛 Bedst med mælk / Cortado'
+                            ? (t('beandex.freshness_stale_title') || '🥛 Best with Milk / Cortado')
                             : freshness.phase === 'past_peak'
-                            ? '⏱️ Efter Peak • Kværn Finere'
+                            ? (t('beandex.freshness_past_peak_title') || '⏱️ Past Peak • Grind Finer')
                             : freshness.phase === 'degassing'
-                            ? '💨 Hviler • Afgasser CO₂'
-                            : '✨ Peak Vindue • Ren Espresso'}
+                            ? (t('beandex.freshness_degassing_title') || '💨 Resting • Degassing CO₂')
+                            : (t('beandex.freshness_peak_title') || '✨ Peak Flavor Window')}
                         </span>
                       </div>
                       <p className="font-sans text-[10px] opacity-90 mt-0.5 leading-tight">

@@ -661,5 +661,11 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'beandex.stats_total_bags': '{count} Poser Nydt',
   'beandex.stats_total_kg': '{kg} kg Specialty Kaffe',
   'beandex.stats_top_roaster': 'Top Risteri: {roaster}',
+  'beandex.freshness_stale_title': '🥛 Bedst med mælk / Cortado',
+  'beandex.freshness_past_peak_title': '⏱️ Efter Peak • Kværn Finere',
+  'beandex.freshness_degassing_title': '💨 Hviler • Afgasser CO₂',
+  'beandex.freshness_peak_title': '✨ Peak Vindue • Ren Espresso',
+  'deck.switch_bean': 'Skift Bønne på Bar',
+  'deck.active_count': '{count} aktive',
 };
 

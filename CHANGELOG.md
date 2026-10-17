@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.5] - 2026-10-17
+### Etape 65: 100% Sprog- & Lokaliserings-Rens (Etape 2 af Feedback-Gennemgang)
+- **Korrekt Datolokaliserings-Motor i Logbog (`src/components/Logbook.tsx`):**
+  - Rettet `toLocaleDateString` så den dynamisk anvender appens aktive i18n-sprog (`localeCode` som `en-US` eller `da-DK`) i stedet for telefonens globale OS-locale.
+  - Elimineret blandingsfejlen `TODAY • LØR. 17. OKT.` i engelsk tilstand (viser nu `Today • Sat, Oct 17`).
+- **Elimineret Danske Fallbacks i Kværnråd & Banners:**
+  - `Logbook.tsx`: Opdateret fallback-strenge for dial-in status (`FLOW TOO FAST`, `FLOW TOO SLOW`, `ADJUST GRINDER`) til rene engelske standarder.
+  - `ShotSummaryModal.tsx`: Opdateret kværnjusterings-tekster og barista-tech forbedringsforslag til engelske fallbacks.
+  - `PreBrewCoachBanner.tsx`: Opdateret alle 6 rådgivningsscenarier (`coach.verdict_fast`, `coach.recommend_finer`, `coach.smart_roast_shift`, `coach.degas_drift_guard`, osv.) til fejlfri engelske defaults.
+- **Internationaliseret Friskhedsfaser i Beandex (`src/components/BeandexView.tsx`):**
+  - Flyttet friskhedsoverskrifter (`🥛 Best with Milk / Cortado`, `⏱️ Past Peak • Grind Finer`, `💨 Resting • Degassing CO₂`, `✨ Peak Flavor Window`) ud i `en.ts` og `da.ts`.
+- **Internationaliseret Bar Bønneskifter (`src/components/DrinkSelector.tsx`):**
+  - Oversat bønneskifterens overskrift til `t('deck.switch_bean')` og `t('deck.active_count')`.
+- **Kvalitetssikring:**
+  - `npm run build` kompileret 100% fejlfrit (0 fejl).
+
 ## [1.19.4] - 2026-10-17
 ### Etape 64: Kritiske Data- & Logik-Bugs (Etape 1 af Feedback-Gennemgang)
 - **Fjernet Falsk "Balanced" Fallback i Logbog (`src/components/Logbook.tsx`):**

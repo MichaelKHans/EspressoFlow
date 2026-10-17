@@ -107,7 +107,7 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
     iconType = 'channeling';
     badgeBorder = 'border-amber-500/40 bg-amber-500/10 text-amber-900';
     bannerBorder = 'border-amber-300 bg-[#FFFDF9]';
-    verdictTitle = t('coach.verdict_channeling') || 'Kanalisering på sidste bryg';
+    verdictTitle = t('coach.verdict_channeling') || 'Last shot channeled';
     const spikeGps =
       typeof lastShot?.channeling === 'object' && lastShot.channeling?.flowSpikeGps
         ? lastShot.channeling.flowSpikeGps.toFixed(1)
@@ -117,7 +117,7 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
         spike: spikeGps,
         setting: lastShot?.grindSetting || currentGrindSetting,
       }) ||
-      `AI-Læring Pauseret: Flow-spring (${spikeGps} g/s) detekteret på sidste skud. Kværnprofilen blev skånet – behold ${lastShot?.grindSetting || currentGrindSetting} og brug WDT-nåle.`;
+      `AI Learning Paused: Flow surge (${spikeGps} g/s) detected on last shot. Grinder profile preserved – keep ${lastShot?.grindSetting || currentGrindSetting} and use WDT needles.`;
     targetSettingStr = null; // Do not shift grind when puck channeled
   } else if (hasProactiveAiAdvice && aiPred) {
     iconType = 'ai';
@@ -126,29 +126,29 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
     targetSettingStr = aiPred.formattedSetting;
 
     if (aiPred.reason === 'roast_shift') {
-      verdictTitle = t('grind.ai_recommendation_label') || 'Smart Ristegrads-Skift';
+      verdictTitle = t('grind.ai_recommendation_label') || 'Smart Roast Shift';
       adviceSummary =
         t('coach.smart_roast_shift', {
-          bean: currentBean?.name || 'Kaffe',
+          bean: currentBean?.name || 'Coffee',
           roast: currentBean?.roastLevel || 'Medium',
           grinder: grinderName.split(' ')[0],
           setting: aiPred.formattedSetting,
           delta: aiPred.stepDelta > 0 ? `+${aiPred.stepDelta}` : `${aiPred.stepDelta}`,
         }) ||
-        `Smart Ristegrads-Skift: ${currentBean?.name} er ${currentBean?.roastLevel}. Ud fra din ${grinderName.split(' ')[0]}-profil anbefales ${aiPred.formattedSetting} (${aiPred.stepDelta > 0 ? `+${aiPred.stepDelta}` : aiPred.stepDelta} trin).`;
+        `Smart Roast Shift: ${currentBean?.name} is ${currentBean?.roastLevel}. Based on your ${grinderName.split(' ')[0]} profile, ${aiPred.formattedSetting} is recommended (${aiPred.stepDelta > 0 ? `+${aiPred.stepDelta}` : aiPred.stepDelta} steps).`;
     } else {
       // degas_drift
       const daysOffRoast = currentBean?.roastDate
         ? Math.max(0, Math.floor((Date.now() - new Date(currentBean.roastDate).getTime()) / (1000 * 60 * 60 * 24)))
         : 7;
-      verdictTitle = 'Afgasnings-Værn';
+      verdictTitle = 'Degas Drift Guard';
       adviceSummary =
         t('coach.degas_drift_guard', {
           days: daysOffRoast,
           steps: Math.abs(aiPred.stepDelta),
           setting: aiPred.formattedSetting,
         }) ||
-        `Afgasnings-Værn: Posen er ${daysOffRoast} dage fra ristning. Justér ${Math.abs(aiPred.stepDelta)} trin finere (${aiPred.formattedSetting}) for at bevare optimalt flow.`;
+        `Degas Drift Guard: Bag has aged ${daysOffRoast}d since roast. Adjust ${Math.abs(aiPred.stepDelta)} steps finer (${aiPred.formattedSetting}) to maintain optimal flow.`;
     }
   } else if (lastShot && advice) {
     const currNum = parseFloat(lastShot.grindSetting || currentGrindSetting);
@@ -165,28 +165,28 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
       iconType = 'fast';
       badgeBorder = 'border-amber-500/40 bg-amber-500/10 text-amber-900';
       bannerBorder = 'border-amber-300/80 bg-[#FFFDF9]';
-      verdictTitle = t('coach.verdict_fast') || 'Sidste bryg gik for hurtigt';
+      verdictTitle = t('coach.verdict_fast') || 'Last shot ran fast';
       adviceSummary = targetSettingStr
         ? t('coach.recommend_finer', { steps: advice.grindDeltaSteps, setting: targetSettingStr }) ||
-          `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Stil kværnen ${advice.grindDeltaSteps} trin FINERE til ${targetSettingStr} før du brygger.`
-        : `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Kværn finere før du brygger for at øge modstanden.`;
+          `Last shot took ${lastShot.totalTimeSeconds.toFixed(1)}s. Adjust grinder ${advice.grindDeltaSteps} steps FINER to ${targetSettingStr} before brewing.`
+        : `Last shot took ${lastShot.totalTimeSeconds.toFixed(1)}s. Grind finer before brewing to increase puck resistance.`;
     } else if (isSlow) {
       iconType = 'slow';
       badgeBorder = 'border-[#8C6046]/40 bg-[#8C6046]/10 text-[#6A4733]';
       bannerBorder = 'border-[#8C6046]/30 bg-[#FFFDF9]';
-      verdictTitle = t('coach.verdict_slow') || 'Sidste bryg gik for langsomt';
+      verdictTitle = t('coach.verdict_slow') || 'Last shot ran slow';
       adviceSummary = targetSettingStr
         ? t('coach.recommend_coarser', { steps: advice.grindDeltaSteps, setting: targetSettingStr }) ||
-          `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Stil kværnen ${advice.grindDeltaSteps} trin GROVERE til ${targetSettingStr} før du brygger.`
-        : `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Kværn grovere for et friere flow.`;
+          `Last shot took ${lastShot.totalTimeSeconds.toFixed(1)}s. Adjust grinder ${advice.grindDeltaSteps} steps COARSER to ${targetSettingStr} before brewing.`
+        : `Last shot took ${lastShot.totalTimeSeconds.toFixed(1)}s. Grind coarser for a smoother flow.`;
     } else if (isGood || lastShot) {
       iconType = 'good';
       badgeBorder = 'border-[#72806B]/30 bg-[#72806B]/10 text-[#54624F]';
       bannerBorder = 'border-[#DECFC0] bg-[#FFFDF9]';
-      verdictTitle = t('coach.verdict_good') || 'Sidste bryg var spot-on!';
+      verdictTitle = t('coach.verdict_good') || 'Last shot was spot on!';
       adviceSummary =
         t('coach.recommend_keep', { setting: lastShot.grindSetting || currentGrindSetting }) ||
-        `Sidste bryg (${lastShot.totalTimeSeconds.toFixed(1)}s) sad lige i skabet! Behold din kværn på ${lastShot.grindSetting || currentGrindSetting}.`;
+        `Last shot (${lastShot.totalTimeSeconds.toFixed(1)}s) was in the Golden Zone! Keep your grinder at ${lastShot.grindSetting || currentGrindSetting}.`;
     }
   }
 

@@ -659,6 +659,12 @@ export const en = {
   'beandex.stats_total_bags': '{count} Bags Enjoyed',
   'beandex.stats_total_kg': '{kg} kg Specialty Coffee',
   'beandex.stats_top_roaster': 'Top Roaster: {roaster}',
+  'beandex.freshness_stale_title': '🥛 Best with Milk / Cortado',
+  'beandex.freshness_past_peak_title': '⏱️ Past Peak • Grind Finer',
+  'beandex.freshness_degassing_title': '💨 Resting • Degassing CO₂',
+  'beandex.freshness_peak_title': '✨ Peak Flavor Window',
+  'deck.switch_bean': 'Switch Active Bean',
+  'deck.active_count': '{count} active',
 } as const;
 
 export type TranslationKeys = keyof typeof en;

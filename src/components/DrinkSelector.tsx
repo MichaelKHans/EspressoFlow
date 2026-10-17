@@ -871,8 +871,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                           {activeBeans.length > 1 && onSwitchBean && (
                             <div className="pt-1.5 mt-1 border-t border-[#E8DFD5]/60">
                               <div className="flex items-center justify-between text-[8.5px] text-[#7A6E65] uppercase font-bold mb-1">
-                                <span>Skift Bønne på Bar</span>
-                                <span className="text-[#C26D52] font-mono">{activeBeans.length} aktive</span>
+                                <span>{t('deck.switch_bean')}</span>
+                                <span className="text-[#C26D52] font-mono">{t('deck.active_count', { count: activeBeans.length })}</span>
                               </div>
                               <select
                                 value={currentBean.id}

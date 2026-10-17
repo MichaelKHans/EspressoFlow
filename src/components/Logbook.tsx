@@ -38,7 +38,7 @@ interface DayGroup {
 }
 
 export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialExpandedShotId, onApplyGrindSetting }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [selectedDrinkFilter, setSelectedDrinkFilter] = useState<string>('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [expandedShotId, setExpandedShotId] = useState<string | null>(
@@ -93,10 +93,12 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
       groups[key].push(s);
     });
 
+    const localeCode = language === 'da' ? 'da-DK' : language === 'de' ? 'de-DE' : language === 'it' ? 'it-IT' : language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US';
+
     return Object.entries(groups).map(([dateKey, dayShots]) => {
       let dayLabel = '';
       const sampleDate = new Date(dayShots[0].timestamp);
-      const formattedDate = sampleDate.toLocaleDateString(undefined, {
+      const formattedDate = sampleDate.toLocaleDateString(localeCode, {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -507,24 +509,24 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                               <div className="text-[10px] uppercase font-bold tracking-wider leading-tight flex items-center gap-1.5">
                                 <span>
                                   {isSweetSpot
-                                    ? t('logbook.status_sweet_spot') || 'SWEET SPOT (PERFEKT)'
+                                    ? t('logbook.status_sweet_spot') || 'SWEET SPOT (OPTIMAL)'
                                     : shot.channelingDetected
-                                    ? t('logbook.status_channeling') || 'KANALISERING OPDAGET'
+                                    ? t('logbook.status_channeling') || 'CHANNELING DETECTED'
                                     : isFiner
-                                    ? t('logbook.status_fast') || 'FOR HURTIGT FLOW (UNDER-EXTRACTED)'
-                                    : t('logbook.status_slow') || 'FOR LANGSOMT FLOW (OVER-EXTRACTED)'}
+                                    ? t('logbook.status_fast') || 'FLOW TOO FAST (UNDER-EXTRACTED)'
+                                    : t('logbook.status_slow') || 'FLOW TOO SLOW (OVER-EXTRACTED)'}
                                 </span>
                               </div>
                               <div className="text-xs font-bold mt-0.5 text-[#2C2018] flex items-center justify-between gap-2 flex-wrap">
                                 <span className="truncate">
                                   {isSweetSpot
-                                    ? (t('logbook.dialin_keep', { setting: shot.grindSetting }) || `Behold kværn på ${shot.grindSetting} (optimal ekstraktion)`)
+                                    ? (t('logbook.dialin_keep', { setting: shot.grindSetting }) || `Keep grinder at ${shot.grindSetting} (optimal extraction)`)
                                     : isFiner && nextSettingStr
-                                    ? (t('logbook.dialin_finer', { from: shot.grindSetting, to: nextSettingStr }) || `Drej kværn FINERE: ${shot.grindSetting} ➔ ${nextSettingStr}`)
+                                    ? (t('logbook.dialin_finer', { from: shot.grindSetting, to: nextSettingStr }) || `Adjust grinder FINER: ${shot.grindSetting} ➔ ${nextSettingStr}`)
                                     : isCoarser && nextSettingStr
-                                    ? (t('logbook.dialin_coarser', { from: shot.grindSetting, to: nextSettingStr }) || `Drej kværn GROVERE: ${shot.grindSetting} ➔ ${nextSettingStr}`)
+                                    ? (t('logbook.dialin_coarser', { from: shot.grindSetting, to: nextSettingStr }) || `Adjust grinder COARSER: ${shot.grindSetting} ➔ ${nextSettingStr}`)
                                     : shot.channelingDetected
-                                    ? (t('logbook.dialin_channeling') || 'Behold kværn • Forbedr puck prep (WDT & jævnt stamp)')
+                                    ? (t('logbook.dialin_channeling') || 'Keep grinder • Improve puck prep (WDT & even tamp)')
                                     : advice.grinderSpecificAdvice || advice.summary}
                                 </span>
                                 {onApplyGrindSetting && (isFiner || isCoarser) && nextSettingStr && (
@@ -538,8 +540,8 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                                     className="px-2 py-0.5 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-sans font-bold transition shadow-2xs shrink-0 cursor-pointer"
                                   >
                                     {appliedShotId === shot.id
-                                      ? (t('logbook.applied_grind') || '✓ Anvendt')
-                                      : (t('logbook.apply_grind', { setting: nextSettingStr }) || `Anvend ${nextSettingStr}`)}
+                                      ? (t('logbook.applied_grind') || '✓ Applied')
+                                      : (t('logbook.apply_grind', { setting: nextSettingStr }) || `Apply ${nextSettingStr}`)}
                                   </button>
                                 )}
                               </div>
@@ -612,7 +614,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                               <div className="flex items-center gap-1.5">
                                 <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6E65]">
-                                  {t('logbook.barista_tech_title') || 'BARISTA TECH FORBEDRINGSFORSLAG'}
+                                  {t('logbook.barista_tech_title') || 'BARISTA TECH IMPROVEMENT ADVICE'}
                                 </span>
                               </div>
                               <span

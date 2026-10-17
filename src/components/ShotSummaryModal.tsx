@@ -307,12 +307,12 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
                 </span>
                 <span className="text-sm font-bold text-[#C26D52]">
                   {advice.grindAdvice === 'finer' && nextSettingStr
-                    ? (t('logbook.dialin_finer', { from: shot.grindSetting, to: nextSettingStr }) || `Drej kværn FINERE: ${shot.grindSetting} ➔ ${nextSettingStr}`)
+                    ? (t('logbook.dialin_finer', { from: shot.grindSetting, to: nextSettingStr }) || `Adjust grinder FINER: ${shot.grindSetting} ➔ ${nextSettingStr}`)
                     : advice.grindAdvice === 'coarser' && nextSettingStr
-                    ? (t('logbook.dialin_coarser', { from: shot.grindSetting, to: nextSettingStr }) || `Drej kværn GROVERE: ${shot.grindSetting} ➔ ${nextSettingStr}`)
+                    ? (t('logbook.dialin_coarser', { from: shot.grindSetting, to: nextSettingStr }) || `Adjust grinder COARSER: ${shot.grindSetting} ➔ ${nextSettingStr}`)
                     : advice.grindAdvice === 'keep'
-                    ? (t('logbook.dialin_keep', { setting: shot.grindSetting }) || `Behold kværn på ${shot.grindSetting} (optimalt)`)
-                    : advice.grinderSpecificAdvice || 'Hold kværnindstilling – forbedr puck prep'}
+                    ? (t('logbook.dialin_keep', { setting: shot.grindSetting }) || `Keep grinder at ${shot.grindSetting} (optimal)`)
+                    : advice.grinderSpecificAdvice || 'Keep grinder setting • Improve puck prep'}
                 </span>
               </div>
 
