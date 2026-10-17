@@ -13,6 +13,7 @@ import {
   Sparkles,
   Flame,
   Share2,
+  ShieldAlert,
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { ShotShareModal } from './ShotShareModal';
@@ -279,6 +280,24 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
             <p className="text-xs text-[#2C2018]/90 mt-2.5 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-[#E8DFD5]">
               {advice.rationale}
             </p>
+
+            {/* AI Learning Paused Shield Alert (Protects Grinder Profile against Channeling Spikes) */}
+            {isChanneling && (
+              <div className="mt-2.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block text-[11px] font-bold text-amber-950 uppercase tracking-wide">
+                    {t('grind.ai_recommendation_label')}: AI-Læring Pauseret
+                  </strong>
+                  <p className="text-[11px] leading-relaxed text-amber-900/90 font-mono">
+                    {t('coach.ai_paused_shield', {
+                      spike: (typeof shot.channeling === 'object' && shot.channeling?.flowSpikeGps ? shot.channeling.flowSpikeGps.toFixed(1) : '3.0'),
+                      setting: shot.grindSetting,
+                    }) || `Flow-spring detekteret på dette skud. Kværnmodellen blev skånet – behold ${shot.grindSetting} og forbedr puck prep.`}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Grind Adjustment Recommendation Callout */}
             <div className="mt-3 pt-3 border-t border-[#DECFC0] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">

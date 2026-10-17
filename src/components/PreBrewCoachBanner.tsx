@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import {
   Sliders,
   CheckCircle,
-  AlertTriangle,
   Check,
   X,
+  Sparkles,
+  ShieldAlert,
 } from 'lucide-react';
-import type { ShotRecord } from '../types/espresso';
+import type { ShotRecord, CoffeeBeanProfile } from '../types/espresso';
 import { generateDialInAdvice, type DialInAdvice } from '../lib/espressoMath';
+import { loadOrCreateGrinderProfile, getAnchorForBean, getLatestAnchorForGrinder } from '../lib/storage';
+import { predictOptimalGrindSetting } from '../lib/grindIntelligence';
 import { useTranslation } from '../i18n';
 
 interface PreBrewCoachBannerProps {
@@ -18,6 +21,7 @@ interface PreBrewCoachBannerProps {
   shots: ShotRecord[];
   onApplyGrindSetting: (newSetting: string) => void;
   isBrewing?: boolean;
+  currentBean?: CoffeeBeanProfile;
 }
 
 export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
@@ -28,6 +32,7 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
   shots,
   onApplyGrindSetting,
   isBrewing = false,
+  currentBean,
 }) => {
   const { t } = useTranslation();
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
@@ -38,43 +43,150 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
     return null;
   }
 
+  // Check Adaptive Grind Intelligence (On-Device AI Engine)
+  const profile = loadOrCreateGrinderProfile(grinderName);
+  const anchor = currentBean ? getAnchorForBean(currentBean.id) : undefined;
+  const refAnchor = getLatestAnchorForGrinder(grinderName);
+  const aiPred = currentBean
+    ? predictOptimalGrindSetting({
+        grinderProfile: profile,
+        activeBean: currentBean,
+        anchor,
+        referenceAnchorForGrinder: refAnchor,
+        currentSetting: currentGrindSetting,
+      })
+    : null;
+
   // Find the most recent shot for this drink (or by name match)
   const lastShot = shots.find(
     (s) => s.drinkId === activeDrinkId || (s.drinkName || '').toLowerCase() === activeDrinkName.toLowerCase()
   );
 
-  if (!lastShot) {
-    return null; // No previous history for this recipe yet
+  const hasProactiveAiAdvice = Boolean(
+    aiPred &&
+    (aiPred.reason === 'roast_shift' || aiPred.reason === 'degas_drift') &&
+    aiPred.formattedSetting !== currentGrindSetting
+  );
+
+  if (!lastShot && !hasProactiveAiAdvice) {
+    return null; // No previous history for this recipe yet and no proactive shift
   }
 
-  const advice: DialInAdvice = generateDialInAdvice(
-    lastShot.totalTimeSeconds,
-    lastShot.doseGrams,
-    lastShot.actualYieldGrams,
-    lastShot.channeling || lastShot.channelingDetected,
-    lastShot.tasteRating,
-    lastShot.preInfusionSeconds,
-    lastShot.roastLevel,
-    lastShot.grinderName || grinderName,
-    lastShot.grindSetting
-  );
-
   const isChanneling = Boolean(
-    lastShot.channelingDetected ||
-    (typeof lastShot.channeling === 'object' && lastShot.channeling.detected)
+    lastShot &&
+    (lastShot.channelingDetected ||
+    (typeof lastShot.channeling === 'object' && lastShot.channeling.detected))
   );
-  const isFast = !isChanneling && (lastShot.totalTimeSeconds < 24.0 || advice.grindAdvice === 'finer');
-  const isSlow = !isChanneling && (lastShot.totalTimeSeconds > 32.0 || advice.grindAdvice === 'coarser');
-  const isGood = !isChanneling && !isFast && !isSlow;
 
-  // Calculate suggested setting
-  const currNum = parseFloat(lastShot.grindSetting || currentGrindSetting);
-  let targetSettingStr: string | null = advice.targetGrindSetting || null;
-  if (!targetSettingStr && !isNaN(currNum) && advice.grindDeltaSteps > 0) {
-    if (advice.grindAdvice === 'finer') {
-      targetSettingStr = (Math.max(0, currNum - advice.grindDeltaSteps)).toFixed(1).replace('.0', '');
-    } else if (advice.grindAdvice === 'coarser') {
-      targetSettingStr = (currNum + advice.grindDeltaSteps).toFixed(1).replace('.0', '');
+  const advice: DialInAdvice | null = lastShot
+    ? generateDialInAdvice(
+        lastShot.totalTimeSeconds,
+        lastShot.doseGrams,
+        lastShot.actualYieldGrams,
+        lastShot.channeling || lastShot.channelingDetected,
+        lastShot.tasteRating,
+        lastShot.preInfusionSeconds,
+        lastShot.roastLevel,
+        lastShot.grinderName || grinderName,
+        lastShot.grindSetting
+      )
+    : null;
+
+  const isFast = Boolean(lastShot && !isChanneling && (lastShot.totalTimeSeconds < 24.0 || (advice && advice.grindAdvice === 'finer')));
+  const isSlow = Boolean(lastShot && !isChanneling && (lastShot.totalTimeSeconds > 32.0 || (advice && advice.grindAdvice === 'coarser')));
+  const isGood = Boolean(lastShot && !isChanneling && !isFast && !isSlow);
+
+  let targetSettingStr: string | null = null;
+  let badgeBorder = 'border-[#72806B]/30 bg-[#72806B]/10 text-[#54624F]';
+  let bannerBorder = 'border-[#DECFC0] bg-[#FFFDF9]';
+  let verdictTitle = t('coach.verdict_good') || 'Sidste bryg var spot-on!';
+  let adviceSummary = '';
+  let iconType: 'good' | 'channeling' | 'fast' | 'slow' | 'ai' = 'good';
+
+  if (isChanneling) {
+    iconType = 'channeling';
+    badgeBorder = 'border-amber-500/40 bg-amber-500/10 text-amber-900';
+    bannerBorder = 'border-amber-300 bg-[#FFFDF9]';
+    verdictTitle = t('coach.verdict_channeling') || 'Kanalisering på sidste bryg';
+    const spikeGps =
+      typeof lastShot?.channeling === 'object' && lastShot.channeling?.flowSpikeGps
+        ? lastShot.channeling.flowSpikeGps.toFixed(1)
+        : '3.0';
+    adviceSummary =
+      t('coach.ai_paused_shield', {
+        spike: spikeGps,
+        setting: lastShot?.grindSetting || currentGrindSetting,
+      }) ||
+      `AI-Læring Pauseret: Flow-spring (${spikeGps} g/s) detekteret på sidste skud. Kværnprofilen blev skånet – behold ${lastShot?.grindSetting || currentGrindSetting} og brug WDT-nåle.`;
+    targetSettingStr = null; // Do not shift grind when puck channeled
+  } else if (hasProactiveAiAdvice && aiPred) {
+    iconType = 'ai';
+    badgeBorder = 'border-[#C26D52]/40 bg-[#C26D52]/10 text-[#8C3F27]';
+    bannerBorder = 'border-[#C26D52]/30 bg-[#FFFDF9]';
+    targetSettingStr = aiPred.formattedSetting;
+
+    if (aiPred.reason === 'roast_shift') {
+      verdictTitle = t('grind.ai_recommendation_label') || 'Smart Ristegrads-Skift';
+      adviceSummary =
+        t('coach.smart_roast_shift', {
+          bean: currentBean?.name || 'Kaffe',
+          roast: currentBean?.roastLevel || 'Medium',
+          grinder: grinderName.split(' ')[0],
+          setting: aiPred.formattedSetting,
+          delta: aiPred.stepDelta > 0 ? `+${aiPred.stepDelta}` : `${aiPred.stepDelta}`,
+        }) ||
+        `Smart Ristegrads-Skift: ${currentBean?.name} er ${currentBean?.roastLevel}. Ud fra din ${grinderName.split(' ')[0]}-profil anbefales ${aiPred.formattedSetting} (${aiPred.stepDelta > 0 ? `+${aiPred.stepDelta}` : aiPred.stepDelta} trin).`;
+    } else {
+      // degas_drift
+      const daysOffRoast = currentBean?.roastDate
+        ? Math.max(0, Math.floor((Date.now() - new Date(currentBean.roastDate).getTime()) / (1000 * 60 * 60 * 24)))
+        : 7;
+      verdictTitle = 'Afgasnings-Værn';
+      adviceSummary =
+        t('coach.degas_drift_guard', {
+          days: daysOffRoast,
+          steps: Math.abs(aiPred.stepDelta),
+          setting: aiPred.formattedSetting,
+        }) ||
+        `Afgasnings-Værn: Posen er ${daysOffRoast} dage fra ristning. Justér ${Math.abs(aiPred.stepDelta)} trin finere (${aiPred.formattedSetting}) for at bevare optimalt flow.`;
+    }
+  } else if (lastShot && advice) {
+    const currNum = parseFloat(lastShot.grindSetting || currentGrindSetting);
+    targetSettingStr = advice.targetGrindSetting || null;
+    if (!targetSettingStr && !isNaN(currNum) && advice.grindDeltaSteps > 0) {
+      if (advice.grindAdvice === 'finer') {
+        targetSettingStr = Math.max(0, currNum - advice.grindDeltaSteps).toFixed(1).replace('.0', '');
+      } else if (advice.grindAdvice === 'coarser') {
+        targetSettingStr = (currNum + advice.grindDeltaSteps).toFixed(1).replace('.0', '');
+      }
+    }
+
+    if (isFast) {
+      iconType = 'fast';
+      badgeBorder = 'border-amber-500/40 bg-amber-500/10 text-amber-900';
+      bannerBorder = 'border-amber-300/80 bg-[#FFFDF9]';
+      verdictTitle = t('coach.verdict_fast') || 'Sidste bryg gik for hurtigt';
+      adviceSummary = targetSettingStr
+        ? t('coach.recommend_finer', { steps: advice.grindDeltaSteps, setting: targetSettingStr }) ||
+          `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Stil kværnen ${advice.grindDeltaSteps} trin FINERE til ${targetSettingStr} før du brygger.`
+        : `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Kværn finere før du brygger for at øge modstanden.`;
+    } else if (isSlow) {
+      iconType = 'slow';
+      badgeBorder = 'border-[#8C6046]/40 bg-[#8C6046]/10 text-[#6A4733]';
+      bannerBorder = 'border-[#8C6046]/30 bg-[#FFFDF9]';
+      verdictTitle = t('coach.verdict_slow') || 'Sidste bryg gik for langsomt';
+      adviceSummary = targetSettingStr
+        ? t('coach.recommend_coarser', { steps: advice.grindDeltaSteps, setting: targetSettingStr }) ||
+          `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Stil kværnen ${advice.grindDeltaSteps} trin GROVERE til ${targetSettingStr} før du brygger.`
+        : `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Kværn grovere for et friere flow.`;
+    } else if (isGood || lastShot) {
+      iconType = 'good';
+      badgeBorder = 'border-[#72806B]/30 bg-[#72806B]/10 text-[#54624F]';
+      bannerBorder = 'border-[#DECFC0] bg-[#FFFDF9]';
+      verdictTitle = t('coach.verdict_good') || 'Sidste bryg var spot-on!';
+      adviceSummary =
+        t('coach.recommend_keep', { setting: lastShot.grindSetting || currentGrindSetting }) ||
+        `Sidste bryg (${lastShot.totalTimeSeconds.toFixed(1)}s) sad lige i skabet! Behold din kværn på ${lastShot.grindSetting || currentGrindSetting}.`;
     }
   }
 
@@ -89,37 +201,6 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
     }
   };
 
-  // Visual Theme Configuration based on extraction verdict
-  let badgeBorder = 'border-[#72806B]/30 bg-[#72806B]/10 text-[#54624F]';
-  let bannerBorder = 'border-[#DECFC0] bg-[#FFFDF9]';
-  let verdictTitle = t('coach.verdict_good') || 'Sidste bryg var spot-on!';
-  let adviceSummary = t('coach.recommend_keep', { setting: lastShot.grindSetting || currentGrindSetting }) ||
-    `Sidste bryg (${lastShot.totalTimeSeconds.toFixed(1)}s) sad lige i skabet! Behold din kværn på ${lastShot.grindSetting || currentGrindSetting}.`;
-
-  if (isChanneling) {
-    badgeBorder = 'border-amber-500/40 bg-amber-500/10 text-amber-900';
-    bannerBorder = 'border-amber-300 bg-[#FFFDF9]';
-    verdictTitle = t('coach.verdict_channeling') || 'Kanalisering på sidste bryg';
-    adviceSummary = t('coach.recommend_channeling', { setting: lastShot.grindSetting || currentGrindSetting }) ||
-      `Sidste bryg havde flow-spike (kanalisering). Hold kværnen på ${lastShot.grindSetting || currentGrindSetting} og fokusér på jævn WDT & tamping.`;
-  } else if (isFast) {
-    badgeBorder = 'border-amber-500/40 bg-amber-500/10 text-amber-900';
-    bannerBorder = 'border-amber-300/80 bg-[#FFFDF9]';
-    verdictTitle = t('coach.verdict_fast') || 'Sidste bryg gik for hurtigt';
-    adviceSummary = targetSettingStr
-      ? (t('coach.recommend_finer', { steps: advice.grindDeltaSteps, setting: targetSettingStr }) ||
-        `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Stil kværnen ${advice.grindDeltaSteps} trin FINERE til ${targetSettingStr} før du brygger.`)
-      : `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Kværn finere før du brygger for at øge modstanden.`;
-  } else if (isSlow) {
-    badgeBorder = 'border-[#8C6046]/40 bg-[#8C6046]/10 text-[#6A4733]';
-    bannerBorder = 'border-[#8C6046]/30 bg-[#FFFDF9]';
-    verdictTitle = t('coach.verdict_slow') || 'Sidste bryg gik for langsomt';
-    adviceSummary = targetSettingStr
-      ? (t('coach.recommend_coarser', { steps: advice.grindDeltaSteps, setting: targetSettingStr }) ||
-        `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Stil kværnen ${advice.grindDeltaSteps} trin GROVERE til ${targetSettingStr} før du brygger.`)
-      : `Sidste bryg tog ${lastShot.totalTimeSeconds.toFixed(1)}s. Kværn grovere for et friere flow.`;
-  }
-
   return (
     <aside
       aria-label={t('coach.pre_brew_title') || 'Barista Coach Anbefaling'}
@@ -128,10 +209,12 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
       <div className="flex items-start justify-between gap-2.5">
         <div className="flex items-start gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-            {isGood ? (
+            {iconType === 'good' ? (
               <CheckCircle className="w-4 h-4 text-[#10B981]" />
-            ) : isChanneling ? (
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+            ) : iconType === 'channeling' ? (
+              <ShieldAlert className="w-4 h-4 text-amber-400" />
+            ) : iconType === 'ai' ? (
+              <Sparkles className="w-4 h-4 text-[#C26D52]" />
             ) : (
               <Sliders className="w-4 h-4 text-[#C26D52]" />
             )}
@@ -145,7 +228,9 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
                 {verdictTitle}
               </span>
               <span className="text-[10px] text-[#7A6E65]">
-                {lastShot.totalTimeSeconds.toFixed(1)}s @ {lastShot.grindSetting}
+                {lastShot
+                  ? `${lastShot.totalTimeSeconds.toFixed(1)}s @ ${lastShot.grindSetting}`
+                  : `${currentBean?.roastLevel || 'Medium'} • ${currentBean?.name || 'Kaffe'}`}
               </span>
             </div>
             <p className="text-xs text-[#2C2018] font-sans font-medium leading-relaxed pt-0.5">
@@ -157,7 +242,7 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
         <button
           type="button"
           onClick={() => setIsDismissed(true)}
-          className="text-[#7A6E65] hover:text-[#2C2018] p-1 rounded-lg transition shrink-0"
+          className="text-[#7A6E65] hover:text-[#2C2018] p-1 rounded-lg transition shrink-0 cursor-pointer"
           title={t('coach.dismiss') || 'Skjul'}
         >
           <X className="w-4 h-4" />
@@ -199,3 +284,4 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
     </aside>
   );
 };
+

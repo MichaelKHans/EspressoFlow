@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Plus, Check, Trash2, Layers, Camera, Globe, Settings, Thermometer, ChevronDown, ChevronUp } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Plus, Check, Trash2, Layers, Camera, Globe, Settings, Thermometer, ChevronDown, ChevronUp, Sparkles, Brain } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
@@ -63,7 +63,16 @@ import {
   saveKettle,
   FILTER_BREWER_PRESETS,
   KETTLE_PRESETS,
+  loadOrCreateGrinderProfile,
+  saveGrinderProfile,
+  saveBeanAnchor,
 } from './lib/storage';
+import {
+  evaluateShotTransitionForLearning,
+  updateGrinderLearnedProfile,
+  calculateNormalizedShotTime,
+  getFactorySecondsPerStep,
+} from './lib/grindIntelligence';
 import { analyzeChanneling, analyzeExtractionDynamics, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
 import { subscribeToRemoteCommands, broadcastShotVerdict } from './lib/antiLiveSync';
 import { redeemLicenseKey } from './lib/licenseEngine';
@@ -679,6 +688,41 @@ export function App() {
       targetYield: targetYieldGrams,
       dose: doseGrams,
     });
+
+    // Background Universal Adaptive Grind Intelligence (Zero Token On-Device Machine Learning)
+    try {
+      const prevShot = shots.find(
+        (s) => s.grinderName === grinderName && s.coffeeName === coffeeBeanName && s.method !== 'pour_over'
+      );
+      if (prevShot) {
+        const factorySeconds = getFactorySecondsPerStep(grinderName);
+        const evaluation = evaluateShotTransitionForLearning(prevShot, newShot, factorySeconds);
+        if (evaluation.accepted) {
+          const learnedProfile = loadOrCreateGrinderProfile(grinderName);
+          const updatedProfile = updateGrinderLearnedProfile(learnedProfile, evaluation);
+          saveGrinderProfile(updatedProfile);
+        }
+      }
+
+      // Lock BeanCalibrationAnchor if shot landed in Golden Zone (24-32s, no channeling)
+      const isGoldenZone = !isChanneling && timeSeconds >= 24.0 && timeSeconds <= 32.0;
+      if (isGoldenZone && activeBeanId) {
+        const freshness = calculateBeanFreshness(currentBean.roastDate, currentBean.roastLevel);
+        saveBeanAnchor({
+          beanId: activeBeanId,
+          beanName: coffeeBeanName,
+          grinderId: grinderName,
+          roastLevel: roastLevel,
+          anchorSetting: parseFloat(grindSetting) || 15.0,
+          anchorDaysOffRoast: freshness.daysOffRoast,
+          anchorNormalizedTime: calculateNormalizedShotTime(newShot),
+          anchorDoseGrams: doseGrams,
+          anchorTimestamp: new Date().toISOString(),
+        });
+      }
+    } catch (err) {
+      console.warn('Grind intelligence background update error (ignored)', err);
+    }
   }, [
     activeDrinkId,
     coffeeBeanName,
@@ -1108,6 +1152,7 @@ export function App() {
               shots={shots}
               onApplyGrindSetting={handleApplyGrindAdjustment}
               isBrewing={isBrewing}
+              currentBean={currentBean}
             />
 
             <ScaleMonitor
@@ -1341,6 +1386,32 @@ export function App() {
                                 <span className="text-[10px] text-[#8C7E74] block mt-0.5">
                                   Scale: {g.stepUnit || 'steps'}
                                 </span>
+                                {(() => {
+                                  const p = loadOrCreateGrinderProfile(g.name || g.id);
+                                  const transitions = p.validTransitionsCount;
+                                  const kEff = p.effectiveSecondsPerUnit;
+                                  if (transitions >= 5) {
+                                    return (
+                                      <div className="flex items-center gap-1 text-[9px] font-bold text-[#E8C29D] bg-[#C26D52]/20 border border-[#C26D52]/40 px-2 py-0.5 rounded-full mt-1.5 w-fit">
+                                        <Sparkles className="w-3 h-3 text-[#C26D52]" />
+                                        <span>{t('grind.master_calibrated')} ({kEff.toFixed(1)}s / trin)</span>
+                                      </div>
+                                    );
+                                  }
+                                  if (transitions >= 2) {
+                                    return (
+                                      <div className="flex items-center gap-1 text-[9px] font-bold text-[#A8BFA0] bg-[#72806B]/20 border border-[#72806B]/40 px-2 py-0.5 rounded-full mt-1.5 w-fit">
+                                        <Brain className="w-3 h-3 text-[#A8BFA0]" />
+                                        <span>{t('grind.adaptive_active')} ({transitions} bryg • {kEff.toFixed(1)}s / trin)</span>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div className="flex items-center gap-1 text-[9px] text-[#A6998E] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full mt-1.5 w-fit">
+                                      <span>🌱 {t('grind.factory_baseline')} • {t('grind.learning_burrs')}</span>
+                                    </div>
+                                  );
+                                })()}
                               </div>
 
                               {isActive ? (

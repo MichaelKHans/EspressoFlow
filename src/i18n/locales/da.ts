@@ -503,9 +503,16 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'coach.recommend_finer': 'Sidste bryg gik for hurtigt. Stil kværnen FINERE til {setting} før du brygger.',
   'coach.recommend_coarser': 'Sidste bryg gik for langsomt. Stil kværnen GROVERE til {setting} før du brygger.',
   'coach.recommend_keep': 'Sidste bryg ramte Golden Zone! Behold kværnen på {setting}.',
-  'coach.recommend_channeling': 'Sidste bryg havde flow-spike. Hold kværnen på {setting} og brug WDT-nåle til jævn fordeling.',
   'coach.apply_btn': 'Sæt til {setting}',
   'coach.dismiss': 'Skjul',
+  'coach.smart_roast_shift': 'Smart Ristegrads-Skift: {bean} er {roast}. Ud fra din {grinder}-profil anbefales {setting} ({delta} trin vs forrige bønne).',
+  'coach.degas_drift_guard': 'Afgasnings-Værn: Posen er {days} dage fra ristning. Justér {steps} trin finere ({setting}) for at bevare optimalt flow.',
+  'coach.ai_paused_shield': 'AI-Læring Pauseret: Flow-spring ({spike} g/s) detekteret på sidste skud. Kværnprofilen blev skånet – behold {setting} og brug WDT-nåle.',
+  'grind.master_calibrated': 'Mester-Kalibreret',
+  'grind.adaptive_active': 'Adaptiv AI Aktiv',
+  'grind.factory_baseline': 'Fabrikskalibreret',
+  'grind.learning_burrs': 'Lærer dine knive...',
+  'grind.ai_recommendation_label': 'Adaptiv Kværn-AI',
 
   // Logbook Date Grouping & Curve Expansion
   'logbook.today': 'I dag',

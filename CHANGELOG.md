@@ -2,6 +2,37 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.0] - 2026-10-17
+### Etape 60: Universal Adaptive Grind Intelligence (On-Device Selvlærende Kværn-Motor & Master Barista Sparringspartner)
+- **100% On-Device Selvlærende Kværn-Motor (`src/lib/grindIntelligence.ts`):**
+  - **Nul AI-Tokens & Nul API-Omkostninger:** Kører fuldstændig deterministisk og lynhurtigt (< 0.1 ms) i TypeScript på brugerens egen enhed uden eksterne cloud-kald.
+  - **Normaliseret Ekstraktionstid ($T_{\text{norm}}$):** Eliminerer fejl ved stop-tid og variabelt yield ved at standardisere mod et 1:2 reference-forhold ($18.0\text{g}$) og væskemekanisk lejehøjdekoefficient: $T_{\text{norm}} = (T_{\text{pre}} + \frac{2.0 \cdot D}{\bar{Q}_{\text{flow}}}) \cdot (\frac{18.0}{D})^{0.30}$.
+  - **5 Matematiske Sanity Gates (`evaluateShotTransitionForLearning`):**
+    1. *Anti-Channeling Værn:* Afviser par med flow-spikes forårsaget af kanalisering.
+    2. *Fysisk Monotonicitet:* Afviser umulige tilstande (fx finere kværn med hurtigere flow).
+    3. *Kontekst-Filter:* Samme bønne, samme kværn, inden for 48 timer.
+    4. *Dødzonestyring:* Minimum $\Delta S \ge 0.5$ og maksimum $\Delta S \le 6.0$.
+    5. *Slope Outlier Clamping:* Klemmer empirisk respons ind i $[0.4 \cdot k_{\text{factory}}, 2.5 \cdot k_{\text{factory}}]$.
+  - **Bayesian Prior + EWMA:** Fabriksstandard ($k_{\text{factory}}$) flettes glat med baristaens faktiske kværnknive over tid via $C = \min(1.0, \frac{N}{N + 2.0})$, hvor $N$ er antal godkendte skudovergange.
+  - **Smart Ristegrads-Matrix & Logaritmisk Afgasningsdrift:**
+    - Automatisk kværn-offset ved skift mellem lys, mellem og mørk ristning.
+    - Logaritmisk $\text{CO}_2$-afgasningskompensation ($\Delta S_{\text{aging}} = -\gamma \cdot \frac{3.0}{k_{\text{eff}}} \cdot \ln(\dots)$), så bønner der har ligget 1-3 uger justeres finere for at modvirke faldende modstand.
+- **Proaktiv "Master Barista" UI/UX Integration:**
+  - **Pre-Brew Coach Banner (`PreBrewCoachBanner.tsx`):**
+    - Viser proaktive *Smart Ristegrads-Skift* og *Afgasnings-Værn* med direkte 1-tryks `[Sæt til {setting}]` knap, før baristaen overhovedet trækker første skud med en ny pose eller en ældet bønne.
+    - Viser `🛡️ AI-Læring Pauseret` med et gyldent skjoldikon, hvis sidste skud kanaliserede, og forklarer at kværnmodellen blev skånet.
+  - **Dial-In Studio (`DialInWizardModal.tsx`):**
+    - Viser den adaptive kværnanbefaling direkte under kværnjusterings-stepperen med forklaring chip og 1-tryks anvendelse.
+  - **Shot Opsummering (`ShotSummaryModal.tsx`):**
+    - Informerer straks baristaen med en beroligende besked, hvis AI-læring blev pauseret på grund af et flow-spring.
+  - **Grinder Fleet Kort i Bar-fanen (`App.tsx`):**
+    - Viser dynamiske mestre-emblemer for hver kværn i brugerens setup:
+      - $\ge 5$ skud: `✨ Mester-Kalibreret ({k}s / trin)`
+      - $\ge 2$ skud: `🧠 Adaptiv AI Aktiv ({N} bryg • {k}s / trin)`
+      - $0-1$ skud: `🌱 Fabrikskalibreret • Lærer dine knive...`
+- **Fuld Sprogunderstøttelse (`da.ts` & `en.ts`):**
+  - Alle nye begreber og forklaringer er fuldt lokaliseret på dansk og engelsk med specialty coffee fagtermer intakte.
+
 ## [1.18.4] - 2026-10-17
 ### Etape 59: Harmoniseret Dial-In & Kværn-Logik (Slut med Modstridende Anbefalinger og Frakoblet Kværntal)
 - **Rettet Modstridende Kværnanbefalinger (`src/lib/espressoMath.ts`):**

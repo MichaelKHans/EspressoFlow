@@ -501,9 +501,16 @@ export const en = {
   'coach.recommend_finer': 'Last shot ran fast. Adjust grinder FINER to {setting} before brewing.',
   'coach.recommend_coarser': 'Last shot ran slow. Adjust grinder COARSER to {setting} before brewing.',
   'coach.recommend_keep': 'Last brew was in the Golden Zone! Keep your grinder at {setting}.',
-  'coach.recommend_channeling': 'Last brew had a flow spike. Keep grinder at {setting} and focus on WDT needle distribution.',
   'coach.apply_btn': 'Set to {setting}',
   'coach.dismiss': 'Dismiss',
+  'coach.smart_roast_shift': 'Smart Roast Shift: {bean} is {roast}. Based on your {grinder} profile, {setting} is recommended ({delta} steps vs previous roast).',
+  'coach.degas_drift_guard': 'Degas Drift Guard: Bag has aged {days}d since roast. Adjust {steps} steps finer ({setting}) to maintain Golden Zone flow.',
+  'coach.ai_paused_shield': 'AI Learning Paused: Flow surge ({spike} g/s) detected on last shot. Grinder profile was preserved – keep {setting} and focus on WDT needle distribution.',
+  'grind.master_calibrated': 'Master Calibrated',
+  'grind.adaptive_active': 'Adaptive AI Active',
+  'grind.factory_baseline': 'Factory Baseline',
+  'grind.learning_burrs': 'Learning your burrs...',
+  'grind.ai_recommendation_label': 'Adaptive Grind AI',
 
   // Logbook Date Grouping & Curve Expansion
   'logbook.today': 'Today',

@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.18.4 (Harmonized Dial-In Engine, Connected Grinder Settings & 1-Tap Adjustments)  
+> **Gældende version:** v1.19.0 (Universal Adaptive Grind Intelligence, Bayesian Burr Learning & On-Device Master Barista)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -330,6 +330,8 @@ flowchart TD
 | `espresso_temp_unit` | `'C' \| 'F'` | Valgt måleenhed for temperatur (Celsius / Fahrenheit). |
 | `espresso_drink_grinds` | `Record<string, string>` | Husket kværnindstilling pr. kaffebønne og drikketype (`beanId_drinkId`). |
 | `flowbean_drink_calibrations_v1` | `Record<string, DrinkCalibration>` | Komplet kalibreringshukommelse for basket dose, target yield, kværn og temp pr. drik og bønne. |
+| `flowbean_grind_intelligence_v1` | `Record<string, GrinderLearnedProfile>` | Universal Adaptive Grind Intelligence: Lærte kværnknive-respons ($s/\text{step}$), konfidensscore og ristegrads-offsets. |
+| `flowbean_bean_anchors_v1` | `Record<string, BeanCalibrationAnchor>` | Dial-in ankre låst i Golden Zone (24-32s uden kanalisering) til beregning af afgasning og ristegrads-skift. |
 | `espresso_curator_checklist` | `Record<string, boolean>` | Kuratorens afkrydsede periodiske kvalitetstjek. |
 | `espresso_last_curator_audit` | `string (YYYY-MM-DD)` | Dato for senest gennemførte officielle kurator-revision. |
 

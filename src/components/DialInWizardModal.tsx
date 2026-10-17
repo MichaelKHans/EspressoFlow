@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, RoastLevel, TempUnit } from '../types/espresso';
-import { resolveGrinder, loadDrinkCalibrations } from '../lib/storage';
+import {
+  resolveGrinder,
+  loadDrinkCalibrations,
+  loadOrCreateGrinderProfile,
+  getAnchorForBean,
+  getLatestAnchorForGrinder,
+} from '../lib/storage';
 import { formatTemperature, getRecommendedBrewTemp, calculateTargetExtractionTime } from '../lib/espressoMath';
+import { predictOptimalGrindSetting } from '../lib/grindIntelligence';
+import { useTranslation } from '../i18n';
 import {
   X,
   Sliders,
@@ -76,6 +84,8 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   onOpenBeanVault,
   onScanBean,
 }) => {
+  const { t } = useTranslation();
+
   // Master pool of all available grinders
   const pool = allGrinders.length > 0
     ? allGrinders
@@ -650,6 +660,53 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Universal Adaptive Grind Intelligence (On-Device ML) Recommendation */}
+          {(() => {
+            const profile = loadOrCreateGrinderProfile(activeGrinder.name || activeGrinder.id);
+            const anchor = getAnchorForBean(activeBean.id);
+            const refAnchor = getLatestAnchorForGrinder(activeGrinder.name || activeGrinder.id);
+            const aiPred = predictOptimalGrindSetting({
+              grinderProfile: profile,
+              activeBean: activeBean,
+              anchor,
+              referenceAnchorForGrinder: refAnchor,
+              currentSetting: grindSetting,
+            });
+
+            return (
+              <div className="bg-[#FAF7F2] p-2.5 rounded-xl border border-[#DECFC0] flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-6 h-6 rounded-lg bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-bold text-[#2C2018]">
+                        {profile.validTransitionsCount >= 5
+                          ? `${t('grind.master_calibrated')} (${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
+                          : profile.validTransitionsCount >= 2
+                          ? `${t('grind.adaptive_active')} (${profile.validTransitionsCount} bryg • ${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
+                          : `${t('grind.factory_baseline')} • ${t('grind.learning_burrs')}`}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#7A6E65] truncate font-mono">
+                      {aiPred.explanation}
+                    </p>
+                  </div>
+                </div>
+                {aiPred.formattedSetting !== grindSetting && (
+                  <button
+                    type="button"
+                    onClick={() => setGrindSetting(aiPred.formattedSetting)}
+                    className="px-2.5 py-1 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-bold shrink-0 transition active:scale-95 cursor-pointer shadow-xs"
+                  >
+                    {t('coach.apply_btn', { setting: aiPred.formattedSetting }) || `Sæt ${aiPred.formattedSetting}`}
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
           <p className="text-[10px] sm:text-[11px] text-[#7A6E65] leading-relaxed">
             Finer setting increases puck resistance and slows flow rate (g/s). Coarser setting yields faster extraction.

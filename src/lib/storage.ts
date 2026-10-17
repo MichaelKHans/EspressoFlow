@@ -14,6 +14,8 @@ const STORAGE_KEYS = {
   TEMP_UNIT: 'espressoflow_temp_unit_v1',
   FILTER_BREWER: 'espressoflow_filter_brewer_v1',
   KETTLE: 'espressoflow_kettle_v1',
+  GRIND_INTELLIGENCE: 'flowbean_grind_intelligence_v1',
+  BEAN_ANCHORS: 'flowbean_bean_anchors_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -740,4 +742,73 @@ export function saveKettle(kettle: string): void {
     console.error('Failed to save kettle', err);
   }
 }
+
+// -------------------------------------------------------------
+// Universal Adaptive Grind Intelligence (On-Device Local-First)
+// -------------------------------------------------------------
+import type { GrinderLearnedProfile, BeanCalibrationAnchor } from './grindIntelligence';
+import { createDefaultGrinderProfile } from './grindIntelligence';
+
+export function loadGrinderProfiles(): Record<string, GrinderLearnedProfile> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.GRIND_INTELLIGENCE);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function loadOrCreateGrinderProfile(grinderId: string): GrinderLearnedProfile {
+  const profiles = loadGrinderProfiles();
+  if (profiles[grinderId]) {
+    return profiles[grinderId];
+  }
+  const defaultProfile = createDefaultGrinderProfile(grinderId);
+  profiles[grinderId] = defaultProfile;
+  saveGrinderProfile(defaultProfile);
+  return defaultProfile;
+}
+
+export function saveGrinderProfile(profile: GrinderLearnedProfile): void {
+  try {
+    const profiles = loadGrinderProfiles();
+    profiles[profile.grinderId] = profile;
+    localStorage.setItem(STORAGE_KEYS.GRIND_INTELLIGENCE, JSON.stringify(profiles));
+  } catch (err) {
+    console.error('Failed to save grinder learned profile', err);
+  }
+}
+
+export function loadBeanAnchors(): Record<string, BeanCalibrationAnchor> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.BEAN_ANCHORS);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveBeanAnchor(anchor: BeanCalibrationAnchor): void {
+  try {
+    const anchors = loadBeanAnchors();
+    anchors[anchor.beanId] = anchor;
+    localStorage.setItem(STORAGE_KEYS.BEAN_ANCHORS, JSON.stringify(anchors));
+  } catch (err) {
+    console.error('Failed to save bean anchor', err);
+  }
+}
+
+export function getAnchorForBean(beanId: string): BeanCalibrationAnchor | undefined {
+  const anchors = loadBeanAnchors();
+  return anchors[beanId];
+}
+
+export function getLatestAnchorForGrinder(grinderId: string): BeanCalibrationAnchor | undefined {
+  const anchors = loadBeanAnchors();
+  const matches = Object.values(anchors).filter((a) => a.grinderId.toLowerCase() === grinderId.toLowerCase());
+  if (matches.length === 0) return undefined;
+  matches.sort((a, b) => new Date(b.anchorTimestamp).getTime() - new Date(a.anchorTimestamp).getTime());
+  return matches[0];
+}
+
 

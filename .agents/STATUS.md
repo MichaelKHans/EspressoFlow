@@ -9,6 +9,35 @@
 
 ---
 
+### 2026-10-17 -- Universal Adaptive Grind Intelligence (On-Device Selvlærende Kværn-Motor & Master Barista UI) (v1.19.0)
+- **100% On-Device Selvlærende Kværn-Motor (`src/lib/grindIntelligence.ts`):**
+  - **Nul AI-Tokens & Nul API-Omkostninger:** Fuldstændig deterministisk og lynhurtig (< 0.1 ms) TypeScript-motor på enheden. Nul eksterne API-kald eller forbrug af tokens.
+  - **Normaliseret Ekstraktionstid ($T_{\text{norm}}$):** Isolerer ægte væskemekanisk modstand fra baristaens yield-cutoff via $T_{\text{norm}} = (T_{\text{pre}} + \frac{2.0 \cdot D}{\bar{Q}_{\text{flow}}}) \cdot (\frac{18.0}{D})^{0.30}$.
+  - **5 Sanity Gates (`evaluateShotTransitionForLearning`):**
+    1. *Anti-Channeling Værn:* Afviser par hvor et af skuddene havde flow-spikes fra kanalisering.
+    2. *Fysisk Monotonicitet:* Afviser anomalier ($\Delta S < 0 \implies \Delta T_{\text{norm}} > 0$).
+    3. *Kontekst-Filter:* Samme bønne, samme kværn, inden for 48 timer.
+    4. *Dødzonestyring:* Minimum $\Delta S \ge 0.5$ og maksimum $\Delta S \le 6.0$.
+    5. *Slope Outlier Clamping:* Klemmer empirisk respons ind i $[0.4 \cdot k_{\text{factory}}, 2.5 \cdot k_{\text{factory}}]$.
+  - **Bayesian Prior + EWMA:** Fabriksstandard opdateres glat mod baristaens knive over tid ($C = \min(1.0, \frac{N}{N + 2.0})$).
+  - **Smart Ristegrads-Matrix & Logaritmisk Afgasningsdrift:**
+    - Forudberegner modstandsforskel mellem bønners ristegrad.
+    - Logaritmisk ældningskompensation ($\Delta S_{\text{aging}} = -\gamma \cdot \frac{3.0}{k_{\text{eff}}} \cdot \ln(\dots)$), så 2-3 uger gamle bønner justeres finere for faldende modstand.
+- **Master Barista UI/UX Integration:**
+  - **Pre-Brew Coach Banner (`PreBrewCoachBanner.tsx`):**
+    - Proaktiv advisering ved ny bønne (*Smart Ristegrads-Skift*) og bønneældning (*Afgasnings-Værn*) med 1-klik `[Sæt til {setting}]` før første bryg.
+    - Viser `🛡️ AI-Læring Pauseret` med et gyldent skjoldikon ved kanalisering.
+  - **Dial-In Studio (`DialInWizardModal.tsx`):**
+    - Viser Adaptive AI anbefalingsboks direkte under kværn-stepperen med 1-klik [Anvend].
+  - **Shot Summary Modal (`ShotSummaryModal.tsx`):**
+    - Viser AI Lærings-Skjold advarsel ved kanalisering.
+  - **Grinder Fleet Kort i Bar-fanen (`App.tsx`):**
+    - Viser dynamiske mestre-emblemer for hver kværn ($\ge 5$ skud: `✨ Mester-Kalibreret`, $\ge 2$ skud: `🧠 Adaptiv AI Aktiv`, $0-1$ skud: `🌱 Fabrikskalibreret`).
+- **Kvalitetssikring:**
+  - `scripts/test-grind-intelligence.cjs` passeret 100%.
+  - `npm run build` verificeret 100% fejlfrit (0 fejl).
+  - `npx cap sync` synkroniseret med iOS og Android.
+
 ### 2026-10-17 -- Harmoniseret Dial-In Logik & Forbundet Kværn-Indstilling (v1.18.4)
 - **Harmoniseret Dial-In Anbefaling (`src/lib/espressoMath.ts`):**
   - Rettet fejl hvor banner i Logbog anbefalede `28 ➔ 28.5` (+0.5 trin), mens den detaljerede Barista Tech analyse på samme skud anbefalede `28 ➔ 35` (+7 mikrosteg).
