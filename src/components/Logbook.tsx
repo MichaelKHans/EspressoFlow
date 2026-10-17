@@ -428,20 +428,37 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                                     ? ` (${shot.channeling.flowSpikeGps} g/s)`
                                     : ''}
                                 </span>
-                              ) : (
-                                <span className="text-[#72806B] flex items-center gap-1 text-[10.5px] font-bold min-w-0">
-                                  <CheckCircle className="w-3.5 h-3.5 shrink-0" />{' '}
+                              ) : shot.tasteRating ? (
+                                <span
+                                  className={`flex items-center gap-1 text-[10.5px] font-bold min-w-0 ${
+                                    shot.tasteRating === 'balanced'
+                                      ? 'text-[#72806B]'
+                                      : shot.tasteRating === 'sour'
+                                      ? 'text-amber-700'
+                                      : shot.tasteRating === 'bitter'
+                                      ? 'text-[#8C6046]'
+                                      : 'text-sky-700'
+                                  }`}
+                                >
+                                  {shot.tasteRating === 'balanced' ? (
+                                    <CheckCircle className="w-3.5 h-3.5 shrink-0 text-[#72806B]" />
+                                  ) : (
+                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                  )}
                                   <span className="truncate">
-                                    {shot.tasteRating
-                                      ? shot.tasteRating === 'sour'
-                                        ? t('taste.sour_label')
-                                        : shot.tasteRating === 'bitter'
-                                        ? t('taste.bitter_label')
-                                        : shot.tasteRating === 'watery'
-                                        ? t('taste.watery_label')
-                                        : t('taste.balanced_label')
-                                      : t('logbook.balanced')}
+                                    {shot.tasteRating === 'sour'
+                                      ? t('taste.sour_label')
+                                      : shot.tasteRating === 'bitter'
+                                      ? t('taste.bitter_label')
+                                      : shot.tasteRating === 'watery'
+                                      ? t('taste.watery_label')
+                                      : t('taste.balanced_label')}
                                   </span>
+                                </span>
+                              ) : (
+                                <span className="text-[#7A6E65] flex items-center gap-1.5 text-[10px] font-medium min-w-0">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#DECFC0] shrink-0" />
+                                  <span className="truncate">{t('logbook.unrated') || t('beandex.unrated') || 'Not rated'}</span>
                                 </span>
                               )}
                             </div>

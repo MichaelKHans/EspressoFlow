@@ -437,7 +437,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       targetYieldGrams: editTargetYield,
       grindSetting: editGrindSetting,
       grinderName: selectedGrinderName || currentGrinderName || 'Baratza Encore ESP',
-      notes: scannedResult?.notes || 'Added via Mobile Vision & Barcode Scanner.',
+      notes: scannedResult?.notes || 'Added via Beandex Bag Vision™',
       barcode: scannedResult?.barcode,
       purchaseCountry: scannedResult?.purchaseCountry || 'DK',
       purchaseLocation: scannedResult?.purchaseLocation,
@@ -520,7 +520,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                   Bag Vision™ AI
                 </span>
               </div>
-              <p className="text-[11px] text-[#7A6E65]">Optisk etiket-genkendelse, stregkoder & ristedato</p>
+              <p className="text-[11px] text-[#7A6E65]">Optisk etiket-genkendelse, Bag Vision™ & ristedato</p>
             </div>
           </div>
           <button

@@ -869,7 +869,7 @@ export function App() {
               <span className={`text-[8.5px] sm:text-[9px] px-1 sm:px-1.5 py-0.2 rounded-full font-bold ${
                 activeMode === 'beandex' ? 'bg-[#C26D52] text-white' : 'bg-[#DECFC0] text-[#2C2018]'
               }`}>
-                {beans.length}
+                {activeBeans.length}
               </span>
             </button>
           </div>
@@ -2239,7 +2239,7 @@ export function App() {
                     : 'bg-[#2C2018] text-[#FAF7F2]'
                 }`}
               >
-                {beans.length}
+                {activeBeans.length}
               </span>
             </div>
             <span className="text-[10px] font-mono tracking-tight mt-0.5 whitespace-nowrap">

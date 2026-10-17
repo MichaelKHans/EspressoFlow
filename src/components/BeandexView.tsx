@@ -915,7 +915,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 {t('beandex.my_bags')}
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-[#C26D52]/10 border border-[#C26D52]/30 text-[#C26D52]">
-                {t('beandex.my_bags_count', { count: beans.length })}
+                {t('beandex.my_bags_count', { count: activeBags.length })}
               </span>
             </div>
             <p className="text-[11px] text-[#7A6E65] font-sans mt-0.5">

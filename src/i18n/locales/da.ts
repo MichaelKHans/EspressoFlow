@@ -96,7 +96,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'bean.roast_date': 'Ristedato',
   'bean.assigned_grinder': 'Tilknyttet Kværn',
   'bean.step2_scan_date': 'Trin 2: Fang ristedatoen på posen',
-  'bean.barcode_no_date_desc': 'Stregkoder indeholder kun produkt-ID, ikke posens produktionsdato. Tag et hurtigt foto af datostemplet bag på posen (Production date eller Bedst Før).',
+  'bean.barcode_no_date_desc': 'Posens forside identificerer kun kaffeproduktet, ikke selve batch-ristedatoen. Tag et hurtigt foto af datostemplet bag på posen (Production date eller Bedst Før).',
   'bean.snap_date_btn': 'Tag foto af datostempel',
   'bean.date_found': 'Ristedato fundet: {date}',
   'bean.date_not_found': 'Kunne ikke automatisk aflæse datostemplet på billedet. Prøv at tage et tættere billede, eller vælg datoen manuelt herunder.',
@@ -533,6 +533,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'logbook.status_fast': 'FOR HURTIGT FLOW (UNDER-EXTRACTED)',
   'logbook.status_slow': 'FOR LANGSOMT FLOW (OVER-EXTRACTED)',
   'logbook.barista_tech_title': 'BARISTA TECH FORBEDRINGSFORSLAG',
+  'logbook.unrated': 'Ikke bedømt',
 
   // Scale Active Brew Badge
   'scale.active_target_badge': 'AKTIV BRYGPROFIL',

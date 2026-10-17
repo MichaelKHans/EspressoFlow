@@ -9,6 +9,20 @@
 
 ---
 
+### 2026-10-17 -- Etape 64: Kritiske Data- & Logik-Bugs (v1.19.4)
+- **Fjernet Falsk "Balanced" Fallback i Logbog (`src/components/Logbook.tsx`):**
+  - Ubedømte skud (`shot.tasteRating === undefined`) viser nu `Ej bedømt / Not rated` (`logbook.unrated`) med neutral grå styling, i stedet for automatisk at falde tilbage til "Balanced" med et grønt flueben.
+  - Tildelt differentierede farver og advarselsikoner for Sur (ravgul), Bitter (espressobrun) og Vandet (himmelblå).
+- **Beandex Badge-tællere Tæller Kun Aktive Bønner (`src/App.tsx` & `src/components/BeandexView.tsx`):**
+  - Rettet bundnavigation og topchip-badges til `activeBeans.length` (`!b.isFinished`).
+  - Synkroniseret overskriftspillen i `BeandexView.tsx` til `activeBags.length`.
+- **Moderniseret Terminologi fra "Barcode" til "Bag Vision™" (`src/components/BeanScannerModal.tsx` & i18n):**
+  - Opdateret bønne-note til `"Added via Beandex Bag Vision™"`.
+  - Rettet underoverskrifter og hjælpetekster til moderne Flowbean branding.
+- **Kvalitetssikring:**
+  - `npm run build` verificeret 100% fejlfrit (0 fejl).
+  - `npx cap sync` synkroniseret.
+
 ### 2026-10-17 -- Kodevedligeholdelse Etape 3: Sikkerhedsaudit & Afhængighedssikring (v1.19.3)
 - **Afhjulpet High-Severity Sårbarhed (`source-map-js`):**
   - Opdateret `source-map-js` i udviklerværktøjer via `npm audit fix`, hvilket eliminerer potentiel DoS i tooling.

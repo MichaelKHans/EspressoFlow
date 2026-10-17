@@ -94,7 +94,7 @@ export const en = {
   'bean.roast_date': 'Roast Date',
   'bean.assigned_grinder': 'Assigned Grinder',
   'bean.step2_scan_date': 'Step 2: Capture Roast Date on Bag',
-  'bean.barcode_no_date_desc': 'Barcodes only identify product type, not the batch roast date. Snap a quick photo of the date stamp on the back of the bag (Production Date or Best Before).',
+  'bean.barcode_no_date_desc': 'Bag packaging identifies product type, not the batch roast date. Snap a photo of the date stamp on the back of the bag (Production Date or Best Before).',
   'bean.snap_date_btn': 'Take Photo of Date Stamp',
   'bean.date_found': 'Roast Date: {date}',
   'bean.date_not_found': 'Could not detect date stamp in photo. Try taking a closer photo or enter date manually below.',
@@ -531,6 +531,7 @@ export const en = {
   'logbook.status_fast': 'FLOW TOO FAST (UNDER-EXTRACTED)',
   'logbook.status_slow': 'FLOW TOO SLOW (OVER-EXTRACTED)',
   'logbook.barista_tech_title': 'BARISTA TECH IMPROVEMENT ADVICE',
+  'logbook.unrated': 'Not rated',
 
   // Scale Active Brew Badge
   'scale.active_target_badge': 'ACTIVE BREW',

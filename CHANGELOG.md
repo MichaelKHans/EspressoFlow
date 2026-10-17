@@ -2,6 +2,21 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.4] - 2026-10-17
+### Etape 64: Kritiske Data- & Logik-Bugs (Etape 1 af Feedback-Gennemgang)
+- **Fjernet Falsk "Balanced" Fallback i Logbog (`src/components/Logbook.tsx`):**
+  - Rettet fejl hvor ubedømte skud (`shot.tasteRating === undefined`) fejlagtigt faldt tilbage til "Balanced" med et grønt flueben.
+  - Viser nu en neutral, elegant `Ej bedømt / Not rated` status (`logbook.unrated`), så logbogen aldrig postulerer, at et skud var velafbalanceret uden baristaens bekræftelse.
+  - Tildelt korrekte farver og ikoner per smagsbedømmelse (Sur, Bitter, Vandet, Balanceret).
+- **Korrigeret Beandex Stock-Tæller til Aktive Bønner (`src/App.tsx` & `src/components/BeandexView.tsx`):**
+  - Opdateret bundnavigations-ikonet og top-chippen i `App.tsx` til at tælle `activeBeans.length` (`!b.isFinished`) frem for alle bønner inklusive arkiverede poser.
+  - Synkroniseret overskriftspillen i `BeandexView.tsx` med aktive poser.
+- **Moderniseret Terminologi fra "Barcode" til "Bag Vision™" (`src/components/BeanScannerModal.tsx` & i18n):**
+  - Opdateret automatisk bønne-note til `"Added via Beandex Bag Vision™"`.
+  - Fjernet forældede stregkode-referencer i undertekster og Step 2 hjælpetekster (`bean.barcode_no_date_desc`).
+- **Kvalitetssikring:**
+  - `npm run build` kompileret 100% fejlfrit (0 fejl).
+
 ## [1.19.3] - 2026-10-17
 ### Etape 63: Kodevedligeholdelse Etape 3 (Sikkerhedskontrol, Afhængighedssikring & Fuld Audit)
 - **Afhjulpet High-Severity Sikkerhedssårbarhed (`source-map-js`):**
