@@ -254,8 +254,9 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
   - Fjernet misvisende "Puck Choking" advarsel fra `espressoMath.ts`.
   - Måltid og $\Delta t$ i "Time & Flow" kort (`Logbook.tsx` & `ShotSummaryModal.tsx`) med opskrifts-sammenligning.
   - Automatisk kurvetrimning for historiske skud og delingskort i `FlowChart.tsx` og `ShotShareModal.tsx`.
-- [ ] **Etape 4: In-App Kamera & Ristedato Reticle HUD i Step 2:**
+- [x] **Etape 4: In-App Kamera & Ristedato Reticle HUD i Step 2 (v1.19.7):**
   - Hold den direkte `<video>` søger kørende i `BeanScannerModal.tsx` Step 2 med den dedikerede "Ret mod Ristedato Stempel" grønne reticle-boks i stedet for at åbne det eksterne native kamera via fil-dialog.
+  - Optisk OCR capture direkte fra videostrøm via `handleDateCameraCapture`.
 - [ ] **Etape 5: Admin Baggrunds-Inspector:**
   - Direkte "Juster" knap på `AdminThemeBadge.tsx`, der åbner en flydende popover til realtids-justering af baggrundssløring (blur 0–16px), farvetone overlay, opacitet (10–90%) og lysstyrke/kontrast, gemt i `localStorage`.
 

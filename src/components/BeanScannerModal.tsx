@@ -84,6 +84,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 
   // Dedicated Date Stamp OCR scanning state
   const [isDateOcrScanning, setIsDateOcrScanning] = useState<boolean>(false);
+  const [isDateCameraOpen, setIsDateCameraOpen] = useState<boolean>(false);
   const [dateScanNote, setDateScanNote] = useState<string | null>(null);
   const [dateScanError, setDateScanError] = useState<string | null>(null);
   const dateFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -214,6 +215,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   // Close handler that thoroughly stops camera and clears transient scan states
   const handleCloseModal = useCallback(() => {
     stopCamera();
+    setIsDateCameraOpen(false);
     setScannedResult(null);
     setFeedbackMessage(null);
     setDateScanNote(null);
@@ -231,6 +233,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setScannedResult(null);
+      setIsDateCameraOpen(false);
       setFeedbackMessage(null);
       setDateScanNote(null);
       setDateScanError(null);
@@ -245,12 +248,20 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       }
       startCamera();
     } else {
+      setIsDateCameraOpen(false);
       stopCamera();
     }
     return () => {
       stopCamera();
     };
   }, [isOpen, initialRoastDate, startCamera, stopCamera]);
+
+  // Activate camera when in-app date camera is opened in Step 2
+  useEffect(() => {
+    if (isDateCameraOpen) {
+      startCamera();
+    }
+  }, [isDateCameraOpen, startCamera]);
 
   useEffect(() => {
     if (isOpen && isCameraActive && !scannedResult) {
@@ -365,7 +376,50 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     }
   };
 
-  // Handle Dedicated Date Stamp Photo Capture & Optical OCR
+  // Handle Dedicated Date Stamp Capture from Live Video Stream (In-App Viewfinder)
+  const handleDateCameraCapture = async () => {
+    if (!videoRef.current || videoRef.current.videoWidth === 0) return;
+    setIsDateOcrScanning(true);
+    setDateScanError(null);
+    setFeedbackMessage('Scanning date stamp on bag with OCR...');
+    try {
+      const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
+      const ocrResult = await scanCoffeeBagForDateAndRoast(videoRef.current, {
+        roaster: editRoaster,
+        beanName: editName,
+      });
+
+      if (ocrResult.roastDate) {
+        setEditRoastDate(ocrResult.roastDate);
+        if (ocrResult.formatDescription) {
+          setDateScanNote(ocrResult.formatDescription);
+        }
+        if (ocrResult.detectedRoastLevel) {
+          setEditRoastLevel(ocrResult.detectedRoastLevel);
+        }
+        setDateScanError(null);
+        setFeedbackMessage(
+          ocrResult.isEstimatedFromBBD
+            ? `Estimated roast date from Best Before: ${ocrResult.roastDate}`
+            : `Production roast date confirmed: ${ocrResult.roastDate}`
+        );
+        setIsDateCameraOpen(false);
+        stopCamera();
+      } else {
+        if (ocrResult.detectedRoastLevel) {
+          setEditRoastLevel(ocrResult.detectedRoastLevel);
+        }
+        setDateScanError(t('bean.date_not_found'));
+      }
+    } catch (err) {
+      console.warn('Date camera OCR error', err);
+      setDateScanError(t('bean.date_not_found'));
+    } finally {
+      setIsDateOcrScanning(false);
+    }
+  };
+
+  // Handle Dedicated Date Stamp Photo Capture & Optical OCR (Fallback for Gallery / File)
   const handleDatePhotoCaptured = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -476,6 +530,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 
   const handleResetScan = () => {
     setScannedResult(null);
+    setIsDateCameraOpen(false);
     setFeedbackMessage(null);
     setDateScanNote(null);
     setDateScanError(null);
@@ -1134,7 +1189,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                 </div>
 
                 {/* Step 2: Capture Roast Date from Bag if not yet scanned */}
-                {!editRoastDate ? (
+                {!editRoastDate || isDateCameraOpen ? (
                   <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col gap-2.5 animate-fadeIn">
                     <div className="flex items-start gap-2.5">
                       <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
@@ -1150,34 +1205,112 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-0.5">
-                      <input
-                        ref={dateFileInputRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleDatePhotoCaptured}
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => dateFileInputRef.current?.click()}
-                        disabled={isDateOcrScanning}
-                        className="flex-1 py-2 px-3 rounded-lg bg-[#C26D52] hover:bg-[#A95840] disabled:opacity-50 text-white text-xs font-bold font-mono flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"
-                      >
-                        {isDateOcrScanning ? (
-                          <>
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                            <span>{t('bean.scanning_date')}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Camera className="w-3.5 h-3.5" />
-                            <span>{t('bean.snap_date_btn')}</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
+                    {isDateCameraOpen ? (
+                      <div className="space-y-2.5 mt-1">
+                        <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-[#72806B]/50 flex items-center justify-center shadow-inner">
+                          <video
+                            ref={videoRef}
+                            playsInline
+                            muted
+                            className={`w-full h-full object-cover ${isCameraActive ? 'block' : 'hidden'}`}
+                          />
+
+                          {/* Green Roast Date Reticle HUD */}
+                          {isCameraActive && (
+                            <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-4">
+                              <div className="relative w-56 h-28 border-2 border-[#72806B] rounded-xl shadow-lg flex items-center justify-center bg-[#72806B]/10">
+                                <div className="absolute top-0 left-0 w-3.5 h-3.5 border-t-2 border-l-2 border-[#72806B] rounded-tl" />
+                                <div className="absolute top-0 right-0 w-3.5 h-3.5 border-t-2 border-r-2 border-[#72806B] rounded-tr" />
+                                <div className="absolute bottom-0 left-0 w-3.5 h-3.5 border-b-2 border-l-2 border-[#72806B] rounded-bl" />
+                                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 border-b-2 border-r-2 border-[#72806B] rounded-br" />
+                                <div className="w-full h-0.5 bg-[#72806B]/80 shadow-[0_0_8px_#72806B] animate-pulse" />
+                                <span className="absolute -bottom-6 text-[10px] font-mono font-semibold text-white/95 bg-black/75 px-2.5 py-0.5 rounded-full backdrop-blur-xs whitespace-nowrap shadow-sm border border-white/10">
+                                  {t('bean.aim_roast_date')}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Inactive / Starting camera */}
+                          {!isCameraActive && (
+                            <div className="text-center p-3 space-y-1.5 text-white/80">
+                              <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#72806B]" />
+                              <p className="text-[11px] font-medium">{t('bean.starting_camera')}</p>
+                            </div>
+                          )}
+
+                          {/* Scanning spinner overlay */}
+                          {isDateOcrScanning && (
+                            <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-2 text-white z-10">
+                              <RefreshCw className="w-6 h-6 animate-spin text-[#72806B]" />
+                              <span className="text-xs font-mono font-medium">{t('bean.scanning_date')}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Capture Controls */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleDateCameraCapture}
+                            disabled={isDateOcrScanning || !isCameraActive}
+                            className="flex-1 py-2.5 px-3 rounded-lg bg-[#72806B] hover:bg-[#5C6756] disabled:opacity-50 text-white text-xs font-bold font-mono flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+                          >
+                            {isDateOcrScanning ? (
+                              <>
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                <span>{t('bean.scanning_date')}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Camera className="w-4 h-4" />
+                                <span>{t('bean.snap_date_btn')}</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsDateCameraOpen(false);
+                              stopCamera();
+                            }}
+                            className="py-2.5 px-3 rounded-lg bg-white border border-[#E8DFD5] text-[#7A6E65] hover:text-[#2C2018] text-xs font-semibold transition cursor-pointer"
+                            title={t('bean.close_camera')}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setIsDateCameraOpen(true)}
+                          disabled={isDateOcrScanning}
+                          className="flex-1 py-2 px-3 rounded-lg bg-[#C26D52] hover:bg-[#A95840] disabled:opacity-50 text-white text-xs font-bold font-mono flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>{t('bean.snap_date_btn')}</span>
+                        </button>
+
+                        <input
+                          ref={dateFileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleDatePhotoCaptured}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => dateFileInputRef.current?.click()}
+                          title={t('bean.gallery_fallback')}
+                          className="py-2 px-2.5 rounded-lg bg-white border border-[#E8DFD5] text-[#7A6E65] hover:text-[#2C2018] text-xs transition cursor-pointer"
+                        >
+                          <ImageIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
 
                     {/* Inline OCR failure guidance banner */}
                     {dateScanError && (
@@ -1187,8 +1320,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                           <p className="font-medium leading-relaxed">{dateScanError}</p>
                           <button
                             type="button"
-                            onClick={() => dateFileInputRef.current?.click()}
-                            className="mt-1 text-[11px] font-bold text-[#C26D52] hover:underline flex items-center gap-1"
+                            onClick={() => setIsDateCameraOpen(true)}
+                            className="mt-1 text-[11px] font-bold text-[#C26D52] hover:underline flex items-center gap-1 cursor-pointer"
                           >
                             <Camera className="w-3 h-3" />
                             <span>{t('bean.date_scan_retry')}</span>
@@ -1208,13 +1341,23 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                         )}
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => dateFileInputRef.current?.click()}
-                      className="px-2.5 py-1 rounded bg-white/80 border border-emerald-500/30 text-[10px] text-emerald-800 font-mono hover:bg-white transition"
-                    >
-                      {t('bean.rescan_date')}
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsDateCameraOpen(true)}
+                        className="px-2.5 py-1 rounded bg-white/80 border border-emerald-500/30 text-[10px] text-emerald-800 font-mono hover:bg-white transition cursor-pointer"
+                      >
+                        {t('bean.rescan_date')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => dateFileInputRef.current?.click()}
+                        title={t('bean.gallery_fallback')}
+                        className="p-1 rounded bg-white/80 border border-emerald-500/30 text-emerald-800 hover:bg-white transition cursor-pointer"
+                      >
+                        <ImageIcon className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 )}
 

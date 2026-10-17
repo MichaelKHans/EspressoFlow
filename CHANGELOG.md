@@ -2,6 +2,19 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.7] - 2026-10-17
+### Etape 67: In-App Kamera & Ristedato Reticle HUD i Step 2 (Etape 4 af Feedback-Gennemgang)
+- **Direkte In-App Kamerasøger i Step 2 (`src/components/BeanScannerModal.tsx`):**
+  - Elimineret irriterende hop til telefonens eksterne, fuldskærms kamera-app via native fil-dialog.
+  - Ved tryk på "Tag foto af datostempel" (`bean.snap_date_btn`) eller "Genscan dato" åbnes nu en direkte, integreret in-app `<video>` søger med en dedikeret grøn reticle HUD-boks: `Ret mod ristedato-stempel` (`#72806B`) med pulserende scan-linje.
+- **Optisk Billedanalyse Direkte fra Videostrøm (`handleDateCameraCapture`):**
+  - Tager et live-billede direkte fra canvas/video-elementet og analyserer datostemplet via on-device optisk OCR (`scanCoffeeBagForDateAndRoast`).
+  - Ved fundet ristedato lukkes kamerasøgeren øjeblikkeligt med bekræftelses-badge og grønt flueben uden at forlade appen.
+  - Hvis datoen ikke findes i første forsøg, forbliver kameraet åbent med vejledning, så baristaen kan justere vinkel/afstand og prøve igen med ét tryk.
+  - Bevaret diskret galleri-ikon som sekundær fallback til upload af eksisterende fotos fra telefonens fotobibliotek.
+- **Kvalitetssikring:**
+  - `npm run build` og `npx cap sync` kompileret 100% fejlfrit (0 fejl).
+
 ## [1.19.6] - 2026-10-17
 ### Etape 66: Tidtagning, Kurve-Trimning & Mål-tid i Time & Flow (Etape 3 af Feedback-Gennemgang)
 - **Kurve-Trimning fra Første Dråbe (`src/components/ScaleMonitor.tsx`):**
