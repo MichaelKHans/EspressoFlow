@@ -2,6 +2,26 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.18.0] - 2026-10-17
+### Etape 55: Flowbean Licensmotor, DoS/Brute-Force Skjold & MH Tegnestue Bogførings-Bro
+- **Kryptografisk Licensmotor (`licenseEngine.ts`):**
+  - Implementeret 16-tegns base32 licensnøgler (`FLOW-XXXX-XXXX-XXXX`) med $1.15 \times 10^{18}$ mulige kombinationer (32¹²). Udelukker forvekselige tegn (`0`/`O`, `1`/`I`/`L`).
+  - Håndterer både Supabase cloud-validering med permanent aktivering i enhedens `localStorage`, samt deterministiske offline master-nøgler til VIP baristaer og demo-formål.
+- **Anti-Brute-Force & DoS Beskyttelse:**
+  - Automatisk hardware-lockout: Efter maks 5 mislykkede forsøg låses indtastningsfeltet i 15 minutter (`LOCKOUT_DURATION_MS = 900000`) med realtids-nedtællingstimer i brugergrænsefladen.
+  - 350 ms kunstig tids-jitter beskytter mod side-channel timing-angreb.
+  - Beskyttelse mod scalping og carding: Web checkouts begrænses til 5 stk. pr. transaktion; digital software har ubegrænset udbud til fastpris ($4.99 / 49,- DKK), hvilket fjerner ethvert økonomisk incitament til gensalg til overpris.
+- **Paywall & URL Magic Link Auto-Indløsning (`PaywallModal.tsx` & `App.tsx`):**
+  - Integreret foldbart licensfelt i `PaywallModal` med auto-formatering og feedback.
+  - Deep-link support: Åbning via `?redeem=FLOW-XXXX-XXXX-XXXX` (fra Kickstarter backer-mails, web kvitteringer, eller QR-kodescannet fysisk messekort) låser appen op automatisk på under 1 sekund og rydder URL-parameteren pænt uden genindlæsning.
+- **Admin Licens- & Salgscenter (`AdminLicenseManager.tsx` & `AdminPortal.tsx`):**
+  - Ny dedikeret administrationsfane: "Licenser, Salg & Bogføring".
+  - Batch generator til Kickstarter, messekort, web-gaver, B2B og VIPs med 1-klik CSV eksport og Supabase SQL insert script.
+- **Automatisk Bro til MH Tegnestue Bogføring (`Bogføring/sales_2026.json`):**
+  - 1-klik generator af månedlige B2B-salgsfakturaer for Apple App Store (Irland), Google Play (Irland), Lemon Squeezy (USA) og Kickstarter (USA) med 0 kr moms (EU Reverse Charge / MoR eksport, Rubrik B-ydelser).
+  - Mulighed for direkte API-overførsel til lokal bogføringsserver (`POST http://localhost:8000/api/sales`) eller udklipsholder.
+  - Oprettet `flowbean` fakturaskabelon i `invoice_templates.json`, tilføjet faste services i `services.json` og oprettet modparter i `contacts.json`.
+
 ## [1.17.1] - 2026-10-16
 ### Etape 54: Raffineret Fotorealistisk Makrografik på Kort & Fjernelse af Baggrundsbønner
 - **Fjernelse af Baggrundsbønner (Ren & Rolig Pergament-Baggrund):**

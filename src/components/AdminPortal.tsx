@@ -56,6 +56,7 @@ import {
   suggestRoasters,
   compressImageToDataUrl,
 } from '../lib/beanCatalogMatcher';
+import { AdminLicenseManager } from './AdminLicenseManager';
 
 interface AdminPortalProps {
   onBack: () => void;
@@ -275,7 +276,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [pinInput, setPinInput] = useState<string>('');
   const [pinError, setPinError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'curator' | 'security' | 'supabase'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'curator' | 'security' | 'supabase' | 'licenses'>('metrics');
   const [telemetryActive, setTelemetryActive] = useState<boolean>(() => isTelemetryEnabled());
 
   const handleToggleTelemetry = () => {
@@ -955,6 +956,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           >
             <Database className="w-3.5 h-3.5 text-[#72806B]" />
             <span>Supabase Cloud Sync</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('licenses')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition shrink-0 ${
+              activeTab === 'licenses'
+                ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                : 'bg-white hover:bg-[#FAF7F2] text-[#7A6E65] border border-[#E8DFD5]'
+            }`}
+          >
+            <KeyRound className="w-3.5 h-3.5 text-[#C26D52]" />
+            <span>Licenser, Salg & Bogføring</span>
           </button>
         </div>
 
@@ -2854,6 +2868,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
             </div>
           </div>
+        )}
+
+        {/* TAB 6: Licenses, Sales & Bookkeeping Bridge */}
+        {activeTab === 'licenses' && (
+          <AdminLicenseManager onNotify={(msg) => alert(msg)} />
         )}
       </main>
     </div>

@@ -60,6 +60,7 @@ import {
 } from './lib/storage';
 import { analyzeChanneling, analyzeExtractionDynamics, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
 import { subscribeToRemoteCommands, broadcastShotVerdict } from './lib/antiLiveSync';
+import { redeemLicenseKey } from './lib/licenseEngine';
 
 export function App() {
   const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
@@ -137,6 +138,7 @@ export function App() {
   const [isAllDrinksModalOpen, setIsAllDrinksModalOpen] = useState<boolean>(false);
   const [isFreshnessInfoOpen, setIsFreshnessInfoOpen] = useState<boolean>(false);
   const [freshnessInfoRoast, setFreshnessInfoRoast] = useState<RoastLevel>('medium');
+  const [redeemToast, setRedeemToast] = useState<string | null>(null);
 
   const closeAllActiveModals = useCallback(() => {
     setIsAllDrinksModalOpen(false);
@@ -244,6 +246,21 @@ export function App() {
       setLegalModalTab('terms');
     } else if (path.includes('support') || path.includes('faq')) {
       setLegalModalTab('support');
+    }
+
+    // Auto-redeem license key via URL parameter (?redeem=FLOW-XXXX-XXXX-XXXX)
+    const searchParams = new URLSearchParams(window.location.search);
+    const redeemCode = searchParams.get('redeem') || searchParams.get('license') || searchParams.get('key');
+    if (redeemCode) {
+      redeemLicenseKey(redeemCode).then((res) => {
+        if (res.success) {
+          setAccessState(loadUserAccess());
+          setRedeemToast(res.message);
+          setTimeout(() => setRedeemToast(null), 5000);
+          const cleanUrl = window.location.pathname + window.location.hash;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      });
     }
 
     const handleLocationChange = () => {
@@ -1867,6 +1884,17 @@ export function App() {
         >
           <span className="w-2 h-2 rounded-full bg-[#C26D52] animate-ping" />
           <span>{exitToastMessage}</span>
+        </div>
+      )}
+
+      {/* License Key Magic Redemption Success Toast */}
+      {redeemToast && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#2C2018]/95 text-[#FAF7F2] border border-emerald-500/50 text-xs font-mono shadow-2xl backdrop-blur-md animate-fadeIn flex items-center gap-2 pointer-events-none"
+          style={{ bottom: 'max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 5rem))' }}
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span>{redeemToast}</span>
         </div>
       )}
     </div>

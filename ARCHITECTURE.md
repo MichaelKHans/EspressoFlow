@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.17.0 (Ambient Bokeh Coffee Beans™ - GPU-Accelereret Atmosfærisk Baggrundsmotion)  
+> **Gældende version:** v1.18.0 (Licensmotor, Anti-Brute-Force & Bogførings-Bro)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -350,21 +350,21 @@ graph TD
     App --> BeandexTab[BeandexView.tsx<br/>Bønnekartotek, Beandex Smagsnoter, Fotos]
     App --> LogbookTab[Logbook.tsx<br/>Dagsopdelt historik, kurver & smag]
     App --> GearTab[GrinderFleet / Gear Setup<br/>Kværn-flåde & baropsætning]
-    App --> AdminTab[AdminPortal.tsx<br/>Curator Studio & Godkendelsespult]
+    App --> AdminTab[AdminPortal.tsx<br/>Curator Studio & AdminLicenseManager.tsx<br/>Batch Licenser, Anti-Brute-Force & Bogførings-Bro]
 
     %% Ikoner & UI Assets
     App --> AmbientLayer[AmbientBeanBackground.tsx<br/>100% GPU-accelereret atmosfærisk bokeh bønnebaggrund]
     App --> CustomIcons[CustomCoffeeIcons.tsx<br/>Vector Line-Art Ikoner: CoffeeBean & Dripper]
     App --> CupEngine[ArchitecturalCup.tsx<br/>SVG Beholder-Motor: Keramikkant, Sham Glas, Isterninger, Desserter & Pour Over]
 
-    %% Modaler & Overlays (Teleporteret til document.body med z-[60] - Starter under Header ved --app-header-height + 0.5rem)
+    %% Modaler & Overlays (Teleporteret til document.body med z-[60] / z-[85] - Starter under Header ved --app-header-height + 0.5rem)
     App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]
     App --> ScannerModal[BeanScannerModal.tsx<br/>Beandex Bag Vision AI + Stregkode + Etiket OCR]
     App --> VaultModal[CentralBeanVaultModal.tsx<br/>Fællesskabs-katalog fra Supabase]
     App --> SummaryModal[ShotSummaryModal.tsx<br/>Hero Decision Card: God/For hurtig/For langsom & 1-klik kværnjustering]
     App --> ShareModal[ShotShareModal.tsx<br/>1080x1350 Canvas Barista Shot Card & Native Web Share]
     App --> SettingsModal[SettingsModal.tsx<br/>Sprog, Enhed °C/°F, Pro & Kurator link]
-    App --> PaywallModal[PaywallModal.tsx<br/>RevenueCat $4.99 Lifetime Unlock]
+    App --> PaywallModal[PaywallModal.tsx<br/>RevenueCat $4.99 Lifetime Unlock & FLOW Licensnøgle Indløsning]
     App --> LegalModal[LegalModal.tsx<br/>Privacy Policy, Terms of Service, Support]
     DrinkTab --> AllDrinksModal[DrinkSelector: All Drinks & Deck Modal<br/>createPortal z-[60], sticky top/bottom, back dismiss]
     BeandexTab --> FreshnessModal[FreshnessInfoModal.tsx<br/>createPortal z-[60], sticky top/bottom, back dismiss]
