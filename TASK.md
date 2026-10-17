@@ -257,8 +257,9 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] **Etape 4: In-App Kamera & Ristedato Reticle HUD i Step 2 (v1.19.7):**
   - Hold den direkte `<video>` søger kørende i `BeanScannerModal.tsx` Step 2 med den dedikerede "Ret mod Ristedato Stempel" grønne reticle-boks i stedet for at åbne det eksterne native kamera via fil-dialog.
   - Optisk OCR capture direkte fra videostrøm via `handleDateCameraCapture`.
-- [ ] **Etape 5: Admin Baggrunds-Inspector:**
-  - Direkte "Juster" knap på `AdminThemeBadge.tsx`, der åbner en flydende popover til realtids-justering af baggrundssløring (blur 0–16px), farvetone overlay, opacitet (10–90%) og lysstyrke/kontrast, gemt i `localStorage`.
+- [x] **Etape 5: Admin Baggrunds-Inspector (v1.19.8):**
+  - Direkte "Juster" knap på `AdminThemeBadge.tsx`, der åbner en flydende popover til realtids-justering af baggrundssløring (blur 0–16px), farvetone overlay, opacitet (10–100%) og lysstyrke/kontrast, gemt i `localStorage`.
+  - Reaktiv motor (`src/lib/cardThemes.ts` & `useCardAdjustments`) forbundet til alle 5 temabærende kort i appen.
 
 ---
 

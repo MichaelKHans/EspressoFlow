@@ -77,7 +77,7 @@ import { analyzeChanneling, analyzeExtractionDynamics, RATIO_PRESETS, ROAST_PRES
 import { subscribeToRemoteCommands, broadcastShotVerdict } from './lib/antiLiveSync';
 import { redeemLicenseKey } from './lib/licenseEngine';
 import { AdminThemeBadge } from './components/AdminThemeBadge';
-import { getCardTheme, loadAdminEditMode, type CardThemePreset } from './lib/cardThemes';
+import { getCardTheme, loadAdminEditMode, useCardAdjustments, type CardThemePreset } from './lib/cardThemes';
 
 export function App() {
   const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
@@ -100,6 +100,9 @@ export function App() {
   const [grinderTheme, setGrinderTheme] = useState<CardThemePreset>(() => getCardTheme('grinder_fleet'));
   const [machineTheme, setMachineTheme] = useState<CardThemePreset>(() => getCardTheme('espresso_machine'));
   const [filterTheme, setFilterTheme] = useState<CardThemePreset>(() => getCardTheme('filter_gear'));
+  const { styles: grinderAdjustments } = useCardAdjustments('grinder_fleet');
+  const { styles: machineAdjustments } = useCardAdjustments('espresso_machine');
+  const { styles: filterAdjustments } = useCardAdjustments('filter_gear');
   const [filterBrewer, setFilterBrewer] = useState<string>(() => loadFilterBrewer());
   const [kettleName, setKettleName] = useState<string>(() => loadKettle());
   const [isRadarOpen, setIsRadarOpen] = useState<boolean>(false);
@@ -1313,8 +1316,16 @@ export function App() {
                   <img
                     src={grinderTheme.src}
                     alt=""
-                    className={`w-full h-full object-cover ${grinderTheme.position || 'object-right sm:object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
+                    style={grinderAdjustments.imageStyle}
+                    className={`w-full h-full object-cover ${grinderTheme.position || 'object-right sm:object-center'} scale-105 transition-all duration-150`}
                   />
+                  {/* Custom Overlay Tint & Strength */}
+                  {Number(grinderAdjustments.overlayStyle.opacity || 0) > 0 && (
+                    <div
+                      className="absolute inset-0 pointer-events-none transition-all duration-150"
+                      style={grinderAdjustments.overlayStyle}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/85 via-[#140C08]/50 to-[#140C08]/20" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/75 via-transparent to-transparent" />
                 </div>
@@ -1541,8 +1552,16 @@ export function App() {
                   <img
                     src={machineTheme.src}
                     alt=""
-                    className={`w-full h-full object-cover ${machineTheme.position || 'object-right sm:object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
+                    style={machineAdjustments.imageStyle}
+                    className={`w-full h-full object-cover ${machineTheme.position || 'object-right sm:object-center'} scale-105 transition-all duration-150`}
                   />
+                  {/* Custom Overlay Tint & Strength */}
+                  {Number(machineAdjustments.overlayStyle.opacity || 0) > 0 && (
+                    <div
+                      className="absolute inset-0 pointer-events-none transition-all duration-150"
+                      style={machineAdjustments.overlayStyle}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/85 via-[#140C08]/50 to-[#140C08]/20" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/75 via-transparent to-transparent" />
                 </div>
@@ -1772,8 +1791,16 @@ export function App() {
                   <img
                     src={filterTheme.src}
                     alt=""
-                    className={`w-full h-full object-cover ${filterTheme.position || 'object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
+                    style={filterAdjustments.imageStyle}
+                    className={`w-full h-full object-cover ${filterTheme.position || 'object-center'} scale-105 transition-all duration-150`}
                   />
+                  {/* Custom Overlay Tint & Strength */}
+                  {Number(filterAdjustments.overlayStyle.opacity || 0) > 0 && (
+                    <div
+                      className="absolute inset-0 pointer-events-none transition-all duration-150"
+                      style={filterAdjustments.overlayStyle}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/85 via-[#140C08]/50 to-[#140C08]/20" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/75 via-transparent to-transparent" />
                 </div>

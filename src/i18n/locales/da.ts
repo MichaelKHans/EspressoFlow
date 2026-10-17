@@ -672,5 +672,18 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'beandex.freshness_peak_title': '✨ Peak Vindue • Ren Espresso',
   'deck.switch_bean': 'Skift Bønne på Bar',
   'deck.active_count': '{count} aktive',
+
+  // Admin Background Inspector
+  'admin.inspector_title': 'Baggrunds-Inspector',
+  'admin.inspector_subtitle': 'Realtids finjustering af kortets baggrund',
+  'admin.inspector_adjust': 'Juster',
+  'admin.inspector_blur': 'Sløring (Blur)',
+  'admin.inspector_opacity': 'Billed Gennemsigtighed',
+  'admin.inspector_brightness': 'Lysstyrke',
+  'admin.inspector_contrast': 'Kontrast',
+  'admin.inspector_tint': 'Overlay Farvetone',
+  'admin.inspector_overlay_opacity': 'Tint Styrke',
+  'admin.inspector_reset': 'Nulstil',
+  'admin.inspector_done': 'Færdig',
 };
 

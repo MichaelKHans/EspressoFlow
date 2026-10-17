@@ -48,7 +48,7 @@ import {
 } from '../lib/beanCatalogMatcher';
 import { PRICE_TIERS, resolveBeanPriceTier } from '../lib/coffeeCatalogData';
 import { AdminThemeBadge } from './AdminThemeBadge';
-import { getCardTheme, type CardThemePreset } from '../lib/cardThemes';
+import { getCardTheme, useCardAdjustments, type CardThemePreset } from '../lib/cardThemes';
 
 export interface BeandexViewProps {
   beans: CoffeeBeanProfile[];
@@ -93,6 +93,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
 }) => {
   const { t, language } = useTranslation();
   const [cardTheme, setCardTheme] = useState<CardThemePreset>(() => getCardTheme('beandex_banner'));
+  const { styles: beandexAdjustments } = useCardAdjustments('beandex_banner');
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -501,8 +502,16 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             <img
               src={cardTheme.src}
               alt=""
-              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
+              style={beandexAdjustments.imageStyle}
+              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} scale-105 transition-all duration-150`}
             />
+            {/* Custom Overlay Tint & Strength */}
+            {Number(beandexAdjustments.overlayStyle.opacity || 0) > 0 && (
+              <div
+                className="absolute inset-0 pointer-events-none transition-all duration-150"
+                style={beandexAdjustments.overlayStyle}
+              />
+            )}
             <div className="absolute inset-0 bg-linear-to-r from-[#140D09]/85 via-[#140D09]/50 to-[#140D09]/20" />
             <div className="absolute inset-0 bg-linear-to-t from-[#140D09]/75 via-transparent to-transparent" />
           </div>

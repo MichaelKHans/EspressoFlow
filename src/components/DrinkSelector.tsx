@@ -31,7 +31,7 @@ import { matchBeansForDrink, getOptimalBeanGuidanceForDrink } from '../lib/beanM
 import { useTranslation } from '../i18n';
 import { DripperIcon } from './CustomCoffeeIcons';
 import { AdminThemeBadge } from './AdminThemeBadge';
-import { getCardTheme, type CardThemePreset } from '../lib/cardThemes';
+import { getCardTheme, useCardAdjustments, type CardThemePreset } from '../lib/cardThemes';
 
 export const getRoastBadgeStyles = (level: RoastLevel) => {
   switch (level) {
@@ -98,6 +98,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   );
   const currentCardKey = methodFilter === 'pour_over' ? 'barista_deck_pourover' : 'barista_deck_espresso';
   const [cardTheme, setCardTheme] = useState<CardThemePreset>(() => getCardTheme(currentCardKey));
+  const { styles: deckAdjustments } = useCardAdjustments(currentCardKey);
 
   useEffect(() => {
     const key = methodFilter === 'pour_over' ? 'barista_deck_pourover' : 'barista_deck_espresso';
@@ -364,8 +365,16 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             <img
               src={cardTheme.src}
               alt=""
-              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} opacity-85 sm:opacity-90 scale-105 transition-all duration-300`}
+              style={deckAdjustments.imageStyle}
+              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} scale-105 transition-all duration-150`}
             />
+            {/* Custom Overlay Tint & Strength */}
+            {Number(deckAdjustments.overlayStyle.opacity || 0) > 0 && (
+              <div
+                className="absolute inset-0 pointer-events-none transition-all duration-150"
+                style={deckAdjustments.overlayStyle}
+              />
+            )}
             {/* Directional vignette protecting text readability on left while keeping droplet and crema rings clearly visible on right */}
             <div className="absolute inset-0 bg-gradient-to-r from-[#140C08]/85 via-[#140C08]/50 to-[#140C08]/20" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/75 via-transparent to-transparent" />

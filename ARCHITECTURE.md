@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.19.7 (In-App Step 2 Roast Date Reticle Viewfinder, First-Drip Curve Trimming & Sensory Precision)  
+> **Gældende version:** v1.19.8 (Admin Background Inspector, Real-Time Blur & Tint Tuning, In-App Camera Reticle & First-Drip Curve Trimming)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -334,6 +334,8 @@ flowchart TD
 | `flowbean_bean_anchors_v1` | `Record<string, BeanCalibrationAnchor>` | Dial-in ankre låst i Golden Zone (24-32s uden kanalisering) til beregning af afgasning og ristegrads-skift. |
 | `espresso_curator_checklist` | `Record<string, boolean>` | Kuratorens afkrydsede periodiske kvalitetstjek. |
 | `espresso_last_curator_audit` | `string (YYYY-MM-DD)` | Dato for senest gennemførte officielle kurator-revision. |
+| `flowbean_card_themes_v1` | `Record<string, string>` | Aktive baggrundstema-id'er pr. kort (`barista_deck`, `beandex_banner`, `grinder_fleet`, etc.). |
+| `flowbean_card_bg_adjustments_v1` | `Record<string, CardBackgroundAdjustments>` | Admin finjusteringer for sløring (0-16px), gennemsigtighed (10-100%), lysstyrke, kontrast og farvetone-overlay. |
 
 ---
 

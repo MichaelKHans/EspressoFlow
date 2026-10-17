@@ -670,6 +670,19 @@ export const en = {
   'beandex.freshness_peak_title': '✨ Peak Flavor Window',
   'deck.switch_bean': 'Switch Active Bean',
   'deck.active_count': '{count} active',
+
+  // Admin Background Inspector
+  'admin.inspector_title': 'Background Inspector',
+  'admin.inspector_subtitle': 'Live backdrop tuning for barista cards',
+  'admin.inspector_adjust': 'Adjust',
+  'admin.inspector_blur': 'Blur',
+  'admin.inspector_opacity': 'Photo Opacity',
+  'admin.inspector_brightness': 'Brightness',
+  'admin.inspector_contrast': 'Contrast',
+  'admin.inspector_tint': 'Overlay Tint',
+  'admin.inspector_overlay_opacity': 'Tint Strength',
+  'admin.inspector_reset': 'Reset',
+  'admin.inspector_done': 'Done',
 } as const;
 
 export type TranslationKeys = keyof typeof en;

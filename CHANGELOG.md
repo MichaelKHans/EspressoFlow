@@ -2,6 +2,26 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.8] - 2026-10-17
+### Etape 68: Admin Baggrunds-Inspector & Realtids Farve-/Sløringsjustering (Etape 5 af Feedback-Gennemgang)
+- **Direkte "Juster" Knap på `AdminThemeBadge.tsx`:**
+  - Tilføjet en dedikeret `[ 🎛️ Juster ]` knap direkte ved siden af temasvælgeren på alle temabærende kort i appen.
+  - Viser en pulserende indikator-prik, når kortets baggrund har brugerdefinerede tilpasninger i forhold til standardværdierne.
+- **Flydende Baggrunds-Inspector Popover (`AdminThemeBadge.tsx`):**
+  - Åbner et floating glaspanel med avanceret Anthropic Claude / Espresso Warmth styling (`bg-[#180E09]/95 backdrop-blur-xl border border-[#C26D52]/60`).
+  - **Sløring / Blur:** Skyder fra 0px til 16px med numerisk visning og hurtigknapper (`0px`, `3px`, `6px`, `12px`).
+  - **Billedets Gennemsigtighed / Opacity:** Skyder fra 10% til 100% med hurtigknapper (`50%`, `75%`, `85%`, `100%`).
+  - **Lysstyrke / Brightness:** Skyder fra 50% til 150% til justering af baggrundens eksponering.
+  - **Kontrast / Contrast:** Skyder fra 50% til 150% til forstærkning af detaljer i bønner og udstyr.
+  - **Farvetone / Overlay Tint:** Direkte farvepalet-cirkler (`Espresso #140C08`, `Kulsort #000000`, `Varm Kaffe #1E130D`, `Terracotta #C26D52`, `Mørk Skov #1F2421`) samt native farvevælger til fri RGB/Hex-justering.
+  - **Tint Styrke / Overlay Opacity:** Skyder fra 0% til 90% med realtids dæmpning af baggrundsbilledet for maksimal tekstlæsbarhed.
+  - **Nulstil & Luk:** `↺ Nulstil` gendanner krystalklare standardværdier med ét tryk; lukker via klik udenfor, `Esc` eller "Færdig".
+- **Realtids Reaktiv Motor (`src/lib/cardThemes.ts`):**
+  - Ny `CardBackgroundAdjustments` datamodel, `useCardAdjustments` React hook og `flowbean_card_adjustments_changed` CustomEvent motor.
+  - Forbundet til alle 5 temakort: `barista_deck_espresso`, `barista_deck_pourover`, `beandex_banner`, `grinder_fleet`, `espresso_machine` og `filter_gear`.
+- **Kvalitetssikring:**
+  - `npm run build` og `npx cap sync` kompileret 100% fejlfrit (0 fejl).
+
 ## [1.19.7] - 2026-10-17
 ### Etape 67: In-App Kamera & Ristedato Reticle HUD i Step 2 (Etape 4 af Feedback-Gennemgang)
 - **Direkte In-App Kamerasøger i Step 2 (`src/components/BeanScannerModal.tsx`):**
