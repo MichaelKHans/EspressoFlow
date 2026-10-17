@@ -802,21 +802,21 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                           <div className="p-3.5 space-y-2.5 bg-[#FAF7F2] border-b sm:border-b-0 sm:border-r border-[#E8DFD5]">
                             <div className="flex items-center justify-between">
                               <span className="text-[9.5px] uppercase font-bold text-amber-900 flex items-center gap-1.5 font-mono">
-                                <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" /> Ingen Aktiv Bønne på Lager
+                                <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" /> {t('drink.no_active_bean')}
                               </span>
                               <span className="text-[8.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
-                                Tømt Pose
+                                {t('drink.emptied_bag')}
                               </span>
                             </div>
 
                             <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
-                              Posens bønner er markeret som tømt i Beandex. Vælg eller scan en bønne til din <strong className="text-[#2C2018]">{selectedDrink.name}</strong>:
+                              {t('drink.bean_emptied_desc', { drink: selectedDrink.name })}
                             </p>
 
                             {/* Smart Recommendation for this drink */}
                             <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5] text-[10px] space-y-1 shadow-2xs font-mono">
                               <div className="text-[#2C2018] font-bold flex items-center gap-1.5 flex-wrap">
-                                <span>💡 Anbefalet til {selectedDrink.name}:</span>
+                                <span>💡 {t('drink.recommended_for', { drink: selectedDrink.name })}</span>
                                 <span className="text-[#C26D52] font-bold">{guidance.idealRoastSummary}</span>
                               </div>
                               <div className="text-[#7A6E65] text-[9.5px] font-sans leading-snug">
@@ -833,7 +833,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                                   className="flex-1 px-3 py-2 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-sans font-bold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
                                 >
                                   <Camera className="w-3.5 h-3.5" />
-                                  <span>Scan Ny Pose</span>
+                                  <span>{t('drink.scan_new_bag')}</span>
                                 </button>
                               )}
 
@@ -844,7 +844,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                                   className="flex-1 px-3 py-2 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-sans font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
                                 >
                                   <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
-                                  <span>Vælg fra Lager</span>
+                                  <span>{t('drink.choose_from_vault')}</span>
                                 </button>
                               )}
                             </div>
@@ -928,10 +928,10 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                               }
                             }}
                             className="px-2 py-0.5 rounded-lg bg-[#C26D52]/10 hover:bg-[#C26D52] text-[#C26D52] hover:text-white border border-[#C26D52]/30 text-[10px] font-sans font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
-                            title={`Anvend anbefaling: ${dialInAnalysis.suggestedSetting}`}
+                            title={`${t('drink.apply_suggestion')}: ${dialInAnalysis.suggestedSetting}`}
                           >
                             <span>💡 {dialInAnalysis.suggestedSetting}</span>
-                            <span className="text-[9px] uppercase font-bold">({t('drink.apply_suggestion') || 'Anvend'})</span>
+                            <span className="text-[9px] uppercase font-bold">({t('drink.apply_suggestion')})</span>
                           </button>
                         )}
                       </div>

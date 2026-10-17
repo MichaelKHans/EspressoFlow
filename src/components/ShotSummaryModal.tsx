@@ -38,7 +38,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   onUpdateShot,
   onApplyGrindSetting,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [selectedTaste, setSelectedTaste] = useState<TasteRating | null>(null);
   const [notes, setNotes] = useState<string>('');
   const [appliedGrind, setAppliedGrind] = useState<boolean>(false);
@@ -288,13 +288,13 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
                 <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <strong className="block text-[11px] font-bold text-amber-950 uppercase tracking-wide">
-                    {t('grind.ai_recommendation_label')}: AI-Læring Pauseret
+                    {t('grind.ai_recommendation_label')}: {t('coach.ai_learning_paused')}
                   </strong>
                   <p className="text-[11px] leading-relaxed text-amber-900/90 font-mono">
                     {t('coach.ai_paused_shield', {
                       spike: (typeof shot.channeling === 'object' && shot.channeling?.flowSpikeGps ? shot.channeling.flowSpikeGps.toFixed(1) : '3.0'),
                       setting: shot.grindSetting,
-                    }) || `Flow-spring detekteret på dette skud. Kværnmodellen blev skånet – behold ${shot.grindSetting} og forbedr puck prep.`}
+                    }) || `Flow spike detected on this shot. Grinder profile was protected – keep ${shot.grindSetting} and improve puck prep.`}
                   </p>
                 </div>
               </div>
@@ -422,7 +422,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
                 )}
               </div>
               <span className="text-[10px] text-[#7A6E65] mt-0.5 block">
-                Ø {shot.averageFlowGps.toFixed(2)} g/s
+                {language === 'da' ? 'Ø' : 'avg.'} {shot.averageFlowGps.toFixed(2)} g/s
               </span>
             </div>
           </div>

@@ -683,6 +683,92 @@ export const en = {
   'admin.inspector_overlay_opacity': 'Tint Strength',
   'admin.inspector_reset': 'Reset',
   'admin.inspector_done': 'Done',
+  'admin.theme_badge_label': 'Theme ({current}/{total}):',
+  'admin.theme_cycle_title': 'Admin: Click to cycle background image on this card',
+  'admin.theme_adjust_title': 'Admin: Fine-tune blur, contrast, brightness and color tint for this card',
+  'admin.customized': 'Customized',
+  'admin.default': 'Default',
+  'admin.pick_color': 'Choose custom color',
+  'admin.tint_espresso': 'Dark Espresso',
+  'admin.tint_black': 'Pitch Black',
+  'admin.tint_warm_amber': 'Warm Amber',
+  'admin.tint_terracotta': 'Terracotta',
+  'admin.tint_forest': 'Forest Noir',
+
+  // Scanner Modal & Mode Tabs
+  'bean.scanner_subtitle': 'Optical label recognition, Bag Vision™ & roast date',
+  'bean.tab_bag_ai': 'Bag AI',
+  'bean.tab_barcode': 'Barcode',
+  'bean.tab_roast_date': 'Roast Date',
+  'bean.reticle_center_bag': 'Center front of coffee bag',
+  'bean.vision_analyzing': 'Beandex Vision AI analyzing...',
+  'bean.scan_bag_front_btn': 'Scan Coffee Bag (Front)',
+  'bean.choose_gallery_btn': 'Select Bag Photo from Library',
+  'bean.camera_not_ready': 'Camera is not ready yet. Please try again in a moment.',
+  'bean.recognition_failed_lighting': 'Could not identify coffee bag. Try another angle or better lighting.',
+  'bean.recognition_failed_image': 'Could not identify coffee bag from photo.',
+  'bean.could_not_analyze_image': 'Could not analyze image.',
+  'bean.vision_call_failed': 'Vision AI call failed. Check network and Supabase connection.',
+  'bean.identified_msg': 'Identified: {name}',
+
+  // Radar & Matchmaker Tooltips
+  'radar.quick_desc': 'Instant zero-tap shelf scanning with traffic-light HUD for roast dates & BBD.',
+  'radar.tooltip': 'Instant Supermarket & Shelf Scanner',
+  'beandex.matchmaker_tooltip': 'Find your next coffee bean match based on flavor, milk and budget',
+  'matchmaker.selected_count': '{count}/3 selected',
+
+  // Settings & Theme Admin
+  'settings.admin_edit_desc': 'When enabled, interactive theme and tuning buttons appear on hero cards (Barista Deck, Beandex, Grinder Fleet and Espresso Machine) to adjust backgrounds live.',
+  'settings.admin_edit_active': 'Editing active: Go to Bar, Beandex or Gear to tune backgrounds live!',
+
+  // Gear & General Common
+  'common.expand': 'Expand',
+  'common.collapse': 'Collapse',
+  'gear.grinder_active_short': 'Active on bar: {name}',
+  'gear.grinder_desc': 'Manage your home bar grinders and select which grinder is active on your station.',
+  'gear.machine_active_short': 'Active: {name}',
+  'gear.machine_desc': 'Select your espresso machine or all-in-one combo unit.',
+  'gear.filter_gear_title': 'Filter & Manual Brewing (V60 & Press)',
+  'gear.filter_active_short': 'Active: {name}',
+  'gear.filter_desc': 'Your manual drippers, French presses, and gooseneck kettles for Pour Over.',
+  'gear.filter_brewer_label': 'Manual Dripper / Brewer',
+  'gear.filter_kettle_label': 'Gooseneck Kettle / Water Temp',
+  'gear.filter_sync_title': 'Automatic Grinder Sync for Filter',
+  'gear.filter_sync_desc': 'When you switch to Pour Over on Bar, the app automatically selects your filter equipment ({brewer}) and pairs it with your active bar grinder ({grinder}) with coarse grind settings.',
+
+  // Drink Selector & Empty Bag
+  'drink.no_active_bean': 'No Active Bean in Stock',
+  'drink.emptied_bag': 'Empty Bag',
+  'drink.bean_emptied_desc': 'This coffee bag is marked as finished in Beandex. Select or scan a bean for your {drink}:',
+  'drink.recommended_for': 'Recommended for {drink}:',
+  'drink.scan_new_bag': 'Scan Bag Photo',
+  'drink.choose_from_vault': 'Choose from Shelf',
+
+  // Matchmaker
+  'matchmaker.drink_milk_desc': 'Prioritizes rich body, caramel and dark chocolate that cuts beautifully through milk.',
+  'matchmaker.drink_espresso_desc': 'Focuses on sweetness, delicate balance, and captivating crema without overpowering bitterness.',
+  'matchmaker.drink_filter_desc': 'Light-roasted micro-lots with vibrant fruitiness and floral notes.',
+  'matchmaker.drink_all_desc': 'Versatile medium roasts that excel equally as straight espresso and in milk drinks.',
+  'matchmaker.tier_all_label': 'All Budgets',
+  'matchmaker.tier_all_desc': 'No price limit',
+  'beandex.available_at': 'Available at: {location}',
+  'beandex.purchased_at_tooltip': 'Purchased at: {location}',
+  'beandex.finished_label': 'Finished',
+  'beandex.repurchase_label': 'Repurchase',
+  'beandex.dial_in_view_tooltip': 'View saved recipe and grind setting',
+
+  // Paywall & Licensing
+  'paywall.network_error': 'Network error during validation. Please try again.',
+  'paywall.have_key_btn': 'Have a license key or gift code?',
+  'paywall.redeem_title': 'Redeem License or Gift Code',
+  'paywall.redeem_btn': 'Redeem',
+  'paywall.rate_locked': 'Security lock active ({seconds}s remaining)',
+
+  // Radar & Pre-Brew Coach
+  'radar.reading_date': 'Reading date...',
+  'coach.current_grind_label': 'Current grinder',
+  'coach.recommended_label': 'Recommended',
+  'coach.ai_learning_paused': 'AI-Learning Paused',
 } as const;
 
 export type TranslationKeys = keyof typeof en;

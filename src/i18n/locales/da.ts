@@ -685,5 +685,91 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'admin.inspector_overlay_opacity': 'Tint Styrke',
   'admin.inspector_reset': 'Nulstil',
   'admin.inspector_done': 'Færdig',
+  'admin.theme_badge_label': 'Tema ({current}/{total}):',
+  'admin.theme_cycle_title': 'Admin: Klik her for at skifte baggrundsbillede på dette kort',
+  'admin.theme_adjust_title': 'Admin: Finjuster sløring, kontrast, lysstyrke og farvetone for dette kort',
+  'admin.customized': 'Tilpasset',
+  'admin.default': 'Standard',
+  'admin.pick_color': 'Vælg brugerdefineret farve',
+  'admin.tint_espresso': 'Mørk Espresso',
+  'admin.tint_black': 'Kulsort',
+  'admin.tint_warm_amber': 'Varm Kaffe',
+  'admin.tint_terracotta': 'Terracotta',
+  'admin.tint_forest': 'Mørk Skov',
+
+  // Scanner Modal & Mode Tabs
+  'bean.scanner_subtitle': 'Optisk etiket-genkendelse, Bag Vision™ & ristedato',
+  'bean.tab_bag_ai': 'Pose AI',
+  'bean.tab_barcode': 'Stregkode',
+  'bean.tab_roast_date': 'Ristedato',
+  'bean.reticle_center_bag': 'Centrér kaffeposens forside',
+  'bean.vision_analyzing': 'Beandex Vision AI analyserer...',
+  'bean.scan_bag_front_btn': 'Scan Kaffepose (Forside)',
+  'bean.choose_gallery_btn': 'Vælg posefoto fra Galleri',
+  'bean.camera_not_ready': 'Kameraet er ikke klar endnu. Prøv igen om et øjeblik.',
+  'bean.recognition_failed_lighting': 'Kunne ikke genkende kaffeposen. Prøv en anden vinkel eller bedre lys.',
+  'bean.recognition_failed_image': 'Kunne ikke genkende kaffeposen fra billedet.',
+  'bean.could_not_analyze_image': 'Kunne ikke analysere billedet.',
+  'bean.vision_call_failed': 'Vision AI kaldet fejlede. Kontroller netværk og Supabase-forbindelse.',
+  'bean.identified_msg': 'Genkendt: {name}',
+
+  // Radar & Matchmaker Tooltips
+  'radar.quick_desc': 'Lynhurtig zero-tap hyldescanning med trafiklys-HUD mod ristedatoer & BBD.',
+  'radar.tooltip': 'Lynhurtig Butiks- & Hyldescanner',
+  'beandex.matchmaker_tooltip': 'Find dit næste bønne-match baseret på smag, mælk og budget',
+  'matchmaker.selected_count': '{count}/3 valgt',
+
+  // Settings & Theme Admin
+  'settings.admin_edit_desc': 'Når denne tilstand er slået til, vises interaktive Tema- og justeringsknapper direkte på kortene, så du nemt kan tilpasse baggrunde live.',
+  'settings.admin_edit_active': 'Redigering aktiv: Gå til Bar, Beandex eller Gear for at skifte baggrunde live!',
+
+  // Gear & General Common
+  'common.expand': 'Fold ud',
+  'common.collapse': 'Minimer',
+  'gear.grinder_active_short': 'Aktiv på bar: {name}',
+  'gear.grinder_desc': 'Administrer dine kværne og vælg hvilken kværn der er aktiv på din kaffebar.',
+  'gear.machine_active_short': 'Aktiv: {name}',
+  'gear.machine_desc': 'Vælg din espressomaskine eller all-in-one maskine.',
+  'gear.filter_gear_title': 'Filter & Manuel Bryg (V60 & Stempel)',
+  'gear.filter_active_short': 'Aktiv: {name}',
+  'gear.filter_desc': 'Dine manuelle dryppere, stempelkander og svanehals elkedler til Pour Over.',
+  'gear.filter_brewer_label': 'Manuel Drypper / Brygger',
+  'gear.filter_kettle_label': 'Svanehals Kedel / Vandtemperatur',
+  'gear.filter_sync_title': 'Automatisk Kværnsynkronisering for Filter',
+  'gear.filter_sync_desc': 'Når du på Kaffebar (Bar) skifter til Pour Over, bruger appen automatisk dit valgte filterudstyr ({brewer}) og forbinder det med din aktive barkværn ({grinder}) med grove formalingsgrader.',
+
+  // Drink Selector & Empty Bag
+  'drink.no_active_bean': 'Ingen Aktiv Bønne på Lager',
+  'drink.emptied_bag': 'Tømt Pose',
+  'drink.bean_emptied_desc': 'Posens bønner er markeret som tømt i Beandex. Vælg eller scan en bønne til din {drink}:',
+  'drink.recommended_for': 'Anbefalet til {drink}:',
+  'drink.scan_new_bag': 'Scan Ny Pose',
+  'drink.choose_from_vault': 'Vælg fra Lager',
+
+  // Matchmaker
+  'matchmaker.drink_milk_desc': 'Prioriterer fyldig krop, karamel og mørk kakao, som trænger perfekt igennem mælk.',
+  'matchmaker.drink_espresso_desc': 'Fokuserer på sødme, klar balance og forførende crema uden overdøvende bitterhed.',
+  'matchmaker.drink_filter_desc': 'Lysristede mikro-partier med sprudlende frugtighed og florale noter.',
+  'matchmaker.drink_all_desc': 'Alsidige mellemristninger, der fungerer suverænt til både espresso og mælk.',
+  'matchmaker.tier_all_label': 'Alle Priser',
+  'matchmaker.tier_all_desc': 'Ingen budgetgrænse',
+  'beandex.available_at': 'Købes i: {location}',
+  'beandex.purchased_at_tooltip': 'Købt i: {location}',
+  'beandex.finished_label': 'Tømt',
+  'beandex.repurchase_label': 'Genkøb',
+  'beandex.dial_in_view_tooltip': 'Se gemt opskrift og kværnindstilling',
+
+  // Paywall & Licensing
+  'paywall.network_error': 'Netværksfejl under validering. Prøv igen.',
+  'paywall.have_key_btn': 'Har du en licensnøgle eller gavekode?',
+  'paywall.redeem_title': 'Indløs Licens- eller Gavekode',
+  'paywall.redeem_btn': 'Indløs',
+  'paywall.rate_locked': 'Sikkerhedslås aktiv ({seconds}s tilbage)',
+
+  // Radar & Pre-Brew Coach
+  'radar.reading_date': 'Læser dato...',
+  'coach.current_grind_label': 'Nuværende kværn',
+  'coach.recommended_label': 'Anbefalet',
+  'coach.ai_learning_paused': 'AI-Læring Pauseret',
 };
 

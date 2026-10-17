@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { en, type TranslationKeys } from './locales/en';
+export type { TranslationKeys };
 import { de } from './locales/de';
 import { da } from './locales/da';
 import { ko } from './locales/ko';

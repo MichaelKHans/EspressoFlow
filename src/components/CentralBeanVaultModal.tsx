@@ -355,7 +355,7 @@ export const CentralBeanVaultModal: React.FC<CentralBeanVaultModalProps> = ({
                           {bean.purchase_location && (
                             <span
                               className="text-[9px] font-sans text-[#7A6E65] bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.5 rounded truncate max-w-[130px]"
-                              title={`Købt i: ${bean.purchase_location}`}
+                              title={t('beandex.purchased_at_tooltip', { location: bean.purchase_location })}
                             >
                               🏪 {bean.purchase_location}
                             </span>

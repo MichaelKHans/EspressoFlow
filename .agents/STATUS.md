@@ -9,6 +9,27 @@
 
 ---
 
+### 2026-10-17 -- Etape 69: Komplet Sprog- & Lokaliserings-Sanering (v1.19.9)
+- **BeanScannerModal.tsx & FreshnessRadarModal.tsx:**
+  - Undertitel lokaliseret: `{t('bean.scanner_subtitle')}` ("Optisk etiket-genkendelse, stregkoder & ristedato" -> "Optical label recognition, Bag Vision™ & roast date").
+  - Modus-tabs lokaliseret: `{t('bean.tab_bag_ai')}`, `{t('bean.tab_barcode')}`, `{t('bean.tab_roast_date')}` ("Pose AI", "Stregkode", "Ristedato" -> "Bag AI", "Barcode", "Roast Date").
+  - Reticle & søger-hjælpetekster lokaliseret: `{t('bean.reticle_center_bag')}`, `{t('bean.vision_analyzing')}`, `{t('bean.scan_bag_front_btn')}`, `{t('bean.choose_gallery_btn')}`.
+  - Freshness Radar banner og live scanner spinner: `{t('radar.quick_desc')}` og `{t('radar.reading_date')}`.
+  - Smagsnoter i scanneren vises nu tosproget (`tag.labelDa` / `tag.labelEn`).
+- **DrinkSelector.tsx & FlowChart.tsx:**
+  - Tømte bønner og anbefalingskort fuldt lokaliseret via `t('drink.no_active_bean')`, `t('drink.emptied_bag')`, `t('drink.bean_emptied_desc')`, `t('drink.recommended_for')`, `t('drink.scan_new_bag')`, `t('drink.choose_from_vault')`.
+  - FlowChart: Vægt-akse og mål-kurve nu tosproget (`language === 'da' ? 'VÆGT' : 'WEIGHT'`, `🎯 TARGET / 🎯 MÅL`).
+- **BeanMatchmakerModal.tsx & BeandexView.tsx:**
+  - Præferencer (Mælkedrikke, Ren Espresso, Filter & All-Rounder) og budget-knapper lokaliseret tosproget.
+  - Viser købssted tosproget via `t('beandex.available_at')` og `t('beandex.purchased_at_tooltip')`.
+  - Tømt bønne-status og arkivering lokaliseret tosproget (`Archived` / `Arkiveret`).
+- **Udstyr & Indstillinger (`App.tsx`, `AdminThemeBadge.tsx`, `SettingsModal.tsx`):**
+  - Filterudstyr kort: `t('gear.filter_gear_title')`, `t('gear.filter_active_short')`, `t('gear.filter_desc')`, `t('common.expand')`/`t('common.collapse')`, samt dropdown labels og kværnsynkronisering note.
+  - Admin tema inspector swatches bruger nu oversættelsesnøgler for farvenavne.
+  - Licens- og fejlbilleder i `PaywallModal.tsx` og `licenseEngine.ts` fuldt tosprogede.
+- **Kvalitetssikring:**
+  - `npm run build` og `npx cap sync` kompileret 100% fejlfrit (0 fejl).
+
 ### 2026-10-17 -- Etape 68: Admin Baggrunds-Inspector & Realtids Farve-/Sløringsjustering (v1.19.8)
 - **Direkte "Juster" Knap på `AdminThemeBadge.tsx`:**
   - Tilføjet en dedikeret `[ 🎛️ Juster ]` knap direkte ved siden af temasvælgeren på alle temabærende kort i appen.

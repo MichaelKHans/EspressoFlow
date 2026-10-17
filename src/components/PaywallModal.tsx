@@ -61,7 +61,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
         }, 1200);
       }
     } catch {
-      setRedeemFeedback({ success: false, message: 'Netværksfejl under validering. Prøv igen.' });
+      setRedeemFeedback({ success: false, message: t('paywall.network_error') });
     } finally {
       setIsRedeeming(false);
     }
@@ -182,14 +182,14 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 className="w-full text-[11px] font-mono text-[#7A6E65] hover:text-[#C26D52] flex items-center justify-center gap-1.5 transition cursor-pointer py-1"
               >
                 <KeyRound className="w-3.5 h-3.5" />
-                <span>Har du en licensnøgle eller gavekode?</span>
+                <span>{t('paywall.have_key_btn')}</span>
               </button>
             ) : (
               <form onSubmit={handleRedeemSubmit} className="space-y-2 bg-[#FAF7F2] p-3 rounded-xl border border-[#DECFC0] animate-fadeIn text-left">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-mono font-bold text-[#7A6E65] uppercase flex items-center gap-1">
                     <KeyRound className="w-3 h-3 text-[#C26D52]" />
-                    <span>Indløs Licens- eller Gavekode</span>
+                    <span>{t('paywall.redeem_title')}</span>
                   </label>
                   <button
                     type="button"
@@ -199,7 +199,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                     }}
                     className="text-[10px] text-[#A6998E] hover:text-[#2C2018] cursor-pointer"
                   >
-                    Luk
+                    {t('common.close') || 'Close'}
                   </button>
                 </div>
 
@@ -220,7 +220,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                     {isRedeeming ? (
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <span>Indløs</span>
+                      <span>{t('paywall.redeem_btn')}</span>
                     )}
                   </button>
                 </div>
@@ -238,7 +238,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 {rateLimit.isLocked && (
                   <p className="text-[10.5px] text-amber-700 font-sans flex items-center gap-1">
                     <AlertCircle className="w-3 h-3 shrink-0 text-amber-600" />
-                    <span>Sikkerhedslås aktiv ({rateLimit.remainingSeconds}s tilbage)</span>
+                    <span>{t('paywall.rate_locked', { seconds: rateLimit.remainingSeconds })}</span>
                   </p>
                 )}
               </form>

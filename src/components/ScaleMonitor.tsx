@@ -71,7 +71,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   targetFlowRateMin = 4.0,
   targetFlowRateMax = 6.0,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [currentWeight, setCurrentWeight] = useState<number>(0.0);
   const [currentFlow, setCurrentFlow] = useState<number>(0.0);
   const [elapsedTime, setElapsedTime] = useState<number>(0.0);
@@ -1867,7 +1867,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             {/* Remote Trigger Scenarios on PC */}
             <div className="flex flex-col gap-2">
               <div className="text-[10px] uppercase font-bold text-[#E8DFD5]/50 tracking-wider">
-                Fjernstyr PC-Skærmen direkte:
+                {language === 'da' ? 'Fjernstyr PC-Skærmen direkte:' : 'Remote control PC screen directly:'}
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs">
@@ -1880,7 +1880,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                   className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#C26D52]/50 text-left transition flex flex-col gap-1 active:scale-95 cursor-pointer"
                 >
                   <span className="font-bold text-amber-200">☕ 30s Standard</span>
-                  <span className="text-[9px] text-[#E8DFD5]/60">0g → 36g jævnt</span>
+                  <span className="text-[9px] text-[#E8DFD5]/60">{language === 'da' ? '0g → 36g jævnt' : '0g → 36g steady'}</span>
                 </button>
 
                 <button
@@ -1903,8 +1903,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                   }}
                   className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/50 text-left transition flex flex-col gap-1 active:scale-95 cursor-pointer"
                 >
-                  <span className="font-bold text-blue-300">🔢 Cifre 0–9</span>
-                  <span className="text-[9px] text-[#E8DFD5]/60">Stress-test 10 tal</span>
+                  <span className="font-bold text-blue-300">{language === 'da' ? '🔢 Cifre 0–9' : '🔢 Digits 0–9'}</span>
+                  <span className="text-[9px] text-[#E8DFD5]/60">{language === 'da' ? 'Stress-test 10 tal' : 'Stress-test 10 digits'}</span>
                 </button>
 
                 <button
@@ -1916,7 +1916,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                   className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-400/50 text-left transition flex flex-col gap-1 active:scale-95 cursor-pointer"
                 >
                   <span className="font-bold text-emerald-300">⏱️ Timer Stress</span>
-                  <span className="text-[9px] text-[#E8DFD5]/60">Hurtig optælling</span>
+                  <span className="text-[9px] text-[#E8DFD5]/60">{language === 'da' ? 'Hurtig optælling' : 'Fast count-up'}</span>
                 </button>
               </div>
 

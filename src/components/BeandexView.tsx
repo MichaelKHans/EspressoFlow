@@ -552,7 +552,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               type="button"
               onClick={() => setIsMatchmakerOpen(true)}
               className="px-3.5 py-2 rounded-xl bg-linear-to-r from-[#D4A373] to-[#C26D52] hover:brightness-110 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md transition active:scale-95 cursor-pointer ring-1 ring-white/20"
-              title="Find dit næste bønne-match baseret på smag, mælk og budget"
+              title={t('beandex.matchmaker_tooltip')}
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
               <span>{t('beandex.matchmaker_btn')}</span>
@@ -570,7 +570,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 type="button"
                 onClick={onOpenRadar}
                 className="px-3.5 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15] hover:bg-[#38271C] text-[#FFFDF9] font-semibold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs"
-                title="Lynhurtig Butiks- & Hyldescanner"
+                title={t('radar.tooltip')}
               >
                 <Zap className="w-3.5 h-3.5 text-[#E58367] fill-[#E58367]" />
                 <span>{t('radar.btn')}</span>
@@ -876,7 +876,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                     <button
                       key={tag.id}
                       type="button"
-                      onClick={() => toggleNewBagFlavorNote(tag.labelDa)}
+                      onClick={() => toggleNewBagFlavorNote(language === 'da' ? tag.labelDa : tag.labelEn)}
                       className={`px-2.5 py-1 rounded-xl text-[10.5px] font-sans flex items-center gap-1 transition cursor-pointer ${
                         isSelected
                           ? 'bg-[#C26D52] text-white font-bold shadow-xs'
@@ -884,7 +884,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       }`}
                     >
                       <span>{tag.icon}</span>
-                      <span>{tag.labelDa}</span>
+                      <span>{language === 'da' ? tag.labelDa : tag.labelEn}</span>
                     </button>
                   );
                 })}
@@ -1299,7 +1299,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                           </p>
                         )}
                         {bean.purchaseLocation && (
-                          <p className="text-[10px] text-[#C26D52] font-sans flex items-center gap-1 mt-0.5 truncate" title={`Købt i: ${bean.purchaseLocation}`}>
+                          <p className="text-[10px] text-[#C26D52] font-sans flex items-center gap-1 mt-0.5 truncate" title={t('beandex.purchased_at_tooltip', { location: bean.purchaseLocation })}>
                             <span>🏪</span>
                             <span className="font-semibold">{bean.purchaseLocation}</span>
                           </p>
@@ -1448,12 +1448,12 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                     {bean.isFinished && (
                       <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#DECFC0] space-y-1.5 text-xs shadow-2xs">
                         <div className="flex items-center justify-between text-[10.5px] font-mono">
-                          <span className="text-[#7A6E65]">Tømt:</span>
-                          <span className="font-bold text-[#2C2018]">{bean.dateFinished || 'Arkiveret'}</span>
+                          <span className="text-[#7A6E65]">{t('beandex.finished_label')}:</span>
+                          <span className="font-bold text-[#2C2018]">{bean.dateFinished || (language === 'da' ? 'Arkiveret' : 'Archived')}</span>
                         </div>
                         {bean.repurchaseVerdict && (
                           <div className="flex items-center justify-between text-[10.5px] font-mono pt-1 border-t border-[#DECFC0]/50">
-                            <span className="text-[#7A6E65]">Genkøb:</span>
+                            <span className="text-[#7A6E65]">{t('beandex.repurchase_label')}:</span>
                             {bean.repurchaseVerdict === 'buy_again' && (
                               <span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold flex items-center gap-1">
                                 <ThumbsUp className="w-3 h-3 text-emerald-600" />
@@ -1649,7 +1649,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                           type="button"
                           onClick={() => onOpenDialInForBean(bean.id)}
                           className="px-2 py-1 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] text-[10px] flex items-center gap-1 transition cursor-pointer"
-                          title="Se gemt opskrift og kværnindstilling"
+                          title={t('beandex.dial_in_view_tooltip')}
                         >
                           <Sliders className="w-3 h-3 text-[#C26D52]" />
                           <span>Dial-In</span>
@@ -1762,7 +1762,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                         {gb.roaster} • {gb.purchase_country}
                       </span>
                       {gb.purchase_location && (
-                        <span className="text-[9.5px] text-[#C26D52] font-semibold flex items-center gap-1 mt-0.5 truncate" title={`Købt i: ${gb.purchase_location}`}>
+                        <span className="text-[9.5px] text-[#C26D52] font-semibold flex items-center gap-1 mt-0.5 truncate" title={t('beandex.purchased_at_tooltip', { location: gb.purchase_location })}>
                           <span>🏪</span>
                           <span>{gb.purchase_location}</span>
                         </span>

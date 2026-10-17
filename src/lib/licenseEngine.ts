@@ -191,11 +191,14 @@ export function generateLicenseBatch(count: number, batchTag: string = 'general'
  * Safe against brute force with rate-limiting.
  */
 export async function redeemLicenseKey(rawInput: string): Promise<RedeemResult> {
+  const isDa = typeof localStorage !== 'undefined' && localStorage.getItem('flowbean_i18n_lang') === 'da';
   const rateLimit = getRateLimitStatus();
   if (rateLimit.isLocked || !rateLimit.canAttempt) {
     return {
       success: false,
-      message: `For mange forkerte forsøg. Sikkerhedslåst i ${rateLimit.remainingSeconds} sekunder.`,
+      message: isDa
+        ? `For mange forkerte forsøg. Sikkerhedslåst i ${rateLimit.remainingSeconds} sekunder.`
+        : `Too many failed attempts. Security locked for ${rateLimit.remainingSeconds} seconds.`,
       rateLimitStatus: rateLimit,
     };
   }
@@ -205,7 +208,9 @@ export async function redeemLicenseKey(rawInput: string): Promise<RedeemResult> 
     const updatedStatus = recordFailedAttempt();
     return {
       success: false,
-      message: 'Ugyldigt nøgleformat. Skal have formatet FLOW-XXXX-XXXX-XXXX.',
+      message: isDa
+        ? 'Ugyldigt nøgleformat. Skal have formatet FLOW-XXXX-XXXX-XXXX.'
+        : 'Invalid key format. Expected format: FLOW-XXXX-XXXX-XXXX.',
       rateLimitStatus: updatedStatus,
     };
   }
@@ -222,7 +227,9 @@ export async function redeemLicenseKey(rawInput: string): Promise<RedeemResult> 
       success: true,
       code: key,
       batchTag: 'master_vip',
-      message: 'VIP Licens aktiveret! Flowbean Lifetime Pro er nu låst op permanent.',
+      message: isDa
+        ? 'VIP Licens aktiveret! Flowbean Lifetime Pro er nu låst op permanent.'
+        : 'VIP License activated! Flowbean Lifetime Pro is permanently unlocked.',
       rateLimitStatus: getRateLimitStatus(),
     };
   }
@@ -244,7 +251,9 @@ export async function redeemLicenseKey(rawInput: string): Promise<RedeemResult> 
           const updatedStatus = recordFailedAttempt();
           return {
             success: false,
-            message: 'Denne licensnøgle er allerede blevet indløst.',
+            message: isDa
+              ? 'Denne licensnøgle er allerede blevet indløst.'
+              : 'This license key has already been redeemed.',
             rateLimitStatus: updatedStatus,
           };
         }
@@ -253,7 +262,9 @@ export async function redeemLicenseKey(rawInput: string): Promise<RedeemResult> 
           const updatedStatus = recordFailedAttempt();
           return {
             success: false,
-            message: 'Denne licensnøgle er blevet deaktiveret.',
+            message: isDa
+              ? 'Denne licensnøgle er blevet deaktiveret.'
+              : 'This license key has been deactivated.',
             rateLimitStatus: updatedStatus,
           };
         }
@@ -278,7 +289,9 @@ export async function redeemLicenseKey(rawInput: string): Promise<RedeemResult> 
             success: true,
             code: key,
             batchTag: data.batch_tag,
-            message: 'Licensnøgle bekræftet! Flowbean Lifetime Pro er nu låst op.',
+            message: isDa
+              ? 'Licensnøgle bekræftet! Flowbean Lifetime Pro er nu låst op.'
+              : 'License key confirmed! Flowbean Lifetime Pro is now unlocked.',
             rateLimitStatus: getRateLimitStatus(),
           };
         }
@@ -291,13 +304,15 @@ export async function redeemLicenseKey(rawInput: string): Promise<RedeemResult> 
   // 3. Fallback: If not found in database or offline
   const updatedStatus = recordFailedAttempt();
   const attemptsLeft = MAX_FAILED_ATTEMPTS - updatedStatus.failedAttempts;
-  const attemptsWarning = attemptsLeft > 0 
-    ? `(${attemptsLeft} forsøg tilbage før midlertidig låsning)` 
-    : '(Sikkerhedslås aktiveret i 15 minutter)';
+  const attemptsWarning = isDa
+    ? (attemptsLeft > 0 ? `(${attemptsLeft} forsøg tilbage før midlertidig låsning)` : '(Sikkerhedslås aktiveret i 15 minutter)')
+    : (attemptsLeft > 0 ? `(${attemptsLeft} attempts remaining before temporary lockout)` : '(Security lockout active for 15 minutes)');
 
   return {
     success: false,
-    message: `Koden blev ikke genkendt. Tjek venligst for slåfejl ${attemptsWarning}.`,
+    message: isDa
+      ? `Koden blev ikke genkendt. Tjek venligst for slåfejl ${attemptsWarning}.`
+      : `Code was not recognized. Please check for typos ${attemptsWarning}.`,
     rateLimitStatus: updatedStatus,
   };
 }

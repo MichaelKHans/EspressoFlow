@@ -253,7 +253,7 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
       {targetSettingStr && !isAlreadyAdjusted && (
         <div className="mt-2.5 pt-2.5 border-t border-[#E8DFD5] flex items-center justify-between gap-2">
           <div className="text-[11px] text-[#7A6E65]">
-            Nuværende kværn: <strong className="text-[#2C2018]">{currentGrindSetting}</strong> ➔ Anbefalet:{' '}
+            {t('coach.current_grind_label')}: <strong className="text-[#2C2018]">{currentGrindSetting}</strong> ➔ {t('coach.recommended_label')}:{' '}
             <strong className="text-[#C26D52]">{targetSettingStr}</strong>
           </div>
           <button
@@ -268,13 +268,13 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
             {justApplied ? (
               <>
                 <Check className="w-3.5 h-3.5" />
-                <span>{t('shotsummary.applied_grind') || 'Opdateret'}</span>
+                <span>{t('shotsummary.applied_grind') || 'Updated'}</span>
               </>
             ) : (
               <>
                 <Sliders className="w-3.5 h-3.5" />
                 <span>
-                  {t('coach.apply_btn', { setting: targetSettingStr }) || `Sæt til ${targetSettingStr}`}
+                  {t('coach.apply_btn', { setting: targetSettingStr }) || `Set to ${targetSettingStr}`}
                 </span>
               </>
             )}

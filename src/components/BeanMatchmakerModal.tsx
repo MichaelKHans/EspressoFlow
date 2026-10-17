@@ -237,25 +237,25 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
                     id: 'milk_drink' as PreferredDrink,
                     icon: '🥛',
                     title: t('matchmaker.drink_milk'),
-                    desc: 'Prioriterer fyldig krop, karamel og mørk kakao, som trænger perfekt igennem mælk.',
+                    desc: t('matchmaker.drink_milk_desc'),
                   },
                   {
                     id: 'pure_espresso' as PreferredDrink,
                     icon: '☕',
                     title: t('matchmaker.drink_espresso'),
-                    desc: 'Fokuserer på sødme, klar balance og forførende crema uden overdøvende bitterhed.',
+                    desc: t('matchmaker.drink_espresso_desc'),
                   },
                   {
                     id: 'filter_pour_over' as PreferredDrink,
                     icon: '💧',
                     title: t('matchmaker.drink_filter'),
-                    desc: 'Lysristede mikro-partier med sprudlende frugtighed og florale noter.',
+                    desc: t('matchmaker.drink_filter_desc'),
                   },
                   {
                     id: 'all_rounder' as PreferredDrink,
                     icon: '🌟',
                     title: t('matchmaker.drink_all'),
-                    desc: 'Alsidige mellemristninger, der fungerer suverænt til både espresso og mælk.',
+                    desc: t('matchmaker.drink_all_desc'),
                   },
                 ].map((opt) => (
                   <button
@@ -298,7 +298,7 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
                   {t('matchmaker.step2_title')}
                 </h3>
                 <p className="text-[11px] text-[#7A6E65] font-sans mt-0.5">
-                  {t('matchmaker.step2_desc')} ({selectedFlavorTags.length}/3 valgt)
+                  {t('matchmaker.step2_desc')} ({t('matchmaker.selected_count', { count: selectedFlavorTags.length })})
                 </p>
               </div>
 
@@ -383,8 +383,8 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
                         : 'border-[#E8DFD5] bg-white text-[#7A6E65]'
                     }`}
                   >
-                    <span className="text-xs block font-mono font-bold text-[#2C2018]">Alle Priser</span>
-                    <span className="text-[10px] text-[#A6998E] font-sans block mt-0.5">Ingen budgetgrænse</span>
+                    <span className="text-xs block font-mono font-bold text-[#2C2018]">{t('matchmaker.tier_all_label')}</span>
+                    <span className="text-[10px] text-[#A6998E] font-sans block mt-0.5">{t('matchmaker.tier_all_desc')}</span>
                   </button>
 
                   {(['budget', 'standard', 'premium', 'ultra_rare'] as PriceTier[]).map((tierKey) => {
@@ -507,7 +507,7 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
                       {item.purchaseLocation && (
                         <div className="text-[10.5px] text-[#7A6E65] font-sans flex items-center gap-1 pt-1">
                           <Store className="w-3 h-3 text-[#C26D52] shrink-0" />
-                          <span className="truncate">Købes i: <strong className="text-[#2C2018]">{item.purchaseLocation}</strong></span>
+                          <span className="truncate">{t('beandex.available_at', { location: item.purchaseLocation })}</span>
                         </div>
                       )}
 

@@ -705,7 +705,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                     onClick={() => setGrindSetting(aiPred.formattedSetting)}
                     className="px-2.5 py-1 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-bold shrink-0 transition active:scale-95 cursor-pointer shadow-xs"
                   >
-                    {t('coach.apply_btn', { setting: aiPred.formattedSetting }) || `Sæt ${aiPred.formattedSetting}`}
+                    {t('coach.apply_btn', { setting: aiPred.formattedSetting }) || `Set ${aiPred.formattedSetting}`}
                   </button>
                 )}
               </div>

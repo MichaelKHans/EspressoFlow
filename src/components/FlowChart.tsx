@@ -29,7 +29,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   flowProfile,
   flowStabilityPercent,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   if (points.length === 0) {
     return (
@@ -211,7 +211,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
               fontSize="9"
               fontWeight="bold"
             >
-              {isPourOver ? '🎯 PACING (4–6 g/s)' : '🎯 MÅL: 1.2–1.8 g/s'}
+              {isPourOver ? '🎯 PACING (4–6 g/s)' : (language === 'da' ? '🎯 MÅL: 1.2–1.8 g/s' : '🎯 TARGET: 1.2–1.8 g/s')}
             </text>
           </g>
 
@@ -239,7 +239,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             })}
           {/* Left Y-axis label */}
           <text x={padLeft - 6} y={padTop - 8} textAnchor="end" fill="#7A6E65" fontSize="8" fontWeight="bold">
-            VÆGT
+            {language === 'da' ? 'VÆGT' : 'WEIGHT'}
           </text>
 
           {/* Right Y-Axis: Flow Rate in g/s (Terracotta #C26D52) */}

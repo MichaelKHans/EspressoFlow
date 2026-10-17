@@ -260,6 +260,10 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] **Etape 5: Admin Baggrunds-Inspector (v1.19.8):**
   - Direkte "Juster" knap på `AdminThemeBadge.tsx`, der åbner en flydende popover til realtids-justering af baggrundssløring (blur 0–16px), farvetone overlay, opacitet (10–100%) og lysstyrke/kontrast, gemt i `localStorage`.
   - Reaktiv motor (`src/lib/cardThemes.ts` & `useCardAdjustments`) forbundet til alle 5 temabærende kort i appen.
+- [x] **Etape 6: Komplet Sprog- & Lokaliserings-Sanering (v1.19.9):**
+  - Fuld eliminering af hårdkodede danske ord i `BeanScannerModal.tsx`, `DrinkSelector.tsx`, `BeanMatchmakerModal.tsx`, `BeandexView.tsx`, `PaywallModal.tsx`, `FlowChart.tsx`, `ScaleMonitor.tsx` og `App.tsx`.
+  - Tosprogede modale faner (`Bag AI`, `Barcode`, `Roast Date`), reticle guides, radar descriptions og udstyrs-kort.
+  - Engelsk fallback i overensstemmelse med Rule 4; 100% nøgleparitet i `en.ts` og `da.ts`.
 
 ---
 

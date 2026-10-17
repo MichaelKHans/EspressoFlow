@@ -276,13 +276,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
-            Når denne tilstand er slået til, vises interaktive <strong className="text-[#2C2018]">🎨 Tema-knapper</strong> direkte på appens mørke kort (Barista Deck, Beandex, Kværnflåde og Espressomaskine), så du nemt kan afprøve nye fotorealistiske baggrunde og vælge dine favoritter.
+            {t('settings.admin_edit_desc')}
           </p>
 
           {adminEditActive && (
             <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span>Redigering aktiv: Gå til Bar, Beandex eller Gear for at skifte baggrunde live!</span>
+              <span>{t('settings.admin_edit_active')}</span>
             </div>
           )}
         </div>
@@ -290,7 +290,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Section 5: Version & Legal Compliance Links */}
         <div className="p-3 sm:p-3.5 rounded-xl bg-white border border-[#E8DFD5] flex items-center justify-between text-[11px] font-mono text-[#7A6E65] flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-[#2C2018]">Flowbean</span> v1.18.3
+            <span className="font-bold text-[#2C2018]">Flowbean</span> v1.19.9
             <button
               type="button"
               onClick={() => {

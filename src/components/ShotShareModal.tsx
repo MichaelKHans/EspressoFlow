@@ -882,12 +882,12 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
             </div>
           ) : (
             <div className="w-full h-80 flex items-center justify-center text-xs text-[#7A6E65]">
-              {t('share.generating') || 'Genererer shot-kort...'}
+              {t('share.generating') || 'Generating shot card...'}
             </div>
           )}
 
           <p className="text-[11px] text-[#7A6E65] text-center mt-3 max-w-xs leading-relaxed">
-            {t('share.card_subtitle') || 'Kortet indeholder din ekstraktionskurve, nøgletal og Flowbean-branding med link til appen.'}
+            {t('share.card_subtitle') || 'The card includes your extraction curve, key metrics, and Flowbean branding with an app link.'}
           </p>
         </div>
 

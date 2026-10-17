@@ -69,7 +69,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   onOpenRadar,
   initialRoastDate,
 }) => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [mode, setMode] = useState<ScanMode>('bag_vision');
   const [selectedGrinderName, setSelectedGrinderName] = useState<string>(() => {
     const res = resolveGrinder(currentGrinderName, grinders);
@@ -301,11 +301,11 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   const handleBagVisionCapture = async () => {
     if (!videoRef.current) return;
     setIsScanning(true);
-    setFeedbackMessage('Beandex Bag Vision™ analyserer kaffeposen via AI...');
+    setFeedbackMessage(t('bean.vision_analyzing'));
     try {
       const frame = captureBagFrameFromVideo(videoRef.current);
       if (!frame) {
-        setFeedbackMessage('Kameraet er ikke klar endnu. Prøv igen om et øjeblik.');
+        setFeedbackMessage(t('bean.camera_not_ready'));
         setIsScanning(false);
         return;
       }
@@ -314,13 +314,13 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       if (res.success && res.data) {
         applyScanResult(res.data);
         stopCamera();
-        setFeedbackMessage(`Genkendt: ${res.data.roaster || ''} - ${res.data.name}`);
+        setFeedbackMessage(t('bean.identified_msg', { name: `${res.data.roaster || ''} - ${res.data.name}` }));
       } else {
-        setFeedbackMessage(res.error || 'Kunne ikke genkende kaffeposen. Prøv en anden vinkel eller bedre lys.');
+        setFeedbackMessage(res.error || t('bean.recognition_failed_lighting'));
       }
     } catch (err) {
       console.warn('Bag vision capture error:', err);
-      setFeedbackMessage('Vision AI kaldet fejlede. Kontroller netværk og Supabase Edge Function.');
+      setFeedbackMessage(t('bean.vision_call_failed'));
     } finally {
       setIsScanning(false);
     }
@@ -330,20 +330,20 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     setIsScanning(true);
-    setFeedbackMessage('Beandex Bag Vision™ analyserer kaffeposen via AI...');
+    setFeedbackMessage(t('bean.vision_analyzing'));
     try {
       const frame = await compressFileToBagFrame(file);
       const res = await scanBagWithVisionAI(frame.base64, frame.thumbnailBase64);
       if (res.success && res.data) {
         applyScanResult(res.data);
         stopCamera();
-        setFeedbackMessage(`Genkendt: ${res.data.roaster || ''} - ${res.data.name}`);
+        setFeedbackMessage(t('bean.identified_msg', { name: `${res.data.roaster || ''} - ${res.data.name}` }));
       } else {
-        setFeedbackMessage(res.error || 'Kunne ikke genkende kaffeposen fra billedet.');
+        setFeedbackMessage(res.error || t('bean.recognition_failed_image'));
       }
     } catch (err) {
       console.warn('Bag vision file upload error:', err);
-      setFeedbackMessage('Kunne ikke analysere billedet.');
+      setFeedbackMessage(t('bean.could_not_analyze_image'));
     } finally {
       setIsScanning(false);
       if (e.target) e.target.value = '';
@@ -575,7 +575,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                   Bag Vision™ AI
                 </span>
               </div>
-              <p className="text-[11px] text-[#7A6E65]">Optisk etiket-genkendelse, Bag Vision™ & ristedato</p>
+              <p className="text-[11px] text-[#7A6E65]">{t('bean.scanner_subtitle')}</p>
             </div>
           </div>
           <button
@@ -601,7 +601,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
-                <span className="truncate">Pose AI</span>
+                <span className="truncate">{t('bean.tab_bag_ai')}</span>
               </button>
               <button
                 type="button"
@@ -613,7 +613,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                 }`}
               >
                 <Barcode className="w-3.5 h-3.5 text-[#C26D52]" />
-                <span className="truncate">Stregkode</span>
+                <span className="truncate">{t('bean.tab_barcode')}</span>
                 {barcodeSupported && (
                   <span className="w-1.5 h-1.5 rounded-full bg-[#72806B]" title="Vision API aktiv" />
                 )}
@@ -628,7 +628,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5 text-[#72806B]" />
-                <span className="truncate">Ristedato</span>
+                <span className="truncate">{t('bean.tab_roast_date')}</span>
               </button>
             </div>
           )}
@@ -653,7 +653,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#C26D52] rounded-bl-lg" />
                       <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#C26D52] rounded-br-lg" />
                       <span className="absolute -bottom-6 text-[10px] font-mono text-white/95 bg-black/75 px-2.5 py-0.5 rounded-full backdrop-blur-xs whitespace-nowrap shadow-sm">
-                        Centrér kaffeposens forside
+                        {t('bean.reticle_center_bag')}
                       </span>
                     </div>
                   ) : mode === 'barcode' ? (
@@ -698,7 +698,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
               {isScanning && (
                 <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-2 text-white">
                   <RefreshCw className="w-6 h-6 animate-spin text-[#C26D52]" />
-                  <span className="text-xs font-mono font-medium">Beandex Vision AI analyserer...</span>
+                  <span className="text-xs font-mono font-medium">{t('bean.vision_analyzing')}</span>
                 </div>
               )}
             </div>
@@ -714,7 +714,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                 className="w-full py-3 px-4 rounded-xl bg-[#C26D52] hover:bg-[#A95840] disabled:opacity-50 text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
               >
                 <Sparkles className="w-4 h-4 text-[#FFFDF9]" />
-                <span>Scan Kaffepose (Forside)</span>
+                <span>{t('bean.scan_bag_front_btn')}</span>
               </button>
 
               <div className="flex items-center gap-2">
@@ -733,7 +733,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                   className="flex-1 py-2 px-3 rounded-xl bg-white border border-[#E8DFD5] text-[#2C2018] text-xs font-semibold hover:bg-[#FAF7F2] transition flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   <ImageIcon className="w-3.5 h-3.5 text-[#72806B]" />
-                  <span>Vælg posefoto fra Galleri</span>
+                  <span>{t('bean.choose_gallery_btn')}</span>
                 </button>
               </div>
             </div>
@@ -842,7 +842,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       <span>{t('radar.title')}</span>
                     </div>
                     <p className="text-[10.5px] text-[#C2B5A8] font-sans">
-                      Lynhurtig zero-tap hyldescanning med trafiklys-HUD mod ristedatoer & BBD.
+                      {t('radar.quick_desc')}
                     </p>
                   </div>
                   <button
@@ -1171,7 +1171,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                             if (isSelected) {
                               setEditFlavorNotes(editFlavorNotes.filter((n) => n !== tag.labelDa && n !== tag.labelEn));
                             } else {
-                              setEditFlavorNotes([...editFlavorNotes, tag.labelDa]);
+                              const tagLabel = language === 'da' ? tag.labelDa : tag.labelEn;
+                              setEditFlavorNotes([...editFlavorNotes, tagLabel]);
                             }
                           }}
                           className={`px-2 py-1 rounded-full text-[10px] font-semibold flex items-center gap-1 transition ${
@@ -1181,7 +1182,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                           }`}
                         >
                           <span>{tag.icon}</span>
-                          <span>{tag.labelDa}</span>
+                          <span>{language === 'da' ? tag.labelDa : tag.labelEn}</span>
                         </button>
                       );
                     })}

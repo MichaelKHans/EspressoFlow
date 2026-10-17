@@ -540,7 +540,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
                 ) : isAnalyzing ? (
                   <span className="flex items-center gap-1 text-[#E58367]">
                     <RefreshCw className="w-2.5 h-2.5 animate-spin" />
-                    <span>Læser dato...</span>
+                    <span>{t('radar.reading_date')}</span>
                   </span>
                 ) : (
                   <span>{t('radar.ready_standby')}</span>

@@ -6,7 +6,7 @@ import {
   useCardAdjustments,
   type CardThemePreset,
 } from '../lib/cardThemes';
-import { useTranslation } from '../i18n';
+import { useTranslation, type TranslationKeys } from '../i18n';
 
 interface AdminThemeBadgeProps {
   cardKey:
@@ -22,12 +22,12 @@ interface AdminThemeBadgeProps {
   onThemeChanged: (next: CardThemePreset) => void;
 }
 
-const TINT_PRESETS = [
-  { label: 'Espresso', color: '#140C08' },
-  { label: 'Kulsort', color: '#000000' },
-  { label: 'Varm Kaffe', color: '#1E130D' },
-  { label: 'Terracotta', color: '#C26D52' },
-  { label: 'Mørk Skov', color: '#1F2421' },
+const TINT_PRESETS: { key: TranslationKeys; color: string }[] = [
+  { key: 'admin.tint_espresso', color: '#140C08' },
+  { key: 'admin.tint_black', color: '#000000' },
+  { key: 'admin.tint_warm_amber', color: '#1E130D' },
+  { key: 'admin.tint_terracotta', color: '#C26D52' },
+  { key: 'admin.tint_forest', color: '#1F2421' },
 ];
 
 export const AdminThemeBadge: React.FC<AdminThemeBadgeProps> = ({
@@ -89,10 +89,10 @@ export const AdminThemeBadge: React.FC<AdminThemeBadgeProps> = ({
         type="button"
         onClick={handleCycle}
         className="px-2.5 py-1 rounded-lg bg-black/60 hover:bg-black/80 backdrop-blur-md border border-[#C26D52]/60 hover:border-[#C26D52] text-[#FAF7F2] text-[10px] font-bold flex items-center gap-1.5 transition shadow-lg active:scale-95 cursor-pointer"
-        title="Admin: Klik her for at skifte baggrundsbillede på dette kort"
+        title={t('admin.theme_cycle_title')}
       >
         <Palette className="w-3 h-3 text-[#C26D52] shrink-0" />
-        <span className="text-[#E8DFD5] font-normal">Tema ({positionNumber}/{presets.length}):</span>
+        <span className="text-[#E8DFD5] font-normal">{t('admin.theme_badge_label', { current: positionNumber, total: presets.length })}</span>
         <strong className="text-white font-bold">{currentTheme.label}</strong>
         {justSwitched ? (
           <Check className="w-3 h-3 text-emerald-400 shrink-0" />
@@ -112,12 +112,12 @@ export const AdminThemeBadge: React.FC<AdminThemeBadgeProps> = ({
             ? 'bg-amber-950/70 border-amber-400/80 text-amber-200 hover:bg-amber-900/80'
             : 'bg-black/60 hover:bg-black/80 border-[#C26D52]/60 hover:border-[#C26D52] text-[#FAF7F2]'
         }`}
-        title="Admin: Finjuster sløring, kontrast, lysstyrke og farvetone for dette kort"
+        title={t('admin.theme_adjust_title')}
       >
         <Sliders className="w-3 h-3 text-amber-300 shrink-0" />
         <span>{t('admin.inspector_adjust')}</span>
         {isCustomized && (
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" title="Tilpasset" />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" title={t('admin.customized')} />
         )}
       </button>
 
@@ -146,7 +146,7 @@ export const AdminThemeBadge: React.FC<AdminThemeBadgeProps> = ({
                   {t('admin.inspector_title')}
                 </h4>
                 <p className="text-[10px] text-[#D4A373] font-mono">
-                  {cardKey} {isCustomized ? '• (Justeret)' : '• (Standard)'}
+                  {cardKey} • {isCustomized ? t('admin.customized') : t('admin.default')}
                 </p>
               </div>
             </div>
@@ -275,7 +275,7 @@ export const AdminThemeBadge: React.FC<AdminThemeBadgeProps> = ({
                   key={p.color}
                   type="button"
                   onClick={() => update({ overlayTint: p.color })}
-                  title={p.label}
+                  title={t(p.key)}
                   className={`w-6 h-6 rounded-full border transition cursor-pointer shrink-0 ${
                     adjustments.overlayTint.toLowerCase() === p.color.toLowerCase()
                       ? 'ring-2 ring-[#C26D52] ring-offset-1 ring-offset-[#180E09] border-white scale-110'
@@ -288,7 +288,7 @@ export const AdminThemeBadge: React.FC<AdminThemeBadgeProps> = ({
               {/* Native color picker */}
               <label
                 className="w-6 h-6 rounded-full border border-white/30 hover:border-white flex items-center justify-center cursor-pointer overflow-hidden bg-gradient-to-tr from-rose-500 via-amber-400 to-sky-400 shrink-0"
-                title="Vælg brugerdefineret farve"
+                title={t('admin.pick_color')}
               >
                 <input
                   type="color"

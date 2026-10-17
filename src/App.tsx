@@ -1340,7 +1340,7 @@ export function App() {
                         Grinder Fleet & Bar Setup
                       </h3>
                       <p className="text-[10px] text-[#A6998E] font-sans">
-                        {isGrinderFleetCollapsed ? `Aktiv på bar: ${grinderName}` : 'Manage your home bar grinders and select which grinder is active on your station.'}
+                        {isGrinderFleetCollapsed ? t('gear.grinder_active_short', { name: grinderName }) : t('gear.grinder_desc')}
                       </p>
                     </div>
                   </div>
@@ -1349,7 +1349,7 @@ export function App() {
                     onClick={toggleGrinderFleetCollapsed}
                     className="sm:hidden px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] flex items-center gap-1 cursor-pointer active:scale-95 transition"
                   >
-                    <span>{isGrinderFleetCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    <span>{isGrinderFleetCollapsed ? t('common.expand') : t('common.collapse')}</span>
                     {isGrinderFleetCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -1368,7 +1368,7 @@ export function App() {
                     onClick={toggleGrinderFleetCollapsed}
                     className="hidden sm:flex px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] items-center gap-1 cursor-pointer hover:bg-black/60 active:scale-95 transition"
                   >
-                    <span>{isGrinderFleetCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    <span>{isGrinderFleetCollapsed ? t('common.expand') : t('common.collapse')}</span>
                     {isGrinderFleetCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -1576,7 +1576,7 @@ export function App() {
                         Espresso Machine & Pump Setup
                       </h3>
                       <p className="text-[10px] text-[#A6998E] font-sans">
-                        {isMachineCollapsed ? `Aktiv: ${machineName.split('(')[0].trim()}` : 'Select your espresso machine or all-in-one combo unit.'}
+                        {isMachineCollapsed ? t('gear.machine_active_short', { name: machineName.split('(')[0].trim() }) : t('gear.machine_desc')}
                       </p>
                     </div>
                   </div>
@@ -1585,7 +1585,7 @@ export function App() {
                     onClick={toggleMachineCollapsed}
                     className="sm:hidden px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] flex items-center gap-1 cursor-pointer active:scale-95 transition"
                   >
-                    <span>{isMachineCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    <span>{isMachineCollapsed ? t('common.expand') : t('common.collapse')}</span>
                     {isMachineCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -1604,7 +1604,7 @@ export function App() {
                     onClick={toggleMachineCollapsed}
                     className="hidden sm:flex px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] items-center gap-1 cursor-pointer hover:bg-black/60 active:scale-95 transition"
                   >
-                    <span>{isMachineCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    <span>{isMachineCollapsed ? t('common.expand') : t('common.collapse')}</span>
                     {isMachineCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -1812,10 +1812,10 @@ export function App() {
                     <Coffee className="w-4 h-4 text-[#D4A373]" />
                     <div>
                       <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
-                        Filter & Manuel Bryg (V60 & Stempel)
+                        {t('gear.filter_gear_title')}
                       </h3>
                       <p className="text-[10px] text-[#A6998E] font-sans">
-                        {isFilterCollapsed ? `Aktiv: ${filterBrewer.split('(')[0].trim()}` : 'Dine manuelle dryppere, stempelkander og svanehals elkedler til Pour Over.'}
+                        {isFilterCollapsed ? t('gear.filter_active_short', { name: filterBrewer.split('(')[0].trim() }) : t('gear.filter_desc')}
                       </p>
                     </div>
                   </div>
@@ -1824,7 +1824,7 @@ export function App() {
                     onClick={toggleFilterCollapsed}
                     className="sm:hidden px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] flex items-center gap-1 cursor-pointer active:scale-95 transition"
                   >
-                    <span>{isFilterCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    <span>{isFilterCollapsed ? t('common.expand') : t('common.collapse')}</span>
                     {isFilterCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -1843,7 +1843,7 @@ export function App() {
                     onClick={toggleFilterCollapsed}
                     className="hidden sm:flex px-2.5 py-1 rounded-lg bg-black/45 border border-white/15 text-[11px] font-mono text-[#D4A373] items-center gap-1 cursor-pointer hover:bg-black/60 active:scale-95 transition"
                   >
-                    <span>{isFilterCollapsed ? 'Fold ud' : 'Minimer'}</span>
+                    <span>{isFilterCollapsed ? t('common.expand') : t('common.collapse')}</span>
                     {isFilterCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                   </button>
                 </div>
@@ -1853,7 +1853,7 @@ export function App() {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-[#A6998E] uppercase font-bold">Manuel Drypper / Brygger</label>
+                      <label className="text-[10px] text-[#A6998E] uppercase font-bold">{t('gear.filter_brewer_label')}</label>
                       <select
                         value={filterBrewer}
                         onChange={(e) => {
@@ -1872,7 +1872,7 @@ export function App() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-[#A6998E] uppercase font-bold">Svanehals Kedel / Vandtemperatur</label>
+                      <label className="text-[10px] text-[#A6998E] uppercase font-bold">{t('gear.filter_kettle_label')}</label>
                       <select
                         value={kettleName}
                         onChange={(e) => {
@@ -1894,10 +1894,13 @@ export function App() {
                   {/* Informative Filter Pairing Note */}
                   <div className="p-3 rounded-xl bg-[#180E09]/75 backdrop-blur-md border border-[#FAF7F2]/10 text-xs font-mono space-y-1 relative z-10">
                     <div className="flex items-center gap-1.5 text-[#D4A373] text-[11px] font-bold">
-                      <span>☕ Automatisk Kværnsynkronisering for Filter</span>
+                      <span>☕ {t('gear.filter_sync_title')}</span>
                     </div>
                     <p className="text-[11px] text-[#A6998E] font-sans leading-relaxed">
-                      Når du på <strong className="text-[#FAF7F2]">Kaffebar (Bar)</strong> skifter til <strong className="text-[#D4A373]">Pour Over</strong>, bruger appen automatisk dit valgte filterudstyr (<span className="text-white font-mono">{filterBrewer.split('(')[0].trim()}</span>) og forbinder det med din aktive barkværn ({grinderName}) med grove formalingsgrader.
+                      {t('gear.filter_sync_desc', {
+                        brewer: filterBrewer.split('(')[0].trim(),
+                        grinder: grinderName,
+                      })}
                     </p>
                   </div>
                 </>
