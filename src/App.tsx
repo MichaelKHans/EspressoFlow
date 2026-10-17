@@ -96,19 +96,25 @@ export function App() {
   const [isRadarOpen, setIsRadarOpen] = useState<boolean>(false);
   const [radarScannedDate, setRadarScannedDate] = useState<string | undefined>(undefined);
 
-  // Active Bean derived
-  const currentBean = beans.find((b) => b.id === activeBeanId) || beans[0] || {
-    id: 'default',
-    name: 'Ethiopia Yirgacheffe',
-    roaster: 'Nomad Coffee',
-    roastDate: '2026-09-14',
-    roastLevel: 'light' as RoastLevel,
-    doseGrams: 18.0,
-    ratioStyle: 'lungo' as RatioStyle,
-    targetYieldGrams: 45.0,
-    grindSetting: '1.4',
-    grinderName: 'Eureka Mignon Specialita 16CR',
-  };
+  // Active (non-finished) Beans pool
+  const activeBeans = beans.filter((b) => !b.isFinished);
+
+  // Active Bean derived - prioritizes active (non-emptied) beans!
+  const currentBean =
+    (activeBeanId ? activeBeans.find((b) => b.id === activeBeanId) : null) ||
+    activeBeans[0] || {
+      id: 'empty-inventory',
+      name: 'Ingen aktive kaffebønner',
+      roaster: 'Kaffehylden er tom',
+      roastDate: '',
+      roastLevel: 'medium' as RoastLevel,
+      doseGrams: 18.0,
+      ratioStyle: 'standard' as RatioStyle,
+      targetYieldGrams: 36.0,
+      grindSetting: '15',
+      grinderName: 'Baratza Encore ESP Pro',
+      isFinished: true,
+    };
 
   // Brewing & Equipment Parameters (Declared BEFORE currentGrinder to prevent TDZ crash)
   const [doseGrams, setDoseGrams] = useState<number>(currentBean.doseGrams);
@@ -294,7 +300,7 @@ export function App() {
   const handleSelectBean = (beanId: string) => {
     setActiveBeanId(beanId);
     const selected = beans.find((b) => b.id === beanId);
-    if (selected) {
+    if (selected && !selected.isFinished) {
       setCoffeeBeanName(selected.name);
       setRoastDate(selected.roastDate);
       setRoastLevel(selected.roastLevel);
@@ -304,6 +310,8 @@ export function App() {
       const res = resolveGrinder(selected.grinderName, grinders);
       setGrinderName(res?.name || selected.grinderName);
       setGrindSetting(selected.grindSetting);
+    } else {
+      setCoffeeBeanName('');
     }
   };
 
@@ -913,6 +921,17 @@ export function App() {
               const updated = beans.map((b) => (b.id === id ? { ...b, ...patch } : b));
               setBeans(updated);
               saveBeans(updated);
+
+              // If the bean being finished was the active one, auto-promote next active bean or clear!
+              if (patch.isFinished && id === activeBeanId) {
+                const nextActive = updated.find((b) => !b.isFinished && b.id !== id);
+                if (nextActive) {
+                  handleSelectBean(nextActive.id);
+                } else {
+                  setActiveBeanId('');
+                  setCoffeeBeanName('');
+                }
+              }
             }}
             onDeleteBean={handleDeleteBean}
             onCreateBean={(newBeanData) => {

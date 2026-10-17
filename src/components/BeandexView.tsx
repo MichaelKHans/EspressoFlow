@@ -242,6 +242,16 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
         dateFinished: details.dateFinished,
       });
 
+      // If the finished bag was the active one on the bar, switch to next active or clear
+      if (beanId === activeBeanId) {
+        const remainingActive = activeBags.filter((b) => b.id !== beanId);
+        if (remainingActive.length > 0) {
+          onSelectBean(remainingActive[0].id);
+        } else {
+          onSelectBean('');
+        }
+      }
+
       // Fire-and-forget sync to Supabase global intelligence
       syncBeanRepurchaseVerdict(targetBean, details.repurchaseVerdict);
     }
@@ -253,6 +263,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     onUpdateBean(beanId, {
       isFinished: false,
     });
+    onSelectBean(beanId);
   };
 
   // Repeat purchase / Buy Again clone: increments bagCount, preserves dial-in, creates new active bag

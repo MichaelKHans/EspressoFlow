@@ -21,10 +21,17 @@ Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokumen
 - **Understøttelse af Bønne-til-Kop Fuldautomatiske Maskiner:**
   - Tilføjet Jura (Z10 / E8), Philips LatteGo (5400 / 3200) og De'Longhi Magnifica / Eletta.
   - Smart salviegrøn badge: `[ 🤖 Bønne-til-Kop Fuldautomatisk ]` forklarer, at kværn og bryg sker internt, mens Flowbean måler det reelle flow og koppeudbytte i realtid via vægten på drypbakken.
-- **Dedikeret Filter & Manuelt Bryggear Kort (Pour Over, V60 & Stempel):**
-  - Tilføjet dedikeret luksuskort i Gear-fanen for manuelle bryggere (Hario V60 01/02, French Press / Stempelkande, AeroPress, Chemex, Kalita Wave, Moccamaster, Clever Dripper).
-  - Vælg svanehals elkedel (Fellow Stagg EKG, Timemore Fish, Brewista Artisan, Hario Buono, Standard Elkedel).
-  - Automatisk synkronisering: Når brugeren på kaffebaren vælger *Pour Over*, anvendes filterudstyret automatisk med de relevante kværntrin fra barkværnen.
+- **Redesign af Barista Deck Bånd (Løst "3 Pinned" & Tekstombrydning):**
+  - Fjernet den akavede midterkapsel for `3 PINNED`, der tidligere pressede `ESPRESSO DECK` ud i to uheldige linjer på mobilskærme.
+  - Gjort titlen ubrudt (`whitespace-nowrap`) med et elegant, integreret chip-badge direkte ved siden af titlen samt knap `All Drinks (19)` til højre.
+- **Synkroniseret Livscyklus for Tømte Kaffeposer (Empty Bag State):**
+  - Løst fejlen hvor en kaffepose, der blev markeret som tømt (`isFinished: true`) i Beandex, stadig optrådte som aktiv på Bar-forsiden.
+  - Hvis den tømte pose var den aktive, promoveres automatisk den næste aktive bønne på lager.
+  - Hvis kaffehylden er helt tom for aktive bønner (0 aktive poser), vises nu et dedikeret og informativt bønnekald under *Calibrated Grinder & Bean* med:
+    - Rådgivning om den optimale ristegrad og smagsprofil til den valgte drik (fx *Medium-Dark Chocolate/Caramel til Cappuccino*).
+    - 1-klik knapper: `[ 📷 Scan Ny Pose ]` og `[ ☕ Vælg fra Bønnelager ]`.
+  - Tilføjet hurtigvælger-dropdown på Bar-forsiden, hvis man har mere end 1 aktiv pose i rotation.
+  - Når en arkiveret pose genaktiveres i Beandex, gøres den omgående aktiv på baren med det samme.
 
 ## [1.18.0] - 2026-10-17
 ### Etape 55: Flowbean Licensmotor, DoS/Brute-Force Skjold & MH Tegnestue Bogførings-Bro

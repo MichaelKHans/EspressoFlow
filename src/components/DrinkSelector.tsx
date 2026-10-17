@@ -14,6 +14,8 @@ import {
   X,
   Layers,
   Plus,
+  PackageOpen,
+  Camera,
 } from 'lucide-react';
 import {
   loadActiveBarDrinkIds,
@@ -78,10 +80,10 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onSelectDrink,
   onLaunchScaleCam,
   onOpenDialInWizard,
-  onOpenBeanVault: _onOpenBeanVault,
+  onOpenBeanVault,
   onGrindSettingChange: _onGrindSettingChange,
-  onSwitchBean: _onSwitchBean,
-  onScanBean: _onScanBean,
+  onSwitchBean,
+  onScanBean,
   onUpdateBeanDialIn: _onUpdateBeanDialIn,
   isAllDrinksModalOpen,
   onOpenAllDrinksModal,
@@ -393,21 +395,23 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
         {/* 2. Active Bar Deck Ribbon & Customizer */}
         <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/15 relative z-10">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-[11px] font-sans text-stone-200 uppercase tracking-wider font-bold flex items-center gap-1.5">
-              <span>{methodFilter === 'espresso' ? 'Espresso Deck' : 'Pour Over Deck'}</span>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/20 border border-white/20 text-white">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xs sm:text-sm font-sans text-white uppercase tracking-wider font-bold whitespace-nowrap">
+                {methodFilter === 'espresso' ? 'Espresso Deck' : 'Pour Over Deck'}
+              </span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-[#E8DFD5] shrink-0">
                 {displayDeckDrinks.length} pinned
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsCustomizeModalOpen(true)}
-              className="text-xs font-sans font-semibold text-white hover:text-white bg-white/15 hover:bg-white/25 border border-white/25 px-3 py-1 rounded-full flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98"
+              className="text-xs font-sans font-semibold text-white hover:text-white bg-white/15 hover:bg-white/25 border border-white/25 px-2.5 sm:px-3 py-1 rounded-full flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98 shrink-0"
               title="Browse all drinks or customize quick deck"
             >
               <Settings2 className="w-3.5 h-3.5 text-[#E58367]" />
-              <span>All Drinks & Pin ({DRINK_RECIPES.filter((d) => (d.method || 'espresso') === methodFilter).length})</span>
+              <span className="whitespace-nowrap">All Drinks ({DRINK_RECIPES.filter((d) => (d.method || 'espresso') === methodFilter).length})</span>
             </button>
           </div>
 
@@ -730,30 +734,113 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
                   {/* Unified Grinder & Bean Calibration Card */}
                   <div className="rounded-xl bg-white border border-[#E8DFD5] grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E8DFD5] overflow-hidden text-xs shadow-xs">
-                    {/* Active Bean Info */}
-                    <div className="p-3 space-y-1.5">
-                      <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
-                        <span>{t('drink.active_bean_label') || 'Active Coffee Bean'}</span>
-                        <span className="text-[#72806B] font-bold">{score}% match</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span
-                          className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${getRoastBadgeStyles(
-                            currentBean.roastLevel
-                          )}`}
-                        >
-                          {currentBean.roastLevel}
-                        </span>
-                        <span className="font-bold text-[#2C2018] truncate font-serif">
-                          {currentBean.name}
-                        </span>
-                      </div>
-                      {currentBean.roaster && (
-                        <div className="text-[10px] text-[#7A6E65] truncate">
-                          {currentBean.roaster}
+                    {/* Active Bean Info or Empty Bag Notice */}
+                    {(() => {
+                      const activeBeans = (allBeans || []).filter((b) => !b.isFinished);
+                      const isBeanEmptied = !currentBean || currentBean.isFinished || currentBean.id === 'empty-inventory' || activeBeans.length === 0;
+
+                      if (isBeanEmptied) {
+                        return (
+                          <div className="p-3.5 space-y-2.5 bg-[#FAF7F2] border-b sm:border-b-0 sm:border-r border-[#E8DFD5]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9.5px] uppercase font-bold text-amber-900 flex items-center gap-1.5 font-mono">
+                                <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" /> Ingen Aktiv Bønne på Lager
+                              </span>
+                              <span className="text-[8.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                                Tømt Pose
+                              </span>
+                            </div>
+
+                            <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
+                              Posens bønner er markeret som tømt i Beandex. Vælg eller scan en bønne til din <strong className="text-[#2C2018]">{selectedDrink.name}</strong>:
+                            </p>
+
+                            {/* Smart Recommendation for this drink */}
+                            <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5] text-[10px] space-y-1 shadow-2xs font-mono">
+                              <div className="text-[#2C2018] font-bold flex items-center gap-1.5 flex-wrap">
+                                <span>💡 Anbefalet til {selectedDrink.name}:</span>
+                                <span className="text-[#C26D52] font-bold">{guidance.idealRoastSummary}</span>
+                              </div>
+                              <div className="text-[#7A6E65] text-[9.5px] font-sans leading-snug">
+                                {guidance.idealFlavorNotes}
+                              </div>
+                            </div>
+
+                            {/* Quick Action Buttons */}
+                            <div className="flex items-center gap-2 pt-1">
+                              {onScanBean && (
+                                <button
+                                  type="button"
+                                  onClick={onScanBean}
+                                  className="flex-1 px-3 py-2 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white text-xs font-sans font-bold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
+                                >
+                                  <Camera className="w-3.5 h-3.5" />
+                                  <span>Scan Ny Pose</span>
+                                </button>
+                              )}
+
+                              {onOpenBeanVault && (
+                                <button
+                                  type="button"
+                                  onClick={onOpenBeanVault}
+                                  className="flex-1 px-3 py-2 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#2C2018] text-xs font-sans font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
+                                >
+                                  <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
+                                  <span>Vælg fra Lager</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="p-3 space-y-1.5">
+                          <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
+                            <span>{t('drink.active_bean_label') || 'Active Coffee Bean'}</span>
+                            <span className="text-[#72806B] font-bold">{score}% match</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`text-[8px] uppercase font-mono font-bold px-1.5 py-0.2 rounded-full border shrink-0 ${getRoastBadgeStyles(
+                                currentBean.roastLevel
+                              )}`}
+                            >
+                              {currentBean.roastLevel}
+                            </span>
+                            <span className="font-bold text-[#2C2018] truncate font-serif">
+                              {currentBean.name}
+                            </span>
+                          </div>
+                          {currentBean.roaster && (
+                            <div className="text-[10px] text-[#7A6E65] truncate">
+                              {currentBean.roaster}
+                            </div>
+                          )}
+
+                          {/* Multi-Active-Beans Switcher dropdown when user has more than 1 active bean in stock */}
+                          {activeBeans.length > 1 && onSwitchBean && (
+                            <div className="pt-1.5 mt-1 border-t border-[#E8DFD5]/60">
+                              <div className="flex items-center justify-between text-[8.5px] text-[#7A6E65] uppercase font-bold mb-1">
+                                <span>Skift Bønne på Bar</span>
+                                <span className="text-[#C26D52] font-mono">{activeBeans.length} aktive</span>
+                              </div>
+                              <select
+                                value={currentBean.id}
+                                onChange={(e) => onSwitchBean(e.target.value)}
+                                className="w-full px-2 py-1 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-[11px] font-sans font-semibold text-[#2C2018] focus:outline-none focus:ring-1 focus:ring-[#C26D52] cursor-pointer"
+                              >
+                                {activeBeans.map((b) => (
+                                  <option key={b.id} value={b.id}>
+                                    {b.name} ({b.roaster ? `${b.roaster} • ` : ''}{b.roastLevel})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
 
                     {/* Grinder & Dial Setting */}
                     <div className="p-3 space-y-1.5">
