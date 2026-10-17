@@ -32,6 +32,20 @@ export const CARD_THEME_REGISTRY: Record<string, CardThemePreset[]> = {
       accent: '#C26D52',
     },
     {
+      id: 'portafilter-gauge',
+      label: 'Naked Portafilter & 9-Bar Manometer',
+      src: '/images/portafilter-gauge-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#D4A373',
+    },
+    {
+      id: 'grinder-chute',
+      label: 'Kværn & Portafilter Udløb',
+      src: '/images/grinder-chute-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#C26D52',
+    },
+    {
       id: 'portafilter-flow',
       label: 'Naked Portafilter Flow',
       src: '/images/portafilter-flow-macro.jpg',
@@ -84,6 +98,13 @@ export const CARD_THEME_REGISTRY: Record<string, CardThemePreset[]> = {
       accent: '#C26D52',
     },
     {
+      id: 'grinder-chute',
+      label: 'Kværn & Portafilter Udløb',
+      src: '/images/grinder-chute-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#C26D52',
+    },
+    {
       id: 'pourover-bloom',
       label: 'V60 Pour Over Bloom',
       src: '/images/pourover-bloom-macro.jpg',
@@ -129,6 +150,13 @@ export const CARD_THEME_REGISTRY: Record<string, CardThemePreset[]> = {
 
   grinder_fleet: [
     {
+      id: 'grinder-chute',
+      label: 'Kværn & Portafilter Udløb',
+      src: '/images/grinder-chute-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#C26D52',
+    },
+    {
       id: 'grinder-burrs',
       label: 'Conical Steel Burrs & Grounds',
       src: '/images/grinder-burrs-macro.jpg',
@@ -159,6 +187,13 @@ export const CARD_THEME_REGISTRY: Record<string, CardThemePreset[]> = {
   ],
 
   espresso_machine: [
+    {
+      id: 'portafilter-gauge',
+      label: 'Naked Portafilter & 9-Bar Manometer',
+      src: '/images/portafilter-gauge-macro.jpg',
+      position: 'object-right sm:object-center',
+      accent: '#D4A373',
+    },
     {
       id: 'portafilter-flow',
       label: 'Bottomless Portafilter Flow',

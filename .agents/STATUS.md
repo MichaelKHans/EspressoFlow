@@ -9,7 +9,15 @@
 
 ---
 
-## 🕒 Historik & Gennemførte Opgaver
+### 2026-10-17 -- Bruger-Inspirerede Makro-Baggrunde (Kværnudløb & Portafilter/Manometer) samt Oprydning (v1.18.2)
+- **Nye Makro-Baggrundstemaer i CARD_THEME_REGISTRY:**
+  - `grinder-chute-macro.jpg` (*Kværn & Portafilter Udløb*): Inspireret af brugerens referencer i `public/midlertidig/`. Kommercielt kværnudløb der dispenserer luftigt formalet kaffe i portafilter-kurven på gaflen.
+  - `portafilter-gauge-macro.jpg` (*Naked Portafilter & 9-Bar Manometer*): Inspireret af brugerens referencer med E61 krom-gruppehoved, bundløst portafilter med gylden espresso-stråle og analogt 9-bar manometer.
+  - Begge temaer tilgængelige for live-skift i Barista Deck, Kværnflåde, Espressomaskine og Beandex Bønnehvælv via Admin Redigeringstilstanden.
+- **Rensning af midlertidige filer:**
+  - `public/midlertidig` med alle referencebilleder slettet for at spare diskplads og holde Git-historikken ren.
+- **Kvalitetssikring:**
+  - `npm run build` verificeret 100% fejlfrit, `npx cap sync` synkroniseret.
 
 ### 2026-10-17 -- Admin Redigeringstilstand (Design Inspector), All-in-One Kombimaskiner, Fuldautomatiske Maskiner & Filter Gear (V60 & Stempel) (v1.18.1)
 - **Admin Redigeringstilstand i Indstillinger:**

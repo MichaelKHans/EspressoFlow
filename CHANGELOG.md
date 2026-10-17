@@ -2,6 +2,16 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.18.2] - 2026-10-17
+### Etape 57: Bruger-Inspirerede Makro-Baggrunde (Kværn-Udløb & Naked Portafilter med 9-Bar Manometer) og Oprydning
+- **Nye Fotorealistiske 16:9 Makro-Baggrundstemaer (`src/lib/cardThemes.ts` & `public/images/`):**
+  - `grinder-chute-macro.jpg` (*Kværn & Portafilter Udløb*): Inspireret af brugerens referencer i `public/midlertidig/`. Viser et kommercielt kværnudløb, der doserer luftigt, friskmalet kaffepulver direkte ned i en portafilter-kurv på kværnens gaffel med varm espresso-belysning.
+  - `portafilter-gauge-macro.jpg` (*Naked Portafilter & 9-Bar Manometer*): Inspireret af brugerens referencer med E61 krom-gruppehoved, bundløst portafilter med gylden ekstraktionsstråle og et autentisk 9-bars analogt manometer i baggrunden.
+  - Begge temaer er registreret som tilgængelige forvalg i `CARD_THEME_REGISTRY` på tværs af Barista Deck (`DrinkSelector`), Kværnflåde (`Grinder Fleet`), Espressomaskine (`Espresso Machine & Pump Setup`) og Bønnehvælv (`BeandexView`).
+  - Giver administratoren mulighed for at bladre direkte igennem og se navnene via Admin Redigeringstilstanden.
+- **Rensning og Pladsbesparelse:**
+  - Den midlertidige reference-mappe `public/midlertidig` med alle prøvebilleder er slettet fuldstændigt som anmodet af brugeren for at undgå unødvendigt repository-spild.
+
 ## [1.18.1] - 2026-10-17
 ### Etape 56: Admin Redigeringstilstand (Design Inspector), All-in-One Kombimaskiner, Fuldautomatiske Maskiner & Filter Gear (V60 & Stempel)
 - **Admin Redigeringstilstand (Design Inspector) i Indstillinger (`SettingsModal.tsx` & `cardThemes.ts`):**
