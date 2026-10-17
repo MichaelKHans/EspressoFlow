@@ -2,6 +2,21 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.3] - 2026-10-17
+### Etape 63: Kodevedligeholdelse Etape 3 (Sikkerhedskontrol, Afhængighedssikring & Fuld Audit)
+- **Afhjulpet High-Severity Sikkerhedssårbarhed (`source-map-js`):**
+  - Kørt `npm audit fix`, som opdaterede `source-map-js` i udviklerværktøjerne, hvilket fjerner risiko for event-loop denial of service.
+  - Verificeret at ingen produktionskoder eller runtime-dependencies på mobilen er påvirket.
+- **Fuld Sikkerheds- & Integritetsaudit Gennemført:**
+  - Bekræftet 0 tilfælde af `dangerouslySetInnerHTML` eller rå HTML-injektion på tværs af hele kildekoden.
+  - Bekræftet at Gemini Bag Vision API-nøgler aldrig eksponeres i klientkoden, men kaldes udelukkende serverless via Supabase Edge Functions (`scan-bag-vision`).
+  - Bekræftet at alle `localStorage` JSON-parsninger er pakket ind i `try/catch` med typesikre fallbacks.
+  - Bekræftet anti-brute-force rate limiting i `licenseEngine.ts` (maks. 5 forsøg før lockout).
+- **Kvalitetssikring:**
+  - `scripts/test-grind-intelligence.cjs` bestået 100% på tværs af samtlige matematiske testcases.
+  - `npm run build` kompileret 100% fejlfrit (0 fejl).
+  - `npx cap sync` synkroniseret med iOS og Android.
+
 ## [1.19.2] - 2026-10-17
 ### Etape 62: Kodevedligeholdelse Etape 2 (Maskinsynkronisering i Onboarding & Hook-Stabilitet)
 - **Synkroniseret Maskineliste i Onboarding Wizard (`src/components/OnboardingWizard.tsx`):**
