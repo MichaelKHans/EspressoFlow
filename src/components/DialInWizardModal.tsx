@@ -164,6 +164,10 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   }, [
     isOpen,
     drink.id,
+    drink.defaultDoseGrams,
+    drink.targetYieldGrams,
+    drink.targetRatio,
+    pool,
     currentBean.id,
     currentBean.grinderName,
     currentBean.grindSetting,

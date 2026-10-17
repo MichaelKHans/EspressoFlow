@@ -32,19 +32,22 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
   // Step 2: Machine
   const COMMON_MACHINES = [
-    "De'Longhi Dedica (EC680 / EC685 / EC885)",
+    // ⚡ Kombimaskiner (Integreret Kværn)
+    'Ninja Luxe Café / Ninja Pro',
+    'Sage / Breville Barista Touch/Express',
     "De'Longhi La Specialista",
-    'Sage Dual Boiler',
-    'Sage Barista Express',
-    'Sage Barista Pro',
+    // 🤖 Bønne-til-Kop Fuldautomatiske
+    'Jura Z10 / E8 (Super-Automatic)',
+    'Philips LatteGo 5400 / 3200',
+    "De'Longhi Magnifica / Eletta",
+    // ☕ Semi-Automatiske & Manuelle (Separat Kværn)
+    "De'Longhi Dedica (EC680 / EC685 / EC885)",
     'Sage Bambino / Bambino Plus',
+    'Sage / Breville Dual Boiler',
     'Gaggia Classic Pro / Evo',
     'Rancilio Silvia / Silvia Pro X',
-    'Lelit Bianca V3',
-    'Lelit MaraX',
-    'Lelit Anna PL41EM',
-    'ECM Mechanika V Slim',
-    'ECM Classika PID',
+    'Lelit Bianca V3 / MaraX',
+    'ECM Mechanika / Classika PID',
     'Profitec Pro 300 / Pro 500 / GO',
     'La Marzocco Linea Micra / Mini',
     'Rocket Appartamento',
@@ -61,7 +64,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   const [beanName, setBeanName] = useState<string>('');
   const [roaster, setRoaster] = useState<string>('');
   const [roastLevel, setRoastLevel] = useState<RoastLevel>('medium');
-  const [roastDate, setRoastDate] = useState<string>(
+  const [roastDate, setRoastDate] = useState<string>(() =>
     new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);

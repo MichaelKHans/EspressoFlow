@@ -2,6 +2,19 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.2] - 2026-10-17
+### Etape 62: Kodevedligeholdelse Etape 2 (Maskinsynkronisering i Onboarding & Hook-Stabilitet)
+- **Synkroniseret Maskineliste i Onboarding Wizard (`src/components/OnboardingWizard.tsx`):**
+  - Opdateret `COMMON_MACHINES` så den matcher Gear-fanen og `storage.ts` 100%.
+  - Tilføjet All-in-One Kombimaskiner (*Ninja Luxe Café / Ninja Pro*, *Sage Barista Touch/Express*, *De'Longhi La Specialista*) og Fuldautomatiske Bønne-til-Kop maskiner (*Jura Z10/E8*, *Philips LatteGo*, *De'Longhi Magnifica*).
+  - Omsluttet initial state for `roastDate` i en render-ren callback (`() => new Date(...)`), hvilket eliminerer React Compiler impurity warning.
+- **Sikret React Hook Afhængigheder mod Stale Closures (`src/App.tsx` & `src/components/DialInWizardModal.tsx`):**
+  - `handleBrewFinish` i `App.tsx`: Tilføjet `activeBeanId`, `beans`, `shots`, `currentBean.roastDate` og `currentBean.roastLevel` til afhængighedsarrayet, så kværn-læringsmotoren aldrig risikerer at kigge på et forældet `shots`-array.
+  - `DialInWizardModal.tsx`: Tilføjet `drink.defaultDoseGrams`, `drink.targetYieldGrams`, `drink.targetRatio` og `pool` til `useEffect` afhængighederne.
+- **Kvalitetssikring:**
+  - `npm run build` verificeret 100% fejlfrit (0 fejl).
+  - `npx cap sync` synkroniseret med iOS og Android.
+
 ## [1.19.1] - 2026-10-17
 ### Etape 61: Kodevedligeholdelse Etape 1 (Oprydning af Død Kode & Forældede Kæder)
 - **Fjernet Forældet Komponent (`src/components/TasteFeedback.tsx`):**

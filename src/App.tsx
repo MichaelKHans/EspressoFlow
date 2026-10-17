@@ -725,6 +725,9 @@ export function App() {
     }
   }, [
     activeDrinkId,
+    activeBeanId,
+    beans,
+    shots,
     coffeeBeanName,
     roastDate,
     roastLevel,
@@ -735,6 +738,8 @@ export function App() {
     grindSetting,
     machineName,
     currentBean.brewTempC,
+    currentBean.roastDate,
+    currentBean.roastLevel,
   ]);
 
   const handleUpdateShot = (updatedShot: ShotRecord) => {
