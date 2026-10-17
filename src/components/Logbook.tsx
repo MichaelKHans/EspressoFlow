@@ -28,6 +28,7 @@ interface LogbookProps {
   shots: ShotRecord[];
   onDeleteShot?: (shotId: string) => void;
   initialExpandedShotId?: string | null;
+  onApplyGrindSetting?: (newSetting: string) => void;
 }
 
 interface DayGroup {
@@ -36,7 +37,7 @@ interface DayGroup {
   shots: ShotRecord[];
 }
 
-export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialExpandedShotId }) => {
+export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialExpandedShotId, onApplyGrindSetting }) => {
   const { t } = useTranslation();
   const [selectedDrinkFilter, setSelectedDrinkFilter] = useState<string>('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
     initialExpandedShotId || (shots.length > 0 ? shots[0].id : null)
   );
   const [sharingShot, setSharingShot] = useState<ShotRecord | null>(null);
+  const [appliedShotId, setAppliedShotId] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (initialExpandedShotId) {
@@ -272,12 +274,12 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                   const isCoarser = advice.grindAdvice === 'coarser';
 
                   const currentGrindNum = parseFloat(shot.grindSetting);
-                  let nextSettingStr: string | null = null;
-                  if (!isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
+                  let nextSettingStr: string | null = advice.targetGrindSetting || null;
+                  if (!nextSettingStr && !isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
                     if (isFiner) {
-                      nextSettingStr = String(Math.max(0, currentGrindNum - advice.grindDeltaSteps));
+                      nextSettingStr = (Math.max(0, currentGrindNum - advice.grindDeltaSteps)).toFixed(1).replace('.0', '');
                     } else if (isCoarser) {
-                      nextSettingStr = String(currentGrindNum + advice.grindDeltaSteps);
+                      nextSettingStr = (currentGrindNum + advice.grindDeltaSteps).toFixed(1).replace('.0', '');
                     }
                   }
 
@@ -484,28 +486,45 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                                 <Sliders className="w-3.5 h-3.5" />
                               </div>
                             )}
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <div className="text-[10px] uppercase font-bold tracking-wider leading-tight flex items-center gap-1.5">
                                 <span>
                                   {isSweetSpot
-                                    ? 'SWEET SPOT (PERFEKT)'
+                                    ? t('logbook.status_sweet_spot') || 'SWEET SPOT (PERFEKT)'
                                     : shot.channelingDetected
-                                    ? 'KANALISERING OPDAGET'
+                                    ? t('logbook.status_channeling') || 'KANALISERING OPDAGET'
                                     : isFiner
-                                    ? 'FOR HURTIGT FLOW (UNDER-EXTRACTED)'
-                                    : 'FOR LANGSOMT FLOW (OVER-EXTRACTED)'}
+                                    ? t('logbook.status_fast') || 'FOR HURTIGT FLOW (UNDER-EXTRACTED)'
+                                    : t('logbook.status_slow') || 'FOR LANGSOMT FLOW (OVER-EXTRACTED)'}
                                 </span>
                               </div>
-                              <div className="text-xs font-bold truncate mt-0.5 text-[#2C2018]">
-                                {isSweetSpot
-                                  ? `Behold kværn på ${shot.grindSetting} (optimal ekstraktion)`
-                                  : isFiner && nextSettingStr
-                                  ? `Drej kværn FINERE: ${shot.grindSetting} ➔ ${nextSettingStr}`
-                                  : isCoarser && nextSettingStr
-                                  ? `Drej kværn GROVERE: ${shot.grindSetting} ➔ ${nextSettingStr}`
-                                  : shot.channelingDetected
-                                  ? 'Behold kværn • Forbedr puck prep (WDT & jævnt stamp)'
-                                  : advice.grinderSpecificAdvice || advice.summary}
+                              <div className="text-xs font-bold mt-0.5 text-[#2C2018] flex items-center justify-between gap-2 flex-wrap">
+                                <span className="truncate">
+                                  {isSweetSpot
+                                    ? (t('logbook.dialin_keep', { setting: shot.grindSetting }) || `Behold kværn på ${shot.grindSetting} (optimal ekstraktion)`)
+                                    : isFiner && nextSettingStr
+                                    ? (t('logbook.dialin_finer', { from: shot.grindSetting, to: nextSettingStr }) || `Drej kværn FINERE: ${shot.grindSetting} ➔ ${nextSettingStr}`)
+                                    : isCoarser && nextSettingStr
+                                    ? (t('logbook.dialin_coarser', { from: shot.grindSetting, to: nextSettingStr }) || `Drej kværn GROVERE: ${shot.grindSetting} ➔ ${nextSettingStr}`)
+                                    : shot.channelingDetected
+                                    ? (t('logbook.dialin_channeling') || 'Behold kværn • Forbedr puck prep (WDT & jævnt stamp)')
+                                    : advice.grinderSpecificAdvice || advice.summary}
+                                </span>
+                                {onApplyGrindSetting && (isFiner || isCoarser) && nextSettingStr && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onApplyGrindSetting(nextSettingStr);
+                                      setAppliedShotId(shot.id);
+                                      setTimeout(() => setAppliedShotId(null), 3000);
+                                    }}
+                                    className="px-2 py-0.5 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-sans font-bold transition shadow-2xs shrink-0 cursor-pointer"
+                                  >
+                                    {appliedShotId === shot.id
+                                      ? (t('logbook.applied_grind') || '✓ Anvendt')
+                                      : (t('logbook.apply_grind', { setting: nextSettingStr }) || `Anvend ${nextSettingStr}`)}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -576,7 +595,7 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                               <div className="flex items-center gap-1.5">
                                 <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A6E65]">
-                                  BARISTA TECH FORBEDRINGSFORSLAG
+                                  {t('logbook.barista_tech_title') || 'BARISTA TECH FORBEDRINGSFORSLAG'}
                                 </span>
                               </div>
                               <span

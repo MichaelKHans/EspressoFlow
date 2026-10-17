@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.18.3 (Separate Espresso/Pour Over Themes, Illuminated Macro Backdrops & Collapsible Gear Accordion)  
+> **Gældende version:** v1.18.4 (Harmonized Dial-In Engine, Connected Grinder Settings & 1-Tap Adjustments)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -404,7 +404,7 @@ Før der foretages ændringer i en kernekomponent, skal tabellen herunder konsul
 | :--- | :--- | :--- |
 | **`src/types/espresso.ts`**<br/>(`CoffeeBeanProfile`, `ShotRecord`) | `App.tsx`, `Logbook.tsx`, `ScaleMonitor.tsx`, `ShotSummaryModal.tsx`, `BeandexView.tsx`, `storage.ts` | **Høj:** Kræver bagudkompatibilitet i `storage.ts` (fallback for manglende felter som `flavorNotes`, `imageUrl` eller `brewTemp`). |
 | **`src/lib/ocr7segment.ts`** | `ScaleMonitor.tsx` | **Kritisk:** Canvas dimensioner og hukommelsesallokering. Må aldrig lække memory i animation frames. |
-| **`src/lib/espressoMath.ts`** | `ScaleMonitor.tsx`, `Logbook.tsx`, `ShotSummaryModal.tsx` | **Høj:** Matematisk ensartethed. Flow rate formler, ratio-beregninger og kanaliseringstærskler må ikke afvige mellem live visning og historik. |
+| **`src/lib/espressoMath.ts`** | `ScaleMonitor.tsx`, `Logbook.tsx`, `ShotSummaryModal.tsx`, `PreBrewCoachBanner.tsx`, `DrinkSelector.tsx` | **Høj:** Matematisk ensartethed. Flow rate formler, ratio-beregninger, kværn-kalibrering og dial-in forbedringsforslag (`targetGrindSetting` og `grindDeltaSteps`) skal stemme 100% overens på tværs af alle skærme. |
 | **`src/lib/beanCatalogMatcher.ts`** | `BeandexView.tsx`, `BeanScannerModal.tsx`, `AdminPortal.tsx`, `DialInWizardModal.tsx` | **Mellem:** Ændring i smagspiller eller risterier skal bevare eksisterende gemte tags i `localStorage`. |
 | **`src/lib/supabase.ts`** | `AdminPortal.tsx`, `CentralBeanVaultModal.tsx`, `BeanScannerModal.tsx` | **Mellem:** Offline fallback skal altid returnere data uden at kaste uhåndterede exceptions ved manglende internetforbindelse. |
 | **`src/components/AdminPortal.tsx`** | `App.tsx`, `SettingsModal.tsx`, `BeandexView.tsx` | **Lav:** Router via URL hash (`#admin`). Skal altid rydde hash ved tilbagetastning for at undgå loop. |

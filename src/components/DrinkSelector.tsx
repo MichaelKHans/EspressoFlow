@@ -21,6 +21,7 @@ import {
   loadActiveBarDrinkIds,
   saveActiveBarDrinkIds,
   loadDrinkGrindSettings,
+  saveDrinkGrindSetting,
   loadDrinkCalibrations,
   loadShots,
 } from '../lib/storage';
@@ -81,7 +82,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onLaunchScaleCam,
   onOpenDialInWizard,
   onOpenBeanVault,
-  onGrindSettingChange: _onGrindSettingChange,
+  onGrindSettingChange,
   onSwitchBean,
   onScanBean,
   onUpdateBeanDialIn: _onUpdateBeanDialIn,
@@ -186,19 +187,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     selectedDrink.expectedTimeSeconds
   );
 
-  const savedDrinkSetting = savedCalibration?.grindSetting || drinkGrinds[calibrationKey] || currentBean.grindSetting || currentGrinder.defaultSetting;
-
-  const [currentSettingInput, setCurrentSettingInput] = useState<string>(savedDrinkSetting);
-
-  useEffect(() => {
-    const key = `${currentBean.id}_${selectedDrink.id}`;
-    const calibs = loadDrinkCalibrations();
-    const cal = calibs[key];
-    const setting = cal?.grindSetting || drinkGrinds[key] || currentBean.grindSetting || currentGrinder.defaultSetting;
-    setCurrentSettingInput(setting);
-  }, [currentBean.id, selectedDrink.id, drinkGrinds, currentBean.grindSetting, currentGrinder.defaultSetting]);
-
-  // Find most recent shot for this drink
+  // Find most recent shot for this drink or bean
   const allShots = shots || loadShots();
   const lastShotForDrink = allShots.find(
     (s) =>
@@ -207,6 +196,46 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   ) || allShots.find(
     (s) => s.drinkId === selectedDrink.id || s.drinkName?.toLowerCase() === selectedDrink.name.toLowerCase()
   );
+  const lastShotForBean = allShots.find((s) => s.coffeeName === currentBean.name);
+
+  // Harmonized grind setting resolution:
+  // 1. Explicit dial-in calibration for this bean + drink
+  // 2. Specific per-drink grind setting for this bean + drink
+  // 3. Latest shot logged for this specific drink + bean
+  // 4. Latest shot logged for this bean (any drink)
+  // 5. Active bean's saved grind setting
+  // 6. Active grinder default setting
+  const savedDrinkSetting =
+    savedCalibration?.grindSetting ||
+    drinkGrinds[calibrationKey] ||
+    lastShotForDrink?.grindSetting ||
+    lastShotForBean?.grindSetting ||
+    currentBean.grindSetting ||
+    currentGrinder.defaultSetting;
+
+  const [currentSettingInput, setCurrentSettingInput] = useState<string>(savedDrinkSetting);
+
+  useEffect(() => {
+    const key = `${currentBean.id}_${selectedDrink.id}`;
+    const calibs = loadDrinkCalibrations();
+    const cal = calibs[key];
+    const setting =
+      cal?.grindSetting ||
+      drinkGrinds[key] ||
+      lastShotForDrink?.grindSetting ||
+      lastShotForBean?.grindSetting ||
+      currentBean.grindSetting ||
+      currentGrinder.defaultSetting;
+    setCurrentSettingInput(setting);
+  }, [
+    currentBean.id,
+    selectedDrink.id,
+    drinkGrinds,
+    lastShotForDrink?.grindSetting,
+    lastShotForBean?.grindSetting,
+    currentBean.grindSetting,
+    currentGrinder.defaultSetting,
+  ]);
 
   const targetTime = effectiveTargetTime;
   const targetYield = effectiveYield;
@@ -870,13 +899,32 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                           {currentGrinder.name.split(' ')[0]}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-base font-bold text-[#2C2018] font-mono">
-                          {t('drink.setting_label') || 'Setting'} {currentSettingInput}
-                        </span>
-                        <span className="text-[9px] text-[#7A6E65]">
-                          ({grinderSpec.unitName})
-                        </span>
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-base font-bold text-[#2C2018] font-mono">
+                            {t('drink.setting_label') || 'Setting'} {currentSettingInput}
+                          </span>
+                          <span className="text-[9px] text-[#7A6E65]">
+                            ({grinderSpec.unitName})
+                          </span>
+                        </div>
+                        {Boolean(dialInAnalysis.suggestedSetting) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (dialInAnalysis.suggestedSetting) {
+                                setCurrentSettingInput(dialInAnalysis.suggestedSetting);
+                                onGrindSettingChange?.(dialInAnalysis.suggestedSetting);
+                                saveDrinkGrindSetting(calibrationKey, dialInAnalysis.suggestedSetting);
+                              }
+                            }}
+                            className="px-2 py-0.5 rounded-lg bg-[#C26D52]/10 hover:bg-[#C26D52] text-[#C26D52] hover:text-white border border-[#C26D52]/30 text-[10px] font-sans font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+                            title={`Anvend anbefaling: ${dialInAnalysis.suggestedSetting}`}
+                          >
+                            <span>💡 {dialInAnalysis.suggestedSetting}</span>
+                            <span className="text-[9px] uppercase font-bold">({t('drink.apply_suggestion') || 'Anvend'})</span>
+                          </button>
+                        )}
                       </div>
                       <div className="text-[10px] text-[#7A6E65] truncate">
                         {t('drink.target_time_label') || 'Target Time'}: ~{targetTime}s ({targetYield}g)

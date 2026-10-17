@@ -493,12 +493,12 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     const isCoarser = advice.grindAdvice === 'coarser';
 
     const currentGrindNum = parseFloat(shot.grindSetting);
-    let nextSettingStr: string | null = null;
-    if (!isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
+    let nextSettingStr: string | null = advice.targetGrindSetting || null;
+    if (!nextSettingStr && !isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
       if (isFiner) {
-        nextSettingStr = String(Math.max(0, currentGrindNum - advice.grindDeltaSteps));
+        nextSettingStr = (Math.max(0, currentGrindNum - advice.grindDeltaSteps)).toFixed(1).replace('.0', '');
       } else if (isCoarser) {
-        nextSettingStr = String(currentGrindNum + advice.grindDeltaSteps);
+        nextSettingStr = (currentGrindNum + advice.grindDeltaSteps).toFixed(1).replace('.0', '');
       }
     }
 

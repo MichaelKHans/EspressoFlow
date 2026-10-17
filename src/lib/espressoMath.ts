@@ -381,6 +381,7 @@ export interface DialInAdvice {
   summary: string;
   grindAdvice: 'finer' | 'coarser' | 'keep';
   grindDeltaSteps: number;
+  targetGrindSetting?: string;
   grinderSpecificAdvice?: string;
   puckAdvice?: string;
   preInfusionAdvice?: string;
@@ -443,19 +444,26 @@ export function generateDialInAdvice(
     : undefined;
   const calibration = matchedGrinderKey ? GRINDER_CALIBRATIONS[matchedGrinderKey] : undefined;
 
-  if (calibration && Math.abs(timeDifference) >= 2.0 && (taste === 'sour' || taste === 'bitter' || totalTimeSeconds < 24 || totalTimeSeconds > 32)) {
-    const rawSteps = Math.abs(timeDifference) / calibration.secondsPerStep;
+  let calculatedSteps = 0.5;
+  let targetSettingStr: string | undefined;
+  const currentNum = currentGrindSetting ? parseFloat(currentGrindSetting) : NaN;
+  const isVarianceSignificant = Math.abs(timeDifference) >= 2.0 && (taste === 'sour' || taste === 'bitter' || totalTimeSeconds < 24 || totalTimeSeconds > 32);
+
+  if (isVarianceSignificant) {
+    const secondsPerStep = calibration?.secondsPerStep || 2.5;
+    const rawSteps = Math.abs(timeDifference) / secondsPerStep;
     const roundedSteps = Math.max(0.5, Math.round(rawSteps * 2) / 2);
+    calculatedSteps = roundedSteps;
     const direction = timeDifference > 0 ? 'finer' : 'coarser';
 
-    const currentNum = currentGrindSetting ? parseFloat(currentGrindSetting) : NaN;
-    let targetSettingText = '';
     if (!isNaN(currentNum)) {
       const nextSetting = direction === 'finer' ? Math.max(0, currentNum - roundedSteps) : currentNum + roundedSteps;
-      targetSettingText = ` (e.g. from ${currentNum} to ${nextSetting.toFixed(1).replace('.0', '')})`;
+      targetSettingStr = nextSetting.toFixed(1).replace('.0', '');
     }
 
-    grinderAdvice = `On your ${matchedGrinderKey || grinderName}: Adjust ${roundedSteps} ${calibration.unitName} ${direction}${targetSettingText} to compensate for ~${Math.abs(Math.round(timeDifference))}s flow variance.`;
+    const unitName = calibration?.unitName || 'steps';
+    const targetSettingText = targetSettingStr ? ` (e.g. from ${currentNum} to ${targetSettingStr})` : '';
+    grinderAdvice = `On your ${matchedGrinderKey || grinderName || 'grinder'}: Adjust ${roundedSteps} ${unitName} ${direction}${targetSettingText} to compensate for ~${Math.abs(Math.round(timeDifference))}s flow variance.`;
   }
 
   if (taste === 'sour' || totalTimeSeconds < 24) {
@@ -465,7 +473,8 @@ export function generateDialInAdvice(
     return {
       summary: 'Under-extracted (Fast Flow / Sour)',
       grindAdvice: 'finer',
-      grindDeltaSteps: 0.5,
+      grindDeltaSteps: calculatedSteps,
+      targetGrindSetting: targetSettingStr,
       grinderSpecificAdvice: grinderAdvice,
       puckAdvice: puckPrepAdvice || 'Ensure even distribution before tamping.',
       preInfusionAdvice: preAdvice,
@@ -474,14 +483,15 @@ export function generateDialInAdvice(
     };
   }
 
-  if (taste === 'bitter' || totalTimeSeconds > 34) {
+  if (taste === 'bitter' || totalTimeSeconds > 32) {
     const extra = roastLevel === 'dark'
       ? ' For this Dark Roast, stop the shot earlier as a Ristretto (1:1.5 ratio) to avoid bitter tannins.'
       : '';
     return {
       summary: 'Over-extracted (Slow Flow / Bitter)',
       grindAdvice: 'coarser',
-      grindDeltaSteps: 0.5,
+      grindDeltaSteps: calculatedSteps,
+      targetGrindSetting: targetSettingStr,
       grinderSpecificAdvice: grinderAdvice,
       puckAdvice: puckPrepAdvice || 'Verify puck headspace and basket capacity.',
       preInfusionAdvice: preAdvice,
@@ -494,7 +504,8 @@ export function generateDialInAdvice(
     return {
       summary: 'Low Body / Diluted Concentration',
       grindAdvice: 'finer',
-      grindDeltaSteps: 0.5,
+      grindDeltaSteps: calculatedSteps,
+      targetGrindSetting: targetSettingStr,
       grinderSpecificAdvice: grinderAdvice,
       puckAdvice: puckPrepAdvice || 'Increase dry dose by 0.5g while keeping target yield constant.',
       preInfusionAdvice: preAdvice,

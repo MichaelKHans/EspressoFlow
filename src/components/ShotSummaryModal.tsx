@@ -129,12 +129,12 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   const isGood = !isFast && !isSlow && !isSurgeOnly;
 
   const currentGrindNum = parseFloat(shot.grindSetting);
-  let nextSettingStr: string | null = null;
-  if (!isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
+  let nextSettingStr: string | null = advice.targetGrindSetting || null;
+  if (!nextSettingStr && !isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
     if (advice.grindAdvice === 'finer') {
-      nextSettingStr = String(Math.max(0, currentGrindNum - advice.grindDeltaSteps));
+      nextSettingStr = (Math.max(0, currentGrindNum - advice.grindDeltaSteps)).toFixed(1).replace('.0', '');
     } else if (advice.grindAdvice === 'coarser') {
-      nextSettingStr = String(currentGrindNum + advice.grindDeltaSteps);
+      nextSettingStr = (currentGrindNum + advice.grindDeltaSteps).toFixed(1).replace('.0', '');
     }
   }
 
@@ -288,11 +288,11 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
                 </span>
                 <span className="text-sm font-bold text-[#C26D52]">
                   {advice.grindAdvice === 'finer' && nextSettingStr
-                    ? `Drej kværn FINERE: ${shot.grindSetting} ➔ ${nextSettingStr}`
+                    ? (t('logbook.dialin_finer', { from: shot.grindSetting, to: nextSettingStr }) || `Drej kværn FINERE: ${shot.grindSetting} ➔ ${nextSettingStr}`)
                     : advice.grindAdvice === 'coarser' && nextSettingStr
-                    ? `Drej kværn GROVERE: ${shot.grindSetting} ➔ ${nextSettingStr}`
+                    ? (t('logbook.dialin_coarser', { from: shot.grindSetting, to: nextSettingStr }) || `Drej kværn GROVERE: ${shot.grindSetting} ➔ ${nextSettingStr}`)
                     : advice.grindAdvice === 'keep'
-                    ? `Behold kværn på ${shot.grindSetting} (optimalt)`
+                    ? (t('logbook.dialin_keep', { setting: shot.grindSetting }) || `Behold kværn på ${shot.grindSetting} (optimalt)`)
                     : advice.grinderSpecificAdvice || 'Hold kværnindstilling – forbedr puck prep'}
                 </span>
               </div>

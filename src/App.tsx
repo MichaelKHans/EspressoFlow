@@ -370,8 +370,19 @@ export function App() {
       setTargetYieldGrams(effectiveYield);
 
       const drinkGrinds = loadDrinkGrindSettings();
+      const lastShotForDrink = shots.find(
+        (s) =>
+          (s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase()) &&
+          (!s.coffeeName || s.coffeeName === currentBean.name)
+      );
+      const lastShotForBean = shots.find((s) => s.coffeeName === currentBean.name);
+
       if (drinkGrinds[key]) {
         setGrindSetting(drinkGrinds[key]);
+      } else if (lastShotForDrink?.grindSetting) {
+        setGrindSetting(lastShotForDrink.grindSetting);
+      } else if (lastShotForBean?.grindSetting) {
+        setGrindSetting(lastShotForBean.grindSetting);
       } else if (currentBean.grindSetting) {
         setGrindSetting(currentBean.grindSetting);
       }
@@ -620,6 +631,15 @@ export function App() {
     setShots((prev) => [newShot, ...prev]);
     setLastFinishedShot(newShot);
     setIsShotSummaryOpen(true);
+
+    // Automatically persist the grind setting used for this drink & active bean so all screens stay in sync
+    if (grindSetting && activeBeanId && activeDrinkId) {
+      const key = `${activeBeanId}_${activeDrinkId}`;
+      saveDrinkGrindSetting(key, grindSetting);
+      const updatedBeans = beans.map((b) => (b.id === activeBeanId ? { ...b, grindSetting } : b));
+      setBeans(updatedBeans);
+      saveBeans(updatedBeans);
+    }
 
     // Broadcast shot verdict to Antigravity PC Simulator
     const isChanneling = Boolean(channelingEvent.detected);
@@ -1123,7 +1143,12 @@ export function App() {
 
         {/* Tab 2: Analog Logbook */}
         {activeTab === 'logbook' && (
-          <Logbook shots={shots} onDeleteShot={handleDeleteShot} initialExpandedShotId={lastFinishedShot?.id} />
+          <Logbook
+            shots={shots}
+            onDeleteShot={handleDeleteShot}
+            initialExpandedShotId={lastFinishedShot?.id}
+            onApplyGrindSetting={handleApplyGrindAdjustment}
+          />
         )}
 
         {/* Tab 3: Beans & Gear */}

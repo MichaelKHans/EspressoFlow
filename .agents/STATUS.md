@@ -9,6 +9,22 @@
 
 ---
 
+### 2026-10-17 -- Harmoniseret Dial-In Logik & Forbundet Kværn-Indstilling (v1.18.4)
+- **Harmoniseret Dial-In Anbefaling (`src/lib/espressoMath.ts`):**
+  - Rettet fejl hvor banner i Logbog anbefalede `28 ➔ 28.5` (+0.5 trin), mens den detaljerede Barista Tech analyse på samme skud anbefalede `28 ➔ 35` (+7 mikrosteg).
+  - Årsag: `grindDeltaSteps` i `generateDialInAdvice` var hårdkodet til 0.5 i stedet for at returnere det kalibrerede `roundedSteps` (7.0).
+  - `generateDialInAdvice` udregner og returnerer nu `grindDeltaSteps: calculatedSteps` og `targetGrindSetting: '35'`, så alle dele af appen deler præcis samme tal.
+- **Forbundet Kværnindstilling på Bar-fanen (`DrinkSelector.tsx` & `App.tsx`):**
+  - Rettet fejl hvor Bar-fanens kort viste forældet mock-standard (`Setting 12`), mens skud var logget på `28`.
+  - Fallback-kæden prioriterer nu det senest loggede skuds indstilling (`lastShotForDrink?.grindSetting || lastShotForBean?.grindSetting`).
+  - Ved skud-afslutning (`onBrewFinish`) persisteres den benyttede kværnindstilling automatisk i `drinkGrinds` og opdaterer bønnen i `beans`.
+- **1-Klik "Anvend" Knapper:**
+  - Tilføjet direkte [Anvend] knap på Logbogens kort-banner og Bar-fanens kværnkort, når et forbedringsforslag er aktivt.
+- **i18n Dial-In Konsistens (`en.ts` & `da.ts`):**
+  - Alle dial-in tekster og status-badges er flyttet til i18n-nøgler med engelsk som Single Source of Truth og fuld dansk oversættelse.
+- **Kvalitetssikring:**
+  - `npm run build` passeret 100% fejlfrit, `npx cap sync` synkroniseret.
+
 ### 2026-10-17 -- Adskilte Espresso/Pour Over Temaer, Oplyste Makroer & Foldbare Gear-Kort (v1.18.3)
 - **Adskilte Baggrundstemaer for Espresso vs. Pour Over:**
   - Barista Deck skifter nu automatisk tema alt efter om baristaen har valgt *Espresso* eller *Pour Over*.

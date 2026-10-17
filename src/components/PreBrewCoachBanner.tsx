@@ -69,12 +69,12 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
 
   // Calculate suggested setting
   const currNum = parseFloat(lastShot.grindSetting || currentGrindSetting);
-  let targetSettingStr: string | null = null;
-  if (!isNaN(currNum) && advice.grindDeltaSteps > 0) {
+  let targetSettingStr: string | null = advice.targetGrindSetting || null;
+  if (!targetSettingStr && !isNaN(currNum) && advice.grindDeltaSteps > 0) {
     if (advice.grindAdvice === 'finer') {
-      targetSettingStr = String(Math.max(0, currNum - advice.grindDeltaSteps));
+      targetSettingStr = (Math.max(0, currNum - advice.grindDeltaSteps)).toFixed(1).replace('.0', '');
     } else if (advice.grindAdvice === 'coarser') {
-      targetSettingStr = String(currNum + advice.grindDeltaSteps);
+      targetSettingStr = (currNum + advice.grindDeltaSteps).toFixed(1).replace('.0', '');
     }
   }
 

@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.18.4] - 2026-10-17
+### Etape 59: Harmoniseret Dial-In & Kværn-Logik (Slut med Modstridende Anbefalinger og Frakoblet Kværntal)
+- **Rettet Modstridende Kværnanbefalinger (`src/lib/espressoMath.ts`):**
+  - Identificeret og løst en kritisk uoverensstemmelse, hvor Logbogens banner viste `28 ➔ 28.5` (+0.5 trin), mens den detaljerede Barista Tech boks på samme kort viste `28 ➔ 35` (+7 mikrosteg).
+  - Årsagen var, at `grindDeltaSteps` i `generateDialInAdvice` var hårdkodet til `0.5`, selvom kværn-kalibreringen korrekt beregnede `roundedSteps` (7.0 for ~17s flowafvigelse).
+  - `generateDialInAdvice` returnerer nu den faktiske kalibrerede trin-delta samt et unificeret `targetGrindSetting` ('35'), så banner og detaljeboks altid stemmer 100% overens.
+- **Løst Frakoblet Kværnindstilling på Bar-fanen (`DrinkSelector.tsx` & `App.tsx`):**
+  - Rettet fejl hvor Bar-fanens *Calibrated Grinder & Bean* kort viste en forældet scanner-standard (`Setting 12`), selvom baristaen for nylig havde brygget og logget skud på `Setting 28`.
+  - Tilføjet harmoniseret fallback-kæde: Hvis der ikke er gemt en eksplicit drik-kalibrering, prioriteres det senest loggede skuds faktiske kværnindstilling for den pågældende bønne/drik frem for forældede standardværdier.
+  - Ved fuldførelse af et bryg (`onBrewFinish` i `App.tsx`) persisteres den anvendte kværnindstilling nu automatisk til den aktive bønne og drik-profil.
+- **1-Tryks "Anvend Indstilling" Knapper (`Logbook.tsx` & `DrinkSelector.tsx`):**
+  - Tilføjet en direkte [Anvend] knap på Logbogens kort-banner og på Bar-fanens kværnkort, når der foreligger et forbedringsforslag (f.eks. `💡 35`).
+  - Baristaen kan med et enkelt tryk opdatere den aktive kværnindstilling på tværs af hele appen uden at skulle genindtaste værdien manuelt.
+- **Fuld i18n Sprogunderstøttelse for Dial-In Feedback (`en.ts` & `da.ts`):**
+  - Udskiftet hårdkodede danske tekststrenge i Logbogen og opsummeringsmodalen med officielle oversættelsesnøgler (`logbook.dialin_finer`, `logbook.dialin_coarser`, `logbook.dialin_keep`, `logbook.status_...`), så sprogskift mellem dansk og engelsk fungerer konsistent.
+
 ## [1.18.3] - 2026-10-17
 ### Etape 58: Adskilte Baggrundstemaer (Espresso vs. Pour Over), Lysere & Skarpere Makroer, Foldbare Gear-Kort og Glassmorphism
 - **Metode-Specifikke Baggrundstemaer for Barista Deck (`src/lib/cardThemes.ts` & `DrinkSelector.tsx`):**
