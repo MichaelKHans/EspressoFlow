@@ -1498,7 +1498,7 @@ export function App() {
                       </div>
                       <p className="text-[11px] text-[#D8CDC4] font-sans leading-relaxed">
                         Denne maskine har indbygget kaffekværn (<strong className="text-white font-mono">{profile.builtInGrinderName}</strong>).
-                        Du behøver ikke tilføje en separat kværn – indstil kværnen direkte på maskinens drejehjul (<span className="text-[#D4A373]">{profile.builtInGrinderSteps}</span>). Flowbean gemmer dine kværntrin automatisk.
+                        Du kan bruge den indbyggede kværn direkte via maskinens drejehjul (<span className="text-[#D4A373]">{profile.builtInGrinderSteps}</span>) — eller frit vælge/tilføje en separat ekstern kværn i <strong className="text-white font-mono">Grinder Fleet</strong> ovenfor. Flowbean husker og logger automatisk begge dele pr. bønne.
                       </p>
                     </div>
                   );
