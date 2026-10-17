@@ -45,8 +45,37 @@ export const FlowChart: React.FC<FlowChartProps> = ({
     );
   }
 
+  // Normalize points: If non-live and curve starts with a dead flatline (>= 1.0s before first drip),
+  // trim it so the chart starts cleanly at first drip (t = 0.0s)
+  const { displayPoints, timeOffset } = React.useMemo(() => {
+    if (isLive || points.length === 0) return { displayPoints: points, timeOffset: 0 };
+    let firstDripIdx = 0;
+    while (firstDripIdx < points.length && points[firstDripIdx].weightGrams < 0.3) {
+      firstDripIdx++;
+    }
+    if (firstDripIdx > 0 && firstDripIdx < points.length) {
+      const offset = points[firstDripIdx].timeSeconds;
+      if (offset >= 1.0) {
+        const trimmed = points.slice(firstDripIdx).map((p) => ({
+          ...p,
+          timeSeconds: Math.max(0, Math.round((p.timeSeconds - offset) * 10) / 10),
+        }));
+        return {
+          displayPoints: [
+            { timeSeconds: 0.0, weightGrams: 0.0, flowRateGps: 0.0 },
+            ...trimmed,
+          ],
+          timeOffset: offset,
+        };
+      }
+    }
+    return { displayPoints: points, timeOffset: 0 };
+  }, [points, isLive]);
+
+  const effectivePre = timeOffset > 0 ? 0 : (preInfusionSeconds || 0);
+
   const isPourOver = method === 'pour_over';
-  const maxTime = Math.max(isPourOver ? 180 : 30, points[points.length - 1]?.timeSeconds || (isPourOver ? 180 : 30));
+  const maxTime = Math.max(isPourOver ? 180 : 30, displayPoints[displayPoints.length - 1]?.timeSeconds || (isPourOver ? 180 : 30));
   const maxWeight = Math.max(targetYield * 1.15, isPourOver ? 300 : 42);
   const maxFlow = isPourOver ? 8.0 : 4.0; // max scale for g/s
 
@@ -72,19 +101,19 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const yGoldenBottom = getYFlow(goldenMinFlow);
 
   // Build SVG path strings
-  const weightPath = points.reduce((acc, p, idx) => {
+  const weightPath = displayPoints.reduce((acc, p, idx) => {
     const x = getX(p.timeSeconds);
     const y = getYWeight(p.weightGrams);
     return idx === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
   }, '');
 
-  const flowPath = points.reduce((acc, p, idx) => {
+  const flowPath = displayPoints.reduce((acc, p, idx) => {
     const x = getX(p.timeSeconds);
     const y = getYFlow(p.flowRateGps);
     return idx === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
   }, '');
 
-  const lastPoint = points[points.length - 1];
+  const lastPoint = displayPoints[displayPoints.length - 1];
   const currentRatio = doseGrams > 0 && lastPoint ? (lastPoint.weightGrams / doseGrams).toFixed(1) : '0.0';
 
   return (
@@ -107,7 +136,9 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             <AlertCircle className="w-3.5 h-3.5 text-[#C26D52]" />
             <span className="whitespace-nowrap">
               {t('chart.channeling_spike', {
-                time: channelingEvent.timestampSeconds ?? 0,
+                time: channelingEvent.timestampSeconds !== undefined
+                  ? Math.max(0, Math.round((channelingEvent.timestampSeconds - timeOffset) * 10) / 10)
+                  : 0,
                 spike: channelingEvent.flowSpikeGps ?? 0,
               })}
             </span>
@@ -261,25 +292,25 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             })}
 
           {/* Pre-Infusion First Drip Vertical Divider */}
-          {preInfusionSeconds && preInfusionSeconds > 0 && preInfusionSeconds < maxTime && (
+          {effectivePre > 0 && effectivePre < maxTime && (
             <g>
               <line
-                x1={getX(preInfusionSeconds)}
+                x1={getX(effectivePre)}
                 y1={padTop}
-                x2={getX(preInfusionSeconds)}
+                x2={getX(effectivePre)}
                 y2={padTop + chartH}
                 stroke="#C26D52"
                 strokeWidth="1.5"
                 strokeDasharray="3 3"
               />
               <text
-                x={getX(preInfusionSeconds) + 4}
+                x={getX(effectivePre) + 4}
                 y={padTop + 12}
                 fill="#C26D52"
                 fontSize="9"
                 fontWeight="bold"
               >
-                {t('chart.first_drip', { time: preInfusionSeconds.toFixed(1) })}
+                {t('chart.first_drip', { time: effectivePre.toFixed(1) })}
               </text>
             </g>
           )}

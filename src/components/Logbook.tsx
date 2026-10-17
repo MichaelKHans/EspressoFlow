@@ -394,12 +394,27 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                             <div className="font-bold text-[#2C2018] text-xs mt-0.5">
                               {shot.totalTimeSeconds}s @ {shot.averageFlowGps}g/s
                             </div>
-                            {shot.preInfusionSeconds !== undefined && (
-                              <div className="text-[9.5px] text-[#7A6E65] mt-0.5 flex items-center justify-between">
-                                <span>Pre {shot.preInfusionSeconds}s</span>
-                                <span>Flow {shot.flowTimeSeconds}s</span>
-                              </div>
-                            )}
+                            {(() => {
+                              const matchingRecipe = DRINK_RECIPES.find(
+                                (d) => d.id === shot.drinkId || d.name.toLowerCase() === (shot.drinkName || '').toLowerCase()
+                              );
+                              const targetSec = matchingRecipe?.expectedTimeSeconds || (shot.method === 'pour_over' ? 180 : 28);
+                              const delta = Math.round((shot.totalTimeSeconds - targetSec) * 10) / 10;
+                              const diffStr = delta > 0 ? `+${delta.toFixed(1)}s` : `${delta.toFixed(1)}s`;
+                              const isTargetHit = Math.abs(delta) <= 2.5;
+                              const isTooSlow = delta > 2.5;
+                              const colorClass = isTargetHit
+                                ? 'text-[#72806B]'
+                                : isTooSlow
+                                ? 'text-[#C26D52]'
+                                : 'text-amber-700';
+
+                              return (
+                                <div className={`text-[9.5px] font-semibold mt-0.5 truncate ${colorClass}`}>
+                                  {t('logbook.target_time_diff', { target: targetSec, diff: diffStr })}
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70">

@@ -285,6 +285,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'logbook.flow_abbr': 'Flow',
   'logbook.channeling': 'Kanalisering',
   'logbook.balanced': 'Balanceret',
+  'logbook.target_time_diff': 'Mål ~{target}s ({diff})',
   'logbook.share_card': 'Del Card',
   'logbook.telemetry_points': '{count} telemetripunkter',
 

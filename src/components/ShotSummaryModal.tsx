@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { ShotShareModal } from './ShotShareModal';
+import { DRINK_RECIPES } from '../data/drinkRecipes';
 
 interface ShotSummaryModalProps {
   isOpen: boolean;
@@ -366,11 +367,27 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
               <div className="text-sm font-bold text-[#2C2018] mt-0.5">
                 {shot.totalTimeSeconds.toFixed(1)}s
               </div>
-              <span className="text-[10px] text-[#7A6E65] mt-0.5 block truncate">
-                {shot.preInfusionSeconds !== undefined
-                  ? `${shot.preInfusionSeconds}s + ${shot.flowTimeSeconds || (shot.totalTimeSeconds - shot.preInfusionSeconds).toFixed(1)}s`
-                  : `${shot.averageFlowGps.toFixed(2)} g/s`}
-              </span>
+              {(() => {
+                const matchingRecipe = DRINK_RECIPES.find(
+                  (d) => d.id === shot.drinkId || d.name.toLowerCase() === (shot.drinkName || '').toLowerCase()
+                );
+                const targetSec = matchingRecipe?.expectedTimeSeconds || (shot.method === 'pour_over' ? 180 : 28);
+                const delta = Math.round((shot.totalTimeSeconds - targetSec) * 10) / 10;
+                const diffStr = delta > 0 ? `+${delta.toFixed(1)}s` : `${delta.toFixed(1)}s`;
+                const isTargetHit = Math.abs(delta) <= 2.5;
+                const isTooSlow = delta > 2.5;
+                const colorClass = isTargetHit
+                  ? 'text-[#72806B]'
+                  : isTooSlow
+                  ? 'text-[#C26D52]'
+                  : 'text-amber-700';
+
+                return (
+                  <span className={`text-[10px] font-semibold mt-0.5 block truncate ${colorClass}`}>
+                    {t('logbook.target_time_diff', { target: targetSec, diff: diffStr })}
+                  </span>
+                );
+              })()}
             </div>
 
             <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5]">

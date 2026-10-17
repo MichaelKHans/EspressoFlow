@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.6] - 2026-10-17
+### Etape 66: Tidtagning, Kurve-Trimning & Mål-tid i Time & Flow (Etape 3 af Feedback-Gennemgang)
+- **Kurve-Trimning fra Første Dråbe (`src/components/ScaleMonitor.tsx`):**
+  - Elimineret død forløbstid før første dråbe: Hvis baristaen starter bryguret i appen for tidligt før maskinens pumpe aktiveres (eller vandet mætter kaffen i 10–25s), detekteres første reelle vægtforøgelse ($\ge 0.3\text{g}$).
+  - Eventuel tom flad linje foran trimmes væk ved afslutning, så brygkurven starter rent ved første dråbe ($t = 0.0\text{s}$), og den samlede målte ekstraktionstid afspejler det faktiske flow (f.eks. 26.5s frem for 46.5s).
+- **Fjernet Misvisende "Puck Choking" Advarsel (`src/lib/espressoMath.ts`):**
+  - Fjernet den forvirrende advarsel `"First drip took 22.7s (very slow). Coffee puck is choking the pump."`, som fejlagtigt opstod pga. forsinket pumpestart.
+  - Kværnrådgivningen baseres nu udelukkende på den reelle flowtid og flowhastighed under selve ekstraktionen.
+- **Mål-tid og $\Delta t$ i "Time & Flow" (`src/components/Logbook.tsx` & `src/components/ShotSummaryModal.tsx`):**
+  - Erstattet forvirrende "Pre Xs Flow Ys" med direkte opskrifts-sammenligning: `Mål ~28s (+1.2s)` / `Target ~28s (+1.2s)` med farvekodning (grøn for $\pm 2.5\text{s}$, terracotta for langsommere, rav for hurtigere).
+  - Giver baristaen øjeblikkelig forståelse for om skuddet ramte opskriftens måltid.
+- **Historisk Kurve- & Delingskort-Optimering (`src/components/FlowChart.tsx` & `src/components/ShotShareModal.tsx`):**
+  - Automatisk visningstrimning af kurver med flad startlinje, så både historiske og nye skud præsenteres knivskarpt på skærmen og på det eksporterede Instagram/SoMe delingskort.
+- **Kvalitetssikring:**
+  - `npm run build` og `npx cap sync` kompileret 100% fejlfrit (0 fejl).
+
 ## [1.19.5] - 2026-10-17
 ### Etape 65: 100% Sprog- & Lokaliserings-Rens (Etape 2 af Feedback-Gennemgang)
 - **Korrekt Datolokaliserings-Motor i Logbog (`src/components/Logbook.tsx`):**

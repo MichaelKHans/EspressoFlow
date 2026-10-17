@@ -219,6 +219,50 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.fillText(gearText, 60, 305);
 
     // 4. Primary KPI Metric Cards (Dose, Yield, Ratio, Time)
+    // Point Processing & Flatline Trim:
+    const rawPoints = shot.dataPoints || [];
+    let tareBaselineIdx = 0;
+    for (let i = 1; i < rawPoints.length; i++) {
+      if (rawPoints[i].weightGrams <= 0.3 && rawPoints[i - 1].weightGrams > 5.0) {
+        tareBaselineIdx = i;
+      }
+    }
+
+    const initialSlice = tareBaselineIdx > 0 ? rawPoints.slice(tareBaselineIdx) : rawPoints;
+
+    let firstDripIdx = 0;
+    while (firstDripIdx < initialSlice.length && initialSlice[firstDripIdx].weightGrams < 0.3) {
+      firstDripIdx++;
+    }
+
+    let displayPoints = initialSlice;
+    let timeOffset = 0;
+    let isTrimmed = false;
+
+    if (firstDripIdx > 0 && firstDripIdx < initialSlice.length) {
+      const offset = initialSlice[firstDripIdx].timeSeconds - initialSlice[0].timeSeconds;
+      if (offset >= 1.0) {
+        const trimmed = initialSlice.slice(firstDripIdx);
+        displayPoints = [
+          { timeSeconds: 0, weightGrams: 0, flowRateGps: 0 },
+          ...trimmed.map((p) => ({
+            ...p,
+            timeSeconds: Math.max(0, Math.round((p.timeSeconds - initialSlice[firstDripIdx].timeSeconds) * 10) / 10),
+          })),
+        ];
+        timeOffset = 0;
+        isTrimmed = true;
+      }
+    } else if (tareBaselineIdx > 0) {
+      timeOffset = initialSlice[0].timeSeconds;
+    }
+
+    const effectiveTime = shot.flowTimeSeconds && isTrimmed
+      ? shot.flowTimeSeconds
+      : isTrimmed && firstDripIdx > 0
+      ? Math.max(0, Math.round((shot.totalTimeSeconds - (initialSlice[firstDripIdx].timeSeconds - initialSlice[0].timeSeconds)) * 10) / 10)
+      : shot.totalTimeSeconds;
+
     const cardY = 340;
     const cardH = 130;
     const cardW = (W - 120 - 45) / 4;
@@ -228,7 +272,7 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
       { label: 'DOSE', val: `${shot.doseGrams.toFixed(1)}g`, sub: 'in' },
       { label: 'YIELD', val: `${shot.actualYieldGrams.toFixed(1)}g`, sub: 'out' },
       { label: 'RATIO', val: `1:${ratioDisplay}`, sub: 'ratio' },
-      { label: 'TIME', val: `${shot.totalTimeSeconds.toFixed(1)}s`, sub: `${shot.preInfusionSeconds.toFixed(1)}s pre` },
+      { label: 'TIME', val: `${effectiveTime.toFixed(1)}s`, sub: shot.averageFlowGps > 0 ? `${shot.averageFlowGps.toFixed(2)} g/s` : 'extraction' },
     ];
 
     kpis.forEach((kpi, idx) => {
@@ -315,21 +359,6 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.fillText('Yield (g)', legendRight - 315, chartY + 37);
     ctx.textAlign = 'left';
 
-    const rawPoints = shot.dataPoints || [];
-
-    // Mid-Shot Tare Isolation:
-    // If barista tared the cup mid-shot (weight dropped from >5g to <=0.3g),
-    // anchor chart data cleanly at the tare baseline so untared cup weight doesn't corrupt the card.
-    let tareBaselineIdx = 0;
-    for (let i = 1; i < rawPoints.length; i++) {
-      if (rawPoints[i].weightGrams <= 0.3 && rawPoints[i - 1].weightGrams > 5.0) {
-        tareBaselineIdx = i;
-      }
-    }
-
-    const displayPoints = tareBaselineIdx > 0 ? rawPoints.slice(tareBaselineIdx) : rawPoints;
-    const timeOffset = tareBaselineIdx > 0 ? displayPoints[0].timeSeconds : 0;
-
     if (displayPoints.length >= 2) {
       const pLeft = chartX + 70;
       const pRight = chartX + chartW - 70;
@@ -371,8 +400,8 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // First drip line (adjusted for mid-shot tare offset if present)
-      const adjustedPre = Math.max(0, shot.preInfusionSeconds - timeOffset);
+      // First drip line (adjusted for mid-shot tare offset if present, or hidden if trimmed)
+      const adjustedPre = isTrimmed ? 0 : Math.max(0, (shot.preInfusionSeconds || 0) - timeOffset);
       if (adjustedPre > 0 && adjustedPre < maxT) {
         const xPre = mapX(adjustedPre);
         ctx.strokeStyle = '#C26D52';
@@ -784,10 +813,17 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     const isChanneling = shot.channelingDetected || (shot.channeling && shot.channeling.detected);
     const spikeVal = shot.channeling?.flowSpikeGps;
 
+    const effectiveTime = shot.flowTimeSeconds && shot.preInfusionSeconds && shot.preInfusionSeconds >= 1.0
+      ? shot.flowTimeSeconds
+      : shot.totalTimeSeconds;
+    const preInfo = shot.preInfusionSeconds && shot.preInfusionSeconds > 0 && !shot.flowTimeSeconds
+      ? ` (Pre: ${shot.preInfusionSeconds.toFixed(1)}s)`
+      : '';
+
     const text = `FLOWBEAN BARISTA TELEMETRY\n` +
       `Drink: ${shot.drinkName || 'Espresso'} — ${shot.coffeeName || 'Coffee Blend'}\n` +
-      `Extraction: ${shot.doseGrams.toFixed(1)}g -> ${shot.actualYieldGrams.toFixed(1)}g in ${shot.totalTimeSeconds.toFixed(1)}s (1:${ratioVal} ratio)\n` +
-      `Flow: ${(shot.averageFlowGps || 0).toFixed(2)} g/s avg (Pre: ${shot.preInfusionSeconds.toFixed(1)}s)\n` +
+      `Extraction: ${shot.doseGrams.toFixed(1)}g -> ${shot.actualYieldGrams.toFixed(1)}g in ${effectiveTime.toFixed(1)}s (1:${ratioVal} ratio)\n` +
+      `Flow: ${(shot.averageFlowGps || 0).toFixed(2)} g/s avg${preInfo}\n` +
       `Gear: ${cleanGrinder} @ ${shot.grindSetting || '–'}${cleanMachine ? ` • ${cleanMachine}` : ''}\n` +
       `Status: ${isChanneling ? `Channeling (${spikeVal ? spikeVal.toFixed(1) : '3.2'} g/s)` : 'Golden Zone'}\n\n` +
       `Analyze your shots with Flowbean: https://flowbean.app`;

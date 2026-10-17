@@ -917,14 +917,38 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     lockedRoiCenterRef.current = null;
     const finalWeight = currentWeightRef.current;
-    const finalTime = startTimeRef.current > 0 ? Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10 : elapsedTime;
-    const dynSummary = pointsRef.current.length >= 8 ? analyzeExtractionDynamics(pointsRef.current) : null;
-    const finalPre = dynSummary && dynSummary.preInfusionSeconds > 0
-      ? dynSummary.preInfusionSeconds
-      : (firstDropTimeRef.current !== null ? firstDropTimeRef.current : (machinePreInfusionRef.current || 5.0));
+    const rawTime = startTimeRef.current > 0 ? Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10 : elapsedTime;
+
+    // Locate first sustained drip point (>= 0.3g)
+    let firstDripIdx = 0;
+    while (firstDripIdx < pointsRef.current.length && pointsRef.current[firstDripIdx].weightGrams < 0.3) {
+      firstDripIdx++;
+    }
+
+    let finalPoints = [...pointsRef.current];
+    let finalTime = rawTime;
+
+    // If there was a dead pre-drip wait >= 1.0s, trim the flatline so curve starts cleanly at first drip (t = 0.0s)
+    if (firstDripIdx > 0 && firstDripIdx < pointsRef.current.length) {
+      const offset = pointsRef.current[firstDripIdx].timeSeconds;
+      if (offset >= 1.0) {
+        const trimmed = pointsRef.current.slice(firstDripIdx).map((p) => ({
+          ...p,
+          timeSeconds: Math.max(0, Math.round((p.timeSeconds - offset) * 10) / 10),
+        }));
+        finalPoints = [
+          { timeSeconds: 0.0, weightGrams: 0.0, flowRateGps: 0.0 },
+          ...trimmed,
+        ];
+        finalTime = Math.max(0, Math.round((rawTime - offset) * 10) / 10);
+      }
+    }
+
+    const dynSummary = finalPoints.length >= 8 ? analyzeExtractionDynamics(finalPoints) : null;
+    const finalPre = 0.0;
     const finalFlow = dynSummary && dynSummary.activeFlowSeconds > 0
       ? dynSummary.activeFlowSeconds
-      : Math.max(0, Math.round((finalTime - finalPre) * 10) / 10);
+      : finalTime;
 
     if (isTelemetryEnabled() && telemetryCollectorRef.current) {
       if (canvasRef.current) {
@@ -939,7 +963,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       });
     }
 
-    onBrewFinish(finalWeight, finalTime, finalPre, finalFlow, [...pointsRef.current]);
+    onBrewFinish(finalWeight, finalTime, finalPre, finalFlow, finalPoints);
 
     // Reset stopwatch & shot telemetry so scale is clean and ready for the next shot
     startTimeRef.current = 0;

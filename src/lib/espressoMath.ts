@@ -398,7 +398,7 @@ export function generateDialInAdvice(
   yieldGrams: number,
   channeling: boolean | ChannelingEvent,
   taste?: TasteRating,
-  preInfusionSeconds?: number,
+  _preInfusionSeconds?: number,
   roastLevel?: RoastLevel,
   grinderName?: string,
   currentGrindSetting?: string
@@ -416,15 +416,8 @@ export function generateDialInAdvice(
     puckPrepAdvice = `Mid-shot flow surge detected${spikeInfo}. Focus on thorough WDT needle distribution and flat, level tamping to prevent water bypass.`;
   }
 
-  // 2. Pre-infusion saturation check (choked puck vs. rushed water)
-  let preAdvice: string | undefined;
-  if (preInfusionSeconds !== undefined) {
-    if (preInfusionSeconds > 10.0) {
-      preAdvice = `First drip took ${preInfusionSeconds.toFixed(1)}s (very slow). Coffee puck is choking the pump.`;
-    } else if (preInfusionSeconds < 3.0) {
-      preAdvice = `First drip appeared at ${preInfusionSeconds.toFixed(1)}s (too fast). Water broke through before pressure built up.`;
-    }
-  }
+  // 2. Pre-infusion saturation check (decoupled from timer to prevent false choking warnings)
+  const preAdvice: string | undefined = undefined;
 
   // Roast-specific tailored advice
   let roastNotice: string | undefined;
@@ -519,7 +512,7 @@ export function generateDialInAdvice(
     grindAdvice: 'keep',
     grindDeltaSteps: 0,
     puckAdvice: puckPrepAdvice,
-    preInfusionAdvice: preAdvice || `First drip at ${preInfusionSeconds ? preInfusionSeconds.toFixed(1) + 's' : 'optimal time'}.`,
+    preInfusionAdvice: undefined,
     roastAdvice: roastNotice,
     rationale: puckPrepAdvice
       ? `Ekstraktionen var tidsmæssigt fin (${totalTimeSeconds.toFixed(1)}s for ${yieldGrams.toFixed(1)}g), men der opstod et flow-spring undervejs. Behold kværnindstillingen og fokusér på puck preparation (WDT).`

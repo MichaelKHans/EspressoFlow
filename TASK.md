@@ -240,6 +240,27 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 
 ---
 
+## 🎯 FASE 12: Feedback-Gennemgang & Barista UX Optimering (7-Siders Audit)
+- [x] **Etape 1: Kritiske Data- & Logik-Bugs (v1.19.4):**
+  - Fjernet falsk "Balanced" fallback i Logbog ved ubedømte skud.
+  - Beandex badge-tællere tæller kun aktive uafsluttede bønner (`!b.isFinished`).
+  - Moderniseret terminologi fra "Barcode" til "Beandex Bag Vision™".
+- [x] **Etape 2: 100% Sprog- & Lokaliserings-Rens (v1.19.5):**
+  - Rettet datolokaliserings-motor i Logbog til appens aktive i18n-sprog (`localeCode` en-US / da-DK).
+  - Elimineret hårde danske fallbacks i `Logbook.tsx`, `ShotSummaryModal.tsx` og `PreBrewCoachBanner.tsx`.
+  - Internationaliseret Beandex friskhedsfaser og bønneskifter i `en.ts` og `da.ts`.
+- [x] **Etape 3: Tidtagning, Kurve-Trimning & Mål-tid i "Time & Flow" (v1.19.6):**
+  - Kurvetrimning fra første dråbe ($t = 0.0\text{s}$) i `ScaleMonitor.tsx` for at eliminere død flad startlinje.
+  - Fjernet misvisende "Puck Choking" advarsel fra `espressoMath.ts`.
+  - Måltid og $\Delta t$ i "Time & Flow" kort (`Logbook.tsx` & `ShotSummaryModal.tsx`) med opskrifts-sammenligning.
+  - Automatisk kurvetrimning for historiske skud og delingskort i `FlowChart.tsx` og `ShotShareModal.tsx`.
+- [ ] **Etape 4: In-App Kamera & Ristedato Reticle HUD i Step 2:**
+  - Hold den direkte `<video>` søger kørende i `BeanScannerModal.tsx` Step 2 med den dedikerede "Ret mod Ristedato Stempel" grønne reticle-boks i stedet for at åbne det eksterne native kamera via fil-dialog.
+- [ ] **Etape 5: Admin Baggrunds-Inspector:**
+  - Direkte "Juster" knap på `AdminThemeBadge.tsx`, der åbner en flydende popover til realtids-justering af baggrundssløring (blur 0–16px), farvetone overlay, opacitet (10–90%) og lysstyrke/kontrast, gemt i `localStorage`.
+
+---
+
 ## 📌 Næste Opgaver
 - [ ] **Opdatering af Vilkår & Privatlivspolitik (`LegalModal.tsx`):**
   - Ajourføre Privacy Policy og Terms of Service til 100% at afspejle den aktuelle arkitektur:
