@@ -9,6 +9,15 @@
 
 ---
 
+### 2026-10-17 -- Kodevedligeholdelse Etape 1: Død Kode Udfaset (v1.19.1)
+- **Fjernet Forældet Komponent (`src/components/TasteFeedback.tsx`):**
+  - Slettet 178-linjers ubenyttet smagsevalueringskomponent, hvis funktioner for længst er fuldt konsolideret og overtaget af `ShotSummaryModal.tsx`.
+- **Renset Dokumentation & Blueprint:**
+  - `ESPRESSO_FLOW_APP_BLUEPRINT.md` opdateret med `ShotSummaryModal.tsx`.
+- **Kvalitetssikring:**
+  - `npm run build` verificeret 100% fejlfrit (0 fejl).
+  - `npx cap sync` synkroniseret med iOS og Android.
+
 ### 2026-10-17 -- Universal Adaptive Grind Intelligence (On-Device Selvlærende Kværn-Motor & Master Barista UI) (v1.19.0)
 - **100% On-Device Selvlærende Kværn-Motor (`src/lib/grindIntelligence.ts`):**
   - **Nul AI-Tokens & Nul API-Omkostninger:** Fuldstændig deterministisk og lynhurtig (< 0.1 ms) TypeScript-motor på enheden. Nul eksterne API-kald eller forbrug af tokens.

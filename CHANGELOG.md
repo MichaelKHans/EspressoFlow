@@ -2,6 +2,18 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.19.1] - 2026-10-17
+### Etape 61: Kodevedligeholdelse Etape 1 (Oprydning af Død Kode & Forældede Kæder)
+- **Fjernet Forældet Komponent (`src/components/TasteFeedback.tsx`):**
+  - Identificeret og slettet en 178-linjers overflødig mock/inline smagsevalueringskomponent, der oprindeligt blev skrevet før udviklingen af `ShotSummaryModal.tsx`.
+  - Alle funktioner vedrørende smagsbedømmelse (sour, balanced, bitter, watery), smagsnoter, flow-kurveanalyse og 1-klik kværnjustering er 100% konsolideret og aktivt understøttet i `ShotSummaryModal.tsx`.
+  - Ingen andre moduler eller ruter refererede til filen.
+- **Opdateret Arkitektur- & Blueprint-Kort (`ESPRESSO_FLOW_APP_BLUEPRINT.md`):**
+  - Opdateret komponenttræet så det afspejler `ShotSummaryModal.tsx` i stedet for `TasteFeedback.tsx`.
+- **Kvalitetssikring:**
+  - `npm run build` kompileret 100% fejlfrit (0 fejl).
+  - `npx cap sync` synkroniseret med iOS og Android.
+
 ## [1.19.0] - 2026-10-17
 ### Etape 60: Universal Adaptive Grind Intelligence (On-Device Selvlærende Kværn-Motor & Master Barista Sparringspartner)
 - **100% On-Device Selvlærende Kværn-Motor (`src/lib/grindIntelligence.ts`):**

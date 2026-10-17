@@ -385,7 +385,7 @@ espresso-flow/
 │   │   ├── ScaleScanner.tsx       <-- Camera stream + crosshairs (Step 0)
 │   │   ├── TypewriterLog.tsx      <-- Analog typewriter logbook (Courier Prime)
 │   │   ├── FlowChart.tsx          <-- Realtime g/s chart in terracotta
-│   │   ├── TasteFeedback.tsx      <-- "How did it taste?" feedback
+│   │   ├── ShotSummaryModal.tsx   <-- Shot verdict, taste rating & 1-tap grind adjustment
 │   │   └── PaywallModal.tsx       <-- Monthly PRO ($3.99/mo) with Apple/Google Pay
 │   ├── lib/
 │   │   ├── ocr.ts                 <-- 7-segment digital scale OCR
