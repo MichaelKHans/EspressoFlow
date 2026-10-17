@@ -57,10 +57,18 @@ import {
   loadTempUnit,
   saveTempUnit,
   getMachineTempProfile,
+  loadFilterBrewer,
+  saveFilterBrewer,
+  loadKettle,
+  saveKettle,
+  FILTER_BREWER_PRESETS,
+  KETTLE_PRESETS,
 } from './lib/storage';
 import { analyzeChanneling, analyzeExtractionDynamics, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
 import { subscribeToRemoteCommands, broadcastShotVerdict } from './lib/antiLiveSync';
 import { redeemLicenseKey } from './lib/licenseEngine';
+import { AdminThemeBadge } from './components/AdminThemeBadge';
+import { getCardTheme, loadAdminEditMode, type CardThemePreset } from './lib/cardThemes';
 
 export function App() {
   const { t, language, setLanguage, supportedLanguages, isMultiLanguageEnabled } = useTranslation();
@@ -79,6 +87,12 @@ export function App() {
   const [activeBeanId, setActiveBeanId] = useState<string>(() => loadBeans()[0]?.id || 'bean-ethiopia');
   const [grinders, setGrinders] = useState<GrinderProfile[]>(() => loadGrinders());
   const [isBeanScannerOpen, setIsBeanScannerOpen] = useState<boolean>(false);
+  const [isAdminEditMode, setIsAdminEditMode] = useState<boolean>(() => loadAdminEditMode());
+  const [grinderTheme, setGrinderTheme] = useState<CardThemePreset>(() => getCardTheme('grinder_fleet'));
+  const [machineTheme, setMachineTheme] = useState<CardThemePreset>(() => getCardTheme('espresso_machine'));
+  const [filterTheme, setFilterTheme] = useState<CardThemePreset>(() => getCardTheme('filter_gear'));
+  const [filterBrewer, setFilterBrewer] = useState<string>(() => loadFilterBrewer());
+  const [kettleName, setKettleName] = useState<string>(() => loadKettle());
   const [isRadarOpen, setIsRadarOpen] = useState<boolean>(false);
   const [radarScannedDate, setRadarScannedDate] = useState<string | undefined>(undefined);
 
@@ -936,6 +950,7 @@ export function App() {
               setIsFreshnessInfoOpen(true);
             }}
             onCloseFreshnessInfo={() => setIsFreshnessInfoOpen(false)}
+            isAdminEditMode={isAdminEditMode}
           />
         ) : (
           <>
@@ -960,6 +975,7 @@ export function App() {
                 isAllDrinksModalOpen={isAllDrinksModalOpen}
                 onOpenAllDrinksModal={() => setIsAllDrinksModalOpen(true)}
                 onCloseAllDrinksModal={() => setIsAllDrinksModalOpen(false)}
+                isAdminEditMode={isAdminEditMode}
               />
             )}
 
@@ -1161,8 +1177,21 @@ export function App() {
             </div>
 
             {/* Equipment: Grinder Setup & Personal Fleet (Mine Kværne i Kaffehjørnet) */}
-            <div className="bg-[#241A14] text-[#FAF7F2] rounded-2xl border border-[#3D2D22] p-5 shadow-md space-y-4 font-mono">
-              <div className="flex items-center justify-between border-b border-[#3D2D22] pb-2.5">
+            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden">
+              {/* Dynamic Macro Grinder Backdrop */}
+              {grinderTheme.src && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+                  <img
+                    src={grinderTheme.src}
+                    alt=""
+                    className={`w-full h-full object-cover ${grinderTheme.position || 'object-right sm:object-center'} opacity-65 scale-105 transition-all duration-300`}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/90 via-transparent to-transparent" />
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22] pb-2.5 gap-2 relative z-10">
                 <div className="flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-[#D4A373]" />
                   <div>
@@ -1174,13 +1203,21 @@ export function App() {
                     </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-[#A8BFA0] bg-[#72806B]/20 border border-[#72806B]/40 px-2.5 py-0.5 rounded-full shrink-0">
-                  ● {grinders.filter((g) => g.inSetup).length} in your setup
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <AdminThemeBadge
+                    cardKey="grinder_fleet"
+                    currentTheme={grinderTheme}
+                    isAdminEditMode={isAdminEditMode}
+                    onThemeChanged={setGrinderTheme}
+                  />
+                  <span className="text-[10px] font-bold text-[#A8BFA0] bg-[#72806B]/20 border border-[#72806B]/40 px-2.5 py-0.5 rounded-full shrink-0">
+                    ● {grinders.filter((g) => g.inSetup).length} in your setup
+                  </span>
+                </div>
               </div>
 
               {/* Grinders currently in user's setup */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative z-10">
                 {grinders
                   .filter((g) => g.inSetup)
                   .map((g) => {
@@ -1319,23 +1356,49 @@ export function App() {
               </div>
             </div>
 
-            {/* Equipment: Espresso Machine & Pre-infusion */}
-            <div className="bg-linear-to-b from-[#FFFDF9] to-[#FAF7F2] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-[#E8DFD5] pb-2">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#C26D52]" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#2C2018]">
-                    Espresso Machine & Pump Setup
-                  </h3>
+            {/* Equipment: Espresso Machine & Pump Setup */}
+            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden">
+              {/* Dynamic Macro Machine Backdrop */}
+              {machineTheme.src && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+                  <img
+                    src={machineTheme.src}
+                    alt=""
+                    className={`w-full h-full object-cover ${machineTheme.position || 'object-right sm:object-center'} opacity-65 scale-105 transition-all duration-300`}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/90 via-transparent to-transparent" />
                 </div>
-                <span className="text-[10px] font-bold text-[#72806B] bg-[#72806B]/10 border border-[#72806B]/30 px-2 py-0.5 rounded-full shrink-0">
-                  Pump Dynamics
-                </span>
+              )}
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22] pb-2.5 gap-2 relative z-10">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-[#D4A373]" />
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
+                      Espresso Machine & Pump Setup
+                    </h3>
+                    <p className="text-[10px] text-[#A6998E] font-sans">
+                      Select your espresso machine or all-in-one combo unit.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <AdminThemeBadge
+                    cardKey="espresso_machine"
+                    currentTheme={machineTheme}
+                    isAdminEditMode={isAdminEditMode}
+                    onThemeChanged={setMachineTheme}
+                  />
+                  <span className="text-[10px] font-bold text-[#A8BFA0] bg-[#72806B]/20 border border-[#72806B]/40 px-2.5 py-0.5 rounded-full shrink-0">
+                    Pump Dynamics
+                  </span>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-[#7A6E65] uppercase">Espresso Machine</label>
+                  <label className="text-[10px] text-[#A6998E] uppercase font-bold">Espresso Machine</label>
                   <select
                     value={machineName}
                     onChange={(e) => {
@@ -1345,31 +1408,43 @@ export function App() {
                       if (selected.includes('Dedica')) setMachinePreInfusion(2.0);
                       else if (selected.includes('Dual Boiler')) setMachinePreInfusion(6.0);
                       else if (selected.includes('Barista')) setMachinePreInfusion(7.0);
+                      else if (selected.includes('Ninja')) setMachinePreInfusion(4.0);
                       else if (selected.includes('Bambino')) setMachinePreInfusion(5.0);
                       else if (selected.includes('Flow Control')) setMachinePreInfusion(8.0);
                       else if (selected.includes('Micra') || selected.includes('Mini')) setMachinePreInfusion(4.0);
                       else if (selected.includes('Straight 9-Bar') || selected.includes('Gaggia') || selected.includes('Silvia')) setMachinePreInfusion(0.0);
                       else if (selected.includes('Decent')) setMachinePreInfusion(6.0);
+                      else if (selected.includes('Jura') || selected.includes('Philips') || selected.includes('Magnifica')) setMachinePreInfusion(2.0);
                     }}
-                    className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-[#C26D52]"
+                    className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#1C1410] font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
                   >
-                    <option value="De'Longhi Dedica (EC680 / EC685 / EC885)">De'Longhi Dedica EC685 (15-Bar, 2s Pulse Pre-Infusion)</option>
-                    <option value="De'Longhi La Specialista">De'Longhi La Specialista (15-Bar, Dual Heating)</option>
-                    <option value="Sage / Breville Dual Boiler">Sage / Breville Dual Boiler (Default 6s)</option>
-                    <option value="Sage / Breville Barista Touch/Express">Sage / Breville Barista Series (Default 7s)</option>
-                    <option value="Sage Bambino / Bambino Plus">Sage Bambino / Bambino Plus (Default 5s)</option>
-                    <option value="Gaggia Classic Pro / Evo">Gaggia Classic Pro (Straight 9-Bar / 0s)</option>
-                    <option value="Rancilio Silvia / Silvia Pro X">Rancilio Silvia (Straight 9-Bar / 0s)</option>
-                    <option value="E61 Manual Flow Control">E61 Manual Flow Control (Default 8s)</option>
-                    <option value="La Marzocco Linea Micra / Mini">La Marzocco Linea Micra/Mini (Default 4s)</option>
-                    <option value="Decent DE1 (Profiling)">Decent DE1 (Adaptive Profiling)</option>
+                    <optgroup label="⚡ Kombimaskiner (Integreret Kværn)">
+                      <option value="Ninja Luxe Café / Ninja Pro">Ninja Luxe Café / Ninja Pro (15-step Conical Grinder)</option>
+                      <option value="Sage / Breville Barista Touch/Express">Sage / Breville Barista Series (30-step Conical)</option>
+                      <option value="De'Longhi La Specialista">De'Longhi La Specialista (Sensor Grinder & Dual Thermo)</option>
+                    </optgroup>
+                    <optgroup label="🤖 Bønne-til-Kop Fuldautomatiske">
+                      <option value="Jura Z10 / E8 (Super-Automatic)">Jura Z10 / E8 (PRG Electronic Grinder)</option>
+                      <option value="Philips LatteGo 5400 / 3200">Philips LatteGo Series (12-step Ceramic Burrs)</option>
+                      <option value="De'Longhi Magnifica / Eletta">De'Longhi Magnifica / Eletta (13-step Conical)</option>
+                    </optgroup>
+                    <optgroup label="☕ Semi-Automatiske & Manuelle (Separat Kværn)">
+                      <option value="De'Longhi Dedica (EC680 / EC685 / EC885)">De'Longhi Dedica EC685 (15-Bar, 2s Pulse)</option>
+                      <option value="Sage Bambino / Bambino Plus">Sage Bambino / Bambino Plus (Default 5s)</option>
+                      <option value="Sage / Breville Dual Boiler">Sage / Breville Dual Boiler (Default 6s)</option>
+                      <option value="Gaggia Classic Pro / Evo">Gaggia Classic Pro (Straight 9-Bar / 0s)</option>
+                      <option value="Rancilio Silvia / Silvia Pro X">Rancilio Silvia (Straight 9-Bar / 0s)</option>
+                      <option value="E61 Manual Flow Control">E61 Manual Flow Control (Default 8s)</option>
+                      <option value="La Marzocco Linea Micra / Mini">La Marzocco Linea Micra/Mini (Default 4s)</option>
+                      <option value="Decent DE1 (Profiling)">Decent DE1 (Adaptive Profiling)</option>
+                    </optgroup>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-[10px] text-[#7A6E65] uppercase">Pre-Infusion Target (Seconds)</label>
-                    <span className="font-bold text-[#C26D52]">{machinePreInfusion.toFixed(1)}s</span>
+                    <label className="text-[10px] text-[#A6998E] uppercase font-bold">Pre-Infusion Target (Seconds)</label>
+                    <span className="font-bold text-[#D4A373]">{machinePreInfusion.toFixed(1)}s</span>
                   </div>
                   <input
                     type="range"
@@ -1378,15 +1453,56 @@ export function App() {
                     step="0.5"
                     value={machinePreInfusion}
                     onChange={(e) => setMachinePreInfusion(parseFloat(e.target.value) || 0)}
-                    className="w-full accent-[#C26D52] cursor-pointer"
+                    className="w-full accent-[#D4A373] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-[#7A6E65]">
+                  <div className="flex justify-between text-[10px] text-[#8C7E74]">
                     <span>0s (Direct 9 bar)</span>
                     <span>5-8s (Standard specialty)</span>
                     <span>15s (Long soak)</span>
                   </div>
                 </div>
               </div>
+
+              {/* Smart Combo & Super-Automatic Intelligent Badges */}
+              {(() => {
+                const profile = getMachineTempProfile(machineName);
+                if (profile.category === 'combo') {
+                  return (
+                    <div className="p-3 rounded-xl bg-[#2A1D15] border border-[#D4A373]/50 text-xs font-mono space-y-1.5 relative z-10">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#D4A373] font-bold flex items-center gap-1.5 text-[11px]">
+                          ⚡ All-In-One Kombimaskine Aktiv
+                        </span>
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#D4A373]/20 text-[#D4A373] border border-[#D4A373]/30 font-bold uppercase">
+                          Integreret Kværn
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#D8CDC4] font-sans leading-relaxed">
+                        Denne maskine har indbygget kaffekværn (<strong className="text-white font-mono">{profile.builtInGrinderName}</strong>).
+                        Du behøver ikke tilføje en separat kværn – indstil kværnen direkte på maskinens drejehjul (<span className="text-[#D4A373]">{profile.builtInGrinderSteps}</span>). Flowbean gemmer dine kværntrin automatisk.
+                      </p>
+                    </div>
+                  );
+                }
+                if (profile.category === 'super_automatic') {
+                  return (
+                    <div className="p-3 rounded-xl bg-[#1A2418] border border-[#72806B]/50 text-xs font-mono space-y-1.5 relative z-10">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[#A8BFA0] font-bold flex items-center gap-1.5 text-[11px]">
+                          🤖 Bønne-til-Kop Fuldautomatisk
+                        </span>
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#72806B]/25 text-[#A8BFA0] border border-[#72806B]/40 font-bold uppercase">
+                          Telemetri & Vægt
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#D8CDC4] font-sans leading-relaxed">
+                        Kværning og brygning sker automatisk internt i maskinen. Flowbean måler det reelle flow og koppeudbytte i realtid via vægten på drypbakken, så du nemt kan finjustere bønner, kværntrin og dosering til den perfekte smag.
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               {/* Machine Temperature & PID Capabilities */}
               {(() => {
@@ -1395,24 +1511,24 @@ export function App() {
                 const maxTemp = profile.maxTempC ?? 96;
                 const defaultTemp = profile.defaultTempC ?? 93;
                 return (
-                  <div className="pt-3 border-t border-[#E8DFD5]/80 space-y-2.5">
+                  <div className="pt-3 border-t border-[#3D2D22] space-y-2.5 relative z-10">
                     <div className="flex items-center justify-between text-[11px] font-mono">
-                      <span className="text-[#7A6E65] uppercase font-bold flex items-center gap-1.5">
-                        <Thermometer className="w-3.5 h-3.5 text-[#C26D52]" /> {t('gear.machine_temp_section')}
+                      <span className="text-[#A6998E] uppercase font-bold flex items-center gap-1.5">
+                        <Thermometer className="w-3.5 h-3.5 text-[#D4A373]" /> {t('gear.machine_temp_section')}
                       </span>
                       <button
                         type="button"
                         onClick={() => setIsSettingsOpen(true)}
-                        className="text-[10px] text-[#C26D52] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                        className="text-[10px] text-[#D4A373] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <span>Unit: °{tempUnit} (Settings ⚙️)</span>
                       </button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-mono">
-                      <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5]">
-                        <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">{t('gear.machine_temp_mode')}</span>
-                        <span className="font-bold text-[#2C2018] text-[11px] mt-0.5 block truncate">
+                      <div className="p-2.5 rounded-xl bg-[#1C1410] border border-[#3D2D22]">
+                        <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">{t('gear.machine_temp_mode')}</span>
+                        <span className="font-bold text-[#FAF7F2] text-[11px] mt-0.5 block truncate">
                           {profile.tempControl === 'pid'
                             ? t('gear.machine_temp_pid')
                             : profile.tempControl === 'stepped'
@@ -1421,25 +1537,25 @@ export function App() {
                         </span>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5]">
-                        <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
+                      <div className="p-2.5 rounded-xl bg-[#1C1410] border border-[#3D2D22]">
+                        <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">
                           {t('gear.machine_temp_range', {
                             min: formatTemperature(minTemp, tempUnit),
                             max: formatTemperature(maxTemp, tempUnit),
                           })}
                         </span>
-                        <span className="font-bold text-[#2C2018] text-[11px] mt-0.5 block">
+                        <span className="font-bold text-[#FAF7F2] text-[11px] mt-0.5 block">
                           {profile.tempControl === 'fixed' ? 'Fixed Boiler' : `${formatTemperature(minTemp, tempUnit)} – ${formatTemperature(maxTemp, tempUnit)}`}
                         </span>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-white border border-[#E8DFD5]">
-                        <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
+                      <div className="p-2.5 rounded-xl bg-[#1C1410] border border-[#3D2D22]">
+                        <span className="text-[9px] uppercase font-bold text-[#8C7E74] block">
                           {t('gear.machine_temp_baseline', {
                             temp: formatTemperature(defaultTemp, tempUnit),
                           })}
                         </span>
-                        <span className="font-bold text-[#C26D52] text-[11px] mt-0.5 block">
+                        <span className="font-bold text-[#D4A373] text-[11px] mt-0.5 block">
                           {formatTemperature(defaultTemp, tempUnit)} (Specialty standard)
                         </span>
                       </div>
@@ -1447,6 +1563,97 @@ export function App() {
                   </div>
                 );
               })()}
+            </div>
+
+            {/* Equipment: Filter & Manuelt Bryggeudstyr (Pour Over, V60 & Stempel) */}
+            <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] rounded-2xl sm:rounded-3xl border border-[#3D2D22] p-4 sm:p-5 shadow-md space-y-4 font-mono relative overflow-hidden">
+              {/* Dynamic Macro Filter Backdrop */}
+              {filterTheme.src && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+                  <img
+                    src={filterTheme.src}
+                    alt=""
+                    className={`w-full h-full object-cover ${filterTheme.position || 'object-center'} opacity-65 scale-105 transition-all duration-300`}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/90 via-transparent to-transparent" />
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#3D2D22] pb-2.5 gap-2 relative z-10">
+                <div className="flex items-center gap-2">
+                  <Coffee className="w-4 h-4 text-[#D4A373]" />
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#FAF7F2]">
+                      Filter & Manuel Bryg (V60 & Stempel)
+                    </h3>
+                    <p className="text-[10px] text-[#A6998E] font-sans">
+                      Dine manuelle dryppere, stempelkander og svanehals elkedler til Pour Over.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <AdminThemeBadge
+                    cardKey="filter_gear"
+                    currentTheme={filterTheme}
+                    isAdminEditMode={isAdminEditMode}
+                    onThemeChanged={setFilterTheme}
+                  />
+                  <span className="text-[10px] font-bold text-[#E5A96A] bg-[#E5A96A]/20 border border-[#E5A96A]/40 px-2.5 py-0.5 rounded-full shrink-0">
+                    Filter & Drip
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-[#A6998E] uppercase font-bold">Manuel Drypper / Brygger</label>
+                  <select
+                    value={filterBrewer}
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      setFilterBrewer(selected);
+                      saveFilterBrewer(selected);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#1C1410] font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
+                  >
+                    {FILTER_BREWER_PRESETS.map((fb) => (
+                      <option key={fb} value={fb} className="bg-[#1C1410] text-[#FAF7F2]">
+                        {fb}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-[#A6998E] uppercase font-bold">Svanehals Kedel / Vandtemperatur</label>
+                  <select
+                    value={kettleName}
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      setKettleName(selected);
+                      saveKettle(selected);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-[#3D2D22] bg-[#1C1410] font-mono text-xs text-[#FAF7F2] focus:outline-none focus:border-[#D4A373]"
+                  >
+                    {KETTLE_PRESETS.map((k) => (
+                      <option key={k} value={k} className="bg-[#1C1410] text-[#FAF7F2]">
+                        {k}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Informative Filter Pairing Note */}
+              <div className="p-3 rounded-xl bg-[#1C1410] border border-[#3D2D22] text-xs font-mono space-y-1 relative z-10">
+                <div className="flex items-center gap-1.5 text-[#D4A373] text-[11px] font-bold">
+                  <span>☕ Automatisk Kværnsynkronisering for Filter</span>
+                </div>
+                <p className="text-[11px] text-[#A6998E] font-sans leading-relaxed">
+                  Når du på <strong className="text-[#FAF7F2]">Kaffebar (Bar)</strong> skifter til <strong className="text-[#D4A373]">Pour Over</strong>, bruger appen automatisk dit valgte filterudstyr (<span className="text-white font-mono">{filterBrewer.split('(')[0].trim()}</span>) og forbinder det med din aktive barkværn ({grinderName}) med grove formalingsgrader.
+                </p>
+              </div>
             </div>
 
             {/* App Membership & Lifetime License (Separate Dedicated Card for Apple App Store Review Compliance) */}
@@ -1648,6 +1855,8 @@ export function App() {
           alert(t('paywall.restore_success'));
           handleUnlockPro();
         }}
+        isAdminEditMode={isAdminEditMode}
+        onToggleAdminEditMode={setIsAdminEditMode}
       />
 
       {/* Dial-In Wizard Modal */}

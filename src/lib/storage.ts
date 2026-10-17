@@ -12,6 +12,8 @@ const STORAGE_KEYS = {
   DRINK_GRINDS: 'espressoflow_drink_grinds_v1',
   ONBOARDING_COMPLETE: 'espressoflow_onboarding_done_v1',
   TEMP_UNIT: 'espressoflow_temp_unit_v1',
+  FILTER_BREWER: 'espressoflow_filter_brewer_v1',
+  KETTLE: 'espressoflow_kettle_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -523,7 +525,24 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     defaultTempC: 92,
     defaultPreInfusionSeconds: 2.0,
   },
+  'Ninja Luxe Café / Ninja Pro': {
+    category: 'combo',
+    hasBuiltInGrinder: true,
+    builtInGrinderName: 'Ninja Luxe Conical Grinder (15-step)',
+    builtInGrinderType: 'stepped',
+    builtInGrinderSteps: '1-15 (Fine to Drip)',
+    tempControl: 'stepped',
+    minTempC: 90,
+    maxTempC: 96,
+    defaultTempC: 93,
+    defaultPreInfusionSeconds: 4.0,
+  },
   "De'Longhi La Specialista": {
+    category: 'combo',
+    hasBuiltInGrinder: true,
+    builtInGrinderName: 'Sensor Grinding Conical Burr (8-step)',
+    builtInGrinderType: 'stepped',
+    builtInGrinderSteps: '1-8',
     tempControl: 'stepped',
     minTempC: 90,
     maxTempC: 96,
@@ -531,6 +550,7 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     defaultPreInfusionSeconds: 3.0,
   },
   'Sage / Breville Dual Boiler': {
+    category: 'manual',
     tempControl: 'pid',
     minTempC: 86,
     maxTempC: 96,
@@ -538,13 +558,55 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     defaultPreInfusionSeconds: 6.0,
   },
   'Sage / Breville Barista Touch/Express': {
+    category: 'combo',
+    hasBuiltInGrinder: true,
+    builtInGrinderName: 'Barista Series Integrated Conical Burr (30-step)',
+    builtInGrinderType: 'stepped',
+    builtInGrinderSteps: '1-30',
     tempControl: 'pid',
     minTempC: 88,
     maxTempC: 96,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 7.0,
   },
+  'Jura Z10 / E8 (Super-Automatic)': {
+    category: 'super_automatic',
+    hasBuiltInGrinder: true,
+    builtInGrinderName: 'Jura Product Recognising Grinder (PRG)',
+    builtInGrinderType: 'stepped',
+    builtInGrinderSteps: 'Electronic 1-5 levels',
+    tempControl: 'stepped',
+    minTempC: 90,
+    maxTempC: 95,
+    defaultTempC: 92,
+    defaultPreInfusionSeconds: 2.0,
+  },
+  'Philips LatteGo 5400 / 3200': {
+    category: 'super_automatic',
+    hasBuiltInGrinder: true,
+    builtInGrinderName: '100% Ceramic Flat Burr (12-step)',
+    builtInGrinderType: 'stepped',
+    builtInGrinderSteps: '1-12 under hopper lid',
+    tempControl: 'stepped',
+    minTempC: 90,
+    maxTempC: 95,
+    defaultTempC: 92,
+    defaultPreInfusionSeconds: 1.5,
+  },
+  "De'Longhi Magnifica / Eletta": {
+    category: 'super_automatic',
+    hasBuiltInGrinder: true,
+    builtInGrinderName: 'Tubeless Steel Conical Burr (13-step)',
+    builtInGrinderType: 'stepped',
+    builtInGrinderSteps: '1-13 dial inside hopper',
+    tempControl: 'stepped',
+    minTempC: 90,
+    maxTempC: 95,
+    defaultTempC: 92,
+    defaultPreInfusionSeconds: 2.0,
+  },
   'Sage Bambino / Bambino Plus': {
+    category: 'manual',
     tempControl: 'stepped',
     minTempC: 91,
     maxTempC: 95,
@@ -628,3 +690,54 @@ export function saveDrinkCalibration(key: string, calibration: DrinkCalibration)
     console.error('Failed to save drink calibration', err);
   }
 }
+
+export const FILTER_BREWER_PRESETS = [
+  'Hario V60 (02 Ceramic / Plastic / Metal)',
+  'French Press / Stempelkande (Bodum Chambord / Espro P7)',
+  'AeroPress (Inverted & Standard Method)',
+  'Chemex (6-Cup / 8-Cup Classic Bonded Paper)',
+  'Kalita Wave (185 Flat-Bottom Stainless)',
+  'Moccamaster / Batch Filter Brewer',
+  'Clever Dripper / Hario Switch (Hybrid Immersion)',
+];
+
+export const KETTLE_PRESETS = [
+  'Fellow Stagg EKG (Variable Temp Gooseneck)',
+  'Timemore Fish Smart Kettle (PID)',
+  'Brewista Artisan Variable Temp Gooseneck',
+  'Hario Buono Stovetop / Electric Gooseneck',
+  'Standard Elkedel (Kogende vand lades stå 1-2 min for ~93°C)',
+];
+
+export function loadFilterBrewer(): string {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.FILTER_BREWER) || FILTER_BREWER_PRESETS[0];
+  } catch {
+    return FILTER_BREWER_PRESETS[0];
+  }
+}
+
+export function saveFilterBrewer(brewer: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.FILTER_BREWER, brewer);
+  } catch (err) {
+    console.error('Failed to save filter brewer', err);
+  }
+}
+
+export function loadKettle(): string {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.KETTLE) || KETTLE_PRESETS[0];
+  } catch {
+    return KETTLE_PRESETS[0];
+  }
+}
+
+export function saveKettle(kettle: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.KETTLE, kettle);
+  } catch (err) {
+    console.error('Failed to save kettle', err);
+  }
+}
+

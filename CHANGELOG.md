@@ -2,6 +2,30 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.18.1] - 2026-10-17
+### Etape 56: Admin Redigeringstilstand (Design Inspector), All-in-One Kombimaskiner, Fuldautomatiske Maskiner & Filter Gear (V60 & Stempel)
+- **Admin Redigeringstilstand (Design Inspector) i Indstillinger (`SettingsModal.tsx` & `cardThemes.ts`):**
+  - Ny omskifter i Indstillinger: *Admin Redigeringstilstand*.
+  - Når slået til, dukker interaktive `🎨 Tema-knapper` (`AdminThemeBadge.tsx`) op direkte på appens mørke kort i Barista Deck (`DrinkSelector`), Bønnehvælv (`BeandexView`), Kværnflåde (`Grinder Fleet`), Espressomaskine (`Espresso Machine & Pump Setup`) og Manuelt Bryggear (`Filter & Manuel Bryg`).
+  - Knappen viser aktuelt temas position (fx 1/5) og dets nøjagtige visningsnavn og filnavn, så administratoren direkte kan bladre igennem de fotorealistiske makrografikker live på mobilen og vælge sin favorit.
+- **Nye Fotorealistiske 16:9 Makrobilleder i Kaffekvalitet (`public/images/`):**
+  - `grinder-burrs-macro.jpg`: Koniske stålblade i makro-nærbillede med friskmalede kaffepartikler.
+  - `flat-burrs-macro.jpg`: 64 mm flade titanium knive på mørk træbar.
+  - `portafilter-flow-macro.jpg`: Bundløst (naked) portafilter med gyldne cremarillinger og honningdråber.
+  - `espresso-gauge-macro.jpg`: 9-bar italiensk analogt manometer med damprefleksioner.
+  - `pourover-bloom-macro.jpg`: Hario V60 glasdrypper med frisk blomstrende kaffebund og vandstråle fra matsort svanehals elkedel.
+  - `frenchpress-macro.jpg`: Klassisk stempelkande med aromatisk oliekrone og rustfrit stålfilter.
+- **Understøttelse af Kombimaskiner (All-In-One med Integreret Kværn):**
+  - Tilføjet modeller som Ninja Luxe Café / Ninja Pro, Sage Barista Series (Touch / Impress / Pro / Express) og De'Longhi La Specialista.
+  - Smart bronzebadge: `[ ⚡ All-In-One Kombimaskine ]` forklarer, at den indbyggede kværn er aktiv, og at kværntrin indstilles direkte på maskinens drejehjul uden at forurene appen med redundante kværnprofiler.
+- **Understøttelse af Bønne-til-Kop Fuldautomatiske Maskiner:**
+  - Tilføjet Jura (Z10 / E8), Philips LatteGo (5400 / 3200) og De'Longhi Magnifica / Eletta.
+  - Smart salviegrøn badge: `[ 🤖 Bønne-til-Kop Fuldautomatisk ]` forklarer, at kværn og bryg sker internt, mens Flowbean måler det reelle flow og koppeudbytte i realtid via vægten på drypbakken.
+- **Dedikeret Filter & Manuelt Bryggear Kort (Pour Over, V60 & Stempel):**
+  - Tilføjet dedikeret luksuskort i Gear-fanen for manuelle bryggere (Hario V60 01/02, French Press / Stempelkande, AeroPress, Chemex, Kalita Wave, Moccamaster, Clever Dripper).
+  - Vælg svanehals elkedel (Fellow Stagg EKG, Timemore Fish, Brewista Artisan, Hario Buono, Standard Elkedel).
+  - Automatisk synkronisering: Når brugeren på kaffebaren vælger *Pour Over*, anvendes filterudstyret automatisk med de relevante kværntrin fra barkværnen.
+
 ## [1.18.0] - 2026-10-17
 ### Etape 55: Flowbean Licensmotor, DoS/Brute-Force Skjold & MH Tegnestue Bogførings-Bro
 - **Kryptografisk Licensmotor (`licenseEngine.ts`):**

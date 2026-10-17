@@ -9,10 +9,12 @@ import {
   Check,
   HelpCircle,
   Coffee,
+  Palette,
 } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from '../i18n';
 import type { TempUnit, UserAccessState } from '../types/espresso';
 import { formatTemperature } from '../lib/espressoMath';
+import { loadAdminEditMode, saveAdminEditMode } from '../lib/cardThemes';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -23,6 +25,8 @@ interface SettingsModalProps {
   onOpenPaywall: () => void;
   onOpenLegal: (tab: 'privacy' | 'terms' | 'support') => void;
   onRestorePro?: () => void;
+  isAdminEditMode?: boolean;
+  onToggleAdminEditMode?: (enabled: boolean) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -34,8 +38,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenPaywall,
   onOpenLegal,
   onRestorePro,
+  isAdminEditMode,
+  onToggleAdminEditMode,
 }) => {
   const { t, language, setLanguage, supportedLanguages } = useTranslation();
+  const [adminEditActive, setAdminEditActive] = React.useState<boolean>(() => isAdminEditMode ?? loadAdminEditMode());
+
+  React.useEffect(() => {
+    if (isAdminEditMode !== undefined) {
+      setAdminEditActive(isAdminEditMode);
+    }
+  }, [isAdminEditMode]);
 
   if (!isOpen) return null;
 
@@ -236,10 +249,48 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* Section 4: Version & Legal Compliance Links */}
+        {/* Section 4: Admin Redigeringstilstand (Design Inspector) */}
+        <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3 font-mono">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
+              <Palette className="w-3.5 h-3.5" /> Admin Redigeringstilstand
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !adminEditActive;
+                setAdminEditActive(next);
+                saveAdminEditMode(next);
+                if (onToggleAdminEditMode) onToggleAdminEditMode(next);
+              }}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                adminEditActive ? 'bg-[#C26D52]' : 'bg-[#E8DFD5]'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                  adminEditActive ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          <p className="text-[11px] text-[#7A6E65] font-sans leading-relaxed">
+            Når denne tilstand er slået til, vises interaktive <strong className="text-[#2C2018]">🎨 Tema-knapper</strong> direkte på appens mørke kort (Barista Deck, Beandex, Kværnflåde og Espressomaskine), så du nemt kan afprøve nye fotorealistiske baggrunde og vælge dine favoritter.
+          </p>
+
+          {adminEditActive && (
+            <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span>Redigering aktiv: Gå til Bar, Beandex eller Gear for at skifte baggrunde live!</span>
+            </div>
+          )}
+        </div>
+
+        {/* Section 5: Version & Legal Compliance Links */}
         <div className="p-3 sm:p-3.5 rounded-xl bg-white border border-[#E8DFD5] flex items-center justify-between text-[11px] font-mono text-[#7A6E65] flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-[#2C2018]">Flowbean</span> v1.7.3
+            <span className="font-bold text-[#2C2018]">Flowbean</span> v1.18.1
             <button
               type="button"
               onClick={() => {

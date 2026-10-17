@@ -11,6 +11,21 @@
 
 ## 🕒 Historik & Gennemførte Opgaver
 
+### 2026-10-17 -- Admin Redigeringstilstand (Design Inspector), All-in-One Kombimaskiner, Fuldautomatiske Maskiner & Filter Gear (V60 & Stempel) (v1.18.1)
+- **Admin Redigeringstilstand i Indstillinger:**
+  - Tilføjet "Admin Redigeringstilstand" omskifter i `SettingsModal.tsx`.
+  - Når slået til, renderes `AdminThemeBadge.tsx` direkte på appens mørke kort (Barista Deck, Beandex, Grinder Fleet, Espresso Machine og Filter Gear).
+  - Viser aktuelt temas navn og filnavn, og lader administratoren skifte baggrunde med 1 klik og se ændringen med det samme.
+- **Fotorealistiske 16:9 Makrobilleder i public/images:**
+  - `grinder-burrs-macro.jpg`, `flat-burrs-macro.jpg`, `portafilter-flow-macro.jpg`, `espresso-gauge-macro.jpg`, `pourover-bloom-macro.jpg`, `frenchpress-macro.jpg`.
+- **Kombimaskiner & Fuldautomatiske Bønne-til-Kop Maskiner:**
+  - Modeller: Ninja Luxe Café / Ninja Pro, Sage Barista Series, De'Longhi La Specialista, Jura Z10/E8, Philips LatteGo, De'Longhi Magnifica.
+  - Dynamiske badges der forklarer hvordan kværn og bryg håndteres (integreret kværn vs intern fuldautomatisk bryggruppe) uden rod.
+- **Dedikeret Filter & Manuelt Bryggear Kort (Pour Over, V60 & Stempel):**
+  - Tilføjet Hario V60, French Press, AeroPress, Chemex, Kalita Wave, Moccamaster og svanehals elkedler (Fellow Stagg EKG osv.) til Gear-fanen.
+- **Kvalitetssikring:**
+  - `npm run build` passeret 100% fejlfrit, `npx cap sync` synkroniseret til Android og iOS.
+
 ### 2026-10-17 -- Flowbean Licensmotor, DoS/Brute-Force Skjold & MH Tegnestue Bogførings-Bro (v1.18.0)
 - **Kryptografisk Licensmotor (`licenseEngine.ts`):**
   - Implementeret 16-tegns base32 licensnøgler (`FLOW-XXXX-XXXX-XXXX`) med $1.15 \times 10^{18}$ mulige kombinationer (32¹²). Udelukker forvekselige tegn (`0`/`O`, `1`/`I`/`L`).

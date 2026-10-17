@@ -126,11 +126,18 @@ export interface GrinderProfile {
   inSetup?: boolean; // Whether user has this grinder in their personal setup / coffee bar
 }
 
+export type MachineCategory = 'manual' | 'combo' | 'super_automatic';
+
 export interface EspressoMachineProfile {
   id: string;
   name: string;
   defaultPreInfusionSeconds: number;
   type: 'timed' | 'manual' | 'straight-9bar';
+  category?: MachineCategory;
+  hasBuiltInGrinder?: boolean;
+  builtInGrinderName?: string;
+  builtInGrinderType?: 'stepped' | 'stepless';
+  builtInGrinderSteps?: string;
   tempControl?: 'pid' | 'stepped' | 'fixed';
   minTempC?: number; // e.g. 88
   maxTempC?: number; // e.g. 96

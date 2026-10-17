@@ -47,6 +47,8 @@ import {
   type DidYouMeanMatch,
 } from '../lib/beanCatalogMatcher';
 import { PRICE_TIERS, resolveBeanPriceTier } from '../lib/coffeeCatalogData';
+import { AdminThemeBadge } from './AdminThemeBadge';
+import { getCardTheme, type CardThemePreset } from '../lib/cardThemes';
 
 export interface BeandexViewProps {
   beans: CoffeeBeanProfile[];
@@ -66,6 +68,7 @@ export interface BeandexViewProps {
   selectedFreshnessRoast?: RoastLevel;
   onOpenFreshnessInfo?: (roast: RoastLevel) => void;
   onCloseFreshnessInfo?: () => void;
+  isAdminEditMode?: boolean;
 }
 
 export const BeandexView: React.FC<BeandexViewProps> = ({
@@ -86,8 +89,10 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   selectedFreshnessRoast: selectedFreshnessRoastProp,
   onOpenFreshnessInfo,
   onCloseFreshnessInfo,
+  isAdminEditMode,
 }) => {
   const { t, language } = useTranslation();
+  const [cardTheme, setCardTheme] = useState<CardThemePreset>(() => getCardTheme('beandex_banner'));
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -479,23 +484,25 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     <div className="space-y-6 font-mono text-xs animate-fadeIn">
       {/* 1. Beandex Hero Banner with Rich Visual Contrast Spring */}
       <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-[#1E1510] via-[#2A1D15] to-[#140D09] text-[#FAF7F2] p-5 sm:p-6 border border-[#3D2D22] shadow-xl">
-        {/* Cinematic Roasted Specialty Coffee Beans Macro Backdrop (Vivino-style luxury atmosphere) */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-          <img
-            src="/images/coffee-beans-macro.jpg"
-            alt=""
-            className="w-full h-full object-cover object-right sm:object-center opacity-65 scale-105"
-          />
-          <div className="absolute inset-0 bg-linear-to-r from-[#140D09] via-[#140D09]/85 to-[#140D09]/30" />
-          <div className="absolute inset-0 bg-linear-to-t from-[#140D09]/85 via-transparent to-transparent" />
-        </div>
+        {/* Dynamic Roasted Specialty Coffee Beans Macro Backdrop */}
+        {cardTheme.src && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+            <img
+              src={cardTheme.src}
+              alt=""
+              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} opacity-65 scale-105 transition-all duration-300`}
+            />
+            <div className="absolute inset-0 bg-linear-to-r from-[#140D09] via-[#140D09]/85 to-[#140D09]/30" />
+            <div className="absolute inset-0 bg-linear-to-t from-[#140D09]/85 via-transparent to-transparent" />
+          </div>
+        )}
 
         <div className="absolute -right-8 -top-8 w-40 h-40 bg-[#C26D52]/15 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute right-12 bottom-0 w-28 h-28 bg-[#D4A373]/15 rounded-full blur-xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="w-8 h-8 rounded-xl bg-[#C26D52] flex items-center justify-center text-white shadow-md">
                 <Coffee className="w-4 h-4" />
               </div>
@@ -505,6 +512,14 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#C26D52]/20 border border-[#C26D52]/50 text-[#E89E88] tracking-widest uppercase">
                 Vault & Index
               </span>
+
+              {/* Admin Live Theme Switcher Badge */}
+              <AdminThemeBadge
+                cardKey="beandex_banner"
+                currentTheme={cardTheme}
+                isAdminEditMode={Boolean(isAdminEditMode)}
+                onThemeChanged={setCardTheme}
+              />
             </div>
             <p className="text-[11px] text-[#C2B5A8] font-sans max-w-xl leading-relaxed">
               {t('beandex.subtitle')} — Rate your bags, scan fresh lots, and explore verified SCA cupping scores without leaving your home barista station.

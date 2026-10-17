@@ -27,6 +27,8 @@ import { ArchitecturalCup } from './ArchitecturalCup';
 import { matchBeansForDrink, getOptimalBeanGuidanceForDrink } from '../lib/beanMatcher';
 import { useTranslation } from '../i18n';
 import { DripperIcon } from './CustomCoffeeIcons';
+import { AdminThemeBadge } from './AdminThemeBadge';
+import { getCardTheme, type CardThemePreset } from '../lib/cardThemes';
 
 export const getRoastBadgeStyles = (level: RoastLevel) => {
   switch (level) {
@@ -62,6 +64,7 @@ interface DrinkSelectorProps {
   isAllDrinksModalOpen?: boolean;
   onOpenAllDrinksModal?: () => void;
   onCloseAllDrinksModal?: () => void;
+  isAdminEditMode?: boolean;
 }
 
 export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
@@ -83,9 +86,11 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   isAllDrinksModalOpen,
   onOpenAllDrinksModal,
   onCloseAllDrinksModal,
+  isAdminEditMode,
 }) => {
   const [activeDeckIds, setActiveDeckIds] = useState<string[]>(() => loadActiveBarDrinkIds());
   const [internalModalOpen, setInternalModalOpen] = useState<boolean>(false);
+  const [cardTheme, setCardTheme] = useState<CardThemePreset>(() => getCardTheme('barista_deck'));
   const isCustomizeModalOpen = isAllDrinksModalOpen !== undefined ? isAllDrinksModalOpen : internalModalOpen;
   const setIsCustomizeModalOpen = (open: boolean) => {
     if (open) {
@@ -304,17 +309,19 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     <div className="space-y-4 sm:space-y-6 animate-fadeIn pb-8 sm:pb-12">
       {/* 1. Barista Deck Hero Banner (Mobile Optimized) */}
       <div className="bg-gradient-to-br from-[#241710] via-[#1E130D] to-[#140C08] text-[#FAF7F2] p-3 sm:p-5 rounded-2xl sm:rounded-3xl shadow-md border border-[#3D2D22] relative overflow-hidden">
-        {/* Cinematic Coffee Droplet Crema Ripple Macro Backdrop */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-          <img
-            src="/images/crema-ripple-macro.jpg"
-            alt=""
-            className="w-full h-full object-cover object-right sm:object-center opacity-70 scale-105"
-          />
-          {/* Directional vignette protecting text readability on left while keeping droplet and crema rings clearly visible on right */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/85 via-transparent to-transparent" />
-        </div>
+        {/* Dynamic Macro Backdrop Preset */}
+        {cardTheme.src && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+            <img
+              src={cardTheme.src}
+              alt=""
+              className={`w-full h-full object-cover ${cardTheme.position || 'object-right sm:object-center'} opacity-70 scale-105 transition-all duration-300`}
+            />
+            {/* Directional vignette protecting text readability on left while keeping droplet and crema rings clearly visible on right */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#180E09] via-[#180E09]/85 to-[#180E09]/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#140C08]/85 via-transparent to-transparent" />
+          </div>
+        )}
 
         {/* Subtle background ambient glow */}
         <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#C26D52]/20 blur-3xl pointer-events-none" />
@@ -334,6 +341,14 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               Select your drink profile below. Grind and extraction targets lock automatically.
             </p>
           </div>
+
+          {/* Admin Live Theme Switcher Badge */}
+          <AdminThemeBadge
+            cardKey="barista_deck"
+            currentTheme={cardTheme}
+            isAdminEditMode={Boolean(isAdminEditMode)}
+            onThemeChanged={setCardTheme}
+          />
         </div>
 
         {/* Thumb-Friendly Brew Method Toggle (Keeps Top Mobile Header Clean) */}
