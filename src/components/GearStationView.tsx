@@ -224,17 +224,20 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
   const grinderCarouselItems: CarouselGearItem[] = grinders
     .filter((g) => g.inSetup)
     .map((g) => {
+      const gNorm = g.name.toLowerCase().trim();
       const cat = GRINDER_CATALOG.find(
         (c) =>
-          c.name.toLowerCase().trim() === g.name.toLowerCase().trim() ||
-          g.name.toLowerCase().includes(c.brand.toLowerCase())
+          c.name.toLowerCase().trim() === gNorm ||
+          gNorm.includes(c.brand.toLowerCase()) ||
+          c.name.toLowerCase().includes(gNorm) ||
+          gNorm.includes(c.name.toLowerCase().split(' ')[0])
       );
       return {
         id: g.id,
         name: g.name,
         brand: cat?.brand,
         subCategory: cat?.subCategory || g.burrType,
-        image: cat?.image,
+        image: cat?.image || '/images/gear/grinders/baratza-esp.webp',
         category: 'grinder',
         specsSummary: `${g.burrType || cat?.specs?.burrType || 'Conical'} • ${grinderShotCount} shots`,
       };
@@ -266,10 +269,13 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
   // --- 2. ESPRESSO MACHINES CAROUSEL DATA & HANDLERS ---
   const machineCarouselItems: CarouselGearItem[] = machinesInSetup.map(
     (mName, idx) => {
+      const mNorm = mName.toLowerCase().trim();
       const cat = MACHINE_CATALOG.find(
         (c) =>
-          c.name.toLowerCase().trim() === mName.toLowerCase().trim() ||
-          mName.toLowerCase().includes(c.brand.toLowerCase())
+          c.name.toLowerCase().trim() === mNorm ||
+          mNorm.includes(c.brand.toLowerCase()) ||
+          c.name.toLowerCase().includes(mNorm) ||
+          (c.brand && mNorm.includes(c.brand.toLowerCase().split(' ')[0]))
       );
       const prof = getMachineTempProfile(mName);
       return {
@@ -277,7 +283,7 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
         name: mName,
         brand: cat?.brand,
         subCategory: cat?.subCategory || 'Espresso Machine',
-        image: cat?.image,
+        image: cat?.image || '/images/gear/machines/espresso-machine.webp',
         category: 'machine',
         specsSummary: `${prof.maxPumpBar || 9.0} Bar • ${cat?.subCategory || 'Espresso'}`,
       };
@@ -304,17 +310,26 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
   // --- 3. FILTER BREWERS CAROUSEL DATA & HANDLERS ---
   const brewerCarouselItems: CarouselGearItem[] = brewersInSetup.map(
     (bName, idx) => {
+      const bNorm = bName.toLowerCase().trim();
       const cat = BREWER_CATALOG.find(
         (c) =>
-          c.name.toLowerCase().trim() === bName.toLowerCase().trim() ||
-          bName.toLowerCase().includes(c.brand.toLowerCase())
+          c.name.toLowerCase().trim() === bNorm ||
+          bNorm.includes(c.brand.toLowerCase()) ||
+          c.name.toLowerCase().includes(bNorm) ||
+          (bNorm.includes('french') && c.id.includes('french')) ||
+          (bNorm.includes('stempel') && c.id.includes('french')) ||
+          (bNorm.includes('v60') && c.id.includes('v60'))
       );
+      const defaultBrewerImg =
+        bNorm.includes('french') || bNorm.includes('stempel')
+          ? '/images/gear/brewers/french-press.webp'
+          : '/images/gear/brewers/hario-v60.webp';
       return {
         id: `brewer-${idx}-${bName}`,
         name: bName,
         brand: cat?.brand,
         subCategory: cat?.subCategory,
-        image: cat?.image,
+        image: cat?.image || defaultBrewerImg,
         category: 'brewer',
         specsSummary: cat?.subCategory || 'Manual Brewer',
       };
@@ -339,17 +354,19 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
   // --- 4. KETTLES CAROUSEL DATA & HANDLERS ---
   const kettleCarouselItems: CarouselGearItem[] = kettlesInSetup.map(
     (kName, idx) => {
+      const kNorm = kName.toLowerCase().trim();
       const cat = KETTLE_CATALOG.find(
         (c) =>
-          c.name.toLowerCase().trim() === kName.toLowerCase().trim() ||
-          kName.toLowerCase().includes(c.brand.toLowerCase())
+          c.name.toLowerCase().trim() === kNorm ||
+          kNorm.includes(c.brand.toLowerCase()) ||
+          c.name.toLowerCase().includes(kNorm)
       );
       return {
         id: `kettle-${idx}-${kName}`,
         name: kName,
         brand: cat?.brand,
         subCategory: cat?.subCategory,
-        image: cat?.image,
+        image: cat?.image || '/images/gear/kettles/fellow-stagg.webp',
         category: 'kettle',
         specsSummary: cat?.subCategory || 'Water Kettle',
       };

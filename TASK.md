@@ -289,6 +289,12 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 - [x] **4. French Press Kalkulator Barista-Validering:**
   - Valideret 3 kandestørrelser (350ml, 500ml, 1000ml) med 1-tryk valg direkte i opskriftskortet og tovejs-synkronisering med `FrenchPressVolumeCalculator.tsx` og Live Monitor via `flowbean_frenchpress_updated`.
   - Gram kaffe doseres automatisk ud fra 1:15 ratio (eller 1:14 kraftig / 1:16 mild), og huskes på tværs af sessioner.
+- [x] **5. Fotorealistiske Gear Billeder & Dobbelt Billed-Pipeline (v1.20.4):**
+  - Genereret og integreret ægte, fotorealistiske studie-produktfotos i WebP-format for alle gear-kategorier (kværne, espressomaskiner, manuelle bryggere, elkedler).
+  - Skabt dedikerede studie-billeder af Baratza Encore ESP, Niche Zero, Turin DF64, Eureka Mignon, rustfrit stål E61 espressomaskine, Sage Bambino Plus, Hario V60 keramik, Bodum Chambord French Press, AeroPress, Chemex karaffel, Moccamaster KBG Select og Fellow Stagg EKG elkedel.
+  - Oprettet og distribueret 109 fotorealistiske WebP-billedfiler på tværs af hele udstyrskataloget i `public/images/gear/`.
+  - Implementeret 2-trins pipeline i `GearImage.tsx`: primært model-billede -> kategoriens fotorealistiske referencebillede -> resilient SVG fallback.
+  - Vercel URL opdateret til `https://espressoflow-app.vercel.app/` og synkroniseret til Android Studio.
 
 ---
 

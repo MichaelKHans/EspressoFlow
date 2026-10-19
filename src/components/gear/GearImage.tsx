@@ -15,14 +15,26 @@ export const GearImage: React.FC<GearImageProps> = ({
   className = 'w-full h-full object-contain',
   subType,
 }) => {
-  const [hasError, setHasError] = useState(!src);
+  const [imgErrorCount, setImgErrorCount] = useState(0);
 
   useEffect(() => {
-    setHasError(!src);
+    setImgErrorCount(0);
   }, [src]);
 
   const altLower = alt.toLowerCase();
   const subLower = (subType || '').toLowerCase();
+
+  // Category photorealistic fallback image
+  const categoryDefaultPhoto = (() => {
+    if (category === 'grinder') return '/images/gear/grinders/baratza-esp.webp';
+    if (category === 'machine') return '/images/gear/machines/espresso-machine.webp';
+    if (category === 'brewer') {
+      return altLower.includes('french') || altLower.includes('stempel')
+        ? '/images/gear/brewers/french-press.webp'
+        : '/images/gear/brewers/hario-v60.webp';
+    }
+    return '/images/gear/kettles/fellow-stagg.webp';
+  })();
 
   // Normalize potential singular vs plural image paths
   const normalizedSrc = src
@@ -31,9 +43,11 @@ export const GearImage: React.FC<GearImageProps> = ({
         .replace('/images/gear/machine/', '/images/gear/machines/')
         .replace('/images/gear/brewer/', '/images/gear/brewers/')
         .replace('/images/gear/kettle/', '/images/gear/kettles/')
-    : undefined;
+    : categoryDefaultPhoto;
 
-  if (hasError || !normalizedSrc) {
+  const activeSrc = imgErrorCount === 0 ? normalizedSrc : categoryDefaultPhoto;
+
+  if (imgErrorCount >= 2 || !activeSrc) {
     return (
       <div
         className="w-full h-full flex items-center justify-center p-2 select-none"
@@ -497,9 +511,9 @@ export const GearImage: React.FC<GearImageProps> = ({
 
   return (
     <img
-      src={normalizedSrc}
+      src={activeSrc}
       alt={alt}
-      onError={() => setHasError(true)}
+      onError={() => setImgErrorCount((prev) => prev + 1)}
       className={`${className} transition-opacity duration-200`}
       loading="lazy"
     />

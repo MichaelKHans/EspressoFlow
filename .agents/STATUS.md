@@ -25,6 +25,19 @@
 
 ---
 
+### 2026-10-19 -- Etape 74: Fotorealistiske Gear Billeder & Dobbelt Billed-Pipeline (v1.20.4)
+- **Fotorealistiske Billeder (Studio Product Photography):**
+  - Genereret og konverteret fotorealistiske studie-produktbilleder i WebP-format for alle gear-kategorier (Baratza ESP, Niche Zero, DF64, Eureka Mignon, E61 rustfrit stål espressomaskine, Sage Bambino Plus, Hario V60 keramik, Bodum Chambord French Press, AeroPress, Chemex karaffel, Moccamaster KBG Select og Fellow Stagg EKG elkedel).
+  - Oprettet og distribueret 109 fotorealistiske WebP-billedfiler på tværs af hele udstyrskataloget i `public/images/gear/`.
+- **To-Trins Intelligent Billed-Pipeline (`src/components/gear/GearImage.tsx`):**
+  - Forsøger altid først at indlæse den specifikke udstyrsmodels fotorealistiske WebP-billede.
+  - Ved manglende fil falder komponenten automatisk tilbage til kategoriens fotorealistiske referencebillede frem for direkte til SVG.
+- **Karrusel Mappere (`src/components/GearStationView.tsx`):**
+  - Garanteret at standard-udstyr ('Espresso Machine', 'French Press / Stempelkande', standard-kværn m.fl.) altid knyttes til et fotorealistisk billede.
+- **Vercel & Android Synkronisering:**
+  - Verificeret Vercel-adresse `https://espressoflow-app.vercel.app/` indført i projektinstrukser.
+  - Koden synkroniseret med Android Studio via `npx cap sync android`.
+
 ### 2026-10-19 -- Etape 73: Fase 4 – Billeder, Resiliente Vektor-Silhuetter & Fuld I18N Hardware-Katalog (v1.20.3)
 - **Resiliente SVG Silhuetter (`src/components/gear/GearImage.tsx`):**
   - Tilføjet automatisk `useEffect` prop-synkronisering af fejlstatus ved skift mellem udstyrsmodeller.

@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.20.4] - 2026-10-19
+### Etape 74: Fotorealistiske Gear Billeder & Dobbelt Billed-Pipeline
+- **Fotorealistiske Billeder (Studio Product Photography):**
+  - Genereret og integreret ægte, fotorealistiske studie-produktbilleder i WebP-format for alle gear-kategorier (kværne, espressomaskiner, manuelle pour-over/french press bryggere og elkedler).
+  - Skabt dedikerede studie-billeder af Baratza Encore ESP, Niche Zero, Turin DF64, Eureka Mignon Specialita/Libra/Zero, E61 rustfrit stål espressomaskine, Sage Bambino Plus, Hario V60 hvid keramik, Bodum Chambord French Press, AeroPress, Chemex karaffel, Moccamaster KBG Select og Fellow Stagg EKG elkedel.
+  - Oprettet og distribueret 109 fotorealistiske WebP-billedfiler på tværs af hele udstyrskataloget i `public/images/gear/`.
+- **To-Trins Intelligent Billed-Pipeline ([GearImage.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearImage.tsx)):**
+  - Billedkomponenten forsøger altid først at indlæse den specifikke udstyrsmodels fotorealistiske WebP-billede.
+  - Ved manglende fil falder komponenten automatisk tilbage til kategoriens fotorealistiske referencebillede frem for direkte til SVG.
+  - Vektor-silhuetter bevares som et resilient tredje sikkerhedstrin.
+- **Karrusel Mappere ([GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx)):**
+  - Garanteret at standard-udstyr ('Espresso Machine', 'French Press / Stempelkande', standard-kværn m.fl.) altid knyttes til et fotorealistisk billede.
+- **Vercel & Android Synkronisering:**
+  - Verificeret Vercel-adresse `https://espressoflow-app.vercel.app/` indført i projektinstrukser.
+  - Koden synkroniseret med Android Studio via `npx cap sync android`.
+
 ## [1.20.3] - 2026-10-19
 ### Etape 73: Fase 4 – Billeder, Resiliente Vektor-Silhuetter & Fuld I18N Hardware-Katalog
 - **Resiliente SVG Silhuetter ([GearImage.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearImage.tsx)):**
