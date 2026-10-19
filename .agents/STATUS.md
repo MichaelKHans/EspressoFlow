@@ -9,6 +9,95 @@
 
 ---
 
+### 📌 KØREPLAN FOR NÆSTE SESSION (I MORGEN): FASE 13 - GEAR VALIDERING & HARDWARE DATA-AUDIT
+1. **Dybtgående Systemintegration & Regressionstest:**
+   - Efterprøve at alt "taler sammen" på tværs af appen efter den store ombygning af `GearStationView.tsx`.
+   - Teste synkronisering af aktiv kværn, maskine, brygger og kedel mod Kaffebaren (`DrinkSelector.tsx`), Beandex (`BeandexView.tsx`), for-bryg rådgiveren (`PreBrewCoachBanner.tsx`) og skudlogning (`ScaleMonitor.tsx`).
+   - Tjekke for eventuelle regressionsfejl, layout overflow eller edge-cases ved tilføjelse og sletning af hardware.
+2. **Hardware & Specifikations-Audit (Korrekthed af Indstillingsmuligheder):**
+   - Gennemgå samtlige maskiner og kværne i `gearCatalog.ts` og `storage.ts` for at sikre, at specifikationer og fysiske justeringsmuligheder er 100% korrekte:
+     - *Espressomaskiner:* 9 bar vs 15 bar OPV, varmesystem (Thermoblock, Boiler, ThermoJet), PID vs stepped/fast temperatur, og præ-infusion (programmerbar, fabriksfast puls, eller ingen).
+     - *Kværne:* Knivstørrelse (mm), konisk vs flad, mikrometerskrue vs stepped trin, og min/max rækkevidde.
+3. **Billedberigelse & Billedskift (WebP optimering):**
+   - Klargøre WebP-billeder (~20–30 KB) til udstyret i `public/images/gear/` og validere SVG-silhuetter som fallback.
+4. **French Press Kalkulator Validering:**
+   - Teste de 3 kandestørrelser (350ml, 500ml, 1000ml), finjustering og ratio-beregning (1:14, 1:15, 1:16).
+
+---
+
+### 2026-10-19 -- Etape 73: Fase 4 – Billeder, Resiliente Vektor-Silhuetter & Fuld I18N Hardware-Katalog (v1.20.3)
+- **Resiliente SVG Silhuetter (`src/components/gear/GearImage.tsx`):**
+  - Tilføjet automatisk `useEffect` prop-synkronisering af fejlstatus ved skift mellem udstyrsmodeller.
+  - Implementeret 4 nye specialiserede vektor-silhuetter:
+    1. **Mahlkönig EK43 / EK43S:** Ikonisk lodret motorhus, stor front-rotary drejeskive med 1–16 referencemærker, bønne-shutoff skyder og poseklemme.
+    2. **Fuldautomatiske Espressomaskiner (Superautomatics):** DeLonghi Magnifica S / Eletta Explore, Miele CM 5310, Jura og Philips LatteGo med integreret bønnekammer, display og højdejusterbart dobbelt kaffeudløb uden manuel portafilter-arm.
+    3. **Flat-Bottom Wave Drippere:** Kalita Wave 155, Fellow Stagg [X]/[XF], April Brewer og Orea V3/V4 med lodrette rillede bølgefilter-linjer, flad bund og dryphuller.
+    4. **Hybrid Steep-and-Release:** Hario Switch 02 og Clever Dripper med kugleventil-omskifter og afdrypningsplade.
+    5. **Elkedel:** Svanehalskedel forsynet med digital LED-temperaturdisplay på basen.
+- **Global-First I18N Standardisering (`src/components/gear/AddGearModal.tsx` & `src/components/gear/GearCardCarousel.tsx`):**
+  - Samtlige titler, søgefelt-placeholders, status-badges ("I setup", "AKTIV", "Vælg"), enheds-tællere og slette-tooltips er nu flyttet til `en.ts` og `da.ts` og tilgås via `useTranslation()`.
+- **Kvalitetskontrol & Build-Verificering:**
+  - `npm run build` og `npx cap sync android` valideret med Exit Code 0.
+
+### 2026-10-19 -- Etape 72: Fase 2 & 3 – Maskine Pre-infusion/Specs Kobling & French Press Auto-Dosis (v1.20.2)
+- **Hardware-katalog Integration til Maskinprofiler (`src/lib/storage.ts`):**
+  - `getMachineTempProfile` integreret direkte med `MACHINE_CATALOG`, så samtlige 24 nye espressomaskiner (Lelit Mara X, Profitec GO/300/600/700, ECM Synchronika, Rocket Appartamento/Giotto, Ascaso Steel UNO/DUO/Dream PID, Cafelat Robot, Flair 58, Oscar II, m.fl.) automatisk forsyner appen med deres verificerede `preInfusionControl` (`adjustable`, `fixed` eller `none`), `defaultPreInfusionSeconds`, `preInfusionNote`, `tempControl` og `defaultTempC`.
+- **Taktil Pre-infusion & Temperatur Synkronisering (`src/components/GearStationView.tsx`):**
+  - Ved maskineskift i karrusellen synkroniseres `defaultPreInfusionSeconds`, fabriks-besked og `defaultTempC` automatisk med den valgte maskine.
+  - Dynamisk kværn-zone mærke på lineallinjalerne afspejler nu automatisk `espressoMaxSetting` (fx ≤ 25 for DF54, ≤ 35 for Mazzer Philos, ≤ 3.2 for EK43).
+- **French Press Kande-størrelse & Auto-Dosis (`src/components/DrinkSelector.tsx`):**
+  - Tilføjet interaktiv kande-vælger direkte på French Press opskriftskortet (350 ml lille, 500 ml mellem, 1000 ml stor kande).
+  - Beregner og forslår prompte den korrekte kaffemængde i gram (fx 23.3g for 350ml, 33.3g for 500ml, 66.7g for 1000ml) i henhold til 1:15 ratioen.
+  - Værdien synkroniseres direkte over i Live Monitor Target Yield og Coffee Dose.
+- **Tovejs-Synkronisering af French Press (`src/App.tsx` & `src/components/gear/FrenchPressVolumeCalculator.tsx`):**
+  - Justeringer i Gear-stationens kande-beregner sendes via reaktiv event og opdaterer straks den aktive opskrift og live monitor.
+- **Sikkerhedsværn mod Tom Kværn/Maskine-opsætning (`src/components/gear/GearCardCarousel.tsx`):**
+  - Skraldespands-ikonet `[🗑️]` deaktiveres for enlige kværne og espressomaskiner (kræver tilføjelse af en erstatning først).
+  - Manuelle bryggere og elkedler kan fortsat fjernes frit helt ned til 0, som anmodet af brugeren.
+
+### 2026-10-19 -- Etape 71: Fase 1 – Udstyrs-synkronisering & Pour Over Integration (v1.20.1)
+- **Datamodel Udvidelse (`src/types/espresso.ts`):**
+  - Udbygget `ShotRecord` med `filterBrewer?: string`, `kettleName?: string` og `waterVolumeMl?: number` med 100% bagudkompatibilitet.
+- **Kaffebar & Barista Deck (`DrinkSelector.tsx`):**
+  - Tilføjet aktiv brygger og kedelindikator i Unified Grinder & Bean Calibration kortet ved Pour Over (`🫗 French Press`, `🫗 Hario V60`, `🫖 Fellow Stagg EKG`).
+  - Direkte genvej `Skift udstyr →`, der prompte skifter til Gear-fanen.
+- **Skudlogning (`App.tsx`):**
+  - `handleBrewFinish` overfører nu automatisk den aktive brygger og kedel til `newShot`, når `method === 'pour_over'`.
+  - Live Monitor badge viser aktiv brygger under opskriften.
+- **Logbog & Skudvisning (`Logbook.tsx` & `ShotSummaryModal.tsx`):**
+  - Udstyrsfeltet på skudkortet viser den manuelle brygger i stedet for maskinenavn ved filterbryg.
+  - Sensorisk opsummering og barista tech råd afspejler både brygger og elkedel.
+- **Specialty Share Card (`ShotShareModal.tsx`):**
+  - Det grafiske 1080x1920 eksportkort stempler nu den præcise manuelle brygger ved filterbryg.
+- **Kvalitetssikring & Byg:**
+  - `npm run build` og `npx cap sync android` valideret fejlfrit med Exit Code 0.
+
+### 2026-10-18 -- Etape 70: Hardware Karruseller, Præcisionslineal med Lodrette Hak, French Press Kalkulator & Udstyrskatalog (v1.20.0)
+- **Eliminering af Gentagelser & Renset Gear Station:**
+  - Fjernet de gamle store mørke herobannere med stock-fotos samt den redundante chip-række. Gear Station er nu 100% renset og fokuseret på fysisk maskineri og hardware.
+- **Mekanisk Caliper Lineal med 40 Lodrette Hak:**
+  - Tilføjet 40 præcisionshak (caliper ticks) på `z-0` bagved teksten på Baratza ESP slider-linealen i `GearStationView.tsx`.
+  - Tydelig markering af yderpunkter (`2C2018`), mellemhak (`A6998E`) og splitpunktet 20.0 (`#C26D52`) mellem espresso og filter.
+  - Tekstmærker med dæmpet baggrund på `z-10` sikrer, at de mekaniske målestregslinjer løber elegant bagved.
+- **Hardware Karrusel (`GearCardCarousel.tsx`):**
+  - Horisontal swipebar hardware-karrusel til Kværne, Espressomaskiner, Manuelle Bryggere og Elkedler.
+  - Viser rigtige fotos (eller SVG-silhuetter), modelnavn, tekniske specs, aktiv "Aktiv på bar" glød, samt et diskret `[🗑️]` ikon til at fjerne udstyr.
+  - Sidste kort i karrusellen er altid `[ + Tilføj ]` kortet.
+- **Hardware Katalog Modal (`AddGearModal.tsx`):**
+  - Åbnes med 1 tryk på `+ Tilføj` og viser det fulde udstyrskatalog med live søgning på mærke, model og type, samt 1-tryk tilføjelse til kaffehjørnet.
+  - Mulighed for at tilføje egne brugerdefinerede modeller.
+- **Interaktiv French Press Kalkulator (`FrenchPressVolumeCalculator.tsx`):**
+  - Vises automatisk når French Press er den aktive brygger.
+  - Hurtigvalg af kandestørrelser (350 ml, 500 ml, 1000 ml) og beregner prompte den præcise kaffedosis i gram ud fra 1:15 ratio (eller 1:14 kraftig / 1:16 mild).
+  - Viser 4:00 min steeping tid og husker indstillingerne i `localStorage`.
+- **Master Gear Dataregister (`src/data/gearCatalog.ts`):**
+  - Struktureret datamodel for kværne, maskiner, bryggere og kedler med tekniske specifikationer og WebP billedstier.
+- **Billedarkitektur & WebP Support (`GearImage.tsx`):**
+  - WebP support med øjeblikkelig SVG silhuet fallback, så der aldrig opstår knækkede billedikoner.
+  - Oprettet mapper `public/images/gear/{grinders,machines,brewers,kettles}`.
+- **Kvalitetssikring:**
+  - `npm run build` og `npx cap sync android` valideret fejlfrit med Exit Code 0.
+
 ### 2026-10-17 -- Etape 69: Komplet Sprog- & Lokaliserings-Sanering (v1.19.9)
 - **BeanScannerModal.tsx & FreshnessRadarModal.tsx:**
   - Undertitel lokaliseret: `{t('bean.scanner_subtitle')}` ("Optisk etiket-genkendelse, stregkoder & ristedato" -> "Optical label recognition, Bag Vision™ & roast date").

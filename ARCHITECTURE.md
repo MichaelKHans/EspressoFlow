@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.19.9 (Universal Localization Sanity, Dual-Language Fallbacks & Zero-Hardcoded Danish)  
+> **Gældende version:** v1.20.3 (Resilient Vector Hardware Silhouettes, Dynamic Image Error Boundaries & Global-First I18N Catalog)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -63,6 +63,7 @@ flowchart TD
     BeandexTabs -- Aktive Poser --> ActiveBags[Aktive Poser i Omløb]
     BeandexTabs -- Tømte Poser / Arkiv --> FinishedArchive[Tømte Posers Arkiv & Historik]
     ActiveBags --> BeanActions{Handling i Beandex}
+    BeanActions -- ☕ Start Bryg med denne bønne --> ReadyToBrew
     BeanActions -- Scan Pose --> BagScanner[Bean Scanner Modal<br/>Stregkode + Etiket Vision OCR]
     BeanActions -- Manuel Oprettelse --> CreateBean[Opret Ny Bønne Formular<br/>Med Beandex-Autocomplete & Smagsnoter]
     BeanActions -- Udforsk Fællesskab --> CloudVault[Central Cloud Bean Vault Modal]
@@ -353,19 +354,25 @@ graph TD
     App --> MonitorTab[ScaleMonitor.tsx<br/>Live Scale Cam, OCR, Bloom/Steep & Flowgraf]
     App --> BeandexTab[BeandexView.tsx<br/>Bønnekartotek, Beandex Smagsnoter, Fotos]
     App --> LogbookTab[Logbook.tsx<br/>Dagsopdelt historik, kurver & smag]
-    App --> GearTab[GrinderFleet / Gear Setup<br/>Kværn-flåde & baropsætning]
+    App --> GearTab[GearStationView.tsx<br/>Hardware-hylde, Karruseller for Kværne, Maskiner, Bryggere & Kedler, Caliper Ruler, PID & Cafiza Tracker]
+    GearTab --> GearCarousel[GearCardCarousel.tsx<br/>Horisontal hardware-karrusel, WebP fotos, aktiv markering & slet-knap]
+    GearTab --> AddGearModalComp[AddGearModal.tsx<br/>Hardware-katalog med søgning, filter og 1-tryk tilføjelse]
+    GearTab --> FrenchPressCalc[FrenchPressVolumeCalculator.tsx<br/>Dynamisk stempelkande-beregner for 350ml, 500ml, 1000ml & 1:15 ratio]
+    GearTab --> GearImageComp[GearImage.tsx<br/>WebP billede med øjeblikkelig SVG-silhuet fallback]
     App --> AdminTab[AdminPortal.tsx<br/>Curator Studio & AdminLicenseManager.tsx<br/>Batch Licenser, Anti-Brute-Force & Bogførings-Bro]
 
     %% Ikoner & UI Assets
     App --> AmbientLayer[AmbientBeanBackground.tsx<br/>100% GPU-accelereret atmosfærisk bokeh bønnebaggrund]
     App --> CustomIcons[CustomCoffeeIcons.tsx<br/>Vector Line-Art Ikoner: CoffeeBean & Dripper]
     App --> CupEngine[ArchitecturalCup.tsx<br/>SVG Beholder-Motor: Keramikkant, Sham Glas, Isterninger, Desserter & Pour Over]
+    App --> SafeSlider[SafeRangeSlider.tsx<br/>Scroll-sikker slider med vertikal scroll-lås & taktile steppere]
+    BeandexTab --> TimelineBar[RoastTimelineBar.tsx<br/>Peak Flavor Window horisontal tidslinjebar & friskhedsmåler]
 
     %% Modaler & Overlays (Teleporteret til document.body med z-[60] / z-[85] - Starter under Header ved --app-header-height + 0.5rem)
     App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]
     App --> ScannerModal[BeanScannerModal.tsx<br/>Beandex Bag Vision AI + Stregkode + Etiket OCR]
     App --> VaultModal[CentralBeanVaultModal.tsx<br/>Fællesskabs-katalog fra Supabase]
-    App --> SummaryModal[ShotSummaryModal.tsx<br/>Hero Decision Card: God/For hurtig/For langsom & 1-klik kværnjustering]
+    App --> SummaryModal[ShotSummaryModal.tsx<br/>Triple-Metric Hero, Puck Resistance Integrity 0-100 & 1-klik kværnjustering]
     App --> ShareModal[ShotShareModal.tsx<br/>1080x1350 Canvas Barista Shot Card & Native Web Share]
     App --> SettingsModal[SettingsModal.tsx<br/>Sprog, Enhed °C/°F, Pro & Kurator link]
     App --> PaywallModal[PaywallModal.tsx<br/>RevenueCat $4.99 Lifetime Unlock & FLOW Licensnøgle Indløsning]

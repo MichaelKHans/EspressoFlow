@@ -110,6 +110,9 @@ export interface ShotRecord {
   grinderName: string;
   grindSetting: string;
   machineName?: string;
+  filterBrewer?: string;
+  kettleName?: string;
+  waterVolumeMl?: number;
   brewTempC?: number;
   tasteRating?: TasteRating;
   notes?: string;
@@ -124,6 +127,10 @@ export interface GrinderProfile {
   stepUnit: string; // e.g. "clicks", "numbers", "marks"
   secondsPerStep?: number; // Approximate extraction time delta (seconds) per step
   inSetup?: boolean; // Whether user has this grinder in their personal setup / coffee bar
+  burrType?: string; // e.g. "M2 40mm Steel Conical"
+  minSetting?: number; // e.g. 1
+  maxSetting?: number; // e.g. 40
+  espressoMaxSetting?: number; // e.g. 20 (for dual-zone grinders like Baratza ESP)
 }
 
 export type MachineCategory = 'manual' | 'combo' | 'super_automatic';
@@ -142,6 +149,9 @@ export interface EspressoMachineProfile {
   minTempC?: number; // e.g. 88
   maxTempC?: number; // e.g. 96
   defaultTempC?: number; // e.g. 93
+  preInfusionControl?: 'adjustable' | 'fixed' | 'none';
+  preInfusionNote?: string;
+  maxPumpBar?: number;
 }
 
 export interface UserAccessState {

@@ -214,8 +214,10 @@ export const ShotShareModal: React.FC<ShotShareModalProps> = ({ isOpen, shot, on
     ctx.fillStyle = '#D4A373';
     ctx.font = '24px "Courier Prime", monospace';
     const cleanGrinder = (shot.grinderName || 'Grinder').replace(/\s*\([^)]*\)/g, '').trim();
-    const cleanMachine = shot.machineName ? shot.machineName.replace(/\s*\([^)]*\)/g, '').trim() : '';
-    const gearText = `${cleanGrinder} @ ${shot.grindSetting || '–'}${cleanMachine ? ` • ${cleanMachine}` : ''}`;
+    const cleanBrewer = shot.method === 'pour_over'
+      ? (shot.filterBrewer ? shot.filterBrewer.replace(/\s*\([^)]*\)/g, '').trim() : '')
+      : (shot.machineName ? shot.machineName.replace(/\s*\([^)]*\)/g, '').trim() : '');
+    const gearText = `${cleanGrinder} @ ${shot.grindSetting || '–'}${cleanBrewer ? ` • ${cleanBrewer}` : ''}`;
     ctx.fillText(gearText, 60, 305);
 
     // 4. Primary KPI Metric Cards (Dose, Yield, Ratio, Time)

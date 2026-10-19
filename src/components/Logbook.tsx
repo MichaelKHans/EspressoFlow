@@ -425,11 +425,15 @@ export const Logbook: React.FC<LogbookProps> = ({ shots, onDeleteShot, initialEx
                               {shot.grinderName.split(' ')[0]} @{' '}
                               <strong className="text-[#C26D52]">{shot.grindSetting}</strong>
                             </div>
-                            {shot.machineName && (
+                            {shot.method === 'pour_over' ? (
+                              <div className="text-[10px] text-[#7A6E65] truncate mt-0.5" title={shot.filterBrewer || 'Pour Over'}>
+                                🫗 {(shot.filterBrewer || 'Pour Over').split('(')[0].trim()}
+                              </div>
+                            ) : shot.machineName ? (
                               <div className="text-[10px] text-[#7A6E65] truncate mt-0.5">
                                 {shot.machineName.split(' ')[0]}
                               </div>
-                            )}
+                            ) : null}
                           </div>
 
                           <div className="p-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5]/70 overflow-hidden">

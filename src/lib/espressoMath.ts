@@ -350,6 +350,94 @@ export function detectChanneling(points: ShotDataPoint[]): boolean {
   return analyzeExtractionDynamics(points).puckAnomaly.detected;
 }
 
+export interface PuckIntegrityResult {
+  score: number;
+  verdictKey:
+    | 'shotsummary.puck_integrity_perfect'
+    | 'shotsummary.puck_integrity_solid'
+    | 'shotsummary.puck_integrity_minor_fissure'
+    | 'shotsummary.puck_integrity_severe';
+  colorClass: string;
+  borderClass: string;
+  bgClass: string;
+}
+
+/**
+ * Calculates a 0-100 Puck Resistance & Integrity Score based on
+ * channeling events, flow stability, and steady-state extraction flow.
+ */
+export function calculatePuckIntegrity(
+  channeling?: boolean | ChannelingEvent,
+  flowStabilityPercent?: number,
+  steadyFlowGps?: number
+): PuckIntegrityResult {
+  let score = 94; // Baseline clean espresso puck prep
+
+  // Factor 1: Flow stability percentage
+  if (typeof flowStabilityPercent === 'number' && flowStabilityPercent > 0) {
+    if (flowStabilityPercent >= 88) score += 4;
+    else if (flowStabilityPercent < 60) score -= 8;
+    else if (flowStabilityPercent < 75) score -= 4;
+  }
+
+  // Factor 2: Steady flow rate sanity
+  if (typeof steadyFlowGps === 'number' && steadyFlowGps > 0) {
+    if (steadyFlowGps >= 1.2 && steadyFlowGps <= 2.2) {
+      score += 2;
+    } else if (steadyFlowGps > 2.8) {
+      score -= 6;
+    }
+  }
+
+  // Factor 3: Channeling anomaly
+  const isChanneling = typeof channeling === 'boolean' ? channeling : Boolean(channeling?.detected);
+  const severity = typeof channeling === 'object' ? channeling?.severity : undefined;
+
+  if (isChanneling) {
+    if (severity === 'severe') {
+      score -= 30;
+    } else {
+      score -= 15;
+    }
+  }
+
+  const finalScore = Math.max(25, Math.min(100, Math.round(score)));
+
+  if (finalScore >= 90) {
+    return {
+      score: finalScore,
+      verdictKey: 'shotsummary.puck_integrity_perfect',
+      colorClass: 'text-[#54624F]',
+      borderClass: 'border-[#72806B]/40',
+      bgClass: 'bg-[#72806B]/10',
+    };
+  } else if (finalScore >= 80) {
+    return {
+      score: finalScore,
+      verdictKey: 'shotsummary.puck_integrity_solid',
+      colorClass: 'text-[#54624F]',
+      borderClass: 'border-[#72806B]/30',
+      bgClass: 'bg-[#72806B]/5',
+    };
+  } else if (finalScore >= 68) {
+    return {
+      score: finalScore,
+      verdictKey: 'shotsummary.puck_integrity_minor_fissure',
+      colorClass: 'text-amber-800',
+      borderClass: 'border-amber-400/40',
+      bgClass: 'bg-amber-500/10',
+    };
+  } else {
+    return {
+      score: finalScore,
+      verdictKey: 'shotsummary.puck_integrity_severe',
+      colorClass: 'text-[#B85B48]',
+      borderClass: 'border-[#B85B48]/40',
+      bgClass: 'bg-[#B85B48]/10',
+    };
+  }
+}
+
 export const GRINDER_CALIBRATIONS: Record<string, { secondsPerStep: number; unitName: string }> = {
   'Baratza Encore ESP Pro': { secondsPerStep: 2.5, unitName: 'micro-steps' },
   'Baratza Encore ESP': { secondsPerStep: 2.5, unitName: 'micro-steps' },

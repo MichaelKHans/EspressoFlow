@@ -49,6 +49,7 @@ import {
 import { PRICE_TIERS, resolveBeanPriceTier } from '../lib/coffeeCatalogData';
 import { AdminThemeBadge } from './AdminThemeBadge';
 import { getCardTheme, useCardAdjustments, type CardThemePreset } from '../lib/cardThemes';
+import { RoastTimelineBar } from './RoastTimelineBar';
 
 export interface BeandexViewProps {
   beans: CoffeeBeanProfile[];
@@ -62,6 +63,7 @@ export interface BeandexViewProps {
   onOpenCentralVault: () => void;
   onOpenDialInForBean: (beanId: string) => void;
   onSwitchToFlow: () => void;
+  onStartBrewWithBean?: (beanId: string) => void;
   grinders: GrinderProfile[];
   activeGrinderName: string;
   isFreshnessInfoOpen?: boolean;
@@ -83,6 +85,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   onOpenCentralVault,
   onOpenDialInForBean,
   onSwitchToFlow,
+  onStartBrewWithBean,
   grinders,
   activeGrinderName,
   isFreshnessInfoOpen: isFreshnessInfoOpenProp,
@@ -1334,39 +1337,28 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Freshness & Degas Status Badge */}
-                    <div className="flex items-center justify-between gap-1.5 pt-0.5">
-                      <div
-                        className={`px-2 py-0.5 rounded-full border text-[9.5px] font-mono font-bold flex items-center gap-1.5 ${freshness.badgeClasses}`}
-                        title={freshness.baristaTip}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${freshness.dotColor}`} />
-                        <span>{freshness.summary}</span>
+                    {/* Visual Peak Flavor Window Timeline Bar (Stitch Inspiration) */}
+                    <div className="pt-0.5 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-[9.5px] font-mono text-[#7A6E65]">
+                          <Calendar className="w-3 h-3 text-[#A6998E]" />
+                          <span>{t('beandex.days_off_roast', { days: freshness.daysOffRoast })}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenFreshness(bean.roastLevel)}
+                          className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] text-[#7A6E65] hover:text-[#C26D52] flex items-center justify-center transition cursor-pointer"
+                          title={t('beandex.info_degas_button')}
+                        >
+                          <Info className="w-3 h-3" />
+                        </button>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleOpenFreshness(bean.roastLevel)}
-                        className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] text-[#7A6E65] hover:text-[#C26D52] flex items-center justify-center transition cursor-pointer"
-                        title={t('beandex.info_degas_button')}
-                      >
-                        <Info className="w-3 h-3" />
-                      </button>
-                    </div>
-
-                    {/* Freshness Days Off Roast & Grinder info */}
-                    <div className="flex items-center justify-between text-[10px] text-[#7A6E65] pt-0.5">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-[#A6998E]" />
-                        <span>{t('beandex.days_off_roast', { days: freshness.daysOffRoast })}</span>
-                      </span>
-
-                      <span className="font-mono bg-[#FAF7F2] border border-[#E8DFD5] px-1.5 py-0.5 rounded text-[10px] inline-flex items-center gap-1">
-                        <span className="text-[#7A6E65] truncate max-w-[80px]">
-                          {beanGrinder?.name || bean.grinderName}:
-                        </span>
-                        <strong className="text-[#C26D52] font-bold">{bean.grindSetting}</strong>
-                      </span>
+                      <RoastTimelineBar
+                        roastDate={bean.roastDate}
+                        roastLevel={bean.roastLevel}
+                        dateOpened={bean.dateOpened}
+                      />
                     </div>
 
                     {/* Barista Freshness Intelligence Note */}
@@ -1612,6 +1604,27 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                         </div>
                       )}
                     </div>
+
+                    {/* Dialed-In Recipe Box (Stitch Inspiration) */}
+                    {!bean.isFinished && (
+                      <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[10px] font-mono space-y-1">
+                        <div className="flex items-center justify-between text-[#7A6E65]">
+                          <span className="font-bold text-[9px] uppercase tracking-wider text-[#C26D52] flex items-center gap-1">
+                            <Sliders className="w-3 h-3" />
+                            {t('beandex.dialed_recipe_badge')}
+                          </span>
+                          <span className="text-[#A6998E]">
+                            1:{bean.doseGrams > 0 ? (bean.targetYieldGrams / bean.doseGrams).toFixed(1) : '2.0'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between font-bold text-[#2C2018]">
+                          <span>{bean.doseGrams}g In ➔ {bean.targetYieldGrams}g Out</span>
+                          <span className="text-[#C26D52]">
+                            {beanGrinder?.name ? beanGrinder.name.split(' ')[0] : bean.grinderName.split(' ')[0]}: {bean.grindSetting}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Card Footer: 1-5 Star Rating & Dial-In Studio Action */}
@@ -1642,7 +1655,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       </span>
                     </div>
 
-                    {/* Action button: Buy Again clone or Dial-In Studio */}
+                    {/* Action button: Buy Again clone or Dial-In Studio + Start Brew */}
                     {bean.isFinished ? (
                       <div className="flex items-center gap-1.5">
                         <button
@@ -1665,15 +1678,33 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                         </button>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => onOpenDialInForBean(bean.id)}
-                        className="px-2.5 py-1.5 rounded-xl border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52]/20 text-[#C26D52] font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs cursor-pointer"
-                        title="Open 4-step Dial-In Studio for this bean"
-                      >
-                        <Sliders className="w-3 h-3" />
-                        <span>{t('beandex.dial_in_btn')}</span>
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => onOpenDialInForBean(bean.id)}
+                          className="px-2.5 py-1.5 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                          title="Open 4-step Dial-In Studio for this bean"
+                        >
+                          <Sliders className="w-3 h-3 text-[#C26D52]" />
+                          <span>{t('beandex.dial_in_btn')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onStartBrewWithBean) {
+                              onStartBrewWithBean(bean.id);
+                            } else {
+                              onSelectBean(bean.id);
+                              onSwitchToFlow();
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white font-bold text-[10px] font-mono flex items-center gap-1.5 transition shadow-xs active:scale-95 cursor-pointer"
+                          title={t('beandex.start_brew_with_bean')}
+                        >
+                          <Coffee className="w-3.5 h-3.5" />
+                          <span>{t('beandex.start_brew_short')}</span>
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

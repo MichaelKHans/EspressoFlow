@@ -2,6 +2,90 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.20.3] - 2026-10-19
+### Etape 73: Fase 4 – Billeder, Resiliente Vektor-Silhuetter & Fuld I18N Hardware-Katalog
+- **Resiliente SVG Silhuetter ([GearImage.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearImage.tsx)):**
+  - Tilføjet automatisk `useEffect` prop-synkronisering af fejlstatus ved skift mellem udstyrsmodeller.
+  - Implementeret 4 nye specialiserede vektor-silhuetter:
+    1. **Mahlkönig EK43 / EK43S:** Ikonisk lodret motorhus, stor front-rotary drejeskive med 1–16 referencemærker, bønne-shutoff skyder og poseklemme.
+    2. **Fuldautomatiske Espressomaskiner (Superautomatics):** DeLonghi Magnifica S / Eletta Explore, Miele CM 5310, Jura og Philips LatteGo med integreret bønnekammer, display og højdejusterbart dobbelt kaffeudløb uden manuel portafilter-arm.
+    3. **Flat-Bottom Wave Drippere:** Kalita Wave 155, Fellow Stagg [X]/[XF], April Brewer og Orea V3/V4 med lodrette rillede bølgefilter-linjer, flad bund og dryphuller.
+    4. **Hybrid Steep-and-Release:** Hario Switch 02 og Clever Dripper med kugleventil-omskifter og afdrypningsplade.
+    5. **Elkedel:** Svanehalskedel forsynet med digital LED-temperaturdisplay på basen.
+- **Global-First I18N Standardisering ([AddGearModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/AddGearModal.tsx) & [GearCardCarousel.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearCardCarousel.tsx)):**
+  - Samtlige titler, søgefelt-placeholders, status-badges ("I setup", "AKTIV", "Vælg"), enheds-tællere og slette-tooltips er nu flyttet til `en.ts` og `da.ts` og tilgås via `useTranslation()`.
+- **Kvalitetskontrol & Build-Verificering:**
+  - `npm run build` og `npx cap sync android` valideret med Exit Code 0.
+
+## [1.20.2] - 2026-10-19
+### Etape 72: Fase 2 & 3 – Maskine Pre-infusion/Specs Kobling & French Press Auto-Dosis
+- **Hardware-katalog Integration til Maskinprofiler ([storage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/storage.ts)):**
+  - `getMachineTempProfile` integreret direkte med `MACHINE_CATALOG`, så samtlige 24 nye espressomaskiner (Lelit Mara X, Profitec GO/300/600/700, ECM Synchronika, Rocket Appartamento/Giotto, Ascaso Steel UNO/DUO/Dream PID, Cafelat Robot, Flair 58, Oscar II, m.fl.) automatisk forsyner appen med deres verificerede `preInfusionControl` (`adjustable`, `fixed` eller `none`), `defaultPreInfusionSeconds`, `preInfusionNote`, `tempControl` og `defaultTempC`.
+- **Taktil Pre-infusion & Temperatur Synkronisering ([GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx)):**
+  - Ved maskineskift i karrusellen synkroniseres `defaultPreInfusionSeconds`, fabriks-besked og `defaultTempC` automatisk med den valgte maskine.
+  - Dynamisk kværn-zone mærke på lineallinjalerne afspejler nu automatisk `espressoMaxSetting` (fx ≤ 25 for DF54, ≤ 35 for Mazzer Philos, ≤ 3.2 for EK43).
+- **French Press Kande-størrelse & Auto-Dosis ([DrinkSelector.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DrinkSelector.tsx)):**
+  - Tilføjet interaktiv kande-vælger direkte på French Press opskriftskortet (350 ml lille, 500 ml mellem, 1000 ml stor kande).
+  - Beregner og forslår prompte den korrekte kaffemængde i gram (fx 23.3g for 350ml, 33.3g for 500ml, 66.7g for 1000ml) i henhold til 1:15 ratioen.
+  - Værdien synkroniseres direkte over i Live Monitor Target Yield og Coffee Dose.
+- **Tovejs-Synkronisering af French Press ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx) & [FrenchPressVolumeCalculator.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/FrenchPressVolumeCalculator.tsx)):**
+  - Justeringer i Gear-stationens kande-beregner sendes via reaktiv event og opdaterer straks den aktive opskrift og live monitor.
+- **Sikkerhedsværn mod Tom Kværn/Maskine-opsætning ([GearCardCarousel.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearCardCarousel.tsx)):**
+  - Skraldespands-ikonet `[🗑️]` deaktiveres for enlige kværne og espressomaskiner (kræver tilføjelse af en erstatning først).
+  - Manuelle bryggere og elkedler kan fortsat fjernes frit helt ned til 0, som anmodet af brugeren.
+
+## [1.20.1] - 2026-10-19
+### Etape 71: Fase 1 – Udstyrs-synkronisering & Pour Over Integration
+- **Datamodel Udvidelse ([espresso.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/types/espresso.ts)):**
+  - Udbygget `ShotRecord` med valgfrie felter for `filterBrewer?: string`, `kettleName?: string` og `waterVolumeMl?: number` (fuld bagudkompatibilitet for eksisterende espressoskud).
+- **Kaffebar & Barista Deck ([DrinkSelector.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DrinkSelector.tsx)):**
+  - Tilføjet integreret banner i Grinder & Bean Calibration kortet, der viser den aktive manuelle brygger (fx `🫗 French Press` eller `🫗 Hario V60`) og elkedel, når bryggemetoden er Pour Over.
+  - Tilføjet direkte `Skift udstyr →` genvej, der skifter prompte til Udstyrs-fanen for nemt skift mellem bryggere og karruseller.
+- **Skudhistorik & Logbog ([Logbook.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/Logbook.tsx)):**
+  - Udstyrskortet på hvert skud viser nu automatisk den anvendte manuelle brygger for filterbryg i stedet for maskinenavn.
+- **Skudopsummering & Sensorisk Vurdering ([ShotSummaryModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ShotSummaryModal.tsx)):**
+  - Udstyrsfeltet afspejler nu både manuel brygger og elkedel ved pour-over bryg.
+- **Specialty Share Card Canvas ([ShotShareModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ShotShareModal.tsx)):**
+  - Det eksporterbare 1080x1920 Instagram/barista share-kort renderes nu med den korrekte manuelle brygger påstemplet.
+- **Live Monitor Header Badge ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - Viser den aktive brygger ved pour over direkte under opskriftsoplysningerne.
+
+## [1.20.0] - 2026-10-18
+### Etape 70: Hardware Karruseller, Præcisionslineal med Lodrette Hak, French Press Kalkulator & Udstyrskatalog
+- **Rensning & Eliminering af Redundans i Gear Station:**
+  - Fjernet de gamle store mørke herobannere med stock-fotos samt chip-rækken for at udrydde gentagelser af kværn- og maskinenavne.
+  - Gear Station er nu 100% fokuseret på fysisk udstyr, samlinger og kalibrering.
+- **Mekanisk Dial-In Lineal med Lodrette Målehak (Ticks):**
+  - Tilføjet 40 præcisionshak (caliper ticks) på `z-0` bagved teksten på Baratza ESP slider-linealen i [GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx).
+  - Tydelig markering af yderpunkter (`2C2018`), mellemhak (`A6998E`) og splitpunktet 20.0 (`#C26D52`) mellem espresso og filter.
+  - Tekstmærker med dæmpet baggrund på `z-10` sikrer, at de mekaniske linjer løber elegant bagved ligesom på et fysisk mikrometer.
+- **Gear Samling & Hardware Karruseller ([GearCardCarousel.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearCardCarousel.tsx)):**
+  - Horisontal swipebar hardware-karrusel til alle 4 udstyrstyper:
+    - Kværne (`Grinders`)
+    - Espressomaskiner (`Espresso Machines`)
+    - Manuelle Bryggere (`Filter & Manual Brewers`)
+    - Elkedler (`Pour-Over Kettles`)
+  - Hvert kort viser rigtigt produktfoto (eller håndtegnet SVG-silhuet), modelnavn, tekniske specs, pulserende grøn "Aktiv på bar" glød, samt en diskret `[🗑️]` knap til at fjerne udstyr.
+  - Sidste kort i karrusellen er altid det stiplede `[ + Tilføj ]` kort.
+- **Hardware Katalog Modal ([AddGearModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/AddGearModal.tsx)):**
+  - Åbnes med 1 tryk på `+ Tilføj`.
+  - Viser hele modelkartoteket med søgefelt (filtrering på mærke, model og type), fotos og 1-tryk tilføjelse til sit kaffehjørne.
+  - Mulighed for at oprette brugerdefinerede modeller.
+- **Interaktiv French Press Vand- & Kaffekalkulator ([FrenchPressVolumeCalculator.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/FrenchPressVolumeCalculator.tsx)):**
+  - Vises automatisk når French Press er valgt som den aktive brygger.
+  - Hurtigvalg af kandestørrelser: **350 ml** (lille / 1 krus), **500 ml** (mellem / 2 kopper), **1000 ml** (stor 8-kops kande), samt +/- 50 ml finjustering.
+  - Beregner automatisk præcis kaffemængde ud fra 1:15 standard ratio (med 1:14 kraftig og 1:16 mild vælgere).
+  - Viser 4:00 min trækketid og vandtemperatur.
+  - Gemmer valgte indstillinger i `localStorage`.
+- **Master Gear Dataregister ([gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts)):**
+  - Komplet datamodel for kværne, maskiner, bryggere og kedler med specs og WebP billedstier.
+  - Klargjort til nem berigelse med flere modeller af andre agenter.
+- **Billedarkitektur & Letvægts WebP Support ([GearImage.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearImage.tsx)):**
+  - Intelligente SVG silhuetter som fallback forhindrer knækkede billeder.
+  - Oprettet mapper `public/images/gear/{grinders,machines,brewers,kettles}` til letvægts WebP billeder (~20-30KB pr. billede).
+- **Kvalitetssikring:**
+  - `npm run build` og `npx cap sync android` valideret fejlfrit (0 TypeScript/Vite fejl).
+
 ## [1.19.9] - 2026-10-17
 ### Etape 69: Komplet Sprog- & Lokaliserings-Sanering (Eliminering af Hårdkodet Dansk Tekst)
 - **BeanScannerModal.tsx & FreshnessRadarModal.tsx:**

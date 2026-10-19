@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ShotRecord, TasteRating, TempUnit } from '../types/espresso';
 import { FlowChart } from './FlowChart';
-import { generateDialInAdvice, type DialInAdvice, formatTemperature } from '../lib/espressoMath';
+import { generateDialInAdvice, type DialInAdvice, formatTemperature, calculatePuckIntegrity } from '../lib/espressoMath';
 import {
   CheckCircle,
   AlertCircle,
@@ -14,6 +14,7 @@ import {
   Flame,
   Share2,
   ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { ShotShareModal } from './ShotShareModal';
@@ -129,6 +130,12 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   const isSlow = !isFast && (shot.totalTimeSeconds > 32.0 || advice.grindAdvice === 'coarser');
   const isSurgeOnly = isChanneling && !isFast && !isSlow;
   const isGood = !isFast && !isSlow && !isSurgeOnly;
+
+  const puckIntegrity = calculatePuckIntegrity(
+    shot.channeling || shot.channelingDetected,
+    undefined,
+    shot.averageFlowGps
+  );
 
   const currentGrindNum = parseFloat(shot.grindSetting);
   let nextSettingStr: string | null = advice.targetGrindSetting || null;
@@ -343,29 +350,98 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
               )}
             </div>
           </div>
-          {/* Telemetry Instrument Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5]">
-              <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
-                {t('active_bean.yield')}
-              </span>
-              <div className="text-sm font-bold text-[#2C2018] mt-0.5">
-                <span className="text-[#C26D52]">{shot.actualYieldGrams.toFixed(1)}g</span>
-                <span className="text-[10px] text-[#7A6E65] font-normal ml-1">
-                  (1:{ratio})
+          {/* Triple-Metric Hero Card (Stitch Inspiration) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-[#FAF7F2] border border-[#DECFC0] shadow-xs">
+            <div className="grid grid-cols-3 divide-x divide-[#DECFC0] text-center font-mono">
+              {/* YIELD */}
+              <div className="px-1.5 sm:px-2 space-y-0.5">
+                <span className="text-[9.5px] uppercase font-bold text-[#7A6E65] tracking-wider block">
+                  {t('shotsummary.metric_yield')}
+                </span>
+                <div className="text-xl sm:text-2xl font-bold text-[#2C2018] tracking-tight">
+                  {shot.actualYieldGrams.toFixed(1)}<span className="text-xs font-normal text-[#7A6E65]">g</span>
+                </div>
+                <span className="text-[10px] text-[#A6998E] block">
+                  {t('shotsummary.metric_in_time', { time: shot.totalTimeSeconds.toFixed(1) })}
                 </span>
               </div>
-              <span className="text-[10px] text-[#7A6E65] mt-0.5 block">
-                Dose: {shot.doseGrams}g
+
+              {/* DOSE */}
+              <div className="px-1.5 sm:px-2 space-y-0.5">
+                <span className="text-[9.5px] uppercase font-bold text-[#7A6E65] tracking-wider block">
+                  {t('shotsummary.metric_dose')}
+                </span>
+                <div className="text-xl sm:text-2xl font-bold text-[#2C2018] tracking-tight">
+                  {shot.doseGrams.toFixed(1)}<span className="text-xs font-normal text-[#7A6E65]">g</span>
+                </div>
+                <span className="text-[10px] text-[#C26D52] font-semibold block truncate">
+                  {t('shotsummary.metric_grind', { grind: shot.grindSetting })}
+                </span>
+              </div>
+
+              {/* RATIO */}
+              <div className="px-1.5 sm:px-2 space-y-0.5">
+                <span className="text-[9.5px] uppercase font-bold text-[#7A6E65] tracking-wider block">
+                  {t('shotsummary.metric_ratio')}
+                </span>
+                <div className="text-xl sm:text-2xl font-bold text-[#C26D52] tracking-tight">
+                  1:{ratio}
+                </div>
+                <span className="text-[10px] text-[#A6998E] block">
+                  {t('shotsummary.metric_target_ratio', {
+                    target: shot.doseGrams > 0 ? (shot.targetYieldGrams / shot.doseGrams).toFixed(1) : '2.0',
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Puck Resistance Integrity Card (Stitch Inspiration) */}
+          <div className={`p-3 rounded-2xl border flex items-center justify-between gap-3 ${puckIntegrity.bgClass} ${puckIntegrity.borderClass}`}>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${puckIntegrity.borderClass} bg-white/70 shadow-2xs`}>
+                <ShieldCheck className={`w-4 h-4 ${puckIntegrity.colorClass}`} />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[9px] uppercase font-mono font-bold tracking-wider text-[#7A6E65] block truncate">
+                  {t('shotsummary.puck_integrity_title')}
+                </span>
+                <span className={`text-xs font-mono font-bold truncate block ${puckIntegrity.colorClass}`}>
+                  {t(puckIntegrity.verdictKey)}
+                </span>
+              </div>
+            </div>
+            <div className="text-right font-mono shrink-0">
+              <span className={`text-xl font-extrabold ${puckIntegrity.colorClass}`}>
+                {puckIntegrity.score}
+              </span>
+              <span className="text-[10px] text-[#A6998E]"> / 100</span>
+            </div>
+          </div>
+
+          {/* Equipment & Flow Instrument Sub-Bar */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5]">
+              <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
+                {t('logbook.equipment')}
+              </span>
+              <div className="text-xs font-bold text-[#2C2018] mt-0.5 truncate">
+                {shot.grinderName.split(' ')[0]} @{' '}
+                <strong className="text-[#C26D52]">{shot.grindSetting}</strong>
+              </div>
+              <span className="text-[10px] text-[#7A6E65] mt-0.5 block truncate">
+                {shot.method === 'pour_over'
+                  ? `🫗 ${(shot.filterBrewer || 'Manual Brewer').split('(')[0].trim()}${shot.kettleName ? ` • 🫖 ${shot.kettleName.split('(')[0].trim()}` : ''}`
+                  : `${shot.machineName ? shot.machineName.split(' ')[0] : 'Machine'}${shot.brewTempC ? ` • ${formatTemperature(shot.brewTempC, tempUnit)}` : ''}`}
               </span>
             </div>
 
             <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5]">
               <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
-                {t('logbook.time_and_flow')}
+                {t('logbook.taste_flow')}
               </span>
-              <div className="text-sm font-bold text-[#2C2018] mt-0.5">
-                {shot.totalTimeSeconds.toFixed(1)}s
+              <div className="text-xs font-bold text-[#2C2018] mt-0.5 truncate">
+                {language === 'da' ? 'Ø' : 'avg.'} {shot.averageFlowGps.toFixed(2)} g/s
               </div>
               {(() => {
                 const matchingRecipe = DRINK_RECIPES.find(
@@ -388,42 +464,6 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
                   </span>
                 );
               })()}
-            </div>
-
-            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5]">
-              <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
-                {t('logbook.equipment')}
-              </span>
-              <div className="text-xs font-bold text-[#2C2018] mt-0.5 truncate">
-                {shot.grinderName.split(' ')[0]} @{' '}
-                <strong className="text-[#C26D52]">{shot.grindSetting}</strong>
-              </div>
-              <span className="text-[10px] text-[#7A6E65] mt-0.5 block truncate">
-                {shot.machineName ? shot.machineName.split(' ')[0] : 'Machine'}
-                {shot.brewTempC ? ` • ${formatTemperature(shot.brewTempC, tempUnit)}` : ''}
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5]">
-              <span className="text-[9px] uppercase font-bold text-[#7A6E65] block">
-                {t('logbook.taste_flow')}
-              </span>
-              <div className="mt-0.5">
-                {shot.channelingDetected ? (
-                  <span className="text-red-700 font-bold text-[11px] flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    Channeling
-                  </span>
-                ) : (
-                  <span className="text-[#72806B] font-bold text-[11px] flex items-center gap-1">
-                    <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-                    {t('shotsummary.smooth_flow')}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] text-[#7A6E65] mt-0.5 block">
-                {language === 'da' ? 'Ø' : 'avg.'} {shot.averageFlowGps.toFixed(2)} g/s
-              </span>
             </div>
           </div>
 

@@ -24,6 +24,9 @@ import {
   saveDrinkGrindSetting,
   loadDrinkCalibrations,
   loadShots,
+  loadFrenchPressSettings,
+  saveFrenchPressSettings,
+  type FrenchPressSettings,
 } from '../lib/storage';
 import { GRINDER_CALIBRATIONS, calculateTargetExtractionTime } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
@@ -64,10 +67,14 @@ interface DrinkSelectorProps {
   onSwitchBean?: (beanId: string) => void;
   onScanBean?: () => void;
   onUpdateBeanDialIn?: (patch: Partial<CoffeeBeanProfile>) => void;
+  filterBrewer?: string;
+  kettleName?: string;
+  onOpenEquipmentTab?: () => void;
   isAllDrinksModalOpen?: boolean;
   onOpenAllDrinksModal?: () => void;
   onCloseAllDrinksModal?: () => void;
   isAdminEditMode?: boolean;
+  onUpdateRecipeTarget?: (dose: number, targetYield: number) => void;
 }
 
 export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
@@ -78,6 +85,9 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   targetYieldGrams,
   shots,
   allBeans,
+  filterBrewer,
+  kettleName,
+  onOpenEquipmentTab,
   onSelectDrink,
   onLaunchScaleCam,
   onOpenDialInWizard,
@@ -90,6 +100,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onOpenAllDrinksModal,
   onCloseAllDrinksModal,
   isAdminEditMode,
+  onUpdateRecipeTarget,
 }) => {
   const { t } = useTranslation();
   const selectedDrink = DRINK_RECIPES.find((d) => d.id === activeDrinkId) || DRINK_RECIPES[0];
@@ -173,13 +184,44 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     }
   }, [selectedDrink.method]);
 
+  const [fpSettings, setFpSettings] = useState<FrenchPressSettings>(() => loadFrenchPressSettings());
+
+  useEffect(() => {
+    const handleFpUpdate = (e: CustomEvent<FrenchPressSettings>) => {
+      if (e.detail) {
+        setFpSettings(e.detail);
+      }
+    };
+    window.addEventListener('flowbean_frenchpress_updated', handleFpUpdate as EventListener);
+    return () => {
+      window.removeEventListener('flowbean_frenchpress_updated', handleFpUpdate as EventListener);
+    };
+  }, []);
+
+  const handleSelectCarafeSize = (ml: number) => {
+    const updated = { ...fpSettings, waterMl: ml };
+    setFpSettings(updated);
+    saveFrenchPressSettings(updated);
+    const newDose = Math.round((ml / updated.ratio) * 10) / 10;
+    if (onUpdateRecipeTarget) {
+      onUpdateRecipeTarget(newDose, ml);
+    }
+  };
+
   // Specific calibration key for this exact bean + drink combination
   const calibrationKey = `${currentBean.id}_${selectedDrink.id}`;
   const drinkCalibrations = loadDrinkCalibrations();
   const savedCalibration = drinkCalibrations[calibrationKey];
 
-  const effectiveDose = doseGrams ?? savedCalibration?.doseGrams ?? currentBean.doseGrams ?? selectedDrink.defaultDoseGrams;
-  const effectiveYield = targetYieldGrams ?? savedCalibration?.targetYieldGrams ?? (currentBean.doseGrams ? Math.round(currentBean.doseGrams * selectedDrink.targetRatio * 10) / 10 : selectedDrink.targetYieldGrams);
+  const defaultDrinkDose = selectedDrink.id === 'french-press'
+    ? Math.round((fpSettings.waterMl / fpSettings.ratio) * 10) / 10
+    : selectedDrink.defaultDoseGrams;
+  const defaultDrinkYield = selectedDrink.id === 'french-press'
+    ? fpSettings.waterMl
+    : selectedDrink.targetYieldGrams;
+
+  const effectiveDose = doseGrams ?? savedCalibration?.doseGrams ?? currentBean.doseGrams ?? defaultDrinkDose;
+  const effectiveYield = targetYieldGrams ?? savedCalibration?.targetYieldGrams ?? (currentBean.doseGrams ? Math.round(currentBean.doseGrams * selectedDrink.targetRatio * 10) / 10 : defaultDrinkYield);
   const effectiveRatio = effectiveDose > 0 ? (effectiveYield / effectiveDose) : selectedDrink.targetRatio;
   const effectiveTargetTime = calculateTargetExtractionTime(
     effectiveDose,
@@ -724,6 +766,62 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
               </div>
             )}
 
+            {/* Dedicated French Press Carafe Size Selector */}
+            {selectedDrink.id === 'french-press' && (
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FFFDF9] border border-[#E8DFD5] space-y-3 font-mono">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#2C2018]">
+                    <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
+                    <span>Stempelkande Størrelse (Carafe Size)</span>
+                  </div>
+                  <span className="text-[10px] text-[#C26D52] font-bold bg-[#C26D52]/10 px-2 py-0.5 rounded-full border border-[#C26D52]/20">
+                    Auto-Dosis 1:{fpSettings.ratio}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  {[
+                    { label: 'Lille', ml: 350 },
+                    { label: 'Mellem', ml: 500 },
+                    { label: 'Stor', ml: 1000 },
+                  ].map((preset) => {
+                    const isCarafeActive = (targetYieldGrams ?? effectiveYield) === preset.ml;
+                    const presetDose = Math.round((preset.ml / fpSettings.ratio) * 10) / 10;
+                    return (
+                      <button
+                        key={preset.ml}
+                        type="button"
+                        onClick={() => handleSelectCarafeSize(preset.ml)}
+                        className={`p-2 sm:p-2.5 rounded-xl border flex flex-col items-center justify-center transition cursor-pointer ${
+                          isCarafeActive
+                            ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-xs font-bold'
+                            : 'bg-white text-[#2C2018] border-[#D0BDAA] hover:border-[#C26D52]'
+                        }`}
+                      >
+                        <span className="font-bold text-xs sm:text-sm">{preset.ml} ml</span>
+                        <span className={`text-[9px] mt-0.5 ${isCarafeActive ? 'text-amber-200' : 'text-[#7A6E65]'}`}>
+                          {presetDose}g kaffe
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-[#7A6E65] pt-1 border-t border-[#E8DFD5]">
+                  <span>Vælg din kandes volumen for præcis vand/kaffebalance.</span>
+                  {onOpenEquipmentTab && (
+                    <button
+                      type="button"
+                      onClick={onOpenEquipmentTab}
+                      className="text-[#C26D52] hover:underline font-bold text-[10px] cursor-pointer"
+                    >
+                      Finjustér i Gear →
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Milk Steam Guide (Only for milk drinks) */}
             {selectedDrink.milkGuide && (
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#FFFDF9] border border-[#E8DFD5] space-y-1.5">
@@ -939,6 +1037,39 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                         {t('drink.target_time_label') || 'Target Time'}: ~{targetTime}s ({targetYield}g)
                       </div>
                     </div>
+
+                    {/* Pour Over Brewer & Kettle Banner (When method is pour_over) */}
+                    {selectedDrink.method === 'pour_over' && filterBrewer && (
+                      <div className="col-span-1 sm:col-span-2 p-2.5 px-3 bg-[#FAF7F2] border-t border-[#E8DFD5] flex items-center justify-between gap-2 flex-wrap text-[11px]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs">🫗</span>
+                          <span className="text-[#7A6E65] uppercase font-bold text-[9px] tracking-wider">
+                            {t('gear.brewer_label') || 'Brewer'}:
+                          </span>
+                          <strong className="text-[#2C2018] font-serif font-bold">
+                            {filterBrewer}
+                          </strong>
+                          {kettleName && (
+                            <>
+                              <span className="text-[#A6998E]">•</span>
+                              <span className="text-[#7A6E65] text-[10px] truncate">
+                                🫖 {kettleName.split('(')[0].trim()}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {onOpenEquipmentTab && (
+                          <button
+                            type="button"
+                            onClick={onOpenEquipmentTab}
+                            className="text-[10px] text-[#C26D52] hover:text-[#2C2018] font-bold flex items-center gap-0.5 underline cursor-pointer shrink-0"
+                          >
+                            <span>{t('gear.switch_gear') || 'Change Gear'}</span>
+                            <ChevronRight className="w-3 h-3 inline" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Subtle guidance row */}

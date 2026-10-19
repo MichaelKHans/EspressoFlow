@@ -1,4 +1,5 @@
 import type { ShotRecord, ShotDataPoint, UserAccessState, CoffeeBeanProfile, GrinderProfile, TempUnit, EspressoMachineProfile } from '../types/espresso';
+import { MACHINE_CATALOG } from '../data/gearCatalog';
 
 const STORAGE_KEYS = {
   SHOTS: 'espressoflow_shots_v1',
@@ -16,6 +17,13 @@ const STORAGE_KEYS = {
   KETTLE: 'espressoflow_kettle_v1',
   GRIND_INTELLIGENCE: 'flowbean_grind_intelligence_v1',
   BEAN_ANCHORS: 'flowbean_bean_anchors_v1',
+  CUSTOM_PREINFUSION_OVERRIDES: 'flowbean_custom_preinfusion_overrides_v1',
+  LAST_CLEANSE_TIMESTAMP: 'flowbean_last_cleanse_timestamp_v1',
+  LAST_CLEANSE_TYPE: 'flowbean_last_cleanse_type_v1',
+  MACHINES_IN_SETUP: 'espressoflow_machines_in_setup_v1',
+  BREWERS_IN_SETUP: 'espressoflow_brewers_in_setup_v1',
+  KETTLES_IN_SETUP: 'espressoflow_kettles_in_setup_v1',
+  FRENCH_PRESS_SETTINGS: 'espressoflow_french_press_settings_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -235,10 +243,14 @@ export function getDefaultGrinders(): GrinderProfile[] {
       id: 'grinder-baratza-esp',
       name: 'Baratza Encore ESP Pro',
       type: 'stepped',
-      defaultSetting: '15',
-      stepUnit: 'micro-steps (1-20)',
+      defaultSetting: '15.0',
+      stepUnit: 'micro-steps (1-20 espresso / 21-40 filter)',
       secondsPerStep: 2.5,
       inSetup: true,
+      burrType: 'M2 40mm Steel Conical',
+      minSetting: 1.0,
+      maxSetting: 40.0,
+      espressoMaxSetting: 20.0,
     },
     {
       id: 'grinder-eureka-specialita',
@@ -248,6 +260,9 @@ export function getDefaultGrinders(): GrinderProfile[] {
       stepUnit: 'micrometric dial (0-5)',
       secondsPerStep: 6.0,
       inSetup: false,
+      burrType: '55mm Hardened Steel Flat',
+      minSetting: 0.0,
+      maxSetting: 6.0,
     },
     {
       id: 'grinder-varia-vs3',
@@ -526,6 +541,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 94,
     defaultTempC: 92,
     defaultPreInfusionSeconds: 2.0,
+    preInfusionControl: 'fixed',
+    preInfusionNote: 'Kort 2s elektronisk puls',
+    maxPumpBar: 15.0,
   },
   'Ninja Luxe Café / Ninja Pro': {
     category: 'combo',
@@ -537,7 +555,10 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     minTempC: 90,
     maxTempC: 96,
     defaultTempC: 93,
-    defaultPreInfusionSeconds: 4.0,
+    defaultPreInfusionSeconds: 6.0,
+    preInfusionControl: 'adjustable',
+    preInfusionNote: 'Justerbar pre-infusion soak (0-12s)',
+    maxPumpBar: 9.0,
   },
   "De'Longhi La Specialista": {
     category: 'combo',
@@ -550,6 +571,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 96,
     defaultTempC: 92,
     defaultPreInfusionSeconds: 3.0,
+    preInfusionControl: 'fixed',
+    preInfusionNote: 'Fast for-vædning (~3s)',
+    maxPumpBar: 15.0,
   },
   'Sage / Breville Dual Boiler': {
     category: 'manual',
@@ -558,6 +582,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 96,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 6.0,
+    preInfusionControl: 'adjustable',
+    preInfusionNote: 'Manuel hold-knap & programmerbar (1-15s)',
+    maxPumpBar: 9.0,
   },
   'Sage / Breville Barista Touch/Express': {
     category: 'combo',
@@ -570,6 +597,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 96,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 7.0,
+    preInfusionControl: 'fixed',
+    preInfusionNote: 'Fabriks-pre-infusion (~7s lavtryk)',
+    maxPumpBar: 15.0,
   },
   'Jura Z10 / E8 (Super-Automatic)': {
     category: 'super_automatic',
@@ -582,6 +612,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 95,
     defaultTempC: 92,
     defaultPreInfusionSeconds: 2.0,
+    preInfusionControl: 'fixed',
+    preInfusionNote: 'I.P.B.A.S. for-vædning (~2s)',
+    maxPumpBar: 15.0,
   },
   'Philips LatteGo 5400 / 3200': {
     category: 'super_automatic',
@@ -594,6 +627,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 95,
     defaultTempC: 92,
     defaultPreInfusionSeconds: 1.5,
+    preInfusionControl: 'fixed',
+    preInfusionNote: 'Automatisk for-brygning (~1.5s)',
+    maxPumpBar: 15.0,
   },
   "De'Longhi Magnifica / Eletta": {
     category: 'super_automatic',
@@ -606,6 +642,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 95,
     defaultTempC: 92,
     defaultPreInfusionSeconds: 2.0,
+    preInfusionControl: 'fixed',
+    preInfusionNote: 'Elektronisk for-infusion (~2s)',
+    maxPumpBar: 15.0,
   },
   'Sage Bambino / Bambino Plus': {
     category: 'manual',
@@ -613,7 +652,10 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     minTempC: 91,
     maxTempC: 95,
     defaultTempC: 93,
-    defaultPreInfusionSeconds: 5.0,
+    defaultPreInfusionSeconds: 8.0,
+    preInfusionControl: 'fixed',
+    preInfusionNote: 'ThermoJet lavtryks-rampe (~8-10s)',
+    maxPumpBar: 9.0,
   },
   'Gaggia Classic Pro / Evo': {
     tempControl: 'fixed',
@@ -621,6 +663,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 93,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 0.0,
+    preInfusionControl: 'none',
+    preInfusionNote: 'Direkte 9-bar pumpe (Ingen for-infusion)',
+    maxPumpBar: 9.0,
   },
   'Rancilio Silvia / Silvia Pro X': {
     tempControl: 'fixed',
@@ -628,6 +673,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 93,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 0.0,
+    preInfusionControl: 'none',
+    preInfusionNote: 'Direkte pumpe (Ingen for-infusion)',
+    maxPumpBar: 9.0,
   },
   'E61 Manual Flow Control': {
     tempControl: 'fixed',
@@ -635,6 +683,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 94,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 8.0,
+    preInfusionControl: 'adjustable',
+    preInfusionNote: 'Manuel flow paddle profilering (0-30s)',
+    maxPumpBar: 9.0,
   },
   'La Marzocco Linea Micra / Mini': {
     tempControl: 'pid',
@@ -642,6 +693,9 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 96,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 4.0,
+    preInfusionControl: 'fixed',
+    preInfusionNote: 'Elektronisk for-vædning via app (~4s)',
+    maxPumpBar: 9.0,
   },
   'Decent DE1 (Profiling)': {
     tempControl: 'pid',
@@ -649,21 +703,145 @@ export const MACHINE_TEMP_PRESETS: Record<string, Partial<EspressoMachineProfile
     maxTempC: 98,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 6.0,
+    preInfusionControl: 'adjustable',
+    preInfusionNote: 'Fuld avanceret tryk/flow profilering (0-30s)',
+    maxPumpBar: 9.0,
   },
 };
 
+export function loadPreinfusionOverride(machineName: string): boolean {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CUSTOM_PREINFUSION_OVERRIDES);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return Boolean(parsed[machineName]);
+  } catch {
+    return false;
+  }
+}
+
+export function savePreinfusionOverride(machineName: string, enabled: boolean): void {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CUSTOM_PREINFUSION_OVERRIDES);
+    const parsed = raw ? JSON.parse(raw) : {};
+    parsed[machineName] = enabled;
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_PREINFUSION_OVERRIDES, JSON.stringify(parsed));
+  } catch (err) {
+    console.error('Failed to save preinfusion override', err);
+  }
+}
+
+export function loadLastCleanse(): { timestamp: number; type: string } {
+  try {
+    const rawTs = localStorage.getItem(STORAGE_KEYS.LAST_CLEANSE_TIMESTAMP);
+    const rawType = localStorage.getItem(STORAGE_KEYS.LAST_CLEANSE_TYPE) || 'Urnex Cafiza Soak';
+    const ts = rawTs ? parseInt(rawTs, 10) : Date.now() - 4 * 24 * 60 * 60 * 1000;
+    return { timestamp: ts, type: rawType };
+  } catch {
+    return { timestamp: Date.now() - 4 * 24 * 60 * 60 * 1000, type: 'Urnex Cafiza Soak' };
+  }
+}
+
+export function saveLastCleanse(type: string = 'Urnex Cafiza Soak'): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LAST_CLEANSE_TIMESTAMP, Date.now().toString());
+    localStorage.setItem(STORAGE_KEYS.LAST_CLEANSE_TYPE, type);
+  } catch (err) {
+    console.error('Failed to save cleanse log', err);
+  }
+}
+
 export function getMachineTempProfile(machineName: string): Partial<EspressoMachineProfile> {
-  const match = Object.keys(MACHINE_TEMP_PRESETS).find(
-    (k) => machineName.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(machineName.toLowerCase())
+  const normName = machineName.toLowerCase().trim();
+
+  // 1. Check custom presets
+  const presetMatch = Object.keys(MACHINE_TEMP_PRESETS).find(
+    (k) => normName.includes(k.toLowerCase()) || k.toLowerCase().includes(normName)
   );
-  if (match) return MACHINE_TEMP_PRESETS[match];
+  const preset = presetMatch ? MACHINE_TEMP_PRESETS[presetMatch] : undefined;
+
+  // 2. Check full hardware catalog (including all 24 new machines)
+  const catalogMatch = MACHINE_CATALOG.find((c) => {
+    const cName = c.name.toLowerCase().trim();
+    const cBrand = c.brand ? c.brand.toLowerCase().trim() : '';
+    return (
+      cName === normName ||
+      cName.includes(normName) ||
+      normName.includes(cName) ||
+      (cBrand && normName.includes(cBrand) && cName.split(' ').some((w) => w.length > 2 && normName.includes(w)))
+    );
+  });
+
+  const catalogSpecs = catalogMatch?.specs;
+  const catalogProfile: Partial<EspressoMachineProfile> = catalogSpecs
+    ? {
+        tempControl: catalogSpecs.tempControl,
+        minTempC: catalogSpecs.tempControl === 'fixed' ? (catalogSpecs.defaultTempC ?? 93) : 88,
+        maxTempC: catalogSpecs.tempControl === 'fixed' ? (catalogSpecs.defaultTempC ?? 93) : 96,
+        defaultTempC: catalogSpecs.defaultTempC,
+        defaultPreInfusionSeconds: catalogSpecs.defaultPreInfusionSeconds,
+        preInfusionControl: catalogSpecs.preInfusionControl,
+        preInfusionNote: catalogSpecs.preInfusionNote,
+        maxPumpBar: catalogSpecs.pumpBar,
+      }
+    : {};
+
+  // Merge: preset takes precedence on combo grinder fields, catalog supplies verified hydraulic & pre-infusion specs
+  if (preset || catalogSpecs) {
+    return {
+      tempControl: preset?.tempControl ?? catalogProfile.tempControl ?? 'pid',
+      minTempC: preset?.minTempC ?? catalogProfile.minTempC ?? 88,
+      maxTempC: preset?.maxTempC ?? catalogProfile.maxTempC ?? 96,
+      defaultTempC: preset?.defaultTempC ?? catalogProfile.defaultTempC ?? 93,
+      defaultPreInfusionSeconds: preset?.defaultPreInfusionSeconds ?? catalogProfile.defaultPreInfusionSeconds ?? 6.0,
+      preInfusionControl: preset?.preInfusionControl ?? catalogProfile.preInfusionControl ?? 'adjustable',
+      preInfusionNote: preset?.preInfusionNote ?? catalogProfile.preInfusionNote,
+      maxPumpBar: preset?.maxPumpBar ?? catalogProfile.maxPumpBar ?? 9.0,
+      hasBuiltInGrinder: preset?.hasBuiltInGrinder,
+      builtInGrinderName: preset?.builtInGrinderName,
+      builtInGrinderType: preset?.builtInGrinderType,
+      builtInGrinderSteps: preset?.builtInGrinderSteps,
+      category: preset?.category,
+    };
+  }
+
   return {
     tempControl: 'pid',
     minTempC: 88,
     maxTempC: 96,
     defaultTempC: 93,
     defaultPreInfusionSeconds: 6.0,
+    preInfusionControl: 'adjustable',
+    maxPumpBar: 9.0,
   };
+}
+
+export interface FrenchPressSettings {
+  waterMl: number;
+  ratio: number;
+}
+
+export function loadFrenchPressSettings(): FrenchPressSettings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.FRENCH_PRESS_SETTINGS);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // fallback
+  }
+  return { waterMl: 500, ratio: 15.0 };
+}
+
+export function saveFrenchPressSettings(settings: FrenchPressSettings): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.FRENCH_PRESS_SETTINGS, JSON.stringify(settings));
+    window.dispatchEvent(
+      new CustomEvent('flowbean_frenchpress_updated', {
+        detail: settings,
+      })
+    );
+  } catch (err) {
+    console.error('Failed to save French Press settings', err);
+  }
 }
 
 export interface DrinkCalibration {
@@ -742,6 +920,76 @@ export function saveKettle(kettle: string): void {
     console.error('Failed to save kettle', err);
   }
 }
+
+export function loadMachinesInSetup(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.MACHINES_IN_SETUP);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    const current = loadMachineName();
+    return [current];
+  } catch {
+    return [loadMachineName()];
+  }
+}
+
+export function saveMachinesInSetup(machines: string[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.MACHINES_IN_SETUP, JSON.stringify(machines));
+  } catch (err) {
+    console.error('Failed to save machines in setup', err);
+  }
+}
+
+export function loadBrewersInSetup(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.BREWERS_IN_SETUP);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    const current = loadFilterBrewer();
+    const defaults = [current];
+    if (!defaults.some((b) => b.toLowerCase().includes('french') || b.toLowerCase().includes('stempel'))) {
+      defaults.push('French Press / Stempelkande (Bodum Chambord / Espro P7)');
+    }
+    return defaults;
+  } catch {
+    return [loadFilterBrewer()];
+  }
+}
+
+export function saveBrewersInSetup(brewers: string[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.BREWERS_IN_SETUP, JSON.stringify(brewers));
+  } catch (err) {
+    console.error('Failed to save brewers in setup', err);
+  }
+}
+
+export function loadKettlesInSetup(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.KETTLES_IN_SETUP);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    return [loadKettle()];
+  } catch {
+    return [loadKettle()];
+  }
+}
+
+export function saveKettlesInSetup(kettles: string[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.KETTLES_IN_SETUP, JSON.stringify(kettles));
+  } catch (err) {
+    console.error('Failed to save kettles in setup', err);
+  }
+}
+
 
 // -------------------------------------------------------------
 // Universal Adaptive Grind Intelligence (On-Device Local-First)

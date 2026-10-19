@@ -267,6 +267,31 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 
 ---
 
+## 🛠️ FASE 13: Gear Station Validering, Hardware Data-Audit & Billedberigelse (v1.20.3 - AFSLUTTET)
+- [x] **1. Dybtgående Systemintegration & Regressionstest:**
+  - Kontrolleret at alt "taler sammen" på tværs af hele appen efter den store arkitekturændring i `GearStationView.tsx`.
+  - Valg af kværn i Gear Station synkroniserer 100% til Kaffebaren (`DrinkSelector.tsx`), Beandex (`BeandexView.tsx`), for-bryg rådgiveren (`PreBrewCoachBanner.tsx`) og skudlogningen i `ScaleMonitor.tsx`.
+  - Valg af espressomaskine opdaterer præ-infusion og temperatur korrekt i opskriftsvisningen og logbogen.
+  - Valg af filterbrygger (V60, French Press, Chemex osv.) og elkedel opdaterer Pour Over baren i `DrinkSelector.tsx`.
+  - Sikkerhedsværn implementeret i `GearCardCarousel.tsx` (forhindrer sletning af sidste kværn eller espressomaskine, mens filterudstyr kan fjernes frit).
+- [x] **2. Fysisk Hardware & Specifikations-Audit (Korrekthed af Indstillingsmuligheder):**
+  - Samtlige 70 nye modeller integreret modulært i `src/data/catalogs/` og koblet direkte til `getMachineTempProfile` i `src/lib/storage.ts`:
+    - **Espressomaskiner:** Verificeret pumpetryk (9 bar OPV vs 15/18/19 bar), kedeltype (Single, Dual, HX, ThermoJet, Manual Lever), temperaturstyring (PID, stepped, fixed) og for-vædning (manuel/programmerbar, fabrikslåst mekanisk E61-kammer, eller direkte pumpe).
+    - **Kværne:** Knivstørrelse (mm), knivtype (konisk vs flad), trintype (stepped med micro/macro vs stepless mikrometrisk skrue), samt minimum/maksimum og espresso-maksimum (fx DF54 ≤ 25, Mazzer Philos ≤ 35, EK43 ≤ 3.2).
+- [x] **3. Billedberigelse & Resiliente Vektor-Silhuetter:**
+  - `GearImage.tsx` forbedret med `useEffect` prop-synkronisering og specialiserede, matematiske SVG-silhuetter for alle kategorier:
+    - Mahlkönig EK43 / EK43S med vertikalt motorhus, stor front-rotary drejeskive og poseklemme.
+    - Fuldautomatiske maskiner (DeLonghi Magnifica/Eletta, Miele, Jura) med integreret bønnetragt, display og dobbelt kaffeudløb.
+    - Flat-Bottom Wave Drippere (Kalita Wave, Stagg X, April, Orea) med lodrette bølgeriller og flad bund.
+    - Hybrid Steep-and-Release (Hario Switch, Clever Dripper) med kugleventil-omskifter.
+    - Elkedler med digital temperatur-LED kontrolbase.
+  - Billedstier i `public/images/gear/{grinders,machines,brewers,kettles}` normaliseres automatisk, så brugeren kan tilføje egne WebP-fotos efter ønske uden risiko for broken images.
+- [x] **4. French Press Kalkulator Barista-Validering:**
+  - Valideret 3 kandestørrelser (350ml, 500ml, 1000ml) med 1-tryk valg direkte i opskriftskortet og tovejs-synkronisering med `FrenchPressVolumeCalculator.tsx` og Live Monitor via `flowbean_frenchpress_updated`.
+  - Gram kaffe doseres automatisk ud fra 1:15 ratio (eller 1:14 kraftig / 1:16 mild), og huskes på tværs af sessioner.
+
+---
+
 ## 📌 Næste Opgaver
 - [ ] **Opdatering af Vilkår & Privatlivspolitik (`LegalModal.tsx`):**
   - Ajourføre Privacy Policy og Terms of Service til 100% at afspejle den aktuelle arkitektur:
