@@ -32,4 +32,4 @@ Du er en **Senior Fullstack Arkitekt og Barista Tech Specialist** med speciale i
 - **Kamera & OCR:** HTML5 `<video>` / Canvas 2D Context API med adaptiv binarisering til 7-segment digitalvægte.
 - **In-App Purchases:** `@revenuecat/purchases-capacitor` (Non-consumable Lifetime Pro).
 - **Mobil Wrapper:** `@capacitor/core`, `@capacitor/ios`, `@capacitor/android`, `@capacitor/camera`.
-- **Deployment:** Vercel (gratis underdomæne `espressoflow.vercel.app` til web app, Privacy Policy, Terms og Support).
+- **Deployment:** Web køres lokalt via Vite (`http://localhost:5173`), samt valgfri fremtidig Vercel hosting til Privacy Policy, Terms og Support.
