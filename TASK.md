@@ -298,12 +298,18 @@ Dette dokument bruges til hurtige opgaveindtastninger, især når du er på fart
 
 ---
 
-## 📌 Næste Opgaver
-- [ ] **Opdatering af Vilkår & Privatlivspolitik (`LegalModal.tsx`):**
+## 📌 Næste Opgaver (FASE 14: Admin Billede-Reference & 100% Ægte Packshot-Katalog)
+- [ ] **1. Admin Gear Reference Upload System (`isAdminEditMode`):**
+  - Byg `AdminGearImageModal.tsx`: Tillad brugeren at tage mobilfoto eller uploade et referencebillede og skrive en note til en maskine/kværn/brygger/kedel.
+  - Tilføj diskret `[📷 Ret / Reference]` knap på hvert udstyrskort i `GearCardCarousel.tsx`, der kun vises når *Admin Redigering* er aktiv.
+  - Implementer lokal override-lagring i `storage.ts` (`saveGearImageOverride`), så kortet skifter billede med det samme.
+- [ ] **2. Systematisk Fabriks-Packshot Pipeline (Model for Model):**
+  - Hent de 100% autentiske, officielle produktfotos for resten af maskinerne (Lelit Bianca/Mara, Rocket Appartamento, ECM, Ascaso, Decent DE1, Cafelat Robot, Flair 58, Jura Z10, Philips LatteGo, Miele, Wilfa, Timemore osv.).
+  - Garanter at ingen modeller deler billeder af andre maskiner.
+- [ ] **3. Opdatering af Vilkår & Privatlivspolitik (`LegalModal.tsx`):**
   - Ajourføre Privacy Policy og Terms of Service til 100% at afspejle den aktuelle arkitektur:
     - 100% on-device OCR uden videostreaming til eksterne servere.
     - Local-first lagring i browser/app SQLite/LocalStorage.
-    - Valgfri anonym synkronisering af kaffedata og fremtidig aggregeret markedsindsigt.
     - Klare vilkår for 7-dages gratis prøveperiode og $4.99 / 49,- DKK engangskøb (Lifetime Pro).
 
 ---

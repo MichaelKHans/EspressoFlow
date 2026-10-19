@@ -9,19 +9,21 @@
 
 ---
 
-### 📌 KØREPLAN FOR NÆSTE SESSION (I MORGEN): FASE 13 - GEAR VALIDERING & HARDWARE DATA-AUDIT
-1. **Dybtgående Systemintegration & Regressionstest:**
-   - Efterprøve at alt "taler sammen" på tværs af appen efter den store ombygning af `GearStationView.tsx`.
-   - Teste synkronisering af aktiv kværn, maskine, brygger og kedel mod Kaffebaren (`DrinkSelector.tsx`), Beandex (`BeandexView.tsx`), for-bryg rådgiveren (`PreBrewCoachBanner.tsx`) og skudlogning (`ScaleMonitor.tsx`).
-   - Tjekke for eventuelle regressionsfejl, layout overflow eller edge-cases ved tilføjelse og sletning af hardware.
-2. **Hardware & Specifikations-Audit (Korrekthed af Indstillingsmuligheder):**
-   - Gennemgå samtlige maskiner og kværne i `gearCatalog.ts` og `storage.ts` for at sikre, at specifikationer og fysiske justeringsmuligheder er 100% korrekte:
-     - *Espressomaskiner:* 9 bar vs 15 bar OPV, varmesystem (Thermoblock, Boiler, ThermoJet), PID vs stepped/fast temperatur, og præ-infusion (programmerbar, fabriksfast puls, eller ingen).
-     - *Kværne:* Knivstørrelse (mm), konisk vs flad, mikrometerskrue vs stepped trin, og min/max rækkevidde.
-3. **Billedberigelse & Billedskift (WebP optimering):**
-   - Klargøre WebP-billeder (~20–30 KB) til udstyret i `public/images/gear/` og validere SVG-silhuetter som fallback.
-4. **French Press Kalkulator Validering:**
-   - Teste de 3 kandestørrelser (350ml, 500ml, 1000ml), finjustering og ratio-beregning (1:14, 1:15, 1:16).
+### 📌 KØREPLAN FOR NÆSTE SESSION (I MORGEN): FASE 14 - ADMIN BILLEDE-REFERENCE UPLOAD & 100% ÆGTE FABRIKS-PACKSHOTS
+1. **Admin Gear Reference Upload System (`isAdminEditMode`):**
+   - Byg `AdminGearImageModal.tsx`: Tillad brugeren at tage et mobilfoto eller uploade et referencebillede og skrive en note til en maskine/kværn/brygger/kedel.
+   - Forbind en diskret `[📷 Ret / Reference]` knap på hvert udstyrskort i `GearCardCarousel.tsx`, der **kun** er synlig, når *Admin Redigering* er slået TIL i Indstillinger.
+   - Gemme uploadede billeder lokalt via `storage.ts` (`saveGearImageOverride`), så kortet opdateres øjeblikkeligt med det samme.
+   - Gøre det muligt for Anti at udlæse alle uploadede referencer, så de kan gøres til permanente officielle filer.
+2. **Systematisk Hentning af 100% Autentiske Fabriks-Packshots (Model for Model):**
+   - Fortsætte den officielle packshot-pipeline uden delte billeder:
+     - *Espressomaskiner:* Lelit Bianca/Mara X, Rocket Appartamento/Giotto, ECM Synchronika, Ascaso Steel/Dream, Decent DE1, Cafelat Robot, Flair 58, Jura Z10, Philips LatteGo, Miele CM 5310, DeLonghi Specialista/Magnifica/Eletta osv.
+     - *Kværne:* Niche Zero/Duo, Mazzer Philos/Super Jolly, Mahlkönig EK43/X54, Wilfa Uniform, Timemore Sculptor 064S/078S, Varia VS3/VS6 osv.
+     - *Bryggere & Kedler:* Bialetti Moka/Brikka, Kalita Wave, Timemore Fish, Brewista Artisan osv.
+3. **Kvalitetssikring & Synkronisering:**
+   - Køre `npm run build` og bekræfte 100% fejlfri kompilering.
+   - Køre `npx cap sync android` og teste i Android Studio.
+   - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
 ---
 
