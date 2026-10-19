@@ -6,6 +6,7 @@ interface GearImageProps {
   category: 'grinder' | 'machine' | 'brewer' | 'kettle';
   className?: string;
   subType?: string;
+  allowSilhouettes?: boolean;
 }
 
 export const GearImage: React.FC<GearImageProps> = ({
@@ -14,6 +15,7 @@ export const GearImage: React.FC<GearImageProps> = ({
   category,
   className = 'w-full h-full object-contain',
   subType,
+  allowSilhouettes = false,
 }) => {
   const [imgErrorCount, setImgErrorCount] = useState(0);
 
@@ -24,10 +26,10 @@ export const GearImage: React.FC<GearImageProps> = ({
   const altLower = alt.toLowerCase();
   const subLower = (subType || '').toLowerCase();
 
-  // Category photorealistic fallback image
+  // Category authentic manufacturer packshot fallback
   const categoryDefaultPhoto = (() => {
     if (category === 'grinder') return '/images/gear/grinders/baratza-esp.webp';
-    if (category === 'machine') return '/images/gear/machines/espresso-machine.webp';
+    if (category === 'machine') return '/images/gear/machines/gaggia-classic.webp';
     if (category === 'brewer') {
       return altLower.includes('french') || altLower.includes('stempel')
         ? '/images/gear/brewers/french-press.webp'
@@ -47,7 +49,7 @@ export const GearImage: React.FC<GearImageProps> = ({
 
   const activeSrc = imgErrorCount === 0 ? normalizedSrc : categoryDefaultPhoto;
 
-  if (imgErrorCount >= 2 || !activeSrc) {
+  if (allowSilhouettes && (imgErrorCount >= 2 || !activeSrc)) {
     return (
       <div
         className="w-full h-full flex items-center justify-center p-2 select-none"
