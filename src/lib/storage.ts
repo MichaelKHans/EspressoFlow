@@ -208,6 +208,15 @@ export function loadGrinders(): GrinderProfile[] {
     const raw = localStorage.getItem(STORAGE_KEYS.GRINDERS);
     const grinders: GrinderProfile[] = raw ? JSON.parse(raw) : getDefaultGrinders();
 
+    // Migrate legacy 'Baratza Encore ESP Pro' to official accurate name 'Baratza Encore ESP'
+    let needsSave = false;
+    for (const g of grinders) {
+      if (g.name === 'Baratza Encore ESP Pro') {
+        g.name = 'Baratza Encore ESP';
+        needsSave = true;
+      }
+    }
+
     // Clean up older legacy default where Eureka was unintentionally enabled alongside Baratza
     const baratza = grinders.find((g) => g.id === 'grinder-baratza-esp');
     const eureka = grinders.find((g) => g.id === 'grinder-eureka-specialita');
@@ -215,13 +224,17 @@ export function loadGrinders(): GrinderProfile[] {
     if (!legacyFlag && baratza?.inSetup && eureka?.inSetup) {
       eureka.inSetup = false;
       localStorage.setItem('espressoflow_eureka_cleaned_v1', 'true');
-      saveGrinders(grinders);
+      needsSave = true;
     }
 
     // Guarantee at least one grinder has inSetup: true
     const hasAnyInSetup = grinders.some((g) => g.inSetup === true);
     if (!hasAnyInSetup && grinders.length > 0) {
       grinders[0].inSetup = true;
+      needsSave = true;
+    }
+
+    if (needsSave) {
       saveGrinders(grinders);
     }
     return grinders;
@@ -242,7 +255,7 @@ export function getDefaultGrinders(): GrinderProfile[] {
   return [
     {
       id: 'grinder-baratza-esp',
-      name: 'Baratza Encore ESP Pro',
+      name: 'Baratza Encore ESP',
       type: 'stepped',
       defaultSetting: '15.0',
       stepUnit: 'micro-steps (1-20 espresso / 21-40 filter)',

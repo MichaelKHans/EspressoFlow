@@ -120,7 +120,7 @@ export function App() {
       ratioStyle: 'standard' as RatioStyle,
       targetYieldGrams: 36.0,
       grindSetting: '15',
-      grinderName: 'Baratza Encore ESP Pro',
+      grinderName: 'Baratza Encore ESP',
       isFinished: true,
     };
 
@@ -128,8 +128,9 @@ export function App() {
   const [doseGrams, setDoseGrams] = useState<number>(currentBean.doseGrams);
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(currentBean.targetYieldGrams);
   const [grinderName, setGrinderName] = useState<string>(() => {
-    const res = resolveGrinder(currentBean.grinderName, loadGrinders());
-    return res?.name || currentBean.grinderName;
+    const rawName = currentBean.grinderName === 'Baratza Encore ESP Pro' ? 'Baratza Encore ESP' : currentBean.grinderName;
+    const res = resolveGrinder(rawName, loadGrinders());
+    return res?.name || rawName;
   });
   const [grindSetting, setGrindSetting] = useState<string>(currentBean.grindSetting);
   const [machineName, setMachineName] = useState<string>(() => loadMachineName());
@@ -142,7 +143,7 @@ export function App() {
   // Active Grinder derived safely after grinderName is declared
   const currentGrinder = resolveGrinder(grinderName, grinders) || grinders[0] || {
     id: 'default',
-    name: 'Baratza Encore ESP Pro',
+    name: 'Baratza Encore ESP',
     type: 'stepped' as const,
     defaultSetting: '15',
     stepUnit: 'micro-steps',

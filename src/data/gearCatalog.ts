@@ -43,7 +43,7 @@ export interface GearCatalogItem {
 export const GRINDER_CATALOG: GearCatalogItem[] = [
   {
     id: 'grinder-baratza-esp',
-    name: 'Baratza Encore ESP Pro',
+    name: 'Baratza Encore ESP',
     brand: 'Baratza',
     category: 'grinder',
     subCategory: 'Conical Burr (Dual-Zone)',

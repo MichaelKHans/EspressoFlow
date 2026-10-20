@@ -469,6 +469,17 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {isAdminEditMode && (
+            <a
+              href="/gear-audit.html"
+              target="_blank"
+              rel="noreferrer"
+              className="px-2.5 py-1.5 rounded-xl bg-[#C26D52]/10 border border-[#C26D52]/30 text-[#C26D52] hover:bg-[#C26D52]/20 text-[11px] font-mono font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+              title="Åbn komplet visuelt billed-galleri og scan alle 104 modeller"
+            >
+              <span>🔍 Scan Alle Billeder</span>
+            </a>
+          )}
           <span className="text-[11px] font-mono text-[#7A6E65] bg-[#FAF7F2] px-3 py-1.5 rounded-xl border border-[#D0BDAA] font-semibold">
             {grinders.filter((g) => g.inSetup).length} {grinders.filter((g) => g.inSetup).length === 1 ? 'Kværn' : 'Kværne'} i setup
           </span>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flowbean – Gear Billed-Scanner & Audit</title>
+  <style>
+    :root {
+      --bg: #FAF7F2;
+      --card-bg: #FFFDF9;
+      --espresso: #2C2018;
+      --terracotta: #C26D52;
+      --border: #D0BDAA;
+      --text: #2C2018;
+      --muted: #7A6E65;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+    .header {
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      padding: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .header h1 {
+      font-size: 22px;
+      color: var(--espresso);
+      margin-bottom: 8px;
+    }
+    .header p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--espresso);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #F4EFEA;
+      border-color: var(--terracotta);
+    }
+    .btn.active {
+      background: var(--espresso);
+      color: white;
+      border-color: var(--espresso);
+    }
+    .btn-copy {
+      background: var(--terracotta);
+      color: white;
+      border-color: var(--terracotta);
+    }
+    .btn-copy:hover {
+      background: #A85A42;
+    }
+    .stats {
+      font-size: 13px;
+      font-family: monospace;
+      color: var(--espresso);
+      padding: 6px 12px;
+      background: #FAF7F2;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .card.status-correct {
+      border: 2px solid #10B981;
+      background: #F0FDF4;
+    }
+    .card.status-wrong {
+      border: 2px solid #EF4444;
+      background: #FEF2F2;
+    }
+    .img-box {
+      width: 100%;
+      height: 180px;
+      background: #FAF7F2;
+      border-radius: 10px;
+      border: 1px solid rgba(208, 189, 170, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .img-box img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+    .meta {
+      margin-bottom: 12px;
+    }
+    .meta .brand {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--terracotta);
+      font-family: monospace;
+    }
+    .meta .title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--espresso);
+      margin: 2px 0;
+      line-height: 1.25;
+    }
+    .meta .sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .meta .path {
+      font-size: 9px;
+      color: #A6998E;
+      font-family: monospace;
+      word-break: break-all;
+    }
+    .actions {
+      display: flex;
+      gap: 6px;
+      margin-top: auto;
+    }
+    .act-btn {
+      flex: 1;
+      padding: 8px 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: white;
+    }
+    .act-btn.correct:hover, .card.status-correct .act-btn.correct {
+      background: #10B981;
+      color: white;
+      border-color: #10B981;
+    }
+    .act-btn.wrong:hover, .card.status-wrong .act-btn.wrong {
+      background: #EF4444;
+      color: white;
+      border-color: #EF4444;
+    }
+    .search-input {
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      min-width: 220px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔍 Flowbean Gear Billed-Scanner & Audit</h1>
+    <p>Gennemse samtlige udstyrsmodeller. Klik <strong>[❌ Forkert]</strong> på modeller der ikke matcher det virkelige udstyr, og klik derefter på <strong>[📋 Kopiér Fejlliste til Anti]</strong>.</p>
+    <div class="toolbar">
+      <div class="filters">
+        <button class="btn active" onclick="setCategory('all')">Alle (104)</button>
+        <button class="btn" onclick="setCategory('grinder')">Kværne</button>
+        <button class="btn" onclick="setCategory('machine')">Maskiner</button>
+        <button class="btn" onclick="setCategory('brewer')">Bryggere</button>
+        <button class="btn" onclick="setCategory('kettle')">Kedler</button>
+      </div>
+      <input type="text" class="search-input" id="search" placeholder="Søg model eller brand..." oninput="renderGrid()">
+      <div class="stats" id="stats">0 godkendt • 0 forkerte</div>
+      <button class="btn btn-copy" onclick="copyReport()">📋 Kopiér Fejlliste til Anti</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const items = [{"id": "grinder-baratza-esp", "name": "Baratza Encore ESP", "brand": "Baratza", "category": "grinder", "subCategory": "Conical Burr (Dual-Zone)", "image": "/images/gear/grinders/baratza-esp.webp"}, {"id": "grinder-niche-zero", "name": "Niche Zero (Conical)", "brand": "Niche", "category": "grinder", "subCategory": "Single Dose Conical", "image": "/images/gear/grinders/niche-zero.webp"}, {"id": "grinder-eureka-specialita", "name": "Eureka Mignon Specialita 16CR", "brand": "Eureka", "category": "grinder", "subCategory": "Flat Burr Micrometric", "image": "/images/gear/grinders/eureka-specialita.webp"}, {"id": "grinder-eureka-libra", "name": "Eureka Mignon Libra (Grind-by-Weight)", "brand": "Eureka", "category": "grinder", "subCategory": "Weight-Dosing Flat Burr", "image": "/images/gear/grinders/eureka-libra.webp"}, {"id": "grinder-eureka-zero", "name": "Eureka Mignon Zero / Oro Single Dose", "brand": "Eureka", "category": "grinder", "subCategory": "Single Dose Flat Burr", "image": "/images/gear/grinders/eureka-zero.webp"}, {"id": "grinder-df64", "name": "DF64 Gen 2 (Single Dose)", "brand": "Turin / DF64", "category": "grinder", "subCategory": "64mm Flat Burr Mod-Friendly", "image": "/images/gear/grinders/df64.webp"}, {"id": "grinder-fellow-opus", "name": "Fellow Opus Conical", "brand": "Fellow", "category": "grinder", "subCategory": "All-Round Dual Ring", "image": "/images/gear/grinders/fellow-opus.webp"}, {"id": "grinder-baratza-sette", "name": "Baratza Sette 270 / 270Wi", "brand": "Baratza", "category": "grinder", "subCategory": "High-Speed Straight-Drop", "image": "/images/gear/grinders/baratza-sette.webp"}, {"id": "grinder-timemore-sculptor", "name": "Timemore Sculptor 064S / 078S", "brand": "Timemore", "category": "grinder", "subCategory": "Rotary Fin Knocker Flat", "image": "/images/gear/grinders/timemore-sculptor.webp"}, {"id": "grinder-comandante", "name": "Comandante C40 MK4", "brand": "Comandante", "category": "grinder", "subCategory": "Precision Hand Grinder", "image": "/images/gear/grinders/comandante-c40.webp"}, {"id": "grinder-1zpresso", "name": "1Zpresso J-Ultra / J-Max", "brand": "1Zpresso", "category": "grinder", "subCategory": "Ultra-Fine External Dial", "image": "/images/gear/grinders/1zpresso-jultra.webp"}, {"id": "grinder-sage-smart", "name": "Sage The Smart Grinder Pro", "brand": "Sage / Breville", "category": "grinder", "subCategory": "Digital Dosing Conical", "image": "/images/gear/grinders/sage-smart.webp"}, {"id": "grinder-wilfa-uniform", "name": "Wilfa Uniform WSFBS-100B", "brand": "Wilfa", "category": "grinder", "subCategory": "Flat Burr Slow-Speed", "image": "/images/gear/grinders/wilfa-uniform.webp"}, {"id": "grinder-mahlkonig", "name": "Mahlkönig X54 Allround Home", "brand": "Mahlkönig", "category": "grinder", "subCategory": "German Commercial Grade Flat", "image": "/images/gear/grinders/mahlkonig-x54.webp"}, {"id": "machine-sage-bambino", "name": "Sage Bambino / Bambino Plus", "brand": "Sage / Breville", "category": "machine", "subCategory": "ThermoJet Fast Heat-Up", "image": "/images/gear/machines/sage-bambino.webp"}, {"id": "machine-sage-barista-express", "name": "Sage / Breville Barista Touch/Express", "brand": "Sage / Breville", "category": "machine", "subCategory": "Combo All-In-One", "image": "/images/gear/machines/sage-barista-express.webp"}, {"id": "machine-sage-dual-boiler", "name": "Sage / Breville Dual Boiler", "brand": "Sage / Breville", "category": "machine", "subCategory": "Dual Boiler PID Specialist", "image": "/images/gear/machines/sage-dual-boiler.webp"}, {"id": "machine-gaggia-classic", "name": "Gaggia Classic Pro / Evo", "brand": "Gaggia", "category": "machine", "subCategory": "Traditional 58mm Commercial Group", "image": "/images/gear/machines/gaggia-classic.webp"}, {"id": "machine-rancilio-silvia", "name": "Rancilio Silvia / Silvia Pro X", "brand": "Rancilio", "category": "machine", "subCategory": "Heavy Brass Commercial Boiler", "image": "/images/gear/machines/rancilio-silvia.webp"}, {"id": "machine-lelit-bianca", "name": "E61 Manual Flow Control (Lelit Bianca, ECM, Rocket)", "brand": "Lelit / ECM / Rocket", "category": "machine", "subCategory": "E61 Paddle Profiling", "image": "/images/gear/machines/lelit-bianca.webp"}, {"id": "machine-lamarzocco-linea", "name": "La Marzocco Linea Micra / Mini", "brand": "La Marzocco", "category": "machine", "subCategory": "Commercial Grade Dual Boiler", "image": "/images/gear/machines/lamarzocco-linea.webp"}, {"id": "machine-decent-de1", "name": "Decent DE1 (Profiling)", "brand": "Decent Espresso", "category": "machine", "subCategory": "Digital Flow & Pressure Profiling", "image": "/images/gear/machines/decent-de1.webp"}, {"id": "machine-ninja-luxe", "name": "Ninja Luxe Café / Ninja Pro", "brand": "Ninja", "category": "machine", "subCategory": "Smart Dosing Combo", "image": "/images/gear/machines/ninja-luxe.webp"}, {"id": "machine-jura-z10", "name": "Jura Z10 / E8 (Super-Automatic)", "brand": "Jura", "category": "machine", "subCategory": "Bean-to-Cup Swiss Automatic", "image": "/images/gear/machines/jura-z10.webp"}, {"id": "machine-philips-lattego", "name": "Philips LatteGo 5400 / 3200", "brand": "Philips", "category": "machine", "subCategory": "Automatic Ceramic Grinder", "image": "/images/gear/machines/philips-lattego.webp"}, {"id": "brewer-french-press", "name": "French Press / Stempelkande (Bodum / Espro)", "brand": "Bodum / Espro", "category": "brewer", "subCategory": "Full Immersion Metal Filter", "image": "/images/gear/brewers/french-press.webp"}, {"id": "brewer-hario-v60", "name": "Hario V60 (02 Ceramic / Plastic / Metal)", "brand": "Hario", "category": "brewer", "subCategory": "High-Bypass Conical Dripper", "image": "/images/gear/brewers/hario-v60.webp"}, {"id": "brewer-aeropress", "name": "AeroPress (Inverted & Standard Method)", "brand": "AeroPress", "category": "brewer", "subCategory": "Hybrid Immersion & Pressure", "image": "/images/gear/brewers/aeropress.webp"}, {"id": "brewer-chemex", "name": "Chemex (6-Cup / 8-Cup Classic Bonded Paper)", "brand": "Chemex", "category": "brewer", "subCategory": "Thick Bonded Filter Carafe", "image": "/images/gear/brewers/chemex.webp"}, {"id": "brewer-kalita-wave", "name": "Kalita Wave (185 Flat-Bottom Stainless)", "brand": "Kalita", "category": "brewer", "subCategory": "Flat-Bottom Wave Dripper", "image": "/images/gear/brewers/kalita-wave.webp"}, {"id": "brewer-moccamaster", "name": "Moccamaster / Batch Filter Brewer", "brand": "Technivorm / Moccamaster", "category": "brewer", "subCategory": "Automated Drip Brewer", "image": "/images/gear/brewers/moccamaster.webp"}, {"id": "brewer-clever-dripper", "name": "Clever Dripper / Hario Switch (Hybrid Immersion)", "brand": "Clever / Hario", "category": "brewer", "subCategory": "Valved Steep-and-Release", "image": "/images/gear/brewers/clever-dripper.webp"}, {"id": "kettle-fellow-stagg", "name": "Fellow Stagg EKG (Variable Temp Gooseneck)", "brand": "Fellow", "category": "kettle", "subCategory": "Precision Gooseneck PID", "image": "/images/gear/kettles/fellow-stagg.webp"}, {"id": "kettle-timemore-fish", "name": "Timemore Fish Smart Kettle (PID)", "brand": "Timemore", "category": "kettle", "subCategory": "Ultra-Fast 90° Vertical Flow", "image": "/images/gear/kettles/timemore-fish.webp"}, {"id": "kettle-brewista-artisan", "name": "Brewista Artisan Variable Temp Gooseneck", "brand": "Brewista", "category": "kettle", "subCategory": "Competition Gooseneck", "image": "/images/gear/kettles/brewista-artisan.webp"}, {"id": "kettle-hario-buono", "name": "Hario Buono Stovetop / Electric Gooseneck", "brand": "Hario", "category": "kettle", "subCategory": "Classic Japanese Gooseneck", "image": "/images/gear/kettles/hario-buono.webp"}, {"id": "kettle-standard", "name": "Standard Elkedel (Kogende vand henstår ~1-2 min for 93°C)", "brand": "Standard", "category": "kettle", "subCategory": "General Household Kettle", "image": "/images/gear/kettles/standard-kettle.webp"}, {"id": "grinder-turin-df54", "name": "Turin DF54", "brand": "Turin", "category": "grinder", "subCategory": "Single-Dose Flat Burr", "image": "/images/gear/grinders/turin-df54.webp"}, {"id": "grinder-turin-df83-v2", "name": "Turin DF83 V2", "brand": "Turin", "category": "grinder", "subCategory": "Commercial Single-Dose Flat Burr", "image": "/images/gear/grinders/turin-df83-v2.webp"}, {"id": "grinder-fellow-ode-gen2", "name": "Fellow Ode Brew Grinder Gen 2", "brand": "Fellow", "category": "grinder", "subCategory": "Dedicated Filter Flat Burr", "image": "/images/gear/grinders/fellow-ode-gen2.webp"}, {"id": "grinder-mazzer-philos", "name": "Mazzer Philos", "brand": "Mazzer", "category": "grinder", "subCategory": "Precision Single-Dose Flat Burr", "image": "/images/gear/grinders/mazzer-philos.webp"}, {"id": "grinder-mazzer-super-jolly-v-pro", "name": "Mazzer Super Jolly V Pro Electronic", "brand": "Mazzer", "category": "grinder", "subCategory": "Commercial On-Demand Flat Burr", "image": "/images/gear/grinders/mazzer-super-jolly-v-pro.webp"}, {"id": "grinder-mahlkonig-ek43", "name": "Mahlkönig EK43", "brand": "Mahlkönig", "category": "grinder", "subCategory": "Commercial Unimodal Reference Grinder", "image": "/images/gear/grinders/mahlkonig-ek43.webp"}, {"id": "grinder-mahlkonig-ek43s", "name": "Mahlkönig EK43S", "brand": "Mahlkönig", "category": "grinder", "subCategory": "Commercial Compact Unimodal Grinder", "image": "/images/gear/grinders/mahlkonig-ek43s.webp"}, {"id": "grinder-baratza-sette-270", "name": "Baratza Sette 270", "brand": "Baratza", "category": "grinder", "subCategory": "High-Speed Conical Burr", "image": "/images/gear/grinders/baratza-sette-270.webp"}, {"id": "grinder-baratza-sette-270wi", "name": "Baratza Sette 270Wi", "brand": "Baratza", "category": "grinder", "subCategory": "Weight-Based Conical Burr", "image": "/images/gear/grinders/baratza-sette-270wi.webp"}, {"id": "grinder-baratza-virtuoso-plus", "name": "Baratza Virtuoso+", "brand": "Baratza", "category": "grinder", "subCategory": "All-Round Conical Burr", "image": "/images/gear/grinders/baratza-virtuoso-plus.webp"}, {"id": "grinder-eureka-mignon-silenzio", "name": "Eureka Mignon Silenzio", "brand": "Eureka", "category": "grinder", "subCategory": "Compact Silent Flat Burr", "image": "/images/gear/grinders/eureka-mignon-silenzio.webp"}, {"id": "grinder-eureka-mignon-zero", "name": "Eureka Mignon Zero", "brand": "Eureka", "category": "grinder", "subCategory": "Single-Dose Flat Burr", "image": "/images/gear/grinders/eureka-mignon-zero.webp"}, {"id": "grinder-eureka-mignon-manuale", "name": "Eureka Mignon Manuale", "brand": "Eureka", "category": "grinder", "subCategory": "Entry Espresso Flat Burr", "image": "/images/gear/grinders/eureka-mignon-manuale.webp"}, {"id": "grinder-1zpresso-x-pro-s", "name": "1Zpresso X-Pro S", "brand": "1Zpresso", "category": "grinder", "subCategory": "Manual Hand Grinder", "image": "/images/gear/grinders/1zpresso-x-pro-s.webp"}, {"id": "grinder-1zpresso-j-max", "name": "1Zpresso J-Max S", "brand": "1Zpresso", "category": "grinder", "subCategory": "Manual Espresso Specialist", "image": "/images/gear/grinders/1zpresso-j-max.webp"}, {"id": "grinder-kingrinder-k4", "name": "Kingrinder K4", "brand": "Kingrinder", "category": "grinder", "subCategory": "Manual Espresso Hand Grinder", "image": "/images/gear/grinders/kingrinder-k4.webp"}, {"id": "grinder-kingrinder-k6", "name": "Kingrinder K6", "brand": "Kingrinder", "category": "grinder", "subCategory": "Manual All-Round Hand Grinder", "image": "/images/gear/grinders/kingrinder-k6.webp"}, {"id": "grinder-timemore-sculptor-064s", "name": "Timemore Sculptor 064s", "brand": "Timemore", "category": "grinder", "subCategory": "Single-Dose Variable-RPM Flat Burr", "image": "/images/gear/grinders/timemore-sculptor-064s.webp"}, {"id": "grinder-timemore-sculptor-078s", "name": "Timemore Sculptor 078s", "brand": "Timemore", "category": "grinder", "subCategory": "Single-Dose Variable-RPM Flat Burr", "image": "/images/gear/grinders/timemore-sculptor-078s.webp"}, {"id": "grinder-option-o-lagom-p64", "name": "Option-O Lagom P64", "brand": "Option-O", "category": "grinder", "subCategory": "Precision Single-Dose Flat Burr", "image": "/images/gear/grinders/option-o-lagom-p64.webp"}, {"id": "grinder-option-o-lagom-mini", "name": "Option-O Lagom Mini", "brand": "Option-O", "category": "grinder", "subCategory": "Ultra-Compact Single-Dose Conical", "image": "/images/gear/grinders/option-o-lagom-mini.webp"}, {"id": "grinder-weber-key-mk2", "name": "Weber Workshops KEY Mk II", "brand": "Weber Workshops", "category": "grinder", "subCategory": "Ultra-Premium Conical Single-Dose", "image": "/images/gear/grinders/weber-key-mk2.webp"}, {"id": "grinder-weber-eg-1", "name": "Weber Workshops EG-1", "brand": "Weber Workshops", "category": "grinder", "subCategory": "Commercial Reference Flat Burr", "image": "/images/gear/grinders/weber-eg-1.webp"}, {"id": "machine-lelit-mara-x", "name": "Lelit Mara X (PL62X)", "brand": "Lelit", "category": "machine", "subCategory": "Heat Exchanger E61", "image": "/images/gear/machines/lelit-mara-x.webp"}, {"id": "machine-lelit-victoria", "name": "Lelit Victoria (PL91T)", "brand": "Lelit", "category": "machine", "subCategory": "Single Boiler 58mm", "image": "/images/gear/machines/lelit-victoria.webp"}, {"id": "machine-lelit-anna-pid", "name": "Lelit Anna med PID (PL41TEM)", "brand": "Lelit", "category": "machine", "subCategory": "Entry Single Boiler 57mm", "image": "/images/gear/machines/lelit-anna-pid.webp"}, {"id": "machine-profitec-go", "name": "Profitec GO", "brand": "Profitec", "category": "machine", "subCategory": "Single Boiler 58mm PID", "image": "/images/gear/machines/profitec-go.webp"}, {"id": "machine-profitec-pro-300", "name": "Profitec Pro 300", "brand": "Profitec", "category": "machine", "subCategory": "Dual Boiler Compact", "image": "/images/gear/machines/profitec-pro-300.webp"}, {"id": "machine-profitec-pro-600", "name": "Profitec Pro 600", "brand": "Profitec", "category": "machine", "subCategory": "Dual Boiler E61", "image": "/images/gear/machines/profitec-pro-600.webp"}, {"id": "machine-profitec-pro-700", "name": "Profitec Pro 700", "brand": "Profitec", "category": "machine", "subCategory": "Dual Boiler Rotary E61", "image": "/images/gear/machines/profitec-pro-700.webp"}, {"id": "machine-ecm-synchronika", "name": "ECM Synchronika", "brand": "ECM", "category": "machine", "subCategory": "Dual Boiler Rotary E61", "image": "/images/gear/machines/ecm-synchronika.webp"}, {"id": "machine-rocket-appartamento", "name": "Rocket Appartamento", "brand": "Rocket Espresso", "category": "machine", "subCategory": "Heat Exchanger E61", "image": "/images/gear/machines/rocket-appartamento.webp"}, {"id": "machine-rocket-giotto-cronometro", "name": "Rocket Giotto Cronometro V / R", "brand": "Rocket Espresso", "category": "machine", "subCategory": "Heat Exchanger E61 PID", "image": "/images/gear/machines/rocket-giotto-cronometro.webp"}, {"id": "machine-ascaso-steel-uno-pid", "name": "Ascaso Steel UNO PID", "brand": "Ascaso", "category": "machine", "subCategory": "Thermoblock 58mm PID", "image": "/images/gear/machines/ascaso-steel-uno-pid.webp"}, {"id": "machine-ascaso-steel-duo-pid", "name": "Ascaso Steel DUO PID", "brand": "Ascaso", "category": "machine", "subCategory": "Dual Thermoblock 58mm PID", "image": "/images/gear/machines/ascaso-steel-duo-pid.webp"}, {"id": "machine-ascaso-dream-pid", "name": "Ascaso Dream PID", "brand": "Ascaso", "category": "machine", "subCategory": "Retro Thermoblock PID", "image": "/images/gear/machines/ascaso-dream-pid.webp"}, {"id": "machine-cafelat-robot", "name": "Cafelat Robot", "brand": "Cafelat", "category": "machine", "subCategory": "Manual Mechanical Lever", "image": "/images/gear/machines/cafelat-robot.webp"}, {"id": "machine-flair-58", "name": "Flair 58 / 58+", "brand": "Flair Espresso", "category": "machine", "subCategory": "Manual Lever Heated Group", "image": "/images/gear/machines/flair-58.webp"}, {"id": "machine-sage-barista-pro", "name": "Sage Barista Pro (SES878)", "brand": "Sage", "category": "machine", "subCategory": "All-In-One ThermoJet", "image": "/images/gear/machines/sage-barista-pro.webp"}, {"id": "machine-sage-barista-touch-impress", "name": "Sage Barista Touch Impress (SES881)", "brand": "Sage", "category": "machine", "subCategory": "Assisted Touch ThermoJet", "image": "/images/gear/machines/sage-barista-touch-impress.webp"}, {"id": "machine-wacaco-picopresso", "name": "Wacaco Picopresso", "brand": "Wacaco", "category": "machine", "subCategory": "Portable Handheld Espresso", "image": "/images/gear/machines/wacaco-picopresso.webp"}, {"id": "machine-nuova-simonelli-oscar-2", "name": "Nuova Simonelli Oscar II", "brand": "Nuova Simonelli", "category": "machine", "subCategory": "Heat Exchanger Commercial Group", "image": "/images/gear/machines/nuova-simonelli-oscar-2.webp"}, {"id": "machine-victoria-arduino-e1-prima", "name": "Victoria Arduino Eagle One Prima", "brand": "Victoria Arduino", "category": "machine", "subCategory": "Commercial Single-Group NEO", "image": "/images/gear/machines/victoria-arduino-e1-prima.webp"}, {"id": "machine-sanremo-you", "name": "Sanremo YOU", "brand": "Sanremo Coffee Machines", "category": "machine", "subCategory": "Multi-Boiler Pressure Profiling", "image": "/images/gear/machines/sanremo-you.webp"}, {"id": "machine-miele-cm-5310", "name": "Miele CM 5310 Silence", "brand": "Miele", "category": "machine", "subCategory": "Premium Bean-to-Cup Superautomatic", "image": "/images/gear/machines/miele-cm-5310.webp"}, {"id": "brewer-fellow-stagg-x", "name": "Fellow Stagg [X] Dripper", "brand": "Fellow", "category": "brewer", "subCategory": "Flat-Bottom Low-Bypass", "image": "/images/gear/brewers/fellow-stagg-x.webp"}, {"id": "brewer-fellow-stagg-xf", "name": "Fellow Stagg [XF] Dripper", "brand": "Fellow", "category": "brewer", "subCategory": "Tall Flat-Bottom Dripper", "image": "/images/gear/brewers/fellow-stagg-xf.webp"}, {"id": "brewer-origami-dripper-s", "name": "Origami Dripper S", "brand": "Origami", "category": "brewer", "subCategory": "Conical/Wave Hybrid Dripper", "image": "/images/gear/brewers/origami-dripper-s.webp"}, {"id": "brewer-origami-dripper-m", "name": "Origami Dripper M", "brand": "Origami", "category": "brewer", "subCategory": "Conical/Wave Hybrid Dripper", "image": "/images/gear/brewers/origami-dripper-m.webp"}, {"id": "brewer-kalita-wave-155", "name": "Kalita Wave 155 (Stainless)", "brand": "Kalita", "category": "brewer", "subCategory": "Flat-Bottom Wave Dripper", "image": "/images/gear/brewers/kalita-wave-155.webp"}, {"id": "brewer-april-brewer-plastic", "name": "April Coffee Brewer", "brand": "April Coffee Roasters", "category": "brewer", "subCategory": "Flat-Bottom Low-Bypass", "image": "/images/gear/brewers/april-brewer.webp"}, {"id": "brewer-orea-v3", "name": "Orea V3", "brand": "Orea", "category": "brewer", "subCategory": "Flat-Bottom Ultra-Low-Bypass", "image": "/images/gear/brewers/orea-v3.webp"}, {"id": "brewer-orea-v4", "name": "Orea V4 Modular", "brand": "Orea", "category": "brewer", "subCategory": "Modular Multi-Geometry Dripper", "image": "/images/gear/brewers/orea-v4.webp"}, {"id": "brewer-hario-switch-02", "name": "Hario Switch 02", "brand": "Hario", "category": "brewer", "subCategory": "Hybrid Steep-and-Release", "image": "/images/gear/brewers/hario-switch-02.webp"}, {"id": "brewer-timemore-crystal-eye", "name": "Timemore Crystal Eye 02 Dripper", "brand": "Timemore", "category": "brewer", "subCategory": "Conical Dripper", "image": "/images/gear/brewers/timemore-crystal-eye.webp"}, {"id": "brewer-aeropress-go", "name": "AeroPress Go", "brand": "AeroPress", "category": "brewer", "subCategory": "Portable Pressure Immersion", "image": "/images/gear/brewers/aeropress-go.webp"}, {"id": "brewer-aeropress-clear", "name": "AeroPress Clear", "brand": "AeroPress", "category": "brewer", "subCategory": "Piston Pressure Immersion", "image": "/images/gear/brewers/aeropress-clear.webp"}, {"id": "brewer-bialetti-moka-express-3cup", "name": "Bialetti Moka Express 3-Cup", "brand": "Bialetti", "category": "brewer", "subCategory": "Stovetop Pressure Moka", "image": "/images/gear/brewers/bialetti-moka-3cup.webp"}, {"id": "brewer-bialetti-moka-express-6cup", "name": "Bialetti Moka Express 6-Cup", "brand": "Bialetti", "category": "brewer", "subCategory": "Stovetop Pressure Moka", "image": "/images/gear/brewers/bialetti-moka-6cup.webp"}, {"id": "brewer-bialetti-brikka-4cup", "name": "Bialetti Brikka 4-Cup", "brand": "Bialetti", "category": "brewer", "subCategory": "Stovetop Pressure Crema Moka", "image": "/images/gear/brewers/bialetti-brikka-4cup.webp"}, {"id": "brewer-delter-coffee-press", "name": "Delter Coffee Press", "brand": "Delter Coffee", "category": "brewer", "subCategory": "Injection Pressure Brewer", "image": "/images/gear/brewers/delter-coffee-press.webp"}, {"id": "kettle-fellow-stagg-ekg-pro", "name": "Fellow Stagg EKG Pro", "brand": "Fellow", "category": "kettle", "subCategory": "Precision Gooseneck Variable PID", "image": "/images/gear/kettles/fellow-stagg-ekg-pro.webp"}, {"id": "kettle-fellow-stagg-ekg-pro-studio", "name": "Fellow Stagg EKG Pro Studio Edition", "brand": "Fellow", "category": "kettle", "subCategory": "Precision Gooseneck Variable PID", "image": "/images/gear/kettles/fellow-stagg-ekg-pro-studio.webp"}, {"id": "kettle-brewista-artisan-1l", "name": "Brewista Artisan Variable Gooseneck 1.0L", "brand": "Brewista", "category": "kettle", "subCategory": "Gooseneck Variable PID", "image": "/images/gear/kettles/brewista-artisan-1l.webp"}, {"id": "kettle-bonavita-variable-1l", "name": "Bonavita 1.0L Digital Variable Temperature", "brand": "Bonavita", "category": "kettle", "subCategory": "Gooseneck Variable PID", "image": "/images/gear/kettles/bonavita-variable-1l.webp"}, {"id": "kettle-cosori-smart-gooseneck", "name": "Cosori Smart Electric Gooseneck", "brand": "Cosori", "category": "kettle", "subCategory": "Smart Gooseneck Variable PID", "image": "/images/gear/kettles/cosori-smart-gooseneck.webp"}, {"id": "kettle-wilfa-svart-pour", "name": "Wilfa Svart Pour Gooseneck", "brand": "Wilfa", "category": "kettle", "subCategory": "Precision Gooseneck Variable Kettle", "image": "/images/gear/kettles/wilfa-svart-pour.webp"}];
+    let currentCategory = 'all';
+    
+    function loadSavedStatus() {
+      try {
+        const raw = localStorage.getItem('flowbean_audit_status');
+        return raw ? JSON.parse(raw) : {};
+      } catch { return {}; }
+    }
+    
+    function saveStatus(auditState) {
+      localStorage.setItem('flowbean_audit_status', JSON.stringify(auditState));
+      updateStats();
+    }
+    
+    let auditState = loadSavedStatus();
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.filters .btn').forEach(b => {
+        b.classList.toggle('active', b.innerText.toLowerCase().includes(cat === 'all' ? 'alle' : cat === 'grinder' ? 'kværne' : cat === 'machine' ? 'maskiner' : cat === 'brewer' ? 'bryggere' : 'kedler'));
+      });
+      renderGrid();
+    }
+
+    function markItem(id, status) {
+      if (auditState[id] === status) {
+        delete auditState[id];
+      } else {
+        auditState[id] = status;
+      }
+      saveStatus(auditState);
+      renderGrid();
+    }
+
+    function updateStats() {
+      let okCount = 0;
+      let wrongCount = 0;
+      for (const id in auditState) {
+        if (auditState[id] === 'correct') okCount++;
+        if (auditState[id] === 'wrong') wrongCount++;
+      }
+      document.getElementById('stats').innerText = `${okCount} ✅ Godkendt • ${wrongCount} ❌ Forkert • ${items.length - okCount - wrongCount} Uafklaret`;
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      
+      const filtered = items.filter(it => {
+        if (currentCategory !== 'all' && it.category !== currentCategory) return false;
+        if (q && !it.name.toLowerCase().includes(q) && !it.brand.toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      grid.innerHTML = filtered.map(it => {
+        const st = auditState[it.id] || '';
+        const stClass = st === 'correct' ? 'status-correct' : st === 'wrong' ? 'status-wrong' : '';
+        return `
+          <div class="card ${stClass}" id="card-${it.id}">
+            <div class="img-box">
+              <img src="${it.image}" alt="${it.name}" onerror="this.src='/images/gear/grinders/baratza-esp.webp'">
+            </div>
+            <div class="meta">
+              <div class="brand">${it.brand || it.category}</div>
+              <div class="title">${it.name}</div>
+              <div class="sub">${it.subCategory || ''}</div>
+              <div class="path">${it.image}</div>
+            </div>
+            <div class="actions">
+              <button class="act-btn correct" onclick="markItem('${it.id}', 'correct')">
+                ${st === 'correct' ? '✅ Godkendt' : '✓ OK'}
+              </button>
+              <button class="act-btn wrong" onclick="markItem('${it.id}', 'wrong')">
+                ${st === 'wrong' ? '❌ Er Forkert' : '✗ Forkert'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      updateStats();
+    }
+
+    function copyReport() {
+      const wrongs = [];
+      for (const it of items) {
+        if (auditState[it.id] === 'wrong') {
+          wrongs.push(`- [ ] **${it.name}** (${it.brand}): ${it.image}`);
+        }
+      }
+      if (wrongs.length === 0) {
+        alert('Du har ikke markeret nogen udstyr som forkerte endnu! Klik [❌ Forkert] på dem, der skal skiftes.');
+        return;
+      }
+      const report = "### 📋 GEAR AUDIT - FORKERTE BILLEDER DER SKAL RETTES:\n" + wrongs.join('\n');
+      navigator.clipboard.writeText(report).then(() => {
+        alert('Kopieret til udklipsholderen! Indsæt teksten direkte i chatten til Anti.');
+      }).catch(() => {
+        prompt('Kopiér herfra:', report);
+      });
+    }
+
+    renderGrid();
+  </script>
+</body>
+</html>
