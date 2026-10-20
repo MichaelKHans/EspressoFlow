@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { loadGearImageOverrides } from '../../lib/storage';
 
 interface GearImageProps {
   src?: string;
@@ -7,6 +8,7 @@ interface GearImageProps {
   className?: string;
   subType?: string;
   allowSilhouettes?: boolean;
+  gearId?: string;
 }
 
 export const GearImage: React.FC<GearImageProps> = ({
@@ -16,12 +18,39 @@ export const GearImage: React.FC<GearImageProps> = ({
   className = 'w-full h-full object-contain',
   subType,
   allowSilhouettes = false,
+  gearId,
 }) => {
   const [imgErrorCount, setImgErrorCount] = useState(0);
+  const [overrideSrc, setOverrideSrc] = useState<string | null>(null);
+
+  const checkOverride = () => {
+    try {
+      const overrides = loadGearImageOverrides();
+      const idKey = gearId ? gearId.toLowerCase().trim() : '';
+      const altKey = alt.toLowerCase().trim();
+      const found = (idKey && overrides[idKey]) || overrides[altKey];
+      if (found?.dataUrl) {
+        setOverrideSrc(found.dataUrl);
+      } else {
+        setOverrideSrc(null);
+      }
+    } catch {
+      setOverrideSrc(null);
+    }
+  };
+
+  useEffect(() => {
+    checkOverride();
+    const handleUpdated = () => checkOverride();
+    window.addEventListener('flowbean_gear_images_updated', handleUpdated);
+    return () => {
+      window.removeEventListener('flowbean_gear_images_updated', handleUpdated);
+    };
+  }, [gearId, alt]);
 
   useEffect(() => {
     setImgErrorCount(0);
-  }, [src]);
+  }, [src, overrideSrc]);
 
   const altLower = alt.toLowerCase();
   const subLower = (subType || '').toLowerCase();
@@ -47,7 +76,7 @@ export const GearImage: React.FC<GearImageProps> = ({
         .replace('/images/gear/kettle/', '/images/gear/kettles/')
     : categoryDefaultPhoto;
 
-  const activeSrc = imgErrorCount === 0 ? normalizedSrc : categoryDefaultPhoto;
+  const activeSrc = overrideSrc || (imgErrorCount === 0 ? normalizedSrc : categoryDefaultPhoto);
 
   if (allowSilhouettes && (imgErrorCount >= 2 || !activeSrc)) {
     return (

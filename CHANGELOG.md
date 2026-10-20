@@ -2,6 +2,29 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.20.5] - 2026-10-20
+### Etape 75: 100% Autentiske Producent-Packshots & In-App Admin Reference-Upload Pipeline
+- **100% Autentisk Niche Zero:**
+  - Erstattet Niche Zero billedet med det officielle, knivskarpe produktfoto med ægte træfod, Mazzer stålknive og metaldoseringskop leveret af brugeren (`public/images/gear/grinders/niche-zero.webp`).
+- **Autentisk Baratza Encore ESP (Korrektion):**
+  - Fjernet det forkerte display-mockup og erstattet med autoriseret producent-packshot af Baratza Encore ESP Black med 54/58mm dosing cup på `#FAF7F2` baggrund uden digital skærm (`public/images/gear/grinders/baratza-esp.webp`).
+- **Nye Autentiske Packshots (Officielle Kilder & DAM):**
+  - **Turin DF54:** Officielt foto fra `df64coffee.com` (`turin-df54.webp`).
+  - **Sage Dual Boiler (BES920):** Officielt foto fra autoriseret distributør (`sage-dual-boiler.webp`).
+  - **Profitec GO:** Officielt packshot fra distributør (`profitec-go.webp`).
+  - **Lelit Anna PID (PL41TEM) & Lelit Victoria (PL91T):** Officielle packshots (`lelit-anna-pid.webp`, `lelit-victoria.webp`).
+  - **Jura Z10:** Officielt packshot i hvid/alu (`jura-z10.webp`).
+  - **Fellow Ode Gen 2:** Officielt produktfoto (`fellow-ode-gen2.webp`).
+  - **Eureka Mignon Silenzio 55 & Zero:** Officielle packshots (`eureka-mignon-silenzio.webp`, `eureka-zero.webp`).
+  - **Flair 58:** Officielt packshot fra `flairespresso.com` (`flair-58.webp`).
+  - **Cafelat Robot:** Officielt packshot fra Prima Coffee (`cafelat-robot.webp`).
+  - **Decent DE1:** Officielt packshot fra Decent Espresso (`decent-de1.webp`).
+- **In-App Admin Reference Mode & Live Card Upload ([AdminGearImageModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/AdminGearImageModal.tsx)):**
+  - Når Admin-tilstand er slået til, vises en diskret `[📷 Ret / Ref]`-knap direkte på hvert eneste gear-kort i alle 4 karruseller (Kværne, Maskiner, Bryggere, Kedler).
+  - Brugeren kan tage et foto med mobilkameraet eller uploade fra fotogalleriet, tilføje en note til Anti, og markere om billedet er forkert.
+  - Kortet og `GearImage` opdateres i realtid med 600x600 WebP preview via `loadGearImageOverrides` og CustomEvent-lyttere.
+  - Vektor-silhuetter er 100% undertrykt som fallback (`allowSilhouettes = false`).
+
 ## [1.20.4] - 2026-10-19
 ### Etape 74: Fotorealistiske Gear Billeder & Dobbelt Billed-Pipeline
 - **Fotorealistiske Billeder (Studio Product Photography):**

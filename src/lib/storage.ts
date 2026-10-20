@@ -24,6 +24,7 @@ const STORAGE_KEYS = {
   BREWERS_IN_SETUP: 'espressoflow_brewers_in_setup_v1',
   KETTLES_IN_SETUP: 'espressoflow_kettles_in_setup_v1',
   FRENCH_PRESS_SETTINGS: 'espressoflow_french_press_settings_v1',
+  GEAR_IMAGE_OVERRIDES: 'flowbean_gear_image_overrides_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -1057,6 +1058,50 @@ export function getLatestAnchorForGrinder(grinderId: string): BeanCalibrationAnc
   if (matches.length === 0) return undefined;
   matches.sort((a, b) => new Date(b.anchorTimestamp).getTime() - new Date(a.anchorTimestamp).getTime());
   return matches[0];
+}
+
+export interface GearImageOverride {
+  gearKey: string;
+  gearName: string;
+  dataUrl: string;
+  notes?: string;
+  flaggedAsWrong?: boolean;
+  timestamp: number;
+}
+
+export function loadGearImageOverrides(): Record<string, GearImageOverride> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.GEAR_IMAGE_OVERRIDES);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveGearImageOverride(override: GearImageOverride): void {
+  try {
+    const current = loadGearImageOverrides();
+    const key = override.gearKey.toLowerCase().trim();
+    const nameKey = override.gearName.toLowerCase().trim();
+    current[key] = override;
+    current[nameKey] = override;
+    localStorage.setItem(STORAGE_KEYS.GEAR_IMAGE_OVERRIDES, JSON.stringify(current));
+    window.dispatchEvent(new CustomEvent('flowbean_gear_images_updated'));
+  } catch (err) {
+    console.error('Failed to save gear image override', err);
+  }
+}
+
+export function removeGearImageOverride(gearKeyOrName: string): void {
+  try {
+    const current = loadGearImageOverrides();
+    const key = gearKeyOrName.toLowerCase().trim();
+    delete current[key];
+    localStorage.setItem(STORAGE_KEYS.GEAR_IMAGE_OVERRIDES, JSON.stringify(current));
+    window.dispatchEvent(new CustomEvent('flowbean_gear_images_updated'));
+  } catch (err) {
+    console.error('Failed to remove gear image override', err);
+  }
 }
 
 

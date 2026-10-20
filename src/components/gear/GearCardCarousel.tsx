@@ -1,7 +1,8 @@
-import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, Camera } from 'lucide-react';
 import { GearImage } from './GearImage';
 import { useTranslation } from '../../i18n';
+import { loadGearImageOverrides } from '../../lib/storage';
 
 export interface CarouselGearItem {
   id: string;
@@ -22,6 +23,8 @@ interface GearCardCarouselProps {
   onRemove: (item: CarouselGearItem) => void;
   onOpenAddModal: () => void;
   addLabel: string;
+  isAdminEditMode?: boolean;
+  onOpenAdminImageModal?: (item: CarouselGearItem) => void;
 }
 
 export const GearCardCarousel: React.FC<GearCardCarouselProps> = ({
@@ -33,8 +36,24 @@ export const GearCardCarousel: React.FC<GearCardCarouselProps> = ({
   onRemove,
   onOpenAddModal,
   addLabel,
+  isAdminEditMode = false,
+  onOpenAdminImageModal,
 }) => {
   const { t } = useTranslation();
+  const [overridesVersion, setOverridesVersion] = useState(0);
+
+  useEffect(() => {
+    const handleUpdated = () => setOverridesVersion((v) => v + 1);
+    window.addEventListener('flowbean_gear_images_updated', handleUpdated);
+    return () => {
+      window.removeEventListener('flowbean_gear_images_updated', handleUpdated);
+    };
+  }, []);
+
+  const activeOverrides = React.useMemo(() => {
+    // re-evaluate when overridesVersion changes
+    return loadGearImageOverrides();
+  }, [overridesVersion]);
   return (
     <div className="space-y-2.5 font-mono text-xs">
       {/* Carousel Section Header */}
@@ -61,6 +80,10 @@ export const GearCardCarousel: React.FC<GearCardCarouselProps> = ({
             item.id === activeIdOrName ||
             item.name.toLowerCase().trim() === activeIdOrName.toLowerCase().trim();
 
+          const itemKey = item.id.toLowerCase().trim();
+          const nameKey = item.name.toLowerCase().trim();
+          const hasOverride = Boolean(activeOverrides[itemKey] || activeOverrides[nameKey]);
+
           return (
             <div
               key={item.id}
@@ -71,7 +94,7 @@ export const GearCardCarousel: React.FC<GearCardCarouselProps> = ({
                   : 'bg-[#FFFDF9] border border-[#D0BDAA] hover:border-[#C26D52]/70 shadow-2xs hover:shadow-xs opacity-90 hover:opacity-100'
               }`}
             >
-              {/* Top Icons: Active Badge & Discreet Trash Button */}
+              {/* Top Icons: Active Badge & Admin Cam / Discreet Trash Button */}
               <div className="flex items-center justify-between w-full mb-1">
                 {isActive ? (
                   <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 text-[8px] font-bold flex items-center gap-1">
@@ -84,36 +107,62 @@ export const GearCardCarousel: React.FC<GearCardCarouselProps> = ({
                   </span>
                 )}
 
-                {/* Discreet Trash Button */}
-                {items.length <= 1 && (item.category === 'grinder' || item.category === 'machine') ? (
-                  <span
-                    className="p-1 text-stone-300 opacity-40 cursor-not-allowed"
-                    title={
-                      item.category === 'grinder'
-                        ? t('gear.min_required_grinder')
-                        : t('gear.min_required_machine')
-                    }
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemove(item);
-                    }}
-                    className="p-1 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                    title={t('gear.remove_tooltip', { name: item.name })}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                <div className="flex items-center gap-1">
+                  {isAdminEditMode && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenAdminImageModal?.(item);
+                      }}
+                      className={`px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 transition cursor-pointer ${
+                        hasOverride
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
+                          : 'bg-[#FAF7F2] text-[#7A6E65] hover:text-[#C26D52] border border-[#D0BDAA] hover:bg-white'
+                      }`}
+                      title={
+                        hasOverride
+                          ? 'Aktiv reference-override gemt - klik for at inspicere eller ændre'
+                          : 'Admin: Tag/upload foto-reference for denne model'
+                      }
+                    >
+                      <Camera className="w-3 h-3 text-[#C26D52]" />
+                      <span>{hasOverride ? 'Ref' : 'Ret'}</span>
+                    </button>
+                  )}
+
+                  {/* Discreet Trash Button */}
+                  {items.length <= 1 && (item.category === 'grinder' || item.category === 'machine') ? (
+                    <span
+                      className="p-1 text-stone-300 opacity-40 cursor-not-allowed"
+                      title={
+                        item.category === 'grinder'
+                          ? t('gear.min_required_grinder')
+                          : t('gear.min_required_machine')
+                      }
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove(item);
+                      }}
+                      className="p-1 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                      title={t('gear.remove_tooltip', { name: item.name })}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Hardware Product Image */}
               <div className="h-24 sm:h-28 w-full bg-[#FAF7F2] rounded-xl border border-[#D0BDAA]/50 p-1 flex items-center justify-center overflow-hidden mb-2 group-hover:scale-[1.02] transition-transform">
                 <GearImage
+                  gearId={item.id}
                   src={item.image}
                   alt={item.name}
                   category={item.category}

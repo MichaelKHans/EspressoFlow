@@ -44,6 +44,7 @@ import type { GearCatalogItem } from '../data/gearCatalog';
 import { GearCardCarousel } from './gear/GearCardCarousel';
 import type { CarouselGearItem } from './gear/GearCardCarousel';
 import { AddGearModal } from './gear/AddGearModal';
+import { AdminGearImageModal } from './gear/AdminGearImageModal';
 import { FrenchPressVolumeCalculator } from './gear/FrenchPressVolumeCalculator';
 import type { CardThemePreset } from '../lib/cardThemes';
 
@@ -104,7 +105,7 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
   setKettleName,
   tempUnit,
   setTempUnit,
-  isAdminEditMode: _isAdminEditMode,
+  isAdminEditMode,
   grinderTheme: _grinderTheme,
   setGrinderTheme: _setGrinderTheme,
   grinderAdjustments: _grinderAdjustments,
@@ -219,6 +220,7 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
   const [addModalCategory, setAddModalCategory] = useState<
     'grinder' | 'machine' | 'brewer' | 'kettle' | null
   >(null);
+  const [adminModalGearItem, setAdminModalGearItem] = useState<CarouselGearItem | null>(null);
 
   // --- 1. GRINDERS CAROUSEL DATA & HANDLERS ---
   const grinderCarouselItems: CarouselGearItem[] = grinders
@@ -487,6 +489,8 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
           onRemove={handleRemoveGrinder}
           onOpenAddModal={() => setAddModalCategory('grinder')}
           addLabel={t('gear.add_grinder_btn')}
+          isAdminEditMode={isAdminEditMode}
+          onOpenAdminImageModal={setAdminModalGearItem}
         />
 
         {/* Cockpit Body (Taktil Dial-In Ruler & Micro-Indexed Steppers) */}
@@ -666,6 +670,8 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
           onRemove={handleRemoveMachine}
           onOpenAddModal={() => setAddModalCategory('machine')}
           addLabel={t('gear.add_machine_btn')}
+          isAdminEditMode={isAdminEditMode}
+          onOpenAdminImageModal={setAdminModalGearItem}
         />
 
         {/* Machine Cockpit Controls */}
@@ -883,6 +889,8 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
           onRemove={handleRemoveBrewer}
           onOpenAddModal={() => setAddModalCategory('brewer')}
           addLabel={t('gear.add_brewer_btn')}
+          isAdminEditMode={isAdminEditMode}
+          onOpenAdminImageModal={setAdminModalGearItem}
         />
 
         {/* Dynamic French Press Volume & Ratio Calculator if French Press is Active */}
@@ -903,6 +911,8 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
             onRemove={handleRemoveKettle}
             onOpenAddModal={() => setAddModalCategory('kettle')}
             addLabel={t('gear.add_kettle_btn')}
+            isAdminEditMode={isAdminEditMode}
+            onOpenAdminImageModal={setAdminModalGearItem}
           />
         </div>
 
@@ -984,6 +994,13 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
             ? brewersInSetup
             : kettlesInSetup
         }
+      />
+
+      {/* Admin Gear Reference & Upload Modal */}
+      <AdminGearImageModal
+        isOpen={Boolean(adminModalGearItem)}
+        onClose={() => setAdminModalGearItem(null)}
+        gear={adminModalGearItem}
       />
     </div>
   );
