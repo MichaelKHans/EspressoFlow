@@ -25,6 +25,24 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-20 -- Etape 79: Total Frilægning af Alle Rød-Markerede Udstyrsbilleder (Kværne, Maskiner, Bryggere, Kedler) & Zone-Badge Fix (v1.21.0)
+- **Niche Zero & De'Longhi Dedica frilægning:**
+  - Niche Zero (`niche-zero.webp`): Rent, hvidt fabriks-packshot uden løse kværnknive eller indre ramme, skaleret perfekt på `#FAF7F2` canvas.
+  - De'Longhi Dedica (`delonghi-dedica.webp`): Rent EC685 packshot uden ekstra latteglas eller dobbeltrammer.
+- **Dial-In Zone Badge Fix (4.0 Micro-Step Espresso Zone Bug):**
+  - Tilføjet eksplicitte `espressoMaxSetting` tærskler til samtlige kværne i `GRINDER_CATALOG` i `gearCatalog.ts`.
+  - Implementeret robust fallback i `GearStationView.tsx` via `effectiveEspressoMax` og `isEspressoZone`, så 4.0 på Niche Zero korrekt viser "ESPRESSO ZONE".
+- **Kværne (Batch 1 - 100% Autentiske):**
+  - Fellow Opus (`fellow-opus.webp`), Timemore Sculptor 064S / 078S (`timemore-sculptor.webp`, `064s`, `078s`), 1Zpresso J-Ultra (`1zpresso-jultra.webp`), J-Max S (`1zpresso-j-max.webp`), X-Pro S (`1zpresso-x-pro-s.webp`), Kingrinder K4 & K6 (`kingrinder-k4.webp`, `kingrinder-k6.webp`), Sage Smart Grinder Pro (`sage-smart.webp`), Mazzer Philos (`mazzer-philos.webp`), Mazzer Super Jolly V Pro (`mazzer-super-jolly-v-pro.webp`), Mahlkönig EK43 & EK43S (`mahlkonig-ek43.webp`, `mahlkonig-ek43s.webp`), Baratza Virtuoso+ (`baratza-virtuoso-plus.webp`), Eureka Mignon Zero (`eureka-mignon-zero.webp`), Eureka Mignon Manuale (`eureka-mignon-manuale.webp`), Option-O Lagom P64 (`option-o-lagom-p64.webp`), Lagom Mini (`option-o-lagom-mini.webp`), Weber Workshops KEY Mk II (`weber-key-mk2.webp`), Weber EG-1 (`weber-eg-1.webp`), og Baratza Encore ESP Pro (`baratza-esp-pro.webp`).
+- **Maskiner (Batch 2 - 100% Autentiske):**
+  - Ninja Luxe Café (`ninja-luxe.webp`), Philips LatteGo 5400 (`philips-lattego.webp`), Sage Barista Pro (`sage-barista-pro.webp`), Sage Barista Touch Impress (`sage-barista-touch-impress.webp`), Profitec Pro 300, 600, 700 (`profitec-pro-300.webp`, `600`, `700`), ECM Synchronika (`ecm-synchronika.webp`), Rocket Appartamento (`rocket-appartamento.webp`), Rocket Giotto Cronometro (`rocket-giotto-cronometro.webp`), Ascaso Steel UNO, DUO, Dream PID (`ascaso-steel-uno-pid.webp`, `duo`, `dream`), Lelit Mara X (`lelit-mara-x.webp`), Nuova Simonelli Oscar II (`nuova-simonelli-oscar-2.webp`), Victoria Arduino E1 Prima (`victoria-arduino-e1-prima.webp`), Sanremo YOU (`sanremo-you.webp`), Miele CM 5310 Silence (`miele-cm-5310.webp`), Wacaco Picopresso (`wacaco-picopresso.webp` uden award-badges).
+- **Bryggere & Kedler (Batch 3 - 100% Autentiske):**
+  - AeroPress Clear (`aeropress-clear.webp` solo krystalklar uden hænder), Delter Coffee Press (`delter-coffee-press.webp`), Fellow Stagg [X] & [XF] (`fellow-stagg-x.webp`, `xf`), Origami S & M (`origami-dripper-s.webp`, `m`), April Brewer (`april-brewer.webp`), Orea V3 & V4 Modular (`orea-v3.webp`, `v4`), Timemore Crystal Eye 02 (`timemore-crystal-eye.webp`), Hario V60 02 Ceramic White (`hario-v60.webp`), Clever Dripper (`clever-dripper.webp`), Bialetti Moka Pots 3-Cup, 6-Cup, Brikka (`bialetti-moka-3cup.webp`, `6cup`, `brikka`), Timemore Fish Smart (`timemore-fish.webp`), Brewista Artisan Variable Temp (`brewista-artisan.webp`, `1l`), Bonavita 1.0L (`bonavita-variable-1l.webp`), Cosori Smart Electric (`cosori-smart-gooseneck.webp`), Wilfa Svart Pour (`wilfa-svart-pour.webp`), Standard Elkedel i rustfrit stål uden prismærke (`standard-kettle.webp`).
+- **Kvalitetskontrol:**
+  - `npm run build` verificeret (exit code 0).
+  - Android synkroniseret (`npx cap sync android`).
+  - Pushed til GitHub `origin main` for live Vercel deployment.
+
 ### 2026-10-20 -- Etape 78: Differentieret Baratza Encore ESP Pro (Digital LED Display) vs Standard (v1.20.8)
 - **Baratza Encore ESP Pro får eget digitalt LED display-billede:**
   - Oprettet `public/images/gear/grinders/baratza-esp-pro.webp` med det digitale display (`20.0`), frilagt via BiRefNet på `#FAF7F2` baggrund.

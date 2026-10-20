@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.20.8 (Differentiated Baratza Encore ESP Pro with Digital Display vs Standard Analog, Gear Audit Tooling)  
+> **Gældende version:** v1.21.0 (Total Frilægning af Samtlige Rød-Markerede Udstyrsbilleder & Dial-In Zone Badge Fix)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---

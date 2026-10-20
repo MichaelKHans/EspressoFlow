@@ -190,6 +190,22 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
     activeGrinder.name.toLowerCase().includes('baratza') &&
     activeGrinder.name.toLowerCase().includes('esp');
 
+  // Resilient Espresso zone threshold: saved profile -> catalog specs -> dual-zone fallback -> 40% of max
+  const catalogGrinderSpecs = GRINDER_CATALOG.find(
+    (g) => g.name.toLowerCase() === activeGrinder.name.toLowerCase()
+  )?.specs;
+
+  const effectiveEspressoMax =
+    activeGrinder.espressoMaxSetting ??
+    catalogGrinderSpecs?.espressoMaxSetting ??
+    (isDualZoneBaratza
+      ? 20.0
+      : activeGrinder.maxSetting
+      ? activeGrinder.maxSetting * 0.4
+      : 20.0);
+
+  const isEspressoZone = currentGrindNum <= effectiveEspressoMax;
+
   const stepGrind = (delta: number) => {
     const min = activeGrinder.minSetting ?? 1.0;
     const max = activeGrinder.maxSetting ?? (isDualZoneBaratza ? 40.0 : 30.0);
@@ -513,13 +529,7 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
                 CURRENT MICRO-INDEXED POSITION
               </span>
               <span className="text-[10px] font-bold uppercase text-[#C26D52] bg-[#C26D52]/10 px-2 py-0.5 rounded-md border border-[#C26D52]/30">
-                {activeGrinder.espressoMaxSetting
-                  ? currentGrindNum <= activeGrinder.espressoMaxSetting
-                    ? t('gear.espresso_zone')
-                    : t('gear.filter_zone')
-                  : currentGrindNum <= 20.0 && isDualZoneBaratza
-                    ? t('gear.espresso_zone')
-                    : t('gear.filter_zone')}
+                {isEspressoZone ? t('gear.espresso_zone') : t('gear.filter_zone')}
               </span>
             </div>
 
@@ -568,9 +578,9 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
                   <span className="font-bold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
                     Split (20.0)
                   </span>
-                ) : activeGrinder.espressoMaxSetting ? (
+                ) : effectiveEspressoMax ? (
                   <span className="hidden sm:inline font-semibold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
-                    Espresso ≤ {activeGrinder.espressoMaxSetting}
+                    Espresso ≤ {effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}
                   </span>
                 ) : null}
 

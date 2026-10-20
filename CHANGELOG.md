@@ -2,6 +2,55 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.0] - 2026-10-20
+### Etape 79: Total Frilægning af Alle Rød-Markerede Udstyrsbilleder (Kværne, Maskiner, Bryggere, Kedler) & Zone-Badge Fix
+- **Rensning af Niche Zero & De'Longhi Dedica:**
+  - **Niche Zero:** Erstattet foto med løse kværnknive og indre boksramme med officielt, fuldt samlet hvidt packshot (`public/images/gear/grinders/niche-zero.webp`), frilagt uden løse dele, centreret på `#FAF7F2` og skaleret optimalt så det udfylder kortet perfekt.
+  - **De'Longhi Dedica:** Erstattet billede med ekstra kaffeglas/lattekop og ramme med rent, frilagt EC685 packshot (`public/images/gear/machines/delonghi-dedica.webp`) på sømløs Espresso Warmth baggrund.
+- **Rettelse af Dial-In Zone Badge (4.0 Espresso Zone Bug):**
+  - Rettet fejl i [GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx) og [gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts), hvor en kværn uden `espressoMaxSetting` fejlagtigt faldt tilbage til "FILTER & POUR OVER ZONE" ved lave indstillinger (f.eks. 4.0 på Niche Zero).
+  - Tilføjet eksplicitte `espressoMaxSetting` tærskler til alle kværne i `GRINDER_CATALOG` (Niche Zero: 20.0, Eureka: 2.5, DF64: 25.0, Fellow Opus: 3.0, Baratza Sette: 9.0, Sculptor: 4.5, Comandante: 15.0, 1Zpresso: 20.0, Sage Smart: 30.0, Wilfa: 8.0, Mahlkönig: 12.0).
+  - Implementeret robust fallback i [GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx) via `effectiveEspressoMax` og `isEspressoZone`.
+- **Komplet Udskiftning af Samtlige Rød-Markerede Kværne (Batch 1):**
+  - **Fellow Opus Conical:** Rent matsort packshot på `#FAF7F2` (`fellow-opus.webp`).
+  - **Timemore Sculptor 064S / 078S:** Autentisk packshot med rotary fin knocker (`timemore-sculptor.webp`, `timemore-sculptor-064s.webp`, `timemore-sculptor-078s.webp`).
+  - **1Zpresso J-Ultra & J-Max S:** Ægte packshots med ekstern mikrometrisk kalibreringsring (`1zpresso-jultra.webp`, `1zpresso-j-max.webp`).
+  - **1Zpresso X-Pro S:** Champagne anodiseret finish med ekstern ring (`1zpresso-x-pro-s.webp`).
+  - **Kingrinder K4 & K6:** Autentiske modeller med intern (K4) vs ekstern talring (K6) (`kingrinder-k4.webp`, `kingrinder-k6.webp`).
+  - **Sage The Smart Grinder Pro:** Autentisk børstet stål med blåt digitalt doseringsdisplay (`sage-smart.webp`).
+  - **Mazzer Philos:** Single-dose fladknivskværn i matsort med doseringskop (`mazzer-philos.webp`).
+  - **Mazzer Super Jolly V Pro Electronic:** Kommerciel on-demand med bønnebeholder og digitalt panel (`mazzer-super-jolly-v-pro.webp`).
+  - **Mahlkönig EK43 & EK43S:** Autentisk høj kommerciel unimodal (EK43) og kompakt kort krop (EK43S) (`mahlkonig-ek43.webp`, `mahlkonig-ek43s.webp`).
+  - **Baratza Virtuoso+:** Autentisk støbt zinkkrop med blåt LED digitalt timer-display (`baratza-virtuoso-plus.webp`).
+  - **Eureka Mignon Zero & Manuale:** Zero med blow-up gummibælg og Zero 65 badge (`eureka-mignon-zero.webp`); Manuale med rund røgfarvet beholder og håndlogo (`eureka-mignon-manuale.webp`).
+  - **Option-O Lagom P64 & Mini:** Autentisk skråt vinklet packshot af Lagom P64 (`option-o-lagom-p64.webp`) og kompakt cylindrisk Mini (`option-o-lagom-mini.webp`).
+  - **Weber Workshops KEY Mk II & EG-1:** Ultra-premium konisk single-dose KEY (`weber-key-mk2.webp`) og horisontal fladkniv referencekværn EG-1 (`weber-eg-1.webp`).
+  - **Baratza Encore ESP Pro:** Dedikeret billede med oplyst digitalt LED display (`20.0`) (`baratza-esp-pro.webp`), side om side med standard ESP (`baratza-esp.webp`).
+- **Komplet Udskiftning af Samtlige 19 Maskiner (Batch 2):**
+  - **Ninja Luxe Café / Ninja Pro:** Autentisk display med "18 18" og assistent (`ninja-luxe.webp`).
+  - **Philips LatteGo 5400 / 3200:** Autentisk farvetouch og mælkekande (`philips-lattego.webp`).
+  - **Sage Barista Pro (SES878):** Autentisk blåt LCD display og ThermoJet (`sage-barista-pro.webp`).
+  - **Sage Barista Touch Impress (SES881):** Autentisk touch skærm og assist-tamping (`sage-barista-touch-impress.webp`).
+  - **Profitec Pro 300, 600, 700:** 100% korrekte maskinfotos (Pro 300 kompakt boks, Pro 600 dual boiler E61, Pro 700 rotationspumpe med caldaia/pompa manometre).
+  - **ECM Synchronika:** Tysk dual boiler med joysticks og antracit base (`ecm-synchronika.webp`).
+  - **Rocket Appartamento & Giotto Cronometro:** Appartamento med kobbercirkler (`rocket-appartamento.webp`) og Giotto med vinklede sider (`rocket-giotto-cronometro.webp`).
+  - **Ascaso Steel UNO, DUO & Dream PID:** Autentiske packshots, inkl. retro Dream med "93" digital PID (`ascaso-dream-pid.webp`).
+  - **Lelit Mara X (PL62X):** Stjerneknapper, E61 låseikon og dobbeltmanometer (`lelit-mara-x.webp`).
+  - **Nuova Simonelli Oscar II, Victoria Arduino E1 Prima & Sanremo YOU:** Autentiske kommercielle packshots.
+  - **Wacaco Picopresso:** Rent packshot uden Red Dot award badges (`wacaco-picopresso.webp`).
+  - **Miele CM 5310 Silence:** Rent Miele DAM packshot (`miele-cm-5310.webp`).
+- **Komplet Udskiftning af Bryggere & Kedler (Batch 3):**
+  - **AeroPress Clear:** Krystalklar transparent solo cylinder uden hænder (`aeropress-clear.webp`).
+  - **Delter Coffee Press:** Ægte Delter injektionskammer (`delter-coffee-press.webp`).
+  - **Fellow Stagg [X] & [XF]:** Autentiske fladbundede drippere (`fellow-stagg-x.webp`, `fellow-stagg-xf.webp`).
+  - **Origami Dripper S & M:** Autentiske japanske porcelænsdrippere (`origami-dripper-s.webp`, `origami-dripper-m.webp`).
+  - **April Coffee Brewer:** Hvid keramisk flat-bed dripper (`april-brewer.webp`).
+  - **Orea V3 & V4 Modular:** Rene packshots uden hænder (`orea-v3.webp`, `orea-v4.webp`).
+  - **Timemore Crystal Eye 02 & Hario V60 (02 White Ceramic):** Autentiske drippere.
+  - **Clever Dripper:** Gennemlysende trapezoid ventil-steep-and-release (`clever-dripper.webp`).
+  - **Bialetti Moka Pots:** Klassiske originale 8-kantede aluminiumsmodeller uden blomster (`bialetti-moka-3cup.webp`, `bialetti-moka-6cup.webp`, `bialetti-brikka-4cup.webp`).
+  - **Kedler:** Timemore Fish Smart Kettle (`timemore-fish.webp`), Brewista Artisan Variable Temp 1.0L (`brewista-artisan-1l.webp`), Bonavita 1.0L (`bonavita-variable-1l.webp`), Cosori Smart Electric (`cosori-smart-gooseneck.webp`), Wilfa Svart Pour (`wilfa-svart-pour.webp`), og Standard Elkedel i børstet rustfrit stål uden prismærker (`standard-kettle.webp`).
+
 ## [1.20.8] - 2026-10-20
 ### Etape 78: Differentieret Baratza Encore ESP Pro (Digital LED Display) vs Standard
 - **Dedikeret Packshot til Baratza Encore ESP Pro:**
