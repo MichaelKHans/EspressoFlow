@@ -2,6 +2,17 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.3] - 2026-10-20
+### Etape 82: 100% Autentiske De'Longhi Fuldautomatiske Packshots (Magnifica S & Eletta Explore)
+- **Autentisk De'Longhi Magnifica S (ECAM 22.110.B):**
+  - Erstattet forkert portafilter-billede med det officielle, originale fabriks-packshot direkte fra De'Longhi's officielle DAM netværk (`public/images/gear/machines/delonghi-magnifica-s.webp`).
+  - Viser den ikoniske bean-to-cup maskine med matsort kabinet, centralt aroma-drejehjul, one-touch espressoknapper, dobbelt kaffetud og Panarello damprør.
+  - Frilagt med transparent `RGBA` baggrund og tight crop (640x773 px).
+- **Autentisk De'Longhi Eletta Explore (ECAM 450.65):**
+  - Erstattet forkert billede med det ægte, officielle De'Longhi Eletta Explore packshot (`public/images/gear/machines/delonghi-eletta-explore.webp`).
+  - Viser maskinen i al sin pragt med 3.5" TFT farve-touchskærm, integreret LatteCrema Hot & Cold mælkekaraffel og sølv/titanium finish.
+  - Frilagt med transparent `RGBA` baggrund og tight crop (694x667 px).
+
 ## [1.21.2] - 2026-10-20
 ### Etape 81: Maksimering af Udstyrsbilleder i Rammen & Fjernelse af Overflødige Kanter
 - **Total Frilægning & Tight Bounding Box Auto-Crop for Samtlige 111 Udstyrsbilleder:**

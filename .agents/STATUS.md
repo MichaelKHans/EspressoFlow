@@ -25,6 +25,18 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-20 -- Etape 82: 100% Autentiske De'Longhi Fuldautomatiske Packshots (v1.21.3)
+- **De'Longhi Magnifica S (ECAM 22.110.B):**
+  - Erstattet forkert portafilter-billede med originalt fabriks-packshot direkte fra De'Longhi's officielle DAM netværk (`public/images/gear/machines/delonghi-magnifica-s.webp`).
+  - Viser den autentiske bean-to-cup maskine med matsort kabinet, centralt aroma-drejehjul, one-touch knapper, dobbelt tud og Panarello damprør. Frilagt med transparent RGBA baggrund (640x773).
+- **De'Longhi Eletta Explore (ECAM 450.65):**
+  - Erstattet forkert billede med det officielle De'Longhi Eletta Explore packshot (`public/images/gear/machines/delonghi-eletta-explore.webp`).
+  - Viser maskinens 3.5" TFT touch-skærm, integreret LatteCrema Hot & Cold karaffel og sølv/titanium finish. Frilagt med transparent RGBA baggrund (694x667).
+- **Kvalitetskontrol:**
+  - `npm run build` testet med exit code 0.
+  - `npx cap sync android` synkroniseret.
+  - Pushed til GitHub `origin main`.
+
 ### 2026-10-20 -- Etape 81: Maksimering af Udstyrsbilleder i Rammen & Tight Packshot Bounding (v1.21.2)
 - **Total Frilægning & Tight Bounding Box Auto-Crop (Samtlige 111 WebP Udstyrsbilleder):**
   - Gennemført automatiseret Connected Components analyse via `scipy.ndimage` på alle 111 gear packshots i `public/images/gear/`.
