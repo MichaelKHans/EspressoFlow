@@ -2,6 +2,17 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.20.7] - 2026-10-20
+### Etape 77: Klassisk Standard Bialetti Moka Express & Fuldt Samlet Turin DF54
+- **Klassisk Standard Bialetti (Fjernelse af MacKenzie-Childs Blomsterudgaver):**
+  - **Bialetti Moka Express 3-Cup:** Erstattet blomstret specialudgave med det legendariske, originale 8-kantede polerede aluminiumsdesign med sort håndtag, "L'omino coi baffi"-maskot og "Moka Express"-gravering (`public/images/gear/brewers/bialetti-moka-3cup.webp`).
+  - **Bialetti Moka Express 6-Cup:** Opdateret til den autoriserede klassiske sølv-aluminium standardmodel (`public/images/gear/brewers/bialetti-moka-6cup.webp`).
+  - **Bialetti Brikka 4-Cup:** Opdateret til standardmodellen med original cremakolonne-trykventil og dual-finish hus (`public/images/gear/brewers/bialetti-brikka-4cup.webp`).
+- **Fuldt Samlet Turin DF54 Grinder:**
+  - Erstattet "skilt ad"-foto på drejeskive med 2200x2200 fabriks-packshot, fuldt samlet med trætop, silikonebælg, doseringskop i gaffelholder og mikrometer-skala på `#FAF7F2` (`public/images/gear/grinders/turin-df54.webp`).
+- **Audit Suite & Android:**
+  - Opdateret `public/gear-audit.html` og synkroniseret med Android wrapper.
+
 ## [1.20.6] - 2026-10-20
 ### Etape 76: Autentisk Decent DE1 med Drypbakke & BiRefNet Neural Matting
 - **Decent DE1 med Komplet Drypbakke & Tablet:**

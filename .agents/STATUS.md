@@ -25,6 +25,19 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-20 -- Etape 77: Klassisk Standard Bialetti Moka Express & Fuldt Samlet Turin DF54 (v1.20.7)
+- **Klassisk Standard Bialetti (Farvel til Blomsterprint):**
+  - Erstattet MacKenzie-Childs blomsterudgaver med de originale, klassiske sølv-aluminium 8-kantede Bialetti-kander med original "L'omino coi baffi"-maskot (`bialetti-moka-3cup.webp` og `bialetti-moka-6cup.webp`).
+  - Opdateret Bialetti Brikka 4-Cup til autoriseret standardmodel med cremakolonne (`bialetti-brikka-4cup.webp`).
+- **Fuldt Samlet Turin DF54:**
+  - Erstattet usamlet drejeskive-foto med officielt 2200x2200 studio packshot, fuldt monteret med trætop, bælg, doseringskop i gaffel og mikrometerskive (`turin-df54.webp`).
+- **Audit Suite & Android:**
+  - `public/gear-audit.html` synkroniseret.
+  - `npm run build` passerer 100% (exit 0).
+  - Android synkroniseret via `npx cap sync android`.
+
+---
+
 ### 2026-10-20 -- Etape 76: Autentisk Decent DE1 med Drypbakke & BiRefNet Neural Matting (v1.20.6)
 - **Decent DE1 Producent-Packshot med Drypbakke:**
   - Erstattet "svævende" skelet-render af Decent DE1 uden drypbakke med officielt packshot indeholdende komplet bundkar, drypbakke med slids-stålrist, portafilter, damparm og monteret Android-tablet med aktive flow/trykkurver (`public/images/gear/machines/decent-de1.webp`).
