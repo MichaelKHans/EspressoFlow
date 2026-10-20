@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Search, Plus, Check, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Search, Plus, Check, Sparkles, Camera } from 'lucide-react';
 import {
   GRINDER_CATALOG,
   MACHINE_CATALOG,
@@ -9,6 +9,7 @@ import {
 import type { GearCatalogItem } from '../../data/gearCatalog';
 import { GearImage } from './GearImage';
 import { useTranslation } from '../../i18n';
+import { loadGearImageOverrides } from '../../lib/storage';
 
 interface AddGearModalProps {
   isOpen: boolean;
@@ -16,6 +17,8 @@ interface AddGearModalProps {
   category: 'grinder' | 'machine' | 'brewer' | 'kettle';
   onAddGear: (item: GearCatalogItem) => void;
   existingNames: string[];
+  isAdminEditMode?: boolean;
+  onOpenAdminImageModal?: (item: GearCatalogItem) => void;
 }
 
 export const AddGearModal: React.FC<AddGearModalProps> = ({
@@ -24,11 +27,26 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
   category,
   onAddGear,
   existingNames,
+  isAdminEditMode = false,
+  onOpenAdminImageModal,
 }) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [customName, setCustomName] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [overridesVersion, setOverridesVersion] = useState(0);
+
+  useEffect(() => {
+    const handleUpdated = () => setOverridesVersion((v) => v + 1);
+    window.addEventListener('flowbean_gear_images_updated', handleUpdated);
+    return () => {
+      window.removeEventListener('flowbean_gear_images_updated', handleUpdated);
+    };
+  }, []);
+
+  const activeOverrides = React.useMemo(() => {
+    return loadGearImageOverrides();
+  }, [overridesVersion]);
 
   if (!isOpen) return null;
 
@@ -124,6 +142,9 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
             const isAlreadyInSetup = existingNames.some(
               (n) => n.toLowerCase().trim() === item.name.toLowerCase().trim()
             );
+            const itemKey = item.id.toLowerCase().trim();
+            const nameKey = item.name.toLowerCase().trim();
+            const hasOverride = Boolean(activeOverrides[itemKey] || activeOverrides[nameKey]);
 
             return (
               <div
@@ -133,6 +154,7 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
                 {/* Gear Image */}
                 <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-[#FAF7F2] rounded-xl border border-[#D0BDAA]/60 p-1 flex items-center justify-center overflow-hidden">
                   <GearImage
+                    gearId={item.id}
                     src={item.image}
                     alt={item.name}
                     category={item.category}
@@ -161,7 +183,26 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
                 </div>
 
                 {/* Action button */}
-                <div className="shrink-0">
+                <div className="shrink-0 flex items-center gap-1.5">
+                  {isAdminEditMode && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenAdminImageModal?.(item);
+                      }}
+                      className={`px-2 py-1.5 rounded-xl border text-[10px] font-bold flex items-center gap-1 transition cursor-pointer shadow-2xs ${
+                        hasOverride
+                          ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
+                          : 'bg-[#FAF7F2] text-[#7A6E65] hover:text-[#C26D52] border-[#D0BDAA] hover:bg-white'
+                      }`}
+                      title="Admin: Tag/upload foto-reference for denne model"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-[#C26D52]" />
+                      <span>{hasOverride ? 'Ref' : 'Ret'}</span>
+                    </button>
+                  )}
+
                   {isAlreadyInSetup ? (
                     <span className="px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
                       <Check className="w-3.5 h-3.5 text-emerald-600" />

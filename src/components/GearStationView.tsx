@@ -1005,6 +1005,8 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
             ? brewersInSetup
             : kettlesInSetup
         }
+        isAdminEditMode={isAdminEditMode}
+        onOpenAdminImageModal={setAdminModalGearItem}
       />
 
       {/* Admin Gear Reference & Upload Modal */}
