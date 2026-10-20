@@ -25,6 +25,16 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-20 -- Etape 76: Autentisk Decent DE1 med Drypbakke & BiRefNet Neural Matting (v1.20.6)
+- **Decent DE1 Producent-Packshot med Drypbakke:**
+  - Erstattet "svævende" skelet-render af Decent DE1 uden drypbakke med officielt packshot indeholdende komplet bundkar, drypbakke med slids-stålrist, portafilter, damparm og monteret Android-tablet med aktive flow/trykkurver (`public/images/gear/machines/decent-de1.webp`).
+  - Udført med BiRefNet neural segmentation (`rembg` + `onnxruntime`) direkte til 600x600 WebP på sømløs `#FAF7F2` Espresso Warmth baggrund.
+- **Audit Suite opdateret:**
+  - `public/gear-audit.html` opdateret og synkroniseret med 105 katalog-emner.
+- **Build & Test:**
+  - `npm run build` passerer 100% (exit 0).
+  - Android synkroniseret via `npx cap sync android`.
+
 ---
 
 ### 2026-10-20 -- Etape 75: 100% Autentiske Producent-Packshots & In-App Admin Reference-Upload Pipeline (v1.20.5)

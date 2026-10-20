@@ -2,6 +2,14 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.20.6] - 2026-10-20
+### Etape 76: Autentisk Decent DE1 med Drypbakke & BiRefNet Neural Matting
+- **Decent DE1 med Komplet Drypbakke & Tablet:**
+  - Erstattet nøgent chassis-render uden drypbakke med officielt autoriseret Decent DE1 packshot, der inkluderer den komplette drypbakke med slids-rist i rustfrit stål, låst portafilter, damparm og monteret Android-tablet med aktive flow/trykkurver (`public/images/gear/machines/decent-de1.webp`).
+  - Isoleret via BiRefNet state-of-the-art neural segmentering og sømløst komponeret på Espresso Warmth pergament (`#FAF7F2`) uden halo-effekter eller boks-kanter.
+- **Opdateret Gear Audit Suite (`public/gear-audit.html`):**
+  - Regenereret samtlige 105 katalog-kort med de nyeste packshots.
+
 ## [1.20.5] - 2026-10-20
 ### Etape 75: 100% Autentiske Producent-Packshots & In-App Admin Reference-Upload Pipeline
 - **100% Autentisk Niche Zero:**

@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.20.3 (Resilient Vector Hardware Silhouettes, Dynamic Image Error Boundaries & Global-First I18N Catalog)  
+> **Gældende version:** v1.20.6 (Authentic Gear Studio Packshots, Complete DE1 with Drip Tray & Tablet, Dual-Baratza Models & Gear Audit Suite)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
