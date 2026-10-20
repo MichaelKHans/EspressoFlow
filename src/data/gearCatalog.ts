@@ -47,7 +47,7 @@ export const GRINDER_CATALOG: GearCatalogItem[] = [
     brand: 'Baratza',
     category: 'grinder',
     subCategory: 'Conical Burr (Dual-Zone Pro)',
-    image: '/images/gear/grinders/baratza-esp.webp',
+    image: '/images/gear/grinders/baratza-esp-pro.webp',
     description: '40mm M2 stålkoniske knive med 1-20 micro-steps til espresso og 21-40 macro-steps til filter.',
     specs: {
       burrSizeMm: 40,

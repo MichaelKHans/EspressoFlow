@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.20.7 (Standard Iconic Bialetti Moka Express, Fully Assembled Turin DF54, Complete Decent DE1 & BiRefNet Neural Matting)  
+> **Gældende version:** v1.20.8 (Differentiated Baratza Encore ESP Pro with Digital Display vs Standard Analog, Gear Audit Tooling)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---

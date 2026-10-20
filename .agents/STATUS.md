@@ -25,6 +25,19 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-20 -- Etape 78: Differentieret Baratza Encore ESP Pro (Digital LED Display) vs Standard (v1.20.8)
+- **Baratza Encore ESP Pro får eget digitalt LED display-billede:**
+  - Oprettet `public/images/gear/grinders/baratza-esp-pro.webp` med det digitale display (`20.0`), frilagt via BiRefNet på `#FAF7F2` baggrund.
+  - Forbundet til `grinder-baratza-esp-pro` i `gearCatalog.ts`.
+  - Standard `grinder-baratza-esp` bevarer det godkendte analoge billede (`baratza-esp.webp`). Begge modeller lever side om side med hver sit unikke billede.
+- **Audit Suite opdateret:**
+  - `public/gear-audit.html` opdateret.
+- **Build & Test:**
+  - `npm run build` passerer 100% (exit 0).
+  - Android synkroniseret via `npx cap sync android`.
+
+---
+
 ### 2026-10-20 -- Etape 77: Klassisk Standard Bialetti Moka Express & Fuldt Samlet Turin DF54 (v1.20.7)
 - **Klassisk Standard Bialetti (Farvel til Blomsterprint):**
   - Erstattet MacKenzie-Childs blomsterudgaver med de originale, klassiske sølv-aluminium 8-kantede Bialetti-kander med original "L'omino coi baffi"-maskot (`bialetti-moka-3cup.webp` og `bialetti-moka-6cup.webp`).

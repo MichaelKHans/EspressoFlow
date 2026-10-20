@@ -2,6 +2,15 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.20.8] - 2026-10-20
+### Etape 78: Differentieret Baratza Encore ESP Pro (Digital LED Display) vs Standard
+- **Dedikeret Packshot til Baratza Encore ESP Pro:**
+  - Oprettet `public/images/gear/grinders/baratza-esp-pro.webp` specifikt til Pro-modellen med det oplyste digitale LED display (`20.0`) og kontrolknap, frilagt via BiRefNet neural segmentation på `#FAF7F2` Espresso Warmth baggrund.
+  - Opdateret `grinder-baratza-esp-pro` i [gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts) så den peger på det korrekte display-billede.
+  - Standard `grinder-baratza-esp` bevarer det godkendte analoge packshot (`baratza-esp.webp`). Begge modeller lever nu side om side med hver sit 100% korrekte billede.
+- **Audit Suite opdateret:**
+  - `public/gear-audit.html` regenereret.
+
 ## [1.20.7] - 2026-10-20
 ### Etape 77: Klassisk Standard Bialetti Moka Express & Fuldt Samlet Turin DF54
 - **Klassisk Standard Bialetti (Fjernelse af MacKenzie-Childs Blomsterudgaver):**
