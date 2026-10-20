@@ -42,6 +42,25 @@ export interface GearCatalogItem {
 // -------------------------------------------------------------------------
 export const GRINDER_CATALOG: GearCatalogItem[] = [
   {
+    id: 'grinder-baratza-esp-pro',
+    name: 'Baratza Encore ESP Pro',
+    brand: 'Baratza',
+    category: 'grinder',
+    subCategory: 'Conical Burr (Dual-Zone Pro)',
+    image: '/images/gear/grinders/baratza-esp.webp',
+    description: '40mm M2 stålkoniske knive med 1-20 micro-steps til espresso og 21-40 macro-steps til filter.',
+    specs: {
+      burrSizeMm: 40,
+      burrType: 'M2 Steel Conical',
+      stepType: 'stepped',
+      minSetting: 1.0,
+      maxSetting: 40.0,
+      espressoMaxSetting: 20.0,
+      stepUnit: 'micro-steps',
+      defaultSetting: '15.0',
+    },
+  },
+  {
     id: 'grinder-baratza-esp',
     name: 'Baratza Encore ESP',
     brand: 'Baratza',

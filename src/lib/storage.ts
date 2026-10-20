@@ -207,15 +207,7 @@ export function loadGrinders(): GrinderProfile[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.GRINDERS);
     const grinders: GrinderProfile[] = raw ? JSON.parse(raw) : getDefaultGrinders();
-
-    // Migrate legacy 'Baratza Encore ESP Pro' to official accurate name 'Baratza Encore ESP'
     let needsSave = false;
-    for (const g of grinders) {
-      if (g.name === 'Baratza Encore ESP Pro') {
-        g.name = 'Baratza Encore ESP';
-        needsSave = true;
-      }
-    }
 
     // Clean up older legacy default where Eureka was unintentionally enabled alongside Baratza
     const baratza = grinders.find((g) => g.id === 'grinder-baratza-esp');

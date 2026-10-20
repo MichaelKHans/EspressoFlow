@@ -556,9 +556,31 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
               </div>
             </div>
 
-            {/* Visual Stepped Ruler with Mechanical Caliper Ticks (placed behind text) */}
-            <div className="pt-2">
-              <div className="relative w-full h-11 bg-white rounded-xl border border-[#D0BDAA] px-3 flex items-center overflow-hidden shadow-2xs">
+            {/* Visual Stepped Ruler with Mechanical Caliper Ticks */}
+            <div className="pt-2 space-y-1.5">
+              {/* Header Label Row ABOVE ruler: Fine on left, Split if present, Coarse on right */}
+              <div className="flex items-center justify-between text-[10px] font-mono select-none px-1">
+                <span className="font-bold text-[#C26D52]">
+                  Fine ({activeGrinder.minSetting || (isDualZoneBaratza ? '1.0' : '0')})
+                </span>
+
+                {isDualZoneBaratza ? (
+                  <span className="font-bold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
+                    Split (20.0)
+                  </span>
+                ) : activeGrinder.espressoMaxSetting ? (
+                  <span className="hidden sm:inline font-semibold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
+                    Espresso ≤ {activeGrinder.espressoMaxSetting}
+                  </span>
+                ) : null}
+
+                <span className="font-bold text-[#72806B]">
+                  Coarse ({activeGrinder.maxSetting || (isDualZoneBaratza ? '40.0' : '30')})
+                </span>
+              </div>
+
+              {/* Clean Ruler Box with Caliper Ticks & Slider Thumb */}
+              <div className="relative w-full h-9 bg-white rounded-xl border border-[#D0BDAA] px-3 flex items-center overflow-hidden shadow-2xs">
                 {/* Mechanical Caliper Ticks (z-0 behind text) */}
                 <div className="absolute inset-0 px-3 flex items-end pointer-events-none z-0">
                   <div className="relative w-full h-full">
@@ -592,43 +614,6 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
                       );
                     })}
                   </div>
-                </div>
-
-                {/* Text Badges (z-10 with semi-translucent backdrop so ruler ticks show behind) */}
-                <div className="relative z-10 w-full flex items-center justify-between text-[9px] font-mono select-none pointer-events-none">
-                  {isDualZoneBaratza ? (
-                    <>
-                      <span className="text-left font-bold text-[#C26D52] bg-white/85 px-1.5 py-0.5 rounded border border-[#D0BDAA]/40 shadow-2xs">
-                        1.0 ({t('gear.fine')})
-                      </span>
-                      <span className="text-center font-bold text-[#C26D52] bg-[#FAF7F2]/95 border border-[#C26D52]/40 px-2 py-0.5 rounded shadow-2xs">
-                        15.0 ({t('gear.dialed')})
-                      </span>
-                      <span className="text-center font-bold text-stone-600 bg-white/85 border border-[#D0BDAA]/40 px-1.5 py-0.5 rounded shadow-2xs">
-                        20.0 (Split)
-                      </span>
-                      <span className="text-right font-bold text-[#72806B] bg-white/85 px-1.5 py-0.5 rounded border border-[#D0BDAA]/40 shadow-2xs">
-                        40.0 ({t('gear.coarse')})
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="bg-white/85 px-1.5 py-0.5 rounded border border-[#D0BDAA]/40 shadow-2xs text-[#7A6E65]">
-                        {activeGrinder.minSetting || 0} ({t('gear.fine')})
-                      </span>
-                      <span className="font-bold text-[#C26D52] bg-[#FAF7F2]/95 border border-[#C26D52]/40 px-2 py-0.5 rounded shadow-2xs">
-                        {currentGrindNum.toFixed(1)} ({t('gear.dialed')})
-                      </span>
-                      {activeGrinder.espressoMaxSetting && (
-                        <span className="hidden sm:inline font-semibold text-stone-600 bg-white/85 border border-[#D0BDAA]/40 px-1.5 py-0.5 rounded shadow-2xs">
-                          Espresso ≤ {activeGrinder.espressoMaxSetting}
-                        </span>
-                      )}
-                      <span className="bg-white/85 px-1.5 py-0.5 rounded border border-[#D0BDAA]/40 shadow-2xs text-[#7A6E65]">
-                        {activeGrinder.maxSetting || 30} ({t('gear.coarse')})
-                      </span>
-                    </>
-                  )}
                 </div>
 
                 {/* Animated Dialed Indicator Notch (z-20 on top of everything) */}
