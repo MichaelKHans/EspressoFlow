@@ -348,6 +348,145 @@ export const GRINDER_CATALOG: GearCatalogItem[] = [
   ...EXTENDED_GRINDERS,
 ];
 
+/**
+ * Resolves authoritative dial & zone specifications for any coffee grinder
+ * across standard and extended catalogs with resilient fuzzy and brand matching.
+ */
+export function resolveGrinderSpecs(nameOrId?: string): GearSpecs | undefined {
+  if (!nameOrId) return undefined;
+  const q = nameOrId.toLowerCase().trim();
+
+  // 1. Direct exact or substring lookup in GRINDER_CATALOG
+  const direct = GRINDER_CATALOG.find(
+    (g) =>
+      g.id.toLowerCase() === q ||
+      g.name.toLowerCase() === q ||
+      q.includes(g.name.toLowerCase()) ||
+      g.name.toLowerCase().includes(q)
+  );
+  if (direct?.specs) return direct.specs;
+
+  // 2. Intelligent Brand & Model Key Matching
+  if (q.includes('niche')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-niche-zero')?.specs;
+  }
+  if (q.includes('baratza') && q.includes('esp')) {
+    return q.includes('pro')
+      ? GRINDER_CATALOG.find((g) => g.id === 'grinder-baratza-esp-pro')?.specs
+      : GRINDER_CATALOG.find((g) => g.id === 'grinder-baratza-esp')?.specs;
+  }
+  if (q.includes('sette')) {
+    return GRINDER_CATALOG.find((g) => g.id.includes('sette'))?.specs;
+  }
+  if (q.includes('virtuoso')) {
+    return GRINDER_CATALOG.find((g) => g.id.includes('virtuoso'))?.specs;
+  }
+  if (q.includes('specialita')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-eureka-specialita')?.specs;
+  }
+  if (q.includes('libra')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-eureka-libra')?.specs;
+  }
+  if (q.includes('zero') && (q.includes('eureka') || q.includes('mignon') || q.includes('oro'))) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-eureka-zero')?.specs;
+  }
+  if (q.includes('manuale') || q.includes('silenzio')) {
+    return GRINDER_CATALOG.find((g) => g.id.includes('manuale') || g.id.includes('silenzio'))?.specs;
+  }
+  if (q.includes('df54')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-turin-df54')?.specs;
+  }
+  if (q.includes('df83')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-turin-df83-v2')?.specs;
+  }
+  if (q.includes('df64')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-df64')?.specs;
+  }
+  if (q.includes('opus')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-fellow-opus')?.specs;
+  }
+  if (q.includes('ode')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-fellow-ode-gen2')?.specs;
+  }
+  if (q.includes('sculptor')) {
+    return GRINDER_CATALOG.find((g) => g.id.includes('sculptor'))?.specs;
+  }
+  if (q.includes('comandante') || q.includes('c40')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-comandante')?.specs;
+  }
+  if (q.includes('j-ultra') || q.includes('jultra') || q.includes('j-max')) {
+    return GRINDER_CATALOG.find((g) => g.id.includes('1zpresso'))?.specs;
+  }
+  if (q.includes('x-pro')) {
+    return GRINDER_CATALOG.find((g) => g.id.includes('x-pro'))?.specs;
+  }
+  if (q.includes('k4')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-kingrinder-k4')?.specs;
+  }
+  if (q.includes('k6')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-kingrinder-k6')?.specs;
+  }
+  if (q.includes('smart grinder') || (q.includes('sage') && q.includes('smart'))) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-sage-smart')?.specs;
+  }
+  if (q.includes('dose control')) {
+    return {
+      minSetting: 1.0,
+      maxSetting: 60.0,
+      espressoMaxSetting: 25.0,
+      defaultSetting: '10.0',
+      stepUnit: 'collar steps',
+    };
+  }
+  if (q.includes('uniform')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-wilfa-uniform')?.specs;
+  }
+  if (q.includes('philos')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-mazzer-philos')?.specs;
+  }
+  if (q.includes('super jolly')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-mazzer-super-jolly-v-pro')?.specs;
+  }
+  if (q.includes('ek43')) {
+    return GRINDER_CATALOG.find((g) => g.id.includes('ek43'))?.specs;
+  }
+  if (q.includes('x54')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-mahlkonig')?.specs;
+  }
+  if (q.includes('lagom') && q.includes('mini')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-option-o-lagom-mini')?.specs;
+  }
+  if (q.includes('lagom') || q.includes('p64')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-option-o-lagom-p64')?.specs;
+  }
+  if (q.includes('key')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-weber-key-mk2')?.specs;
+  }
+  if (q.includes('eg-1') || q.includes('eg1')) {
+    return GRINDER_CATALOG.find((g) => g.id === 'grinder-weber-eg-1')?.specs;
+  }
+  if (q.includes('varia') || q.includes('vs3') || q.includes('vs4') || q.includes('vs6')) {
+    return {
+      minSetting: 0.0,
+      maxSetting: 12.0,
+      espressoMaxSetting: 4.5,
+      defaultSetting: '3.2',
+      stepUnit: 'dial marks',
+    };
+  }
+  if (q.includes('fred')) {
+    return {
+      minSetting: 0.0,
+      maxSetting: 10.0,
+      espressoMaxSetting: 3.5,
+      defaultSetting: '2.5',
+      stepUnit: 'worm screw',
+    };
+  }
+
+  return undefined;
+}
+
 // -------------------------------------------------------------------------
 // 2. ESPRESSO MACHINES CATALOG
 // -------------------------------------------------------------------------

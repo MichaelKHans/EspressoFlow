@@ -1,5 +1,5 @@
 import type { ShotRecord, ShotDataPoint, UserAccessState, CoffeeBeanProfile, GrinderProfile, TempUnit, EspressoMachineProfile } from '../types/espresso';
-import { MACHINE_CATALOG } from '../data/gearCatalog';
+import { MACHINE_CATALOG, resolveGrinderSpecs } from '../data/gearCatalog';
 
 const STORAGE_KEYS = {
   SHOTS: 'espressoflow_shots_v1',
@@ -210,13 +210,63 @@ export function loadGrinders(): GrinderProfile[] {
     let needsSave = false;
 
     // Clean up older legacy default where Eureka was unintentionally enabled alongside Baratza
-    const baratza = grinders.find((g) => g.id === 'grinder-baratza-esp');
+    const baratza = grinders.find((g) => g.id === 'grinder-baratza-esp' || g.id === 'grinder-baratza-esp-pro');
     const eureka = grinders.find((g) => g.id === 'grinder-eureka-specialita');
     const legacyFlag = localStorage.getItem('espressoflow_eureka_cleaned_v1');
     if (!legacyFlag && baratza?.inSetup && eureka?.inSetup) {
       eureka.inSetup = false;
       localStorage.setItem('espressoflow_eureka_cleaned_v1', 'true');
       needsSave = true;
+    }
+
+    // Ensure Baratza Encore ESP Pro is available in the profile list
+    if (!grinders.some((g) => g.id === 'grinder-baratza-esp-pro' || g.name === 'Baratza Encore ESP Pro')) {
+      const proProfile: GrinderProfile = {
+        id: 'grinder-baratza-esp-pro',
+        name: 'Baratza Encore ESP Pro',
+        type: 'stepped',
+        defaultSetting: '15.0',
+        stepUnit: 'micro-steps (1-20 espresso / 21-40 filter)',
+        secondsPerStep: 2.5,
+        inSetup: true,
+        burrType: 'M2 40mm Steel Conical',
+        minSetting: 1.0,
+        maxSetting: 40.0,
+        espressoMaxSetting: 20.0,
+      };
+      grinders.unshift(proProfile);
+      needsSave = true;
+    }
+
+    // Comprehensive dial-in specification backfill for ALL saved grinders
+    for (const g of grinders) {
+      const specs = resolveGrinderSpecs(g.name) || resolveGrinderSpecs(g.id);
+      if (specs) {
+        if (g.minSetting === undefined && specs.minSetting !== undefined) {
+          g.minSetting = specs.minSetting;
+          needsSave = true;
+        }
+        if (g.maxSetting === undefined && specs.maxSetting !== undefined) {
+          g.maxSetting = specs.maxSetting;
+          needsSave = true;
+        }
+        if (g.espressoMaxSetting === undefined && specs.espressoMaxSetting !== undefined) {
+          g.espressoMaxSetting = specs.espressoMaxSetting;
+          needsSave = true;
+        }
+        if (!g.defaultSetting && specs.defaultSetting) {
+          g.defaultSetting = specs.defaultSetting;
+          needsSave = true;
+        }
+        if (!g.burrType && specs.burrType) {
+          g.burrType = specs.burrType;
+          needsSave = true;
+        }
+        if (!g.stepUnit && specs.stepUnit) {
+          g.stepUnit = specs.stepUnit;
+          needsSave = true;
+        }
+      }
     }
 
     // Guarantee at least one grinder has inSetup: true
@@ -246,8 +296,8 @@ export function saveGrinders(grinders: GrinderProfile[]): void {
 export function getDefaultGrinders(): GrinderProfile[] {
   return [
     {
-      id: 'grinder-baratza-esp',
-      name: 'Baratza Encore ESP',
+      id: 'grinder-baratza-esp-pro',
+      name: 'Baratza Encore ESP Pro',
       type: 'stepped',
       defaultSetting: '15.0',
       stepUnit: 'micro-steps (1-20 espresso / 21-40 filter)',
@@ -257,6 +307,32 @@ export function getDefaultGrinders(): GrinderProfile[] {
       minSetting: 1.0,
       maxSetting: 40.0,
       espressoMaxSetting: 20.0,
+    },
+    {
+      id: 'grinder-baratza-esp',
+      name: 'Baratza Encore ESP',
+      type: 'stepped',
+      defaultSetting: '15.0',
+      stepUnit: 'micro-steps (1-20 espresso / 21-40 filter)',
+      secondsPerStep: 2.5,
+      inSetup: false,
+      burrType: 'M2 40mm Steel Conical',
+      minSetting: 1.0,
+      maxSetting: 40.0,
+      espressoMaxSetting: 20.0,
+    },
+    {
+      id: 'grinder-niche',
+      name: 'Niche Zero (Conical)',
+      type: 'stepless',
+      defaultSetting: '15.0',
+      stepUnit: 'stepless calibration marks (0-50)',
+      secondsPerStep: 1.5,
+      burrType: 'Mazzer Hardened Steel Conical',
+      minSetting: 0.0,
+      maxSetting: 50.0,
+      espressoMaxSetting: 20.0,
+      inSetup: false,
     },
     {
       id: 'grinder-eureka-specialita',
@@ -269,22 +345,7 @@ export function getDefaultGrinders(): GrinderProfile[] {
       burrType: '55mm Hardened Steel Flat',
       minSetting: 0.0,
       maxSetting: 6.0,
-    },
-    {
-      id: 'grinder-varia-vs3',
-      name: 'Varia VS3 (Gen 2)',
-      type: 'stepless',
-      defaultSetting: '3.2',
-      stepUnit: 'micrometric ticks (0.1 mark)',
-      secondsPerStep: 4.0,
-    },
-    {
-      id: 'grinder-varia-vs4',
-      name: 'Varia VS4',
-      type: 'stepless',
-      defaultSetting: '2.8',
-      stepUnit: 'stepless dial marks',
-      secondsPerStep: 3.5,
+      espressoMaxSetting: 2.5,
     },
     {
       id: 'grinder-eureka-libra',
@@ -293,6 +354,10 @@ export function getDefaultGrinders(): GrinderProfile[] {
       defaultSetting: '1.6',
       stepUnit: 'micrometric dial (0-5)',
       secondsPerStep: 6.0,
+      burrType: '55mm Hardened Steel Flat',
+      minSetting: 0.0,
+      maxSetting: 6.0,
+      espressoMaxSetting: 2.5,
     },
     {
       id: 'grinder-eureka-zero',
@@ -301,6 +366,10 @@ export function getDefaultGrinders(): GrinderProfile[] {
       defaultSetting: '1.2',
       stepUnit: 'single dose dial indicator',
       secondsPerStep: 5.0,
+      burrType: 'Diamond Inside Flat',
+      minSetting: 0.0,
+      maxSetting: 6.0,
+      espressoMaxSetting: 2.5,
     },
     {
       id: 'grinder-eureka-manuale',
@@ -309,102 +378,154 @@ export function getDefaultGrinders(): GrinderProfile[] {
       defaultSetting: '1.5',
       stepUnit: 'micrometric dial',
       secondsPerStep: 6.0,
-    },
-    {
-      id: 'grinder-sage-smart',
-      name: 'Sage The Smart Grinder Pro',
-      type: 'stepped',
-      defaultSetting: '12',
-      stepUnit: 'espresso steps (1-30)',
-      secondsPerStep: 2.0,
-    },
-    {
-      id: 'grinder-sage-dose',
-      name: 'Sage The Dose Control Pro',
-      type: 'stepped',
-      defaultSetting: '10',
-      stepUnit: 'collar steps',
-      secondsPerStep: 2.0,
+      burrType: '50mm Hardened Steel Flat',
+      minSetting: 0.0,
+      maxSetting: 6.0,
+      espressoMaxSetting: 2.5,
     },
     {
       id: 'grinder-df64',
       name: 'DF64 Gen 2 (Single Dose)',
       type: 'stepless',
-      defaultSetting: '14.0',
+      defaultSetting: '15.0',
       stepUnit: 'collar ticks (0-90)',
       secondsPerStep: 2.0,
-    },
-    {
-      id: 'grinder-niche',
-      name: 'Niche Zero (Conical)',
-      type: 'stepless',
-      defaultSetting: '17.0',
-      stepUnit: 'stepless calibration marks (0-50)',
-      secondsPerStep: 1.5,
+      burrType: 'DLC Coated 64mm Flat',
+      minSetting: 0.0,
+      maxSetting: 90.0,
+      espressoMaxSetting: 25.0,
     },
     {
       id: 'grinder-fellow-opus',
       name: 'Fellow Opus Conical',
       type: 'stepped',
       defaultSetting: '2.0',
-      stepUnit: 'bevel dial + inner micro ring',
+      stepUnit: 'bevel dial (1-11)',
       secondsPerStep: 2.5,
+      burrType: '40mm C-Six Carbon Steel Conical',
+      minSetting: 1.0,
+      maxSetting: 11.0,
+      espressoMaxSetting: 3.0,
     },
     {
       id: 'grinder-baratza-sette',
       name: 'Baratza Sette 270 / 270Wi',
       type: 'stepped',
-      defaultSetting: '9E',
+      defaultSetting: '7.0',
       stepUnit: 'macro 1-31 & micro A-I',
       secondsPerStep: 2.0,
+      burrType: '40mm Steel AP Conical',
+      minSetting: 1.0,
+      maxSetting: 31.0,
+      espressoMaxSetting: 9.0,
     },
     {
       id: 'grinder-timemore-sculptor',
       name: 'Timemore Sculptor 064S / 078S',
       type: 'stepless',
       defaultSetting: '2.5',
-      stepUnit: 'stepless marks',
+      stepUnit: 'stepless marks (0-18)',
       secondsPerStep: 2.5,
-    },
-    {
-      id: 'grinder-wilfa-uniform',
-      name: 'Wilfa Uniform WSFBS-100B',
-      type: 'stepped',
-      defaultSetting: '6',
-      stepUnit: 'steps (1-41)',
-      secondsPerStep: 2.5,
-    },
-    {
-      id: 'grinder-lelit-fred',
-      name: 'Lelit Fred PL043MM',
-      type: 'stepless',
-      defaultSetting: '2.5',
-      stepUnit: 'micrometric worm screw',
-      secondsPerStep: 8.0,
-    },
-    {
-      id: 'grinder-1zpresso',
-      name: '1Zpresso J-Ultra / J-Max',
-      type: 'stepped',
-      defaultSetting: '1.3.5',
-      stepUnit: 'rotations & clicks (8.4µm)',
-      secondsPerStep: 3.0,
+      burrType: 'Turbo / Espresso Flat',
+      minSetting: 0.0,
+      maxSetting: 18.0,
+      espressoMaxSetting: 4.5,
     },
     {
       id: 'grinder-comandante',
       name: 'Comandante C40 MK4',
       type: 'stepped',
-      defaultSetting: '13 clicks',
+      defaultSetting: '12',
       stepUnit: 'clicks (30µm per click)',
       secondsPerStep: 3.5,
+      burrType: 'Nitro Blade Conical',
+      minSetting: 0.0,
+      maxSetting: 40.0,
+      espressoMaxSetting: 15.0,
+    },
+    {
+      id: 'grinder-1zpresso',
+      name: '1Zpresso J-Ultra / J-Max',
+      type: 'stepped',
+      defaultSetting: '14.0',
+      stepUnit: 'rotations & clicks (8µm)',
+      secondsPerStep: 3.0,
+      burrType: 'Titanium-Coated Conical',
+      minSetting: 0.0,
+      maxSetting: 40.0,
+      espressoMaxSetting: 20.0,
+    },
+    {
+      id: 'grinder-sage-smart',
+      name: 'Sage The Smart Grinder Pro',
+      type: 'stepped',
+      defaultSetting: '12.0',
+      stepUnit: 'steps (1-30 espresso)',
+      secondsPerStep: 2.0,
+      burrType: 'Steel Conical',
+      minSetting: 1.0,
+      maxSetting: 60.0,
+      espressoMaxSetting: 30.0,
+    },
+    {
+      id: 'grinder-sage-dose',
+      name: 'Sage The Dose Control Pro',
+      type: 'stepped',
+      defaultSetting: '10.0',
+      stepUnit: 'collar steps',
+      secondsPerStep: 2.0,
+      burrType: 'Steel Conical',
+      minSetting: 1.0,
+      maxSetting: 60.0,
+      espressoMaxSetting: 25.0,
+    },
+    {
+      id: 'grinder-wilfa-uniform',
+      name: 'Wilfa Uniform WSFBS-100B',
+      type: 'stepped',
+      defaultSetting: '5.0',
+      stepUnit: 'steps (1-41)',
+      secondsPerStep: 2.5,
+      burrType: 'Italian Steel Flat',
+      minSetting: 1.0,
+      maxSetting: 41.0,
+      espressoMaxSetting: 8.0,
     },
     {
       id: 'grinder-mahlkonig',
       name: 'Mahlkönig X54 Allround Home',
       type: 'stepless',
-      defaultSetting: '3.5',
+      defaultSetting: '5.5',
       stepUnit: 'stepless dial indicator (1-35)',
       secondsPerStep: 3.0,
+      burrType: 'Special Steel Flat',
+      minSetting: 1.0,
+      maxSetting: 35.0,
+      espressoMaxSetting: 12.0,
+    },
+    {
+      id: 'grinder-varia-vs3',
+      name: 'Varia VS3 (Gen 2)',
+      type: 'stepless',
+      defaultSetting: '3.2',
+      stepUnit: 'micrometric ticks (0.1 mark)',
+      secondsPerStep: 4.0,
+      burrType: 'Supernova Titanium Conical',
+      minSetting: 0.0,
+      maxSetting: 12.0,
+      espressoMaxSetting: 4.5,
+    },
+    {
+      id: 'grinder-varia-vs4',
+      name: 'Varia VS4',
+      type: 'stepless',
+      defaultSetting: '2.8',
+      stepUnit: 'stepless dial marks',
+      secondsPerStep: 3.5,
+      burrType: 'Steel Conical',
+      minSetting: 0.0,
+      maxSetting: 12.0,
+      espressoMaxSetting: 4.5,
     },
     {
       id: 'grinder-varia-vs6',
@@ -413,30 +534,34 @@ export function getDefaultGrinders(): GrinderProfile[] {
       defaultSetting: '3.0',
       stepUnit: 'precision micrometric ticks',
       secondsPerStep: 3.0,
+      burrType: 'Commercial Flat / Conical',
+      minSetting: 0.0,
+      maxSetting: 12.0,
+      espressoMaxSetting: 4.5,
     },
     {
-      id: 'grinder-timemore-bricks',
-      name: 'Timemore Bricks 01S Electric',
-      type: 'stepped',
-      defaultSetting: '4.5',
-      stepUnit: 'notches',
-      secondsPerStep: 2.5,
-    },
-    {
-      id: 'grinder-timemore-whirly',
-      name: 'Timemore Whirly 01S Portable',
-      type: 'stepped',
-      defaultSetting: '3.0',
-      stepUnit: 'clicks',
-      secondsPerStep: 3.0,
+      id: 'grinder-lelit-fred',
+      name: 'Lelit Fred PL043MM',
+      type: 'stepless',
+      defaultSetting: '2.5',
+      stepUnit: 'micrometric worm screw',
+      secondsPerStep: 8.0,
+      burrType: '38mm Conical Steel',
+      minSetting: 0.0,
+      maxSetting: 10.0,
+      espressoMaxSetting: 3.5,
     },
     {
       id: 'grinder-delonghi-kg79',
       name: 'DeLonghi KG79',
       type: 'stepped',
-      defaultSetting: 'Fine 2',
+      defaultSetting: '2.0',
       stepUnit: 'steps',
       secondsPerStep: 2.0,
+      burrType: 'Steel Burr',
+      minSetting: 1.0,
+      maxSetting: 16.0,
+      espressoMaxSetting: 4.0,
     },
   ];
 }

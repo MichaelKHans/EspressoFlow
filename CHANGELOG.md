@@ -2,6 +2,19 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.1] - 2026-10-20
+### Etape 80: Universel Dial-In Zonedatabase & Interaktiv Mikrometerskala for Samtlige Kværne
+- **Universel Grinder Specs Resolver ([gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts)):**
+  - Implementeret og eksporteret `resolveGrinderSpecs(nameOrId)` med dybdegående fuzzy matching på tværs af standard og udvidede kataloger (`GRINDER_CATALOG` og `EXTENDED_GRINDERS`).
+  - Fastlagt autoritative parametre for hver enkelt kværnmodel: `minSetting`, `maxSetting`, `espressoMaxSetting`, `defaultSetting` og `stepUnit`.
+- **Automatisk LocalStorage Migration & Backfill ([storage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/storage.ts)):**
+  - Udvidet `loadGrinders()` så ældre profiler gemt i brugerens browser uden `minSetting`, `maxSetting` eller `espressoMaxSetting` (f.eks. Niche Zero, Eureka, DF64 osv.) automatisk opgraderes med de korrekte fabriksgrænser ved opstart uden tab af brugeropsætning.
+  - Komplet berigelse af alle standardprofiler i `getDefaultGrinders()`.
+- **Interaktiv Mikrometerskala & Dynamiske Zoner ([GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx)):**
+  - Løst zonenavigation: `effectiveMin`, `effectiveMax` og `effectiveEspressoMax` beregnes nu dynamisk ud fra den aktive kværn, så badget altid med 100% matematisk præcision skifter mellem `ESPRESSO ZONE` og `FILTER & POUR OVER ZONE`.
+  - Tilføjet direkte klik/tryk-justering på måleskalaen, så brugeren kan trykke hvor som helst på linealen for lynhurtigt at hoppe til den ønskede indstilling.
+  - Dynamisk zone-guide under linealen, der viser den præcise espresso- og filtergrænse for hver model (f.eks. "● 0–20: Espresso Dial-In Zone • 21–50: Filter & Pour Over Zone" for Niche Zero, "● 0–2.5: Espresso • 2.6–6: Filter" for Eureka).
+
 ## [1.21.0] - 2026-10-20
 ### Etape 79: Total Frilægning af Alle Rød-Markerede Udstyrsbilleder (Kværne, Maskiner, Bryggere, Kedler) & Zone-Badge Fix
 - **Rensning af Niche Zero & De'Longhi Dedica:**

@@ -39,6 +39,7 @@ import {
   MACHINE_CATALOG,
   BREWER_CATALOG,
   KETTLE_CATALOG,
+  resolveGrinderSpecs,
 } from '../data/gearCatalog';
 import type { GearCatalogItem } from '../data/gearCatalog';
 import { GearCardCarousel } from './gear/GearCardCarousel';
@@ -190,25 +191,35 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
     activeGrinder.name.toLowerCase().includes('baratza') &&
     activeGrinder.name.toLowerCase().includes('esp');
 
-  // Resilient Espresso zone threshold: saved profile -> catalog specs -> dual-zone fallback -> 40% of max
-  const catalogGrinderSpecs = GRINDER_CATALOG.find(
-    (g) => g.name.toLowerCase() === activeGrinder.name.toLowerCase()
-  )?.specs;
+  // Resilient Espresso zone threshold: saved profile -> resolveGrinderSpecs -> dual-zone fallback -> 40% of max
+  const resolvedSpecs =
+    resolveGrinderSpecs(activeGrinder.name) ||
+    resolveGrinderSpecs(activeGrinder.id);
+
+  const effectiveMin =
+    activeGrinder.minSetting ??
+    resolvedSpecs?.minSetting ??
+    (isDualZoneBaratza ? 1.0 : 0.0);
+
+  const effectiveMax =
+    activeGrinder.maxSetting ??
+    resolvedSpecs?.maxSetting ??
+    (isDualZoneBaratza ? 40.0 : 30.0);
 
   const effectiveEspressoMax =
     activeGrinder.espressoMaxSetting ??
-    catalogGrinderSpecs?.espressoMaxSetting ??
+    resolvedSpecs?.espressoMaxSetting ??
     (isDualZoneBaratza
       ? 20.0
-      : activeGrinder.maxSetting
-      ? activeGrinder.maxSetting * 0.4
+      : effectiveMax > 0
+      ? effectiveMax * 0.4
       : 20.0);
 
   const isEspressoZone = currentGrindNum <= effectiveEspressoMax;
 
   const stepGrind = (delta: number) => {
-    const min = activeGrinder.minSetting ?? 1.0;
-    const max = activeGrinder.maxSetting ?? (isDualZoneBaratza ? 40.0 : 30.0);
+    const min = effectiveMin;
+    const max = effectiveMax;
     const nextVal = Math.min(
       max,
       Math.max(min, Math.round((currentGrindNum + delta) * 10) / 10)
@@ -264,9 +275,9 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
   const handleSelectGrinder = (item: CarouselGearItem) => {
     setGrinderName(item.name);
     const found = grinders.find((g) => g.name === item.name);
-    if (found?.defaultSetting) {
-      setGrindSetting(found.defaultSetting);
-    }
+    const targetSpecs = resolveGrinderSpecs(item.name) || resolveGrinderSpecs(item.id);
+    const newDefault = found?.defaultSetting ?? targetSpecs?.defaultSetting ?? '15.0';
+    setGrindSetting(newDefault);
   };
 
   const handleRemoveGrinder = (item: CarouselGearItem) => {
@@ -568,39 +579,47 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
 
             {/* Visual Stepped Ruler with Mechanical Caliper Ticks */}
             <div className="pt-2 space-y-1.5">
-              {/* Header Label Row ABOVE ruler: Fine on left, Split if present, Coarse on right */}
+              {/* Header Label Row ABOVE ruler: Fine on left, Split/Espresso boundary in center, Coarse on right */}
               <div className="flex items-center justify-between text-[10px] font-mono select-none px-1">
                 <span className="font-bold text-[#C26D52]">
-                  Fine ({activeGrinder.minSetting || (isDualZoneBaratza ? '1.0' : '0')})
+                  Fine ({effectiveMin.toFixed(effectiveMin % 1 === 0 ? 0 : 1)})
                 </span>
 
                 {isDualZoneBaratza ? (
                   <span className="font-bold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
                     Split (20.0)
                   </span>
-                ) : effectiveEspressoMax ? (
-                  <span className="hidden sm:inline font-semibold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
+                ) : effectiveEspressoMax > 0 ? (
+                  <span className="font-semibold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
                     Espresso ≤ {effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}
                   </span>
                 ) : null}
 
                 <span className="font-bold text-[#72806B]">
-                  Coarse ({activeGrinder.maxSetting || (isDualZoneBaratza ? '40.0' : '30')})
+                  Coarse ({effectiveMax.toFixed(effectiveMax % 1 === 0 ? 0 : 1)})
                 </span>
               </div>
 
               {/* Clean Ruler Box with Caliper Ticks & Slider Thumb */}
-              <div className="relative w-full h-9 bg-white rounded-xl border border-[#D0BDAA] px-3 flex items-center overflow-hidden shadow-2xs">
+              <div
+                className="relative w-full h-9 bg-white rounded-xl border border-[#D0BDAA] px-3 flex items-center overflow-hidden shadow-2xs cursor-pointer select-none"
+                title="Tap or drag to adjust grind position"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const clickX = e.clientX - rect.left;
+                  const pct = Math.max(0, Math.min(1, clickX / rect.width));
+                  const newSetting = effectiveMin + pct * (effectiveMax - effectiveMin);
+                  setGrindSetting(newSetting.toFixed(1));
+                }}
+              >
                 {/* Mechanical Caliper Ticks (z-0 behind text) */}
                 <div className="absolute inset-0 px-3 flex items-end pointer-events-none z-0">
                   <div className="relative w-full h-full">
                     {Array.from({ length: isDualZoneBaratza ? 40 : 31 }, (_, idx) => {
                       const tickVal = isDualZoneBaratza
                         ? idx + 1
-                        : (activeGrinder.minSetting || 0) +
-                          (idx / 30) *
-                            ((activeGrinder.maxSetting || 30) -
-                              (activeGrinder.minSetting || 0));
+                        : effectiveMin +
+                          (idx / 30) * (effectiveMax - effectiveMin);
                       const percent = (idx / (isDualZoneBaratza ? 39 : 30)) * 100;
                       const isSplit = isDualZoneBaratza && tickVal === 20;
                       const isMajor = idx === 0 || idx === (isDualZoneBaratza ? 39 : 30);
@@ -634,9 +653,8 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
                       96,
                       Math.max(
                         4,
-                        ((currentGrindNum - (activeGrinder.minSetting || 1)) /
-                          ((activeGrinder.maxSetting || (isDualZoneBaratza ? 40 : 30)) -
-                            (activeGrinder.minSetting || 1))) *
+                        ((currentGrindNum - effectiveMin) /
+                          Math.max(0.1, effectiveMax - effectiveMin)) *
                           100
                       )
                     )}%`,
@@ -646,14 +664,29 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
                 </div>
               </div>
 
-              {/* Dual-Zone Explanation for Baratza ESP */}
-              {isDualZoneBaratza && (
+              {/* Dynamic Zone Explanation for Baratza ESP / All Other Grinders */}
+              {isDualZoneBaratza ? (
                 <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
                   <span className="text-[#C26D52] font-semibold">
                     ● 1–20: 20µm Micro-Steps (Espresso)
                   </span>
                   <span className="text-[#72806B] font-semibold">
                     ● 21–40: 90µm Macro-Steps (Filter & V60)
+                  </span>
+                </div>
+              ) : effectiveEspressoMax > 0 ? (
+                <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
+                  <span className="text-[#C26D52] font-semibold">
+                    ● {effectiveMin.toFixed(effectiveMin % 1 === 0 ? 0 : 1)}–{effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}: Espresso Dial-In Zone
+                  </span>
+                  <span className="text-[#72806B] font-semibold">
+                    ● {((effectiveEspressoMax * 10 + 1) / 10).toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}–{effectiveMax.toFixed(effectiveMax % 1 === 0 ? 0 : 1)}: Filter & Pour Over Zone
+                  </span>
+                </div>
+              ) : (
+                <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
+                  <span className="text-[#72806B] font-semibold">
+                    ● {effectiveMin}–{effectiveMax}: Dedicated Filter Grinder
                   </span>
                 </div>
               )}

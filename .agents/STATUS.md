@@ -25,6 +25,21 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-20 -- Etape 80: Universel Dial-In Zonedatabase & Interaktiv Mikrometerskala for Samtlige Kværne (v1.21.1)
+- **Universel Grinder Specs Resolver (`resolveGrinderSpecs`):**
+  - Implementeret dybdegående opslag af autoritative parametre (`minSetting`, `maxSetting`, `espressoMaxSetting`, `defaultSetting`, `stepUnit`) i `gearCatalog.ts` for samtlige kværne i systemet.
+- **Automatisk LocalStorage Migration i `loadGrinders()`:**
+  - Eksisterende brugerprofiler gemt i browserens LocalStorage uden eksplicitte zoner/grænser migreres automatisk ved opstart, så alle kværne (f.eks. Niche Zero, Eureka, DF64, Opus, Comandante osv.) får de rigtige min-, max- og espresso-tærskler.
+- **Interaktiv Mikrometerskala & Dynamiske Zoner i `GearStationView.tsx`:**
+  - Rettet zone-fejl: `effectiveMin`, `effectiveMax` og `effectiveEspressoMax` beregnes nu 100% dynamisk ud fra den valgte kværn.
+  - Ved skift af kværn i karussellen sættes indstillingen automatisk til modellens optimale espresso-default (f.eks. 15.0 for Niche, 1.4 for Eureka, 14.0 for DF64, 2.0 for Opus).
+  - Skalaen er gjort direkte klikbar/touch-venlig over hele bredden.
+  - Dynamisk zoneforklaring under linealen guider brugeren (f.eks. "● 0–20: Espresso Dial-In Zone • 21–50: Filter & Pour Over Zone" for Niche Zero).
+- **Kvalitetskontrol:**
+  - `npm run build` verificeret (exit code 0).
+  - Android synkroniseret (`npx cap sync android`).
+  - Pushed til GitHub `origin main`.
+
 ### 2026-10-20 -- Etape 79: Total Frilægning af Alle Rød-Markerede Udstyrsbilleder (Kværne, Maskiner, Bryggere, Kedler) & Zone-Badge Fix (v1.21.0)
 - **Niche Zero & De'Longhi Dedica frilægning:**
   - Niche Zero (`niche-zero.webp`): Rent, hvidt fabriks-packshot uden løse kværnknive eller indre ramme, skaleret perfekt på `#FAF7F2` canvas.
