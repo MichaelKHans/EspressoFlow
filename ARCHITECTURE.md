@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.1 (Universel Dial-In Zonedatabase & Interaktiv Mikrometerskala for Samtlige Kværne)  
+> **Gældende version:** v1.21.2 (Maksimering af Udstyrsbilleder i Rammen & Tight Packshot Bounding)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -355,10 +355,10 @@ graph TD
     App --> BeandexTab[BeandexView.tsx<br/>Bønnekartotek, Beandex Smagsnoter, Fotos]
     App --> LogbookTab[Logbook.tsx<br/>Dagsopdelt historik, kurver & smag]
     App --> GearTab[GearStationView.tsx<br/>Hardware-hylde, Karruseller for Kværne, Maskiner, Bryggere & Kedler, Caliper Ruler, PID & Cafiza Tracker]
-    GearTab --> GearCarousel[GearCardCarousel.tsx<br/>Horisontal hardware-karrusel, WebP fotos, aktiv markering & slet-knap]
-    GearTab --> AddGearModalComp[AddGearModal.tsx<br/>Hardware-katalog med søgning, filter og 1-tryk tilføjelse]
+    GearTab --> GearCarousel[GearCardCarousel.tsx<br/>Horisontal hardware-karrusel, forstørrede h-32/h-36 billedrammer, WebP fotos, aktiv markering & slet-knap]
+    GearTab --> AddGearModalComp[AddGearModal.tsx<br/>Hardware-katalog med søgning, w-20/w-24 billedbokse og 1-tryk tilføjelse]
     GearTab --> FrenchPressCalc[FrenchPressVolumeCalculator.tsx<br/>Dynamisk stempelkande-beregner for 350ml, 500ml, 1000ml & 1:15 ratio]
-    GearTab --> GearImageComp[GearImage.tsx<br/>WebP billede med øjeblikkelig SVG-silhuet fallback]
+    GearTab --> GearImageComp[GearImage.tsx<br/>Frilagte WebP packshots (95% ramme-udnyttelse, transparent RGBA) med øjeblikkelig SVG-silhuet fallback]
     App --> AdminTab[AdminPortal.tsx<br/>Curator Studio & AdminLicenseManager.tsx<br/>Batch Licenser, Anti-Brute-Force & Bogførings-Bro]
 
     %% Ikoner & UI Assets

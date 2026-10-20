@@ -25,6 +25,24 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-20 -- Etape 81: Maksimering af Udstyrsbilleder i Rammen & Tight Packshot Bounding (v1.21.2)
+- **Total Frilægning & Tight Bounding Box Auto-Crop (Samtlige 111 WebP Udstyrsbilleder):**
+  - Gennemført automatiseret Connected Components analyse via `scipy.ndimage` på alle 111 gear packshots i `public/images/gear/`.
+  - Frilagt samtlige kværne, maskiner, bryggere og kedler med transparent `RGBA` baggrund og anti-aliased edge feathering.
+  - Beskåret til udstyrets sande proportioner med 2.5% sikkerhedsmargin, så genstandene fylder 95-98% af lærredet i stedet for at have 50-70% spildte hvide margener.
+- **Forstørrede Billedrammer i Gear Station (`GearCardCarousel.tsx`):**
+  - Øget containerens højde fra `h-24 sm:h-28` (96px) til `h-32 sm:h-36` (128px-144px).
+  - Skaleret udstyrets visuelle areal med over 60-100%, så både høje kværne (Niche Zero, Baratza, Eureka) og brede espressomaskiner (Dedica, Gaggia) fylder rammen maksimalt uden tomme kanter.
+  - Tilføjet `filter drop-shadow-xs` og `group-hover:scale-105`.
+  - Justeret "+ Tilføj" knap til `min-h-[210px] sm:min-h-[235px]`.
+- **Forbedret Billedudvalg i Modaler (`AddGearModal.tsx` & `AdminGearImageModal.tsx`):**
+  - Øget billedbokse i "Tilføj udstyr" modalen fra `w-16 h-16` til `w-20 h-20 sm:w-24 sm:h-24`.
+  - Hævet upload/kamera-skalering i AdminGearImageModal fra 88% til 96%.
+- **Kvalitetskontrol:**
+  - `npm run build` testet med exit code 0.
+  - `npx cap sync android` gennemført fejlfrit.
+  - Pushed til GitHub `origin main`.
+
 ### 2026-10-20 -- Etape 80: Universel Dial-In Zonedatabase & Interaktiv Mikrometerskala for Samtlige Kværne (v1.21.1)
 - **Universel Grinder Specs Resolver (`resolveGrinderSpecs`):**
   - Implementeret dybdegående opslag af autoritative parametre (`minSetting`, `maxSetting`, `espressoMaxSetting`, `defaultSetting`, `stepUnit`) i `gearCatalog.ts` for samtlige kværne i systemet.

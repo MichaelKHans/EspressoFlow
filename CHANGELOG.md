@@ -2,6 +2,23 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.2] - 2026-10-20
+### Etape 81: Maksimering af Udstyrsbilleder i Rammen & Fjernelse af Overflødige Kanter
+- **Total Frilægning & Tight Bounding Box Auto-Crop for Samtlige 111 Udstyrsbilleder:**
+  - Kørt avanceret Connected Components analyse (`scipy.ndimage`) henover samtlige 111 WebP gear packshots i `public/images/gear/` (kværne, espressomaskiner, manuelle bryggere, elkedler).
+  - Ydre baggrunde fjernet og erstattet med ren gennemsigtighed (`RGBA`) og anti-aliased edge feathering, så der ALDRIG optræder en firkantet kasse eller hvide modstridende kanter mod appens varme pergament-baggrund (`#FAF7F2`).
+  - Udstyrets sande proportioner bevares uden unødvendige 50-70% hvide margener: Hver genstand fylder nu 95-98% af sit lærred med en elegant 2.5% sikkerhedsmargin mod afskæring.
+- **Forstørret Billedramme i Gear Station Karrusellen ([GearCardCarousel.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearCardCarousel.tsx)):**
+  - Øget billedcontainerens højde fra `h-24 sm:h-28` (96px) til `h-32 sm:h-36` (128px–144px).
+  - Skaleret udstyrets visuelle areal med over 60-100%, så både høje opretstående kværne (Niche Zero, Eureka, Baratza) og brede espressomaskiner (De'Longhi Dedica, Gaggia Classic) fylder hele rammen fra top til bund og side til side.
+  - Tilføjet diskret `filter drop-shadow-xs` og `group-hover:scale-105` for en flydende, taktil oplevelse ved interaktion.
+  - Justeret "+ Tilføj" karruselkortets minimumshøjde (`min-h-[210px] sm:min-h-[235px]`) for perfekt layout-harmoni.
+- **Opdatering af Udstyrsudvalg & Admin Modal ([AddGearModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/AddGearModal.tsx) & [AdminGearImageModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/AdminGearImageModal.tsx)):**
+  - Udvidelse af billedboksen i "Tilføj udstyr" modalen fra `w-16 h-16` til `w-20 h-20 sm:w-24 sm:h-24` med optimal bounding.
+  - Øget upload- og kameraskalering i AdminGearImageModal fra 88% til 96%, så brugerfotos udnytter canvas maksimalt uden spildte kanter.
+- **Billed-Audit Galleri ([gear-audit.html](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/public/gear-audit.html)):**
+  - Opdateret visning så 100% af audit-kortenes rammer udnyttes optimalt uden overflødig padding.
+
 ## [1.21.1] - 2026-10-20
 ### Etape 80: Universel Dial-In Zonedatabase & Interaktiv Mikrometerskala for Samtlige Kværne
 - **Universel Grinder Specs Resolver ([gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts)):**

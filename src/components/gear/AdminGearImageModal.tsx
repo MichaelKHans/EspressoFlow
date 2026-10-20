@@ -85,14 +85,14 @@ export const AdminGearImageModal: React.FC<AdminGearImageModalProps> = ({
           ctx.fillRect(0, 0, 600, 600);
 
           const maxDim = Math.max(img.width, img.height);
-          const scale = (600 * 0.88) / maxDim;
+          const scale = (600 * 0.96) / maxDim;
           const drawW = img.width * scale;
           const drawH = img.height * scale;
           const drawX = (600 - drawW) / 2;
           const drawY = (600 - drawH) / 2;
 
           ctx.drawImage(img, drawX, drawY, drawW, drawH);
-          const dataUrl = canvas.toDataURL('image/webp', 0.88);
+          const dataUrl = canvas.toDataURL('image/webp', 0.92);
           setPreviewUrl(dataUrl);
         }
         setIsProcessing(false);

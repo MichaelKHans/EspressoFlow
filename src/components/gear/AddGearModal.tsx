@@ -151,15 +151,15 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
                 key={item.id}
                 className="bg-white rounded-2xl border border-[#D0BDAA] p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-2xs hover:border-[#C26D52] transition-colors"
               >
-                {/* Gear Image */}
-                <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-[#FAF7F2] rounded-xl border border-[#D0BDAA]/60 p-1 flex items-center justify-center overflow-hidden">
+                {/* Gear Image - Maximally fills frame without excessive margins */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-[#FAF7F2] rounded-xl border border-[#D0BDAA]/40 p-1 flex items-center justify-center overflow-hidden">
                   <GearImage
                     gearId={item.id}
                     src={item.image}
                     alt={item.name}
                     category={item.category}
                     subType={item.subCategory}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain filter drop-shadow-xs"
                   />
                 </div>
 

@@ -159,15 +159,15 @@ export const GearCardCarousel: React.FC<GearCardCarouselProps> = ({
                 </div>
               </div>
 
-              {/* Hardware Product Image */}
-              <div className="h-24 sm:h-28 w-full bg-[#FAF7F2] rounded-xl border border-[#D0BDAA]/50 p-1 flex items-center justify-center overflow-hidden mb-2 group-hover:scale-[1.02] transition-transform">
+              {/* Hardware Product Image - Maximally fills frame without excessive borders */}
+              <div className="h-32 sm:h-36 w-full bg-[#FAF7F2] rounded-xl border border-[#D0BDAA]/40 p-1 flex items-center justify-center overflow-hidden mb-2 group-hover:border-[#C26D52]/50 transition-all">
                 <GearImage
                   gearId={item.id}
                   src={item.image}
                   alt={item.name}
                   category={item.category}
                   subType={item.subCategory}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain filter drop-shadow-xs transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
 
@@ -194,7 +194,7 @@ export const GearCardCarousel: React.FC<GearCardCarouselProps> = ({
         <button
           type="button"
           onClick={onOpenAddModal}
-          className="snap-start shrink-0 min-w-[125px] sm:min-w-[140px] rounded-2xl border-2 border-dashed border-[#D0BDAA] hover:border-[#C26D52] bg-white/40 hover:bg-white p-3 flex flex-col items-center justify-center gap-2 text-[#7A6E65] hover:text-[#C26D52] transition cursor-pointer active:scale-95 shadow-2xs hover:shadow-xs select-none"
+          className="snap-start shrink-0 min-w-[125px] sm:min-w-[140px] min-h-[210px] sm:min-h-[235px] rounded-2xl border-2 border-dashed border-[#D0BDAA] hover:border-[#C26D52] bg-white/40 hover:bg-white p-3 flex flex-col items-center justify-center gap-2 text-[#7A6E65] hover:text-[#C26D52] transition cursor-pointer active:scale-95 shadow-2xs hover:shadow-xs select-none"
         >
           <div className="w-9 h-9 rounded-full bg-[#FAF7F2] border border-[#D0BDAA] flex items-center justify-center text-[#C26D52]">
             <Plus className="w-4 h-4" />
