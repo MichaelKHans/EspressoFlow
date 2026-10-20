@@ -2,6 +2,16 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.4] - 2026-10-20
+### Etape 83: Komplet i18n Internationalisering af French Press Beregner & Gear Station
+- **French Press Kande & Ratio Beregner ([FrenchPressVolumeCalculator.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/FrenchPressVolumeCalculator.tsx)):**
+  - Fuldt integreret med `useTranslation()`, så alle tekster automatisk skifter med appens sprog (f.eks. GB English vs. DK Dansk).
+  - Titler, vejledninger, kande-størrelser ("Small (1 mug)", "Medium (2 cups)", "Large (8 cups)"), ratio-knapper ("1:14 Strong", "1:15 Golden", "1:16 Mild"), doseringsenheder ("coarsely ground coffee", "water") samt brygguides ("Steep Time: 4:00 min", "Water: 94–96°C") defineret med Single Source of Truth i `en.ts` og oversat i `da.ts`.
+- **Gear Station & Karrusel Tekster ([GearCardCarousel.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/GearCardCarousel.tsx) & [GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx)):**
+  - Knapperne "Ret" / "Ref" skifter nu dynamisk ("Edit" / "Ref" på engelsk, "Ret" / "Ref" på dansk).
+  - Tælleren for kværne i baren skifter korrekt ("{count} Grinders in setup" på engelsk, "{count} Kværne i setup" på dansk).
+  - Fjernet tosproget rod i bryggernavne (`French Press / Stempelkande` $\rightarrow$ `French Press (Bodum / Espro)`), og implementeret automatisk opgradering af ældre gemte profiler i `storage.ts`.
+
 ## [1.21.3] - 2026-10-20
 ### Etape 82: 100% Autentiske De'Longhi Fuldautomatiske Packshots (Magnifica S & Eletta Explore)
 - **Autentisk De'Longhi Magnifica S (ECAM 22.110.B):**

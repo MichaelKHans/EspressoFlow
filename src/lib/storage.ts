@@ -1004,7 +1004,7 @@ export function saveDrinkCalibration(key: string, calibration: DrinkCalibration)
 
 export const FILTER_BREWER_PRESETS = [
   'Hario V60 (02 Ceramic / Plastic / Metal)',
-  'French Press / Stempelkande (Bodum Chambord / Espro P7)',
+  'French Press (Bodum Chambord / Espro P7)',
   'AeroPress (Inverted & Standard Method)',
   'Chemex (6-Cup / 8-Cup Classic Bonded Paper)',
   'Kalita Wave (185 Flat-Bottom Stainless)',
@@ -1017,12 +1017,16 @@ export const KETTLE_PRESETS = [
   'Timemore Fish Smart Kettle (PID)',
   'Brewista Artisan Variable Temp Gooseneck',
   'Hario Buono Stovetop / Electric Gooseneck',
-  'Standard Elkedel (Kogende vand lades stå 1-2 min for ~93°C)',
+  'Standard Kettle (Off-boil rested 1-2 min for ~93°C)',
 ];
 
 export function loadFilterBrewer(): string {
   try {
-    return localStorage.getItem(STORAGE_KEYS.FILTER_BREWER) || FILTER_BREWER_PRESETS[0];
+    const raw = localStorage.getItem(STORAGE_KEYS.FILTER_BREWER);
+    if (raw) {
+      return raw.replace(' / Stempelkande', '');
+    }
+    return FILTER_BREWER_PRESETS[0];
   } catch {
     return FILTER_BREWER_PRESETS[0];
   }
@@ -1079,12 +1083,15 @@ export function loadBrewersInSetup(): string[] {
     const raw = localStorage.getItem(STORAGE_KEYS.BREWERS_IN_SETUP);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Clean legacy bilingual strings
+        return parsed.map((b: string) => b.replace(' / Stempelkande', ''));
+      }
     }
     const current = loadFilterBrewer();
     const defaults = [current];
     if (!defaults.some((b) => b.toLowerCase().includes('french') || b.toLowerCase().includes('stempel'))) {
-      defaults.push('French Press / Stempelkande (Bodum Chambord / Espro P7)');
+      defaults.push('French Press (Bodum Chambord / Espro P7)');
     }
     return defaults;
   } catch {

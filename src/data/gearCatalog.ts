@@ -734,7 +734,7 @@ export const MACHINE_CATALOG: GearCatalogItem[] = [
 export const BREWER_CATALOG: GearCatalogItem[] = [
   {
     id: 'brewer-french-press',
-    name: 'French Press / Stempelkande (Bodum / Espro)',
+    name: 'French Press (Bodum / Espro)',
     brand: 'Bodum / Espro',
     category: 'brewer',
     subCategory: 'Full Immersion Metal Filter',

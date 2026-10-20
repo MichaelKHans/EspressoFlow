@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Coffee, Droplets, Clock, Flame } from 'lucide-react';
+import { useTranslation } from '../../i18n';
 import {
   loadFrenchPressSettings,
   saveFrenchPressSettings,
@@ -7,6 +8,7 @@ import {
 } from '../../lib/storage';
 
 export const FrenchPressVolumeCalculator: React.FC = () => {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<FrenchPressSettings>(() =>
     loadFrenchPressSettings()
   );
@@ -35,16 +37,16 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
         <div className="flex items-center gap-2">
           <Coffee className="w-4 h-4 text-[#C26D52]" />
           <span className="text-xs uppercase font-bold tracking-wider text-[#2C2018]">
-            French Press Kande & Ratio Beregner
+            {t('french_press.title')}
           </span>
         </div>
         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#C26D52]/10 text-[#C26D52] border border-[#C26D52]/20">
-          Full Immersion
+          {t('french_press.full_immersion')}
         </span>
       </div>
 
       <p className="text-[11px] text-[#7A6E65] font-sans">
-        Indstil vandmængden til din stempelkandes størrelse. Appen beregner automatisk den optimale kaffemængde:
+        {t('french_press.subtitle')}
       </p>
 
       {/* 3 Standard Carafe Quick-Selectors */}
@@ -59,7 +61,7 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
           }`}
         >
           <span className="font-bold text-sm">350 ml</span>
-          <span className="text-[9px] opacity-75 mt-0.5">Lille (1 krus)</span>
+          <span className="text-[9px] opacity-75 mt-0.5">{t('french_press.size_small')}</span>
         </button>
 
         <button
@@ -72,7 +74,7 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
           }`}
         >
           <span className="font-bold text-sm">500 ml</span>
-          <span className="text-[9px] opacity-90 mt-0.5">Mellem (2 kopper)</span>
+          <span className="text-[9px] opacity-90 mt-0.5">{t('french_press.size_medium')}</span>
         </button>
 
         <button
@@ -85,7 +87,7 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
           }`}
         >
           <span className="font-bold text-sm">1000 ml</span>
-          <span className="text-[9px] opacity-75 mt-0.5">Stor (8 kopper)</span>
+          <span className="text-[9px] opacity-75 mt-0.5">{t('french_press.size_large')}</span>
         </button>
       </div>
 
@@ -94,7 +96,7 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
         <div className="flex items-center gap-2">
           <Droplets className="w-4 h-4 text-sky-600" />
           <div>
-            <span className="text-[10px] text-[#7A6E65] uppercase block font-bold">Vandmængde</span>
+            <span className="text-[10px] text-[#7A6E65] uppercase block font-bold">{t('french_press.water_volume')}</span>
             <span className="text-lg font-bold font-mono text-[#2C2018]">{settings.waterMl} ml</span>
           </div>
         </div>
@@ -123,7 +125,7 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
       <div className="bg-[#2C2018] text-[#FAF7F2] p-4 rounded-xl shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[10px] uppercase font-bold tracking-wider text-[#D4A373]">
-            ANBEFALET KAFFEDOSIS (1:{settings.ratio})
+            {t('french_press.recommended_dose', { ratio: settings.ratio })}
           </span>
           <div className="flex items-center gap-1">
             <button
@@ -132,9 +134,9 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
               className={`px-1.5 py-0.5 rounded text-[9px] font-mono cursor-pointer transition ${
                 settings.ratio === 14.0 ? 'bg-[#C26D52] text-white font-bold' : 'bg-black/30 text-stone-300'
               }`}
-              title="1:14 Kraftig"
+              title={t('french_press.ratio_strong')}
             >
-              1:14 Kraftig
+              {t('french_press.ratio_strong')}
             </button>
             <button
               type="button"
@@ -142,9 +144,9 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
               className={`px-1.5 py-0.5 rounded text-[9px] font-mono cursor-pointer transition ${
                 settings.ratio === 15.0 ? 'bg-[#C26D52] text-white font-bold' : 'bg-black/30 text-stone-300'
               }`}
-              title="1:15 Standard"
+              title={t('french_press.ratio_golden')}
             >
-              1:15 Gylden
+              {t('french_press.ratio_golden')}
             </button>
             <button
               type="button"
@@ -152,9 +154,9 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
               className={`px-1.5 py-0.5 rounded text-[9px] font-mono cursor-pointer transition ${
                 settings.ratio === 16.0 ? 'bg-[#C26D52] text-white font-bold' : 'bg-black/30 text-stone-300'
               }`}
-              title="1:16 Mild"
+              title={t('french_press.ratio_mild')}
             >
-              1:16 Mild
+              {t('french_press.ratio_mild')}
             </button>
           </div>
         </div>
@@ -164,11 +166,11 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
             <span className="text-3xl sm:text-4xl font-bold font-mono text-white tracking-tight">
               {doseGrams.toFixed(1)}g
             </span>
-            <span className="text-xs text-[#D8CDC4] font-sans">groftkværnet kaffe</span>
+            <span className="text-xs text-[#D8CDC4] font-sans">{t('french_press.coarse_ground')}</span>
           </div>
 
           <div className="text-right text-[10px] font-mono text-[#D8CDC4]">
-            <span>{settings.waterMl}g vand</span>
+            <span>{t('french_press.water_label', { amount: settings.waterMl })}</span>
           </div>
         </div>
 
@@ -176,11 +178,11 @@ export const FrenchPressVolumeCalculator: React.FC = () => {
         <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10 text-[10px] font-mono">
           <div className="flex items-center gap-1.5 text-stone-300">
             <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span>Trækketid: 4:00 min</span>
+            <span>{t('french_press.steep_time')}</span>
           </div>
           <div className="flex items-center gap-1.5 text-stone-300">
             <Flame className="w-3.5 h-3.5 text-rose-400" />
-            <span>Vand: 94–96°C</span>
+            <span>{t('french_press.water_temp')}</span>
           </div>
         </div>
       </div>

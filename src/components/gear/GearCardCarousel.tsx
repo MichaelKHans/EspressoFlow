@@ -122,12 +122,12 @@ export const GearCardCarousel: React.FC<GearCardCarouselProps> = ({
                       }`}
                       title={
                         hasOverride
-                          ? 'Aktiv reference-override gemt - klik for at inspicere eller ændre'
-                          : 'Admin: Tag/upload foto-reference for denne model'
+                          ? t('gear.admin_ref_tooltip')
+                          : t('gear.admin_edit_tooltip')
                       }
                     >
                       <Camera className="w-3 h-3 text-[#C26D52]" />
-                      <span>{hasOverride ? 'Ref' : 'Ret'}</span>
+                      <span>{hasOverride ? t('gear.admin_ref_photo') : t('gear.admin_edit_photo')}</span>
                     </button>
                   )}
 

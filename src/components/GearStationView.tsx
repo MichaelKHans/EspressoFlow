@@ -502,13 +502,15 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
               target="_blank"
               rel="noreferrer"
               className="px-2.5 py-1.5 rounded-xl bg-[#C26D52]/10 border border-[#C26D52]/30 text-[#C26D52] hover:bg-[#C26D52]/20 text-[11px] font-mono font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
-              title="Åbn komplet visuelt billed-galleri og scan alle 104 modeller"
+              title={t('gear.scan_all_images_title')}
             >
-              <span>🔍 Scan Alle Billeder</span>
+              <span>{t('gear.scan_all_images')}</span>
             </a>
           )}
           <span className="text-[11px] font-mono text-[#7A6E65] bg-[#FAF7F2] px-3 py-1.5 rounded-xl border border-[#D0BDAA] font-semibold">
-            {grinders.filter((g) => g.inSetup).length} {grinders.filter((g) => g.inSetup).length === 1 ? 'Kværn' : 'Kværne'} i setup
+            {grinders.filter((g) => g.inSetup).length === 1
+              ? t('gear.in_setup_single', { count: 1 })
+              : t('gear.in_setup_plural', { count: grinders.filter((g) => g.inSetup).length })}
           </span>
         </div>
       </div>

@@ -25,6 +25,19 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-20 -- Etape 83: Komplet i18n Internationalisering af French Press Beregner & Gear Station (v1.21.4)
+- **French Press Kande & Ratio Beregner (`FrenchPressVolumeCalculator.tsx`):**
+  - Fuldt integreret med `useTranslation()`, så alle tekster automatisk skifter med appens valgte sprog (f.eks. GB English vs. DK Dansk).
+  - Titler, vejledninger, kande-størrelser, ratio-knapper ("1:14 Strong", "1:15 Golden", "1:16 Mild"), doseringsenheder samt brygguides er nu defineret i `en.ts` og `da.ts`.
+- **Gear Station & Karrusel Tekster (`GearCardCarousel.tsx` & `GearStationView.tsx`):**
+  - Knappen "Ret" / "Ref" skifter nu dynamisk ("Edit" / "Ref" på engelsk, "Ret" / "Ref" på dansk).
+  - Tælleren for kværne i baren skifter korrekt ("{count} Grinders in setup" på engelsk, "{count} Kværne i setup" på dansk).
+  - Ryddet op i tosprogede bryggernavne (`French Press (Bodum / Espro)`), og implementeret automatisk opgradering af ældre gemte profiler i `storage.ts`.
+- **Kvalitetskontrol:**
+  - `npm run build` testet med exit code 0.
+  - `npx cap sync android` synkroniseret.
+  - Pushed til GitHub `origin main`.
+
 ### 2026-10-20 -- Etape 82: 100% Autentiske De'Longhi Fuldautomatiske Packshots (v1.21.3)
 - **De'Longhi Magnifica S (ECAM 22.110.B):**
   - Erstattet forkert portafilter-billede med originalt fabriks-packshot direkte fra De'Longhi's officielle DAM netværk (`public/images/gear/machines/delonghi-magnifica-s.webp`).
