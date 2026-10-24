@@ -31,20 +31,6 @@ export const FlowChart: React.FC<FlowChartProps> = ({
 }) => {
   const { t, language } = useTranslation();
 
-  if (points.length === 0) {
-    return (
-      <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-6 text-center">
-        <Gauge className="w-8 h-8 text-[#7A6E65]/50 mx-auto mb-2" />
-        <h4 className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
-          {t('chart.empty_title')}
-        </h4>
-        <p className="text-xs text-[#7A6E65] mt-1 max-w-sm mx-auto">
-          {t('chart.empty_desc')}
-        </p>
-      </div>
-    );
-  }
-
   // Normalize points: If non-live and curve starts with a dead flatline (>= 1.0s before first drip),
   // trim it so the chart starts cleanly at first drip (t = 0.0s)
   const { displayPoints, timeOffset } = React.useMemo(() => {
@@ -71,6 +57,20 @@ export const FlowChart: React.FC<FlowChartProps> = ({
     }
     return { displayPoints: points, timeOffset: 0 };
   }, [points, isLive]);
+
+  if (points.length === 0) {
+    return (
+      <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-6 text-center">
+        <Gauge className="w-8 h-8 text-[#7A6E65]/50 mx-auto mb-2" />
+        <h4 className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
+          {t('chart.empty_title')}
+        </h4>
+        <p className="text-xs text-[#7A6E65] mt-1 max-w-sm mx-auto">
+          {t('chart.empty_desc')}
+        </p>
+      </div>
+    );
+  }
 
   const effectivePre = timeOffset > 0 ? 0 : (preInfusionSeconds || 0);
 

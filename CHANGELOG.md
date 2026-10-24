@@ -2,6 +2,19 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.5] - 2026-10-24
+### Etape 84: Eliminering af Hvid Skærm Nedbrud ved "Start Shot" & Taktil Scroll-Shield på Kamera-Sigtepunkt
+- **Løst Kritisk "Hvid Skærm" Crash ved Start Shot ([FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**
+  - Identificeret og rettet et fatalt React hook-order brud (`Minified React error #310: Rendered more hooks than during the previous render`), som udløstes i det øjeblik baristaen startede et shot (fx Americano) og den første datastrøm ramte kurven.
+  - Årsag: `React.useMemo` i `FlowChart` lå *efter* en tidlig returnering (`if (points.length === 0)`). Da `points` gik fra 0 til 1 punkt, kaldte React pludselig hook #2, hvilket fik React til at afmontere hele applikationen til en tom hvid/pergament skærm.
+  - `React.useMemo` er nu placeret ubetinget i toppen af komponenten i overensstemmelse med Reacts Rules of Hooks.
+- **Global Espresso Warmth Fejlbarriere ([ErrorBoundary.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ErrorBoundary.tsx) & [main.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/main.tsx)):**
+  - Implementeret en resilient `ErrorBoundary` i Flowbeans varme æstetik (`#FAF7F2`, `#2C2018`, `#C26D52`), der fanger uventede rendering-fejl og præsenterer en venlig "Genindlæs Flowbean / Prøv igen" knap i stedet for nogensinde at efterlade brugeren med en død hvid skærm.
+- **Scroll-Shield & Berøringssikring af OCR-Sigtepunkt ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Rettet fejl hvor sigteboksen (reticle) hoppede op i øverste højre hjørne under lodret scrolling på mobilen.
+  - Integreret gestus-differentiering (`handleTouchStart`, `handleTouchEnd`, `handleTouchCancel`): Skelner præcist mellem bevidste prik (<10px forskydning, <500ms) og lodrette scroll/swipe bevægelser.
+  - Tilføjet `style={{ touchAction: 'pan-y' }}` og opdateret Tailwind v4 vilkårlige aspect ratio klasser (`aspect-[16/10]` og `aspect-[2/1]`), så side-scroll flyder uforstyrret uden at forskyde vægtens målområde.
+
 ## [1.21.4] - 2026-10-20
 ### Etape 83: Komplet i18n Internationalisering af French Press Beregner & Gear Station
 - **French Press Kande & Ratio Beregner ([FrenchPressVolumeCalculator.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/FrenchPressVolumeCalculator.tsx)):**

@@ -293,6 +293,46 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     setRoiCenter({ x: 0.5, y: 0.5 });
   };
 
+  // Scroll Shield for Camera Viewfinder:
+  // Distinguishes between intentional single-tap targeting (<10px displacement)
+  // and vertical scroll/swipe gestures on mobile screens.
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (isBrewing) return;
+    if (e.touches.length === 1) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      };
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (isBrewing || !touchStartRef.current) return;
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (e.changedTouches.length === 0) return;
+    const end = e.changedTouches[0];
+    const dx = Math.abs(end.clientX - start.x);
+    const dy = Math.abs(end.clientY - start.y);
+    const dt = Date.now() - start.time;
+
+    // If finger moved > 10px or was held > 500ms, it is a scroll gesture, drag, or long-press.
+    // NEVER move the targeting reticle during vertical scrolling!
+    if (dx > 10 || dy > 10 || dt > 500) {
+      return;
+    }
+
+    e.preventDefault();
+    handleTapViewfinder(e);
+  };
+
+  const handleTouchCancel = () => {
+    touchStartRef.current = null;
+  };
+
   const handleTapViewfinder = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     // 🔒 Brew Focus Armor: Never allow screen taps to move ROI or defocus camera during active extraction
     if (isBrewing) return;
@@ -1153,13 +1193,15 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
       )}
 
-      {/* Main Viewfinder Screen (Compact cockpit mode during active brew to prevent scroll blowout) */}
       <div
         ref={viewfinderContainerRef}
         onClick={!isBrewing ? handleTapViewfinder : undefined}
-        onTouchEnd={!isBrewing ? (e) => { e.preventDefault(); handleTapViewfinder(e); } : undefined}
+        onTouchStart={!isBrewing ? handleTouchStart : undefined}
+        onTouchEnd={!isBrewing ? handleTouchEnd : undefined}
+        onTouchCancel={!isBrewing ? handleTouchCancel : undefined}
+        style={{ touchAction: 'pan-y' }}
         className={`relative ${
-          isBrewing ? 'h-36 sm:h-44 cursor-default' : 'aspect-16/10 cursor-crosshair'
+          isBrewing ? 'h-36 sm:h-44 cursor-default' : 'aspect-[16/10] cursor-crosshair'
         } bg-[#1A1412] flex items-center justify-center overflow-hidden select-none transition-all duration-300`}
       >
         {cameraState === 'standby' ? (
@@ -1301,7 +1343,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           return (
             <div
               style={reticleStyle}
-              className={`absolute z-10 rounded-xl transition-all duration-150 pointer-events-none aspect-2/1 ${
+              className={`absolute z-10 rounded-xl transition-all duration-150 pointer-events-none aspect-[2/1] ${
                 isBrewing
                   ? 'border-2 border-solid border-amber-400/90 bg-amber-400/5 shadow-[0_0_20px_rgba(251,191,36,0.25)]'
                   : isDigitLocked

@@ -25,6 +25,23 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-24 -- Etape 84: Fejlfinding & Løsning af Hvid Skærm Crash ved Start Shot samt Taktil Scroll-Shield på Kamera (v1.21.5)
+- **Fejlfinding & Direkte Test i Android Studio Emulator (`emulator-5554`):**
+  - Etableret direkte adgang til Android Studio via `adb` og Chrome DevTools port-forwarding (`localhost:9222`).
+  - Rekonstrueret og isoleret fejlen 1:1 på en emuleret enhed: Valg af Americano $\rightarrow$ Start Shot udløste øjeblikkeligt `Minified React error #310` og afmonterede hele appen til en tom hvid/pergament skærm.
+- **Kritisk Fix af React Hook-Order i `FlowChart.tsx`:**
+  - Flyttet `React.useMemo` op i toppen af komponenten før den tidlige returnering `if (points.length === 0)`.
+  - Da det første datapunkt ankom på t=0.1s, sprang komponenten tidligere fra at kalde 1 hook til 2 hooks, hvilket overtrådte Reacts fundamentale regler for hooks.
+- **Resilient Espresso Warmth `ErrorBoundary.tsx`:**
+  - Oprettet `ErrorBoundary.tsx` og omsluttet `<App />` i `src/main.tsx`.
+  - Forhindrer for altid hvide skærme: Ved uventede fejl vises nu en venlig og æstetisk fejlbarriere med "Genindlæs Flowbean / Prøv igen" knap.
+- **Taktil Scroll-Shield i `ScaleMonitor.tsx`:**
+  - Forhindret at vægtens sigte-reticle utilsigtet hopper op i øverste højre hjørne, når baristaen scroller ned over skærmen.
+  - Implementeret gestus-filtrering (`handleTouchStart`, `handleTouchEnd`, `handleTouchCancel`), der kasserer berøringer med forskydning $> 10\text{px}$ eller varighed $> 500\text{ms}$ som reelle scroll-handlinger frem for sigte-prik.
+  - Tilføjet `style={{ touchAction: 'pan-y' }}` og opdateret Tailwind v4 vilkårlige aspect ratio klasser (`aspect-[16/10]` og `aspect-[2/1]`).
+- **Verifikation:**
+  - Gennemført komplet Americano-shot live i Android Studio emulatoren med 31 FPS OCR, telemetrikurve og gemt shot i logbogen uden nedbrud.
+
 ### 2026-10-20 -- Etape 83: Komplet i18n Internationalisering af French Press Beregner & Gear Station (v1.21.4)
 - **French Press Kande & Ratio Beregner (`FrenchPressVolumeCalculator.tsx`):**
   - Fuldt integreret med `useTranslation()`, så alle tekster automatisk skifter med appens valgte sprog (f.eks. GB English vs. DK Dansk).
