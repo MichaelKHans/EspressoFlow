@@ -9,6 +9,7 @@ import {
 } from '../lib/storage';
 import { formatTemperature, getRecommendedBrewTemp, calculateTargetExtractionTime } from '../lib/espressoMath';
 import { predictOptimalGrindSetting } from '../lib/grindIntelligence';
+import { resolveGrinderSpecs } from '../data/gearCatalog';
 import { useTranslation } from '../i18n';
 import {
   X,
@@ -52,6 +53,8 @@ interface DialInWizardModalProps {
   availableGrinders?: GrinderProfile[];
   allGrinders?: GrinderProfile[];
   allBeans?: CoffeeBeanProfile[];
+  machineName?: string;
+  filterBrewer?: string;
   tempUnit?: TempUnit;
   onSelectBean?: (beanId: string) => void;
   onProceedToScaleCam: () => void;
@@ -77,6 +80,8 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   availableGrinders = [],
   allGrinders = [],
   allBeans = [],
+  machineName,
+  filterBrewer,
   tempUnit = 'C',
   onSelectBean,
   onProceedToScaleCam,
@@ -234,19 +239,6 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     }
   };
 
-  // Grind adjustment handlers (responsive to stepped vs stepless)
-  const handleAdjustGrind = (delta: number) => {
-    const parsed = parseFloat(grindSetting);
-    if (!isNaN(parsed)) {
-      const stepDelta = activeGrinder.type === 'stepless'
-        ? (delta > 0 ? 0.2 : -0.2)
-        : (delta > 0 ? 0.5 : -0.5);
-      const next = Math.max(0.1, Math.round((parsed + stepDelta) * 10) / 10);
-      const formatted = next % 1 === 0 ? next.toString() : next.toFixed(1);
-      setGrindSetting(formatted);
-    }
-  };
-
   // Dose adjustment handlers: automatically scales target yield to preserve ratio
   const handleAdjustDose = (delta: number) => {
     setDoseGrams((prevDose) => {
@@ -366,7 +358,13 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                   {activeBean.roastLevel}
                 </span>
                 <span>•</span>
-                <span className="truncate">{activeGrinder.name.split(' ')[0]} (Setting {grindSetting})</span>
+                <span className="truncate">
+                  {drink.method === 'pour_over'
+                    ? (filterBrewer || 'Pour Over Brewer')
+                    : (machineName || 'Espresso Machine')}
+                </span>
+                <span>•</span>
+                <span className="truncate">{activeGrinder.name.split(' ')[0]} ({grindSetting})</span>
               </div>
             </div>
           </div>
@@ -631,42 +629,44 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
-            <div className="text-[11px] text-[#7A6E65] font-mono">
-              Dial setting on <strong className="text-[#2C2018]">{activeGrinder.name.split(' ')[0]}</strong>:
-              <span className="block text-[9px] text-[#A6998E]">({activeGrinder.stepUnit || 'micro-steps'})</span>
-            </div>
-
-            {/* Grind Stepper */}
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleAdjustGrind(-1)}
-                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95 cursor-pointer"
-                title={`Finer grind (-${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
-              >
-                <Minus className="w-3.5 h-3.5" />
-              </button>
-              <input
-                type="text"
-                value={grindSetting}
-                onChange={(e) => setGrindSetting(e.target.value)}
-                className="w-16 text-center text-sm font-bold font-mono text-[#C26D52] bg-[#FAF7F2] border border-[#E8DFD5] rounded-lg py-1 focus:outline-hidden focus:ring-1 focus:ring-[#C26D52]"
-                title="Enter grind setting"
-              />
-              <button
-                type="button"
-                onClick={() => handleAdjustGrind(1)}
-                className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] hover:bg-[#E8DFD5] text-[#2C2018] flex items-center justify-center font-bold text-sm transition active:scale-95 cursor-pointer"
-                title={`Coarser grind (+${activeGrinder.type === 'stepless' ? '0.2' : '0.5'})`}
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Universal Adaptive Grind Intelligence (On-Device ML) Recommendation */}
           {(() => {
+            const isDualZoneBaratza =
+              activeGrinder.name.toLowerCase().includes('baratza') &&
+              activeGrinder.name.toLowerCase().includes('esp');
+
+            const isDualZoneBaratzaPro =
+              isDualZoneBaratza &&
+              activeGrinder.name.toLowerCase().includes('pro');
+
+            const resolvedGrinderSpecs =
+              resolveGrinderSpecs(activeGrinder.name) ||
+              resolveGrinderSpecs(activeGrinder.id);
+
+            const effectiveMin =
+              activeGrinder.minSetting ??
+              resolvedGrinderSpecs?.minSetting ??
+              (isDualZoneBaratza ? 1.0 : 0.0);
+
+            const effectiveMax =
+              activeGrinder.maxSetting ??
+              resolvedGrinderSpecs?.maxSetting ??
+              (isDualZoneBaratzaPro ? 60.0 : isDualZoneBaratza ? 40.0 : 30.0);
+
+            const effectiveEspressoMax =
+              activeGrinder.espressoMaxSetting ??
+              resolvedGrinderSpecs?.espressoMaxSetting ??
+              (isDualZoneBaratzaPro
+                ? 40.0
+                : isDualZoneBaratza
+                ? 20.0
+                : effectiveMax > 0
+                ? effectiveMax * 0.4
+                : 20.0);
+
+            const currentGrindNum = parseFloat(grindSetting) || 15.0;
+            const isEspressoZone = currentGrindNum <= effectiveEspressoMax;
+
+            // Universal Adaptive ML recommendation
             const profile = loadOrCreateGrinderProfile(activeGrinder.name || activeGrinder.id);
             const anchor = getAnchorForBean(activeBean.id);
             const refAnchor = getLatestAnchorForGrinder(activeGrinder.name || activeGrinder.id);
@@ -678,36 +678,255 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               currentSetting: grindSetting,
             });
 
+            const aiTargetNum = parseFloat(aiPred.formattedSetting);
+            const hasAiTarget = !isNaN(aiTargetNum) && aiTargetNum >= effectiveMin && aiTargetNum <= effectiveMax;
+            const isAtAiTarget = hasAiTarget && Math.abs(currentGrindNum - aiTargetNum) < 0.1;
+
+            const stepDelta = activeGrinder.type === 'stepless' ? 0.2 : 0.5;
+            const stepGrind = (deltaDir: number) => {
+              const nextVal = Math.min(
+                effectiveMax,
+                Math.max(effectiveMin, Math.round((currentGrindNum + deltaDir * stepDelta) * 10) / 10)
+              );
+              setGrindSetting(nextVal.toFixed(1));
+            };
+
+            const tickCount = isDualZoneBaratzaPro ? 60 : isDualZoneBaratza ? 40 : 31;
+            const maxTickIdx = tickCount - 1;
+            const splitTarget = Math.round(effectiveEspressoMax);
+
             return (
-              <div className="bg-[#FAF7F2] p-2.5 rounded-xl border border-[#DECFC0] flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-6 h-6 rounded-lg bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0">
-                    <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-bold text-[#2C2018]">
-                        {profile.validTransitionsCount >= 5
-                          ? `${t('grind.master_calibrated')} (${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
-                          : profile.validTransitionsCount >= 2
-                          ? `${t('grind.adaptive_active')} (${profile.validTransitionsCount} bryg • ${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
-                          : `${t('grind.factory_baseline')} • ${t('grind.learning_burrs')}`}
+              <div className="space-y-3">
+                {/* Tactile Grinder Hero Box */}
+                <div className="bg-white p-3 rounded-xl border border-[#E8DFD5] space-y-2.5 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold font-mono text-[#2C2018] tracking-tight">
+                        {currentGrindNum.toFixed(1)}
+                      </span>
+                      <span className="text-[11px] text-[#7A6E65] uppercase font-mono font-medium">
+                        {isDualZoneBaratza && currentGrindNum > effectiveEspressoMax
+                          ? t('gear.macro_step') || 'Macro-Step'
+                          : t('gear.micro_step') || 'Micro-Step'}
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#7A6E65] truncate font-mono">
-                      {aiPred.explanation}
-                    </p>
+
+                    <div className="flex items-center gap-2">
+                      {/* Zone badge */}
+                      <span
+                        className={`text-[9px] font-bold uppercase font-mono px-2 py-0.5 rounded-md border ${
+                          isEspressoZone
+                            ? 'text-[#C26D52] bg-[#C26D52]/10 border-[#C26D52]/30'
+                            : 'text-[#72806B] bg-[#72806B]/10 border-[#72806B]/30'
+                        }`}
+                      >
+                        {isEspressoZone
+                          ? t('gear.espresso_zone') || 'Espresso Zone'
+                          : t('gear.filter_zone') || 'Filter & Pour Over Zone'}
+                      </span>
+
+                      {/* Stepper Buttons */}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => stepGrind(-1)}
+                          className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#D0BDAA] text-[#2C2018] hover:bg-white hover:border-[#C26D52] font-bold text-base flex items-center justify-center transition active:scale-90 cursor-pointer shadow-2xs"
+                          title={`Finer (-${stepDelta})`}
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => stepGrind(1)}
+                          className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#D0BDAA] text-[#2C2018] hover:bg-white hover:border-[#C26D52] font-bold text-base flex items-center justify-center transition active:scale-90 cursor-pointer shadow-2xs"
+                          title={`Coarser (+${stepDelta})`}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                {aiPred.formattedSetting !== grindSetting && (
-                  <button
-                    type="button"
-                    onClick={() => setGrindSetting(aiPred.formattedSetting)}
-                    className="px-2.5 py-1 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-bold shrink-0 transition active:scale-95 cursor-pointer shadow-xs"
+
+                  {/* Header Label Row ABOVE ruler */}
+                  <div className="flex items-center justify-between text-[10px] font-mono select-none px-1 pt-1">
+                    <span className="font-bold text-[#C26D52]">
+                      Fine ({effectiveMin.toFixed(effectiveMin % 1 === 0 ? 0 : 1)})
+                    </span>
+
+                    {isDualZoneBaratza ? (
+                      <span className="font-bold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
+                        Split ({effectiveEspressoMax.toFixed(1)})
+                      </span>
+                    ) : effectiveEspressoMax > 0 ? (
+                      <span className="font-semibold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
+                        Espresso ≤ {effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}
+                      </span>
+                    ) : null}
+
+                    <span className="font-bold text-[#72806B]">
+                      Coarse ({effectiveMax.toFixed(effectiveMax % 1 === 0 ? 0 : 1)})
+                    </span>
+                  </div>
+
+                  {/* Caliper Ruler Box with Notch & AI Target */}
+                  <div
+                    className="relative w-full h-9 bg-[#FAF7F2] rounded-xl border border-[#D0BDAA] px-3 flex items-center overflow-hidden shadow-2xs cursor-pointer select-none"
+                    title="Tap or drag to set grind"
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickX = e.clientX - rect.left;
+                      const pct = Math.max(0, Math.min(1, clickX / rect.width));
+                      const newSetting = effectiveMin + pct * (effectiveMax - effectiveMin);
+                      const stepPrecision = activeGrinder.type === 'stepless' ? 0.1 : 0.5;
+                      const rounded = Math.round(newSetting / stepPrecision) * stepPrecision;
+                      const clamped = Math.min(effectiveMax, Math.max(effectiveMin, rounded));
+                      setGrindSetting(clamped.toFixed(1));
+                    }}
                   >
-                    {t('coach.apply_btn', { setting: aiPred.formattedSetting }) || `Set ${aiPred.formattedSetting}`}
-                  </button>
-                )}
+                    {/* Caliper Ticks */}
+                    <div className="absolute inset-0 px-3 flex items-end pointer-events-none z-0">
+                      <div className="relative w-full h-full">
+                        {Array.from({ length: tickCount }, (_, idx) => {
+                          const tickVal = isDualZoneBaratza
+                            ? idx + 1
+                            : effectiveMin + (idx / maxTickIdx) * (effectiveMax - effectiveMin);
+                          const percent = (idx / maxTickIdx) * 100;
+                          const isSplit = isDualZoneBaratza && tickVal === splitTarget;
+                          const isMajor = idx === 0 || idx === maxTickIdx;
+                          const isMid = isDualZoneBaratza ? tickVal % 5 === 0 : idx % 5 === 0;
+
+                          let tickHeight = 'h-2 w-[1px] bg-[#D0BDAA]/70';
+                          if (isSplit) {
+                            tickHeight = 'h-6 w-0.5 bg-[#C26D52]';
+                          } else if (isMajor) {
+                            tickHeight = 'h-4 w-0.5 bg-[#2C2018]';
+                          } else if (isMid) {
+                            tickHeight = 'h-3 w-0.5 bg-[#A6998E]';
+                          }
+
+                          return (
+                            <div
+                              key={`tick-${idx}`}
+                              className={`absolute bottom-0 -translate-x-1/2 ${tickHeight}`}
+                              style={{ left: `${percent}%` }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* AI Target Notch on Ruler (if available) */}
+                    {hasAiTarget && (
+                      <div
+                        className="absolute bottom-0 top-0 w-0.5 bg-[#C26D52]/70 pointer-events-none z-10 transition-all duration-150"
+                        style={{
+                          left: `${Math.min(
+                            96,
+                            Math.max(
+                              4,
+                              ((aiTargetNum - effectiveMin) /
+                                Math.max(0.1, effectiveMax - effectiveMin)) *
+                                100
+                            )
+                          )}%`,
+                        }}
+                      >
+                        <div
+                          className="absolute -top-1 -translate-x-1/2 w-2 h-2 rounded-full bg-[#C26D52] ring-2 ring-white shadow-xs"
+                          title={`AI Target: ${aiTargetNum.toFixed(1)}`}
+                        />
+                      </div>
+                    )}
+
+                    {/* Current Position Thumb Notch */}
+                    <div
+                      className="absolute bottom-0 top-0 w-1 bg-[#2C2018] shadow-sm transition-all duration-150 pointer-events-none z-20"
+                      style={{
+                        left: `${Math.min(
+                          96,
+                          Math.max(
+                            4,
+                            ((currentGrindNum - effectiveMin) /
+                              Math.max(0.1, effectiveMax - effectiveMin)) *
+                              100
+                          )
+                        )}%`,
+                      }}
+                    >
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#2C2018] -translate-x-1.25 -translate-y-1 shadow-md border-2 border-white" />
+                    </div>
+                  </div>
+
+                  {/* Dynamic Zone Explanation */}
+                  {isDualZoneBaratzaPro ? (
+                    <div className="flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
+                      <span className="text-[#C26D52] font-semibold">
+                        ● 1–40: 20µm Micro-Steps (Espresso)
+                      </span>
+                      <span className="text-[#72806B] font-semibold">
+                        ● 41–60: Macro-Steps (Filter & V60)
+                      </span>
+                    </div>
+                  ) : isDualZoneBaratza ? (
+                    <div className="flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
+                      <span className="text-[#C26D52] font-semibold">
+                        ● 1–20: 20µm Micro-Steps (Espresso)
+                      </span>
+                      <span className="text-[#72806B] font-semibold">
+                        ● 21–40: 90µm Macro-Steps (Filter & V60)
+                      </span>
+                    </div>
+                  ) : effectiveEspressoMax > 0 ? (
+                    <div className="flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
+                      <span className="text-[#C26D52] font-semibold">
+                        ● ≤ {effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}: Espresso Dial-In Zone
+                      </span>
+                      <span className="text-[#72806B] font-semibold">
+                        ● &gt; {effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}: Filter / Coarse Range
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* AI Adaptive Intelligence Recommendation Card */}
+                <div className="bg-[#FAF7F2] p-2.5 rounded-xl border border-[#DECFC0] flex items-center justify-between gap-2 shadow-2xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0 shadow-2xs">
+                      <Sparkles className="w-4 h-4 text-[#C26D52]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold text-[#2C2018]">
+                          {profile.validTransitionsCount >= 5
+                            ? `${t('grind.master_calibrated')} (${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
+                            : profile.validTransitionsCount >= 2
+                            ? `${t('grind.adaptive_active')} (${profile.validTransitionsCount} bryg • ${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
+                            : `${t('grind.factory_baseline')} • ${t('grind.learning_burrs')}`}
+                        </span>
+                        {isAtAiTarget && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#72806B]/15 text-[#72806B] font-mono font-bold">
+                            ✓ Dialed In
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-[#7A6E65] truncate font-mono">
+                        {aiPred.explanation}
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isAtAiTarget && hasAiTarget && (
+                    <button
+                      type="button"
+                      onClick={() => setGrindSetting(aiPred.formattedSetting)}
+                      className="px-2.5 py-1.5 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-bold shrink-0 transition active:scale-95 cursor-pointer shadow-xs flex items-center gap-1 font-mono"
+                      title={`Apply recommended setting ${aiPred.formattedSetting}`}
+                    >
+                      <Sparkles className="w-3 h-3 text-amber-200" />
+                      <span>Sæt {aiPred.formattedSetting}</span>
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })()}

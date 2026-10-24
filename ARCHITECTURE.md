@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.6 (Præcis Baratza Encore ESP Pro Dual-Zone Hardware-Kalibrering: 1–60 Skala & 1–40 Espresso Grænse)  
+> **Gældende version:** v1.21.7 (Taktilt Grinder Cockpit i Dial-In Studio & Gear Intelligence Samspil)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -369,7 +369,7 @@ graph TD
     BeandexTab --> TimelineBar[RoastTimelineBar.tsx<br/>Peak Flavor Window horisontal tidslinjebar & friskhedsmåler]
 
     %% Modaler & Overlays (Teleporteret til document.body med z-[60] / z-[85] - Starter under Header ved --app-header-height + 0.5rem)
-    App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, bønne- & drinkvalg, temp]
+    App --> DialInModal[DialInWizardModal.tsx<br/>Guidet dial-in, taktil caliper lineal med AI Target markør, bønne-, maskine- & drinkvalg, temp]
     App --> ScannerModal[BeanScannerModal.tsx<br/>Beandex Bag Vision AI + Stregkode + Etiket OCR]
     App --> VaultModal[CentralBeanVaultModal.tsx<br/>Fællesskabs-katalog fra Supabase]
     App --> SummaryModal[ShotSummaryModal.tsx<br/>Triple-Metric Hero, Puck Resistance Integrity 0-100 & 1-klik kværnjustering]

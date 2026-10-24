@@ -25,6 +25,19 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-24 -- Etape 86: Taktilt Grinder Cockpit i Dial-In Studio & Gear Intelligence Samspil (v1.21.7)
+- **Taktil Mekanisk Skydelineal i Dial-In Studio ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx)):**
+  - Overført den taktile caliper-lineal fra Gear Station til Step 2 ("Grinder & Setting for Bean") i Dial-In Studio.
+  - Dynamiske zone-badges (`ESPRESSO ZONE` vs `FILTER & POUR OVER ZONE`), digital step-visning (`MICRO-STEP` / `MACRO-STEP`), split-streg og zone-forklaring for dual-zone kværne.
+  - Dynamiske ticks (60 for Baratza ESP Pro, 40 for standard ESP, 31 for øvrige).
+- **Interaktiv AI Target-Markør & "Sæt Anbefaling" Handle-knap ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx)):**
+  - Forbundet med `grindIntelligence.ts` (`predictOptimalGrindSetting`): Projicerer en glødende AI-målmarkør direkte på linealen.
+  - Når indstillingen afviger, gives en hurtig "Sæt [target]" handling. Ved match kvitteres med `✓ Dialed In`.
+  - Transparent status for læringsstadie: `Master Calibrated` (høj tillid), `Adaptive Learning` (aktiv empiri) eller `Factory Baseline` (hardware standard).
+- **Gear- & Maskine-Kontekst ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx) & [DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx)):**
+  - Dial-In Studio viser hele setup-konteksten i headeren (Bønne + Ristning + Aktiv Espressomaskine/Filterbrygger + Kværn).
+  - Verificeret visuelt på Android Emulator (`Pixel_10_Pro_XL`) via adb screencap og interaktion.
+
 ### 2026-10-24 -- Etape 85: Præcis Baratza Encore ESP Pro Dual-Zone Hardware-Kalibrering (1–60 Skala & 1–40 Espresso Grænse) (v1.21.6)
 - **Autentisk Baratza Encore ESP Pro Profil & Skala ([gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts)):**
   - Opdateret Baratza Encore ESP Pro med 1.0–60.0 skala og split ved 40.0 baseret på brugerens direkte fotos af det fysiske digitale display.

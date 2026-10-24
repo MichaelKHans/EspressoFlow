@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.7] - 2026-10-24
+### Etape 86: Taktilt Grinder Cockpit i Dial-In Studio & Helhedsorienteret Gear Intelligence Synkronisering
+- **Taktil Mekanisk Skydelineal i Dial-In Studio ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx)):**
+  - Overført den taktile caliper skydelineal fra Gear Station direkte ind i Step 2 ("Grinder & Setting for Bean") i Dial-In Studio.
+  - Viser dynamisk digital step-størrelse med differentieret `MICRO-STEP` (finjustering) vs. `MACRO-STEP` (filter).
+  - Dynamiske zone-badges: `ESPRESSO ZONE` i diskret terracotta tone og `FILTER & POUR OVER ZONE` i salvie/grøn tone baseret på den valgte kværns fysiske grænser.
+  - Dynamiske ticks (60 for Baratza ESP Pro, 40 for standard ESP, 31 for øvrige) med tydeligt `Split (40.0)` eller `Split (20.0)` mærke og forklarende tekst under linealen.
+  - Taktile `+` og `-` knapper (0.5 trinstørrelse for trinvise kværne, 0.2 for trinløse).
+- **Interaktiv AI Target-Markør & "Sæt Anbefaling" Handlekort ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx)):**
+  - Universel Adaptiv ML-motoren (`grindIntelligence.ts`) evaluerer bønnen, ristegrad, afgasning og kværnhistorik i realtid og projicerer en glødende `AI Target` markør direkte på linealen.
+  - Når den aktuelle indstilling afviger fra AI-anbefalingen, fremhæves en direkte "Sæt [target]" terracotta handling, som øjeblikkeligt flytter linealen til det ideelle udgangspunkt. Når kværnen matcher målet, bekræftes det med `✓ Dialed In`.
+  - Gennemsigtig visning af læringsstadie: `Master Calibrated` (høj tillid efter flere skud), `Adaptive Learning` (aktiv empirisk tilpasning) eller `Factory Baseline` (hardware-standard med burr-indkøring).
+- **Helhedsorienteret Gear & Maskine-Kontekst ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx) & [DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx)):**
+  - Dial-In Studio viser nu hele setup-konteksten i headeren: Bønne + Ristegrad + Aktiv Espressomaskine (eller Filter Brygger) + Kværn.
+  - Arkitektonisk adskillelse mellem hydraulisk 9-bars espresso-læring (Gate 3 udelukker pour over) og opskriftspecifikke filter-kalibreringer (`saveDrinkCalibration()`), så pour over aldrig forurener espressoens puck-modstandsmodel.
+
 ## [1.21.6] - 2026-10-24
 ### Etape 85: Præcis Baratza Encore ESP Pro Dual-Zone Hardware-Kalibrering (1–60 Skala & 1–40 Espresso Grænse)
 - **Autentisk Baratza Encore ESP Pro Specifikation ([gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts)):**

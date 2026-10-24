@@ -1497,6 +1497,8 @@ export function App() {
         availableGrinders={grinders.filter((g) => g.inSetup)}
         allGrinders={grinders}
         allBeans={beans}
+        machineName={machineName}
+        filterBrewer={filterBrewer}
         tempUnit={tempUnit}
         onSelectBean={handleSelectBean}
         onProceedToScaleCam={() => {
