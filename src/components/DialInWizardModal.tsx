@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { DrinkRecipe, CoffeeBeanProfile, GrinderProfile, RoastLevel, TempUnit } from '../types/espresso';
 import {
   resolveGrinder,
-  loadDrinkCalibrations,
+  resolveDrinkCalibration,
   loadOrCreateGrinderProfile,
   getAnchorForBean,
   getLatestAnchorForGrinder,
@@ -129,9 +129,17 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         : [activeGrinder, ...setupGrinders])
     : pool.slice(0, 4);
 
-  // Initialize state with calibrated bean & drink targets
-  const drinkCalibrations = loadDrinkCalibrations();
-  const savedCalibration = drinkCalibrations[`${activeBean.id}_${drink.id}`];
+  // Active machine or filter brewer depending on drink method
+  const isFilter = drink.method === 'pour_over';
+  const activeMachineOrBrewer = isFilter ? filterBrewer : machineName;
+
+  // Initialize state with calibrated bean & drink targets (multi-variable resolution)
+  const savedCalibration = resolveDrinkCalibration(
+    activeBean.id,
+    drink.id,
+    activeGrinder.name,
+    activeMachineOrBrewer
+  );
 
   const initialDose = savedCalibration?.doseGrams || activeBean.doseGrams || drink.defaultDoseGrams || 18.0;
   const initialYield = savedCalibration?.targetYieldGrams || (activeBean.doseGrams ? Math.round(activeBean.doseGrams * drink.targetRatio * 10) / 10 : drink.targetYieldGrams) || 36.0;
@@ -152,8 +160,13 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
       const res = resolveGrinder(raw, pool);
       setSelectedGrinderName(res?.name || raw);
 
-      const calibs = loadDrinkCalibrations();
-      const cal = calibs[`${currentBean.id}_${drink.id}`];
+      const effMachineOrBrewer = drink.method === 'pour_over' ? filterBrewer : machineName;
+      const cal = resolveDrinkCalibration(
+        currentBean.id,
+        drink.id,
+        res?.name || raw,
+        effMachineOrBrewer
+      );
 
       const effDose = cal?.doseGrams || currentBean.doseGrams || drink.defaultDoseGrams || 18.0;
       const effYield = cal?.targetYieldGrams || (currentBean.doseGrams ? Math.round(currentBean.doseGrams * drink.targetRatio * 10) / 10 : drink.targetYieldGrams) || 36.0;
@@ -201,8 +214,12 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     if (onSelectBean) {
       onSelectBean(bean.id);
     }
-    const calibs = loadDrinkCalibrations();
-    const cal = calibs[`${bean.id}_${drink.id}`];
+    const cal = resolveDrinkCalibration(
+      bean.id,
+      drink.id,
+      activeGrinder.name,
+      activeMachineOrBrewer
+    );
 
     if (cal) {
       setDoseGrams(cal.doseGrams);
@@ -667,9 +684,15 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             const isEspressoZone = currentGrindNum <= effectiveEspressoMax;
 
             // Universal Adaptive ML recommendation
-            const profile = loadOrCreateGrinderProfile(activeGrinder.name || activeGrinder.id);
-            const anchor = getAnchorForBean(activeBean.id);
-            const refAnchor = getLatestAnchorForGrinder(activeGrinder.name || activeGrinder.id);
+            const grinderIdentifier = activeGrinder.name || activeGrinder.id;
+            const profile = loadOrCreateGrinderProfile(grinderIdentifier, {
+              type: activeGrinder.type,
+              minSetting: effectiveMin,
+              maxSetting: effectiveMax,
+              espressoMaxSetting: effectiveEspressoMax,
+            });
+            const anchor = getAnchorForBean(activeBean.id, grinderIdentifier, machineName);
+            const refAnchor = getLatestAnchorForGrinder(grinderIdentifier, machineName);
             const aiPred = predictOptimalGrindSetting({
               grinderProfile: profile,
               activeBean: activeBean,

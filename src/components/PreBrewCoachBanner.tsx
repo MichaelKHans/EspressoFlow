@@ -18,6 +18,7 @@ interface PreBrewCoachBannerProps {
   activeDrinkName: string;
   currentGrindSetting: string;
   grinderName: string;
+  machineName?: string;
   shots: ShotRecord[];
   onApplyGrindSetting: (newSetting: string) => void;
   isBrewing?: boolean;
@@ -29,6 +30,7 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
   activeDrinkName,
   currentGrindSetting,
   grinderName,
+  machineName,
   shots,
   onApplyGrindSetting,
   isBrewing = false,
@@ -45,8 +47,8 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
 
   // Check Adaptive Grind Intelligence (On-Device AI Engine)
   const profile = loadOrCreateGrinderProfile(grinderName);
-  const anchor = currentBean ? getAnchorForBean(currentBean.id) : undefined;
-  const refAnchor = getLatestAnchorForGrinder(grinderName);
+  const anchor = currentBean ? getAnchorForBean(currentBean.id, grinderName, machineName) : undefined;
+  const refAnchor = getLatestAnchorForGrinder(grinderName, machineName);
   const aiPred = currentBean
     ? predictOptimalGrindSetting({
         grinderProfile: profile,

@@ -994,6 +994,19 @@ export interface DrinkCalibration {
   grindSetting: string;
   brewTempC?: number;
   grinderName?: string;
+  machineName?: string;
+  filterBrewer?: string;
+}
+
+export function buildDrinkCalibrationKey(
+  beanId: string,
+  drinkId: string,
+  grinderName?: string,
+  machineOrBrewer?: string
+): string {
+  const gKey = toGearKey(grinderName);
+  const mKey = toGearKey(machineOrBrewer);
+  return `${beanId}__${gKey}__${mKey}__${drinkId}`;
 }
 
 export function loadDrinkCalibrations(): Record<string, DrinkCalibration> {
@@ -1013,6 +1026,38 @@ export function saveDrinkCalibration(key: string, calibration: DrinkCalibration)
   } catch (err) {
     console.error('Failed to save drink calibration', err);
   }
+}
+
+/**
+ * Resolves a calibration for a bean and drink in the active gear context.
+ * 3-step fallback:
+ * 1. Exact bean + grinder + machine/brewer + drink
+ * 2. Bean + grinder + drink (any machine)
+ * 3. Legacy bean + drink key (pre-Etape 1)
+ */
+export function resolveDrinkCalibration(
+  beanId: string,
+  drinkId: string,
+  grinderName?: string,
+  machineOrBrewer?: string
+): DrinkCalibration | undefined {
+  const calibrations = loadDrinkCalibrations();
+
+  if (grinderName && machineOrBrewer) {
+    const exactKey = buildDrinkCalibrationKey(beanId, drinkId, grinderName, machineOrBrewer);
+    if (calibrations[exactKey]) return calibrations[exactKey];
+  }
+
+  if (grinderName) {
+    const gKey = toGearKey(grinderName);
+    const semiMatch = Object.entries(calibrations).find(
+      ([k]) => k.startsWith(`${beanId}__${gKey}__`) && k.endsWith(`__${drinkId}`)
+    );
+    if (semiMatch) return semiMatch[1];
+  }
+
+  const legacyKey = `${beanId}_${drinkId}`;
+  return calibrations[legacyKey];
 }
 
 export const FILTER_BREWER_PRESETS = [
@@ -1145,8 +1190,9 @@ export function saveKettlesInSetup(kettles: string[]): void {
 // -------------------------------------------------------------
 // Universal Adaptive Grind Intelligence (On-Device Local-First)
 // -------------------------------------------------------------
-import type { GrinderLearnedProfile, BeanCalibrationAnchor } from './grindIntelligence';
+import type { GrinderLearnedProfile, BeanCalibrationAnchor, GrinderScaleSpec } from './grindIntelligence';
 import { createDefaultGrinderProfile } from './grindIntelligence';
+import { toGearKey } from './brewPhysics';
 
 export function loadGrinderProfiles(): Record<string, GrinderLearnedProfile> {
   try {
@@ -1157,12 +1203,12 @@ export function loadGrinderProfiles(): Record<string, GrinderLearnedProfile> {
   }
 }
 
-export function loadOrCreateGrinderProfile(grinderId: string): GrinderLearnedProfile {
+export function loadOrCreateGrinderProfile(grinderId: string, scale?: GrinderScaleSpec): GrinderLearnedProfile {
   const profiles = loadGrinderProfiles();
   if (profiles[grinderId]) {
     return profiles[grinderId];
   }
-  const defaultProfile = createDefaultGrinderProfile(grinderId);
+  const defaultProfile = createDefaultGrinderProfile(grinderId, scale);
   profiles[grinderId] = defaultProfile;
   saveGrinderProfile(defaultProfile);
   return defaultProfile;
@@ -1187,26 +1233,75 @@ export function loadBeanAnchors(): Record<string, BeanCalibrationAnchor> {
   }
 }
 
+/**
+ * Etape 0: Composite anchor key. A dial-in anchor belongs to bean + grinder + machine,
+ * never to the bean alone (a setting of "15" is meaningless on a different grinder scale).
+ */
+export function buildBeanAnchorKey(beanId: string, grinderId?: string, machineName?: string): string {
+  return `${beanId}__${toGearKey(grinderId)}__${toGearKey(machineName)}`;
+}
+
 export function saveBeanAnchor(anchor: BeanCalibrationAnchor): void {
   try {
     const anchors = loadBeanAnchors();
-    anchors[anchor.beanId] = anchor;
+    anchors[buildBeanAnchorKey(anchor.beanId, anchor.grinderId, anchor.machineName)] = anchor;
     localStorage.setItem(STORAGE_KEYS.BEAN_ANCHORS, JSON.stringify(anchors));
   } catch (err) {
     console.error('Failed to save bean anchor', err);
   }
 }
 
-export function getAnchorForBean(beanId: string): BeanCalibrationAnchor | undefined {
+/**
+ * Resolves the best anchor for a bean in the active gear context.
+ * Fallback chain (strict – never crosses grinder scales):
+ *  1. Exact bean + grinder + machine
+ *  2. Same bean + same grinder on another machine (most recent)
+ *  3. Legacy bean-only anchor (pre-Etape 0), only if it was made on the same grinder
+ * Calling without grinderId preserves the legacy behavior.
+ */
+export function getAnchorForBean(
+  beanId: string,
+  grinderId?: string,
+  machineName?: string
+): BeanCalibrationAnchor | undefined {
   const anchors = loadBeanAnchors();
-  return anchors[beanId];
+
+  if (!grinderId) {
+    if (anchors[beanId]) return anchors[beanId];
+    const forBean = Object.values(anchors).filter((a) => a.beanId === beanId);
+    forBean.sort((a, b) => new Date(b.anchorTimestamp).getTime() - new Date(a.anchorTimestamp).getTime());
+    return forBean[0];
+  }
+
+  const exact = anchors[buildBeanAnchorKey(beanId, grinderId, machineName)];
+  if (exact) return exact;
+
+  const grinderKey = toGearKey(grinderId);
+  const sameGrinder = Object.values(anchors).filter(
+    (a) => a.beanId === beanId && toGearKey(a.grinderId) === grinderKey
+  );
+  if (sameGrinder.length > 0) {
+    sameGrinder.sort((a, b) => new Date(b.anchorTimestamp).getTime() - new Date(a.anchorTimestamp).getTime());
+    return sameGrinder[0];
+  }
+
+  const legacy = anchors[beanId];
+  if (legacy && toGearKey(legacy.grinderId) === grinderKey) return legacy;
+
+  return undefined;
 }
 
-export function getLatestAnchorForGrinder(grinderId: string): BeanCalibrationAnchor | undefined {
+export function getLatestAnchorForGrinder(grinderId: string, machineName?: string): BeanCalibrationAnchor | undefined {
   const anchors = loadBeanAnchors();
-  const matches = Object.values(anchors).filter((a) => a.grinderId.toLowerCase() === grinderId.toLowerCase());
+  const grinderKey = toGearKey(grinderId);
+  const matches = Object.values(anchors).filter((a) => toGearKey(a.grinderId) === grinderKey);
   if (matches.length === 0) return undefined;
   matches.sort((a, b) => new Date(b.anchorTimestamp).getTime() - new Date(a.anchorTimestamp).getTime());
+  if (machineName) {
+    const machineKey = toGearKey(machineName);
+    const sameMachine = matches.find((a) => toGearKey(a.machineName) === machineKey);
+    if (sameMachine) return sameMachine;
+  }
   return matches[0];
 }
 

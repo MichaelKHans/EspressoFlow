@@ -47,8 +47,9 @@ import {
   saveGrinders,
   loadDrinkGrindSettings,
   saveDrinkGrindSetting,
-  loadDrinkCalibrations,
   saveDrinkCalibration,
+  buildDrinkCalibrationKey,
+  resolveDrinkCalibration,
   loadOnboardingComplete,
   saveOnboardingComplete,
   loadMachineName,
@@ -326,9 +327,10 @@ export function App() {
 
   const handleSelectDrink = (drink: DrinkRecipe) => {
     setActiveDrinkId(drink.id);
-    const calibrations = loadDrinkCalibrations();
-    const key = `${activeBeanId}_${drink.id}`;
-    const savedCal = calibrations[key];
+    const legacyKey = `${activeBeanId}_${drink.id}`;
+    const isFilter = drink.method === 'pour_over';
+    const activeMachineOrBrewer = isFilter ? filterBrewer : machineName;
+    const savedCal = resolveDrinkCalibration(activeBeanId, drink.id, grinderName, activeMachineOrBrewer);
 
     if (savedCal) {
       setDoseGrams(savedCal.doseGrams);
@@ -345,8 +347,8 @@ export function App() {
           (s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase()) &&
           (!s.coffeeName || s.coffeeName === currentBean.name)
       );
-      if (drinkGrinds[key]) {
-        setGrindSetting(drinkGrinds[key]);
+      if (drinkGrinds[legacyKey]) {
+        setGrindSetting(drinkGrinds[legacyKey]);
       } else if (lastShotForDrink?.grindSetting) {
         setGrindSetting(lastShotForDrink.grindSetting);
       } else if (currentBean.grindSetting) {
@@ -369,8 +371,8 @@ export function App() {
       );
       const lastShotForBean = shots.find((s) => s.coffeeName === currentBean.name);
 
-      if (drinkGrinds[key]) {
-        setGrindSetting(drinkGrinds[key]);
+      if (drinkGrinds[legacyKey]) {
+        setGrindSetting(drinkGrinds[legacyKey]);
       } else if (lastShotForDrink?.grindSetting) {
         setGrindSetting(lastShotForDrink.grindSetting);
       } else if (lastShotForBean?.grindSetting) {
@@ -459,16 +461,26 @@ export function App() {
     setBeans(updated);
     saveBeans(updated);
 
-    // 4. Save drink-specific grind setting and full calibration mapping
-    const calibrationKey = `${targetBeanId}_${activeDrinkId}`;
-    saveDrinkGrindSetting(calibrationKey, dialInData.grindSetting);
-    saveDrinkCalibration(calibrationKey, {
+    // 4. Save drink-specific grind setting and full calibration mapping (composite + legacy fallback)
+    const isFilter = activeDrink?.method === 'pour_over';
+    const activeMachineOrBrewer = isFilter ? filterBrewer : machineName;
+    const multiKey = buildDrinkCalibrationKey(targetBeanId, activeDrinkId, dialInData.grinderName, activeMachineOrBrewer);
+    const legacyKey = `${targetBeanId}_${activeDrinkId}`;
+
+    const calibrationPayload = {
       doseGrams: dialInData.doseGrams,
       targetYieldGrams: dialInData.targetYieldGrams,
       grindSetting: dialInData.grindSetting,
       brewTempC: dialInData.brewTempC,
       grinderName: dialInData.grinderName,
-    });
+      machineName: !isFilter ? machineName : undefined,
+      filterBrewer: isFilter ? filterBrewer : undefined,
+    };
+
+    saveDrinkGrindSetting(legacyKey, dialInData.grindSetting);
+    saveDrinkGrindSetting(multiKey, dialInData.grindSetting);
+    saveDrinkCalibration(legacyKey, calibrationPayload);
+    saveDrinkCalibration(multiKey, calibrationPayload);
 
     // 5. Close wizard and conditionally launch scale monitor
     setIsDialInWizardOpen(false);
@@ -693,13 +705,30 @@ export function App() {
     // Background Universal Adaptive Grind Intelligence (Zero Token On-Device Machine Learning)
     try {
       const prevShot = shots.find(
-        (s) => s.grinderName === grinderName && s.coffeeName === coffeeBeanName && s.method !== 'pour_over'
+        (s) =>
+          s.grinderName === grinderName &&
+          s.coffeeName === coffeeBeanName &&
+          s.machineName === machineName &&
+          s.method !== 'pour_over'
       );
       if (prevShot) {
-        const factorySeconds = getFactorySecondsPerStep(grinderName);
-        const evaluation = evaluateShotTransitionForLearning(prevShot, newShot, factorySeconds);
+        const factorySeconds = getFactorySecondsPerStep(grinderName, {
+          type: currentGrinder.type,
+          minSetting: currentGrinder.minSetting,
+          maxSetting: currentGrinder.maxSetting,
+          espressoMaxSetting: currentGrinder.espressoMaxSetting,
+        });
+        const minStepDelta = currentGrinder.type === 'stepless' ? 0.2 : 0.5;
+        const evaluation = evaluateShotTransitionForLearning(prevShot, newShot, factorySeconds, {
+          minStepDelta,
+        });
         if (evaluation.accepted) {
-          const learnedProfile = loadOrCreateGrinderProfile(grinderName);
+          const learnedProfile = loadOrCreateGrinderProfile(grinderName, {
+            type: currentGrinder.type,
+            minSetting: currentGrinder.minSetting,
+            maxSetting: currentGrinder.maxSetting,
+            espressoMaxSetting: currentGrinder.espressoMaxSetting,
+          });
           const updatedProfile = updateGrinderLearnedProfile(learnedProfile, evaluation);
           saveGrinderProfile(updatedProfile);
         }
@@ -713,6 +742,7 @@ export function App() {
           beanId: activeBeanId,
           beanName: coffeeBeanName,
           grinderId: grinderName,
+          machineName: machineName,
           roastLevel: roastLevel,
           anchorSetting: parseFloat(grindSetting) || 15.0,
           anchorDaysOffRoast: freshness.daysOffRoast,
@@ -1089,6 +1119,7 @@ export function App() {
                 currentBean={currentBean}
                 currentGrinder={currentGrinder}
                 activeDrinkId={activeDrinkId}
+                machineName={machineName}
                 doseGrams={doseGrams}
                 targetYieldGrams={targetYieldGrams}
                 shots={shots}
@@ -1175,6 +1206,7 @@ export function App() {
               activeDrinkName={activeDrink.name}
               currentGrindSetting={grindSetting}
               grinderName={currentGrinder.name}
+              machineName={machineName}
               shots={shots}
               onApplyGrindSetting={handleApplyGrindAdjustment}
               isBrewing={isBrewing}

@@ -25,6 +25,20 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-24 -- Etape 87: BrewPhysics Taksonomi, Maskine-Isolering i Læringen & Flerdimensionel Kalibreringsnøgle (v1.21.8)
+- **BrewPhysics Taksonomi ([brewPhysics.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/brewPhysics.ts)):**
+  - Implementeret 7-delt fysisk klassifikation (`pump_espresso`, `manual_espresso`, `pressurized_basket`, `moka`, `percolation`, `immersion`, `immersion_pressure`), der afgør gyldigheden af hydraulisk modstandslæring, kværnzone og læringssignaler.
+  - Normaliserede udstyrsnøgler via `toGearKey()` for konsistente opslag uafhængigt af navne-strenge.
+- **Maskine-Isolering & Relativ Dead-Zone i Læringen ([grindIntelligence.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/grindIntelligence.ts) & [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - Tilføjet maskine-gate (`sameMachine`) i Gate 3 og i `prevShot` opslag: Forhindrer at skift mellem f.eks. Dedica (51 mm) og Picopresso (52 mm) forurener kværnens modstandskoefficient.
+  - Skaleret støj-deadzone i Gate 4 til 0.18 for trinløse kværne (0.2 step) mod 0.45 for trinvise, så trinløse kværne nu modtager fuld læring.
+  - Kværne uden kendt profil modtager en skala-baseret prior (`ESPRESSO_CONTACT_SPAN_SECONDS / espressoUnits`) i stedet for arbitrære 2.5 s/step.
+- **Flerdimensionel Kalibrerings- & Anker-Hukommelse ([storage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/storage.ts)):**
+  - Ankre gemmes nu med sammensat nøgle: `beanId__grinderKey__machineKey`. Ankre fra én kværn bruges aldrig som startpunkt på en fremmed skala.
+  - Opskriftskalibreringer gemmes med 4-variabel sammensat nøgle: `beanId__grinderKey__machineKey__drinkId` via `buildDrinkCalibrationKey()`.
+  - 3-trins bagudkompatibel opløsning i `resolveDrinkCalibration()` sikrer nul datatab for eksisterende profiler.
+  - `DialInWizardModal`, `DrinkSelector` og `PreBrewCoachBanner` opdateret til at udnytte den fulde gear-kontekst.
+
 ### 2026-10-24 -- Etape 86: Taktilt Grinder Cockpit i Dial-In Studio & Gear Intelligence Samspil (v1.21.7)
 - **Taktil Mekanisk Skydelineal i Dial-In Studio ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx)):**
   - Overført den taktile caliper-lineal fra Gear Station til Step 2 ("Grinder & Setting for Bean") i Dial-In Studio.

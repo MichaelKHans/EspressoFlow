@@ -12,6 +12,7 @@
 
 import type { RoastLevel, ShotRecord } from '../types/espresso';
 import { GRINDER_CALIBRATIONS } from './espressoMath';
+import { toGearKey } from './brewPhysics';
 
 export const GRIND_INTELLIGENCE_STORAGE_KEY = 'flowbean_grind_intelligence_v1';
 export const BEAN_ANCHORS_STORAGE_KEY = 'flowbean_bean_anchors_v1';
@@ -32,6 +33,8 @@ export interface BeanCalibrationAnchor {
   beanId: string;
   beanName: string;
   grinderId: string;
+  /** Machine the anchor was dialed in on (Etape 0). Optional for legacy anchors. */
+  machineName?: string;
   roastLevel: RoastLevel;
   anchorSetting: number;
   anchorDaysOffRoast: number;
@@ -104,21 +107,57 @@ export function calculateNormalizedShotTime(shot: ShotRecord): number {
 }
 
 /**
- * Resolves baseline seconds-per-step for any grinder name
+ * Approximate total espresso contact-time span (seconds) from choking (~60s) to gushing (~10s)
+ * across a grinder's full espresso zone. Used to derive a physics prior for unknown/custom grinders.
+ * Baratza Encore ESP (1–20 espresso zone): 50 / 20 = 2.5 s/step, matching the historical default.
  */
-export function getFactorySecondsPerStep(grinderName?: string): number {
-  if (!grinderName) return 2.5;
-  const matchedKey = Object.keys(GRINDER_CALIBRATIONS).find(
-    (k) => grinderName.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(grinderName.toLowerCase())
-  );
-  return matchedKey ? GRINDER_CALIBRATIONS[matchedKey].secondsPerStep : 2.5;
+export const ESPRESSO_CONTACT_SPAN_SECONDS = 50;
+
+export interface GrinderScaleSpec {
+  type?: 'stepped' | 'stepless';
+  minSetting?: number;
+  maxSetting?: number;
+  espressoMaxSetting?: number;
+}
+
+/**
+ * Resolves baseline seconds-per-step for any grinder name.
+ * 1. Known calibration table (name match)
+ * 2. Scale-derived prior for unknown / custom grinders (espresso span / number of espresso units)
+ * 3. Legacy default 2.5 s/step
+ */
+export function getFactorySecondsPerStep(grinderName?: string, scale?: GrinderScaleSpec): number {
+  if (grinderName) {
+    const matchedKey = Object.keys(GRINDER_CALIBRATIONS).find(
+      (k) => grinderName.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(grinderName.toLowerCase())
+    );
+    if (matchedKey) return GRINDER_CALIBRATIONS[matchedKey].secondsPerStep;
+  }
+
+  if (scale && typeof scale.minSetting === 'number' && typeof scale.maxSetting === 'number') {
+    const espressoTop = typeof scale.espressoMaxSetting === 'number' ? scale.espressoMaxSetting : scale.maxSetting;
+    const espressoUnits = espressoTop - scale.minSetting;
+    if (espressoUnits > 0) {
+      const derived = ESPRESSO_CONTACT_SPAN_SECONDS / espressoUnits;
+      return Math.round(Math.max(0.5, Math.min(12, derived)) * 100) / 100;
+    }
+  }
+
+  return 2.5;
+}
+
+export interface ShotTransitionOptions {
+  /** Smallest meaningful grind delta for this grinder (0.5 stepped, 0.2 stepless). Default 0.5 */
+  minStepDelta?: number;
+  /** Largest delta still considered a dial-in move rather than a brew-style jump. Default 6.0 */
+  maxStepDelta?: number;
 }
 
 /**
  * Creates a pristine default learned profile for a grinder
  */
-export function createDefaultGrinderProfile(grinderId: string): GrinderLearnedProfile {
-  const factorySeconds = getFactorySecondsPerStep(grinderId);
+export function createDefaultGrinderProfile(grinderId: string, scale?: GrinderScaleSpec): GrinderLearnedProfile {
+  const factorySeconds = getFactorySecondsPerStep(grinderId, scale);
   return {
     grinderId,
     factorySecondsPerUnit: factorySeconds,
@@ -139,9 +178,12 @@ export function createDefaultGrinderProfile(grinderId: string): GrinderLearnedPr
 export function evaluateShotTransitionForLearning(
   prevShot: ShotRecord,
   currShot: ShotRecord,
-  factorySecondsPerUnit: number
+  factorySecondsPerUnit: number,
+  options: ShotTransitionOptions = {}
 ): ShotTransitionEvaluation {
   const failures: string[] = [];
+  const minStepDelta = options.minStepDelta ?? 0.5;
+  const maxStepDelta = options.maxStepDelta ?? 6.0;
 
   const prevSettingNum = parseFloat(prevShot.grindSetting);
   const currSettingNum = parseFloat(currShot.grindSetting);
@@ -173,7 +215,7 @@ export function evaluateShotTransitionForLearning(
   }
 
   // Gate 2: Physical Monotonicity (Grinding finer must increase resistance; grinding coarser must decrease)
-  if (Math.abs(deltaSetting) >= 0.5) {
+  if (Math.abs(deltaSetting) >= minStepDelta) {
     if (deltaSetting < 0 && deltaTimeNorm < 0) {
       // Ground finer, but shot ran faster -> micro-channeling / puck crack
       failures.push('gate_2_inverted_monotonicity_finer_ran_faster');
@@ -188,6 +230,9 @@ export function evaluateShotTransitionForLearning(
     !prevShot.coffeeName || !currShot.coffeeName || prevShot.coffeeName.toLowerCase() === currShot.coffeeName.toLowerCase();
   const sameGrinder =
     !prevShot.grinderName || !currShot.grinderName || prevShot.grinderName.toLowerCase() === currShot.grinderName.toLowerCase();
+  // Etape 0: Different machines (basket geometry, pump, pre-infusion) must never be read as grinder response
+  const sameMachine =
+    !prevShot.machineName || !currShot.machineName || prevShot.machineName.toLowerCase() === currShot.machineName.toLowerCase();
   const doseDiff = Math.abs((currShot.doseGrams || 18) - (prevShot.doseGrams || 18));
   const prevTimeMs = new Date(prevShot.timestamp).getTime();
   const currTimeMs = new Date(currShot.timestamp).getTime();
@@ -197,15 +242,16 @@ export function evaluateShotTransitionForLearning(
 
   if (!sameCoffee) failures.push('gate_3_different_coffee_beans');
   if (!sameGrinder) failures.push('gate_3_different_grinders');
+  if (!sameMachine) failures.push('gate_3_different_machines');
   if (doseDiff > 1.2) failures.push('gate_3_dose_variance_too_high');
   if (timeDiffHours > 48) failures.push('gate_3_time_window_exceeded_48h');
   if (prevShot.method === 'pour_over' || currShot.method === 'pour_over') failures.push('gate_3_pourover_method_excluded');
 
-  // Gate 4: Step Size Dead-Zone (Minimum 0.5 to avoid noise; maximum 6.0 to avoid brew style jumps)
+  // Gate 4: Step Size Dead-Zone relative to grinder resolution (stepped 0.5 -> 0.45; stepless 0.2 -> 0.18)
   const absDeltaSetting = Math.abs(deltaSetting);
-  if (absDeltaSetting < 0.45) {
+  if (absDeltaSetting < minStepDelta * 0.9) {
     failures.push('gate_4_step_too_small_noise_zone');
-  } else if (absDeltaSetting > 6.0) {
+  } else if (absDeltaSetting > maxStepDelta) {
     failures.push('gate_4_step_too_large_jump');
   }
 
@@ -303,7 +349,15 @@ export function predictOptimalGrindSetting(params: {
   const roastTime = new Date(activeBean.roastDate).getTime();
   const daysOffRoastToday = isNaN(roastTime) ? 7 : Math.max(0, Math.floor((now - roastTime) / (1000 * 60 * 60 * 24)));
 
-  if (anchor && anchor.beanId === activeBean.id) {
+  // Etape 0: An anchor is only valid on the same grinder scale it was dialed in on
+  const profileGrinderKey = toGearKey(grinderProfile.grinderId);
+  const anchorMatchesGrinder =
+    !!anchor && (!anchor.grinderId || toGearKey(anchor.grinderId) === profileGrinderKey);
+  const refAnchorMatchesGrinder =
+    !!referenceAnchorForGrinder &&
+    (!referenceAnchorForGrinder.grinderId || toGearKey(referenceAnchorForGrinder.grinderId) === profileGrinderKey);
+
+  if (anchor && anchorMatchesGrinder && anchor.beanId === activeBean.id) {
     // We already have a dialed-in anchor for this specific bean
     baseSetting = anchor.anchorSetting;
     reason = 'golden_anchor';
@@ -324,7 +378,7 @@ export function predictOptimalGrindSetting(params: {
         reason = 'degas_drift';
       }
     }
-  } else if (referenceAnchorForGrinder) {
+  } else if (referenceAnchorForGrinder && refAnchorMatchesGrinder) {
     // New bean, but user has an anchor on another bean with this grinder
     baseSetting = referenceAnchorForGrinder.anchorSetting;
     reason = 'roast_shift';

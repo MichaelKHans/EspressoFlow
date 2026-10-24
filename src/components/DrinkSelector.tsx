@@ -22,7 +22,7 @@ import {
   saveActiveBarDrinkIds,
   loadDrinkGrindSettings,
   saveDrinkGrindSetting,
-  loadDrinkCalibrations,
+  resolveDrinkCalibration,
   loadShots,
   loadFrenchPressSettings,
   saveFrenchPressSettings,
@@ -55,6 +55,7 @@ interface DrinkSelectorProps {
   currentBean: CoffeeBeanProfile;
   currentGrinder: GrinderProfile;
   activeDrinkId: string;
+  machineName?: string;
   doseGrams?: number;
   targetYieldGrams?: number;
   shots?: ShotRecord[];
@@ -81,6 +82,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   currentBean,
   currentGrinder,
   activeDrinkId,
+  machineName,
   doseGrams,
   targetYieldGrams,
   shots,
@@ -208,10 +210,18 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     }
   };
 
-  // Specific calibration key for this exact bean + drink combination
+  // Active machine or filter brewer depending on drink method
+  const isFilter = selectedDrink.method === 'pour_over';
+  const activeMachineOrBrewer = isFilter ? filterBrewer : machineName;
+
+  // Specific calibration lookup for this bean + drink in current gear context (multi-variable)
   const calibrationKey = `${currentBean.id}_${selectedDrink.id}`;
-  const drinkCalibrations = loadDrinkCalibrations();
-  const savedCalibration = drinkCalibrations[calibrationKey];
+  const savedCalibration = resolveDrinkCalibration(
+    currentBean.id,
+    selectedDrink.id,
+    currentGrinder.name,
+    activeMachineOrBrewer
+  );
 
   const defaultDrinkDose = selectedDrink.id === 'french-press'
     ? Math.round((fpSettings.waterMl / fpSettings.ratio) * 10) / 10
@@ -259,9 +269,15 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   const [currentSettingInput, setCurrentSettingInput] = useState<string>(savedDrinkSetting);
 
   useEffect(() => {
+    const isFilterEffect = selectedDrink.method === 'pour_over';
+    const effMachineOrBrewer = isFilterEffect ? filterBrewer : machineName;
+    const cal = resolveDrinkCalibration(
+      currentBean.id,
+      selectedDrink.id,
+      currentGrinder.name,
+      effMachineOrBrewer
+    );
     const key = `${currentBean.id}_${selectedDrink.id}`;
-    const calibs = loadDrinkCalibrations();
-    const cal = calibs[key];
     const setting =
       cal?.grindSetting ||
       drinkGrinds[key] ||
@@ -273,11 +289,15 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   }, [
     currentBean.id,
     selectedDrink.id,
+    selectedDrink.method,
+    currentGrinder.name,
+    currentGrinder.defaultSetting,
+    machineName,
+    filterBrewer,
     drinkGrinds,
     lastShotForDrink?.grindSetting,
     lastShotForBean?.grindSetting,
     currentBean.grindSetting,
-    currentGrinder.defaultSetting,
   ]);
 
   const targetTime = effectiveTargetTime;
