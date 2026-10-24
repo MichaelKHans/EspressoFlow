@@ -23,6 +23,7 @@ import {
   type FleetTelemetrySummary,
   SIMULATED_FLEET_DATASET,
 } from '../lib/supabase';
+import { KNOWN_OFFLINE_FLEET_PRIORS } from '../lib/fleetConsensusEngine';
 
 export const FlowbeanLabDashboard: React.FC = () => {
   const [dataMode, setDataMode] = useState<'simulated' | 'cloud'>('simulated');
@@ -684,6 +685,81 @@ export const FlowbeanLabDashboard: React.FC = () => {
                 ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Hierarchical Bayesian Fleet Consensus & Bean Priors (Etape 7) */}
+      <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#E8DFD5] pb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#C26D52]" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[#2C2018]">
+              Hierarkisk Bayesian Flåde-Konsensus &amp; Bønne-Priors
+            </h3>
+          </div>
+          <span className="text-[11px] text-[#7A6E65]">
+            Global Sandhed (&beta;_bean) + Lokalt Burr-Offset (u_i)
+          </span>
+        </div>
+
+        {/* Mathematical callout */}
+        <div className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-xs text-[#7A6E65] space-y-1 font-sans">
+          <div className="font-bold font-mono text-[#2C2018] flex items-center gap-2">
+            <Info className="w-3.5 h-3.5 text-[#C26D52]" />
+            <span>Matematisk fundament: Hierarkisk opdeling af kværnkalibrering</span>
+          </div>
+          <p className="leading-relaxed">
+            I stedet for et naivt gennemsnit beregner flådemotoren bønners relative modstandsfaktor (&beta;_bean) uafhængigt af brugerens individuelle fabriksnulpunkt. Appen lærer automatisk brugerens lokale afvigelse <em>u_i</em>, så en &quot;Fleet Verified&quot; anbefaling rammer plet ved 1. brygning, uanset om kværnen er kalibreret lidt finere eller grovere end gennemsnittet.
+          </p>
+        </div>
+
+        {/* Verified Specialty Bean Prior Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Object.entries(KNOWN_OFFLINE_FLEET_PRIORS).map(([key, info]) => {
+            const espPrior = info.grinderSettings['baratza-encore-esp-pro'] || info.grinderSettings['baratza-encore-esp'];
+            const nichePrior = info.grinderSettings['niche-zero'];
+            const title = key
+              .split('-')
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(' ');
+
+            return (
+              <div
+                key={key}
+                className="p-3.5 rounded-xl border border-[#E8DFD5] bg-white space-y-2.5 relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#2C2018] truncate pr-2" title={title}>
+                    {title}
+                  </span>
+                  <span className="text-[9px] font-bold font-mono px-2 py-0.5 rounded-md bg-[#C26D52]/10 text-[#C26D52] border border-[#C26D52]/30 shrink-0">
+                    ✨ Verified
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-[10px] text-[#7A6E65]">
+                  <span className="capitalize font-semibold text-[#2C2018]">{info.roastLevel} Roast</span>
+                  <span>&bull;</span>
+                  <span>{espPrior ? `${espPrior.shots} skud i flåden` : '30+ skud'}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-[#E8DFD5]/60 font-mono">
+                  <div className="p-2 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5]/60">
+                    <div className="text-[9px] text-[#7A6E65]">Baratza ESP</div>
+                    <div className="font-bold text-[#2C2018]">
+                      {espPrior ? `${espPrior.setting.toFixed(1)} trin` : '14.5'}
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5]/60">
+                    <div className="text-[9px] text-[#7A6E65]">Niche Zero</div>
+                    <div className="font-bold text-[#2C2018]">
+                      {nichePrior ? `${nichePrior.setting.toFixed(1)} trin` : '15.0'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

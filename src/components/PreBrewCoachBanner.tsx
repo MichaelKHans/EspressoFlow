@@ -56,6 +56,7 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
         anchor,
         referenceAnchorForGrinder: refAnchor,
         currentSetting: currentGrindSetting,
+        machineName,
       })
     : null;
 
@@ -66,7 +67,7 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
 
   const hasProactiveAiAdvice = Boolean(
     aiPred &&
-    (aiPred.reason === 'roast_shift' || aiPred.reason === 'degas_drift') &&
+    (aiPred.reason === 'roast_shift' || aiPred.reason === 'degas_drift' || aiPred.reason === 'fleet_consensus') &&
     aiPred.formattedSetting !== currentGrindSetting
   );
 
@@ -123,11 +124,16 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
     targetSettingStr = null; // Do not shift grind when puck channeled
   } else if (hasProactiveAiAdvice && aiPred) {
     iconType = 'ai';
-    badgeBorder = 'border-[#C26D52]/40 bg-[#C26D52]/10 text-[#8C3F27]';
-    bannerBorder = 'border-[#C26D52]/30 bg-[#FFFDF9]';
     targetSettingStr = aiPred.formattedSetting;
 
-    if (aiPred.reason === 'roast_shift') {
+    if (aiPred.reason === 'fleet_consensus') {
+      badgeBorder = 'border-[#C26D52]/60 bg-gradient-to-r from-[#C26D52]/15 to-amber-500/10 text-[#C26D52]';
+      bannerBorder = 'border-[#C26D52]/40 bg-gradient-to-r from-[#FFFDF9] to-[#FFF9F5]';
+      verdictTitle = '✨ Fleet Verified Prior';
+      adviceSummary = `Flåde-konsensus for ${currentBean?.name || 'denne bønne'}: Anbefalet kværnindstilling er ${aiPred.formattedSetting} baseret på flådens succesfulde skud.`;
+    } else if (aiPred.reason === 'roast_shift') {
+      badgeBorder = 'border-[#C26D52]/40 bg-[#C26D52]/10 text-[#8C3F27]';
+      bannerBorder = 'border-[#C26D52]/30 bg-[#FFFDF9]';
       verdictTitle = t('grind.ai_recommendation_label') || 'Smart Roast Shift';
       adviceSummary =
         t('coach.smart_roast_shift', {
@@ -139,6 +145,8 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
         }) ||
         `Smart Roast Shift: ${currentBean?.name} is ${currentBean?.roastLevel}. Based on your ${grinderName.split(' ')[0]} profile, ${aiPred.formattedSetting} is recommended (${aiPred.stepDelta > 0 ? `+${aiPred.stepDelta}` : aiPred.stepDelta} steps).`;
     } else {
+      badgeBorder = 'border-[#C26D52]/40 bg-[#C26D52]/10 text-[#8C3F27]';
+      bannerBorder = 'border-[#C26D52]/30 bg-[#FFFDF9]';
       // degas_drift
       const daysOffRoast = currentBean?.roastDate
         ? Math.max(0, Math.floor((Date.now() - new Date(currentBean.roastDate).getTime()) / (1000 * 60 * 60 * 24)))

@@ -865,6 +865,7 @@ export interface FleetShotTelemetryVector {
   mathVersion: string;
   machineKey: string;
   grinderKey: string;
+  beanKey?: string;
   physicsClass: string;
   basketDiameterMm?: number;
   doseG: number;
@@ -896,6 +897,7 @@ export async function uploadFleetShotTelemetry(
       math_version: payload.mathVersion,
       machine_key: payload.machineKey,
       grinder_key: payload.grinderKey,
+      bean_key: payload.beanKey || null,
       physics_class: payload.physicsClass,
       basket_diameter_mm: payload.basketDiameterMm || null,
       dose_g: payload.doseG,

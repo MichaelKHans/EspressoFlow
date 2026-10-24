@@ -517,6 +517,14 @@ For at opbygge verdens mest præcise kaffeteknologiske flådemodel, anvender Flo
 - **Wizard ([CustomGearCreatorModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/CustomGearCreatorModal.tsx)):** Tillader brugere at registrere maskiner, kværne og bryggere med fulde tekniske specifikationer og lokale fotos.
 - **IndexedDB Medielager ([gearImageStorage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/gearImageStorage.ts)):** Sikrer billeder op til 400KB+ uden at overskride browserens 5MB localStorage kvote.
 - **Admin Moderationskø:** Nye udstyrsspecifikationer indsendes anonymt til `crowdsourced_gear_submissions` og kan godkendes til det globale katalog med et enkelt klik i Admin Portalen.
+
+### 11.3 Hierarkisk Bayesian Flåde-Konsensus Engine ([fleetConsensusEngine.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetConsensusEngine.ts))
+- **Formel:** $\text{Indstilling}_{i, u} = \beta_{\text{bønne}} + \beta_{\text{maskine}} + \beta_{\text{kværn}} + u_i$.
+- **Cold-Start Specialty Priors:** Forudindlæst flådeviden for specialty kaffer (f.eks. Coffee Collective Kieni, April, Prolog, La Cabra, Hedekaffe) mod Baratza ESP Pro, Niche Zero m.fl.
+- **Darcy-Ergun Kurvetranslation:** Automatisk omregning af kværntrin ved kurveskift (f.eks. 51 mm Dedica $\rightarrow +1.5$ trin mod 58 mm standard).
+- **Individuelt Burr Offset ($u_i$):** Appen isolerer baristaens personlige nulpunkt, så flådens anbefaling korrigeres for brugerens specifikke kværnkalibrering.
+- **In-App Badges:** Vises i `DialInWizardModal.tsx` og `PreBrewCoachBanner.tsx` som `✨ Fleet Verified Prior` med 1-klik overførsel til kværnen.
 - **Masterdokument:** Se den udtømmende videnskabelige specifikation i [FLEET_INTELLIGENCE_LAB.md](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/FLEET_INTELLIGENCE_LAB.md).
+
 
 

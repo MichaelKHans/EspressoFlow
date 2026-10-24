@@ -13,6 +13,7 @@
 import type { RoastLevel, ShotRecord } from '../types/espresso';
 import { GRINDER_CALIBRATIONS } from './espressoMath';
 import { toGearKey } from './brewPhysics';
+import { resolveFleetConsensus, getBurrOffsetForGrinder } from './fleetConsensusEngine';
 
 export const GRIND_INTELLIGENCE_STORAGE_KEY = 'flowbean_grind_intelligence_v1';
 export const BEAN_ANCHORS_STORAGE_KEY = 'flowbean_bean_anchors_v1';
@@ -59,13 +60,17 @@ export interface PredictedGrindAdjustment {
   stepDelta: number;
   direction: 'finer' | 'coarser' | 'keep';
   confidenceScore: number;
-  reason: 'golden_anchor' | 'roast_shift' | 'degas_drift' | 'dial_in_adjustment' | 'baseline';
+  reason: 'golden_anchor' | 'fleet_consensus' | 'roast_shift' | 'degas_drift' | 'dial_in_adjustment' | 'baseline';
   explanation: string;
   details: {
     roastOffsetSteps: number;
     agingOffsetSteps: number;
     dialInOffsetSteps: number;
     effectiveSecondsPerUnit: number;
+    fleetConsensusSetting?: number;
+    userBurrOffsetSteps?: number;
+    fleetShotsCount?: number;
+    isFleetVerified?: boolean;
   };
 }
 
@@ -328,8 +333,10 @@ export function predictOptimalGrindSetting(params: {
   anchor?: BeanCalibrationAnchor;
   referenceAnchorForGrinder?: BeanCalibrationAnchor;
   currentSetting?: string;
+  machineName?: string;
+  basketDiameterMm?: number;
 }): PredictedGrindAdjustment {
-  const { grinderProfile, activeBean, anchor, referenceAnchorForGrinder, currentSetting } = params;
+  const { grinderProfile, activeBean, anchor, referenceAnchorForGrinder, currentSetting, machineName, basketDiameterMm } = params;
   const kEff = Math.max(1.0, grinderProfile.effectiveSecondsPerUnit);
 
   const fallbackSettingNum = currentSetting
@@ -378,6 +385,33 @@ export function predictOptimalGrindSetting(params: {
         reason = 'degas_drift';
       }
     }
+  } else if (
+    (() => {
+      const fleetMatch = resolveFleetConsensus({
+        beanName: activeBean.name,
+        roastLevel: activeBean.roastLevel,
+        grinderName: grinderProfile.grinderId,
+        machineName,
+        basketDiameterMm,
+      });
+      if (fleetMatch && (fleetMatch.isFleetVerified || fleetMatch.confidence >= 0.55)) {
+        const userBurrOffset = getBurrOffsetForGrinder(grinderProfile.grinderId);
+        baseSetting = fleetMatch.consensusGrindSetting;
+        reason = 'fleet_consensus';
+        dialInOffsetSteps = userBurrOffset;
+
+        if (daysOffRoastToday >= 14) {
+          const gamma = activeBean.roastLevel === 'dark' ? 1.15 : 0.85;
+          const ageRatio = Math.max(2, daysOffRoastToday) / 7;
+          const rawAgingDelta = -gamma * (3.0 / kEff) * Math.log(ageRatio);
+          agingOffsetSteps = Math.round(rawAgingDelta * 2) / 2;
+        }
+        return true;
+      }
+      return false;
+    })()
+  ) {
+    // Fleet consensus applied
   } else if (referenceAnchorForGrinder && refAnchorMatchesGrinder) {
     // New bean, but user has an anchor on another bean with this grinder
     baseSetting = referenceAnchorForGrinder.anchorSetting;
@@ -408,14 +442,25 @@ export function predictOptimalGrindSetting(params: {
     stepDelta < 0 ? 'finer' : stepDelta > 0 ? 'coarser' : 'keep';
 
   // Construct clear, calm explanation
-  const parts: string[] = [`Base: ${baseSetting.toFixed(1).replace('.0', '')}`];
-  if (roastOffsetSteps !== 0) {
-    parts.push(`${activeBean.roastLevel} roast: ${roastOffsetSteps > 0 ? '+' : ''}${roastOffsetSteps}`);
+  let explanation = '';
+  if (reason === 'fleet_consensus') {
+    const verifiedBadge = dialInOffsetSteps !== 0
+      ? `✨ Flåde-konsensus: ${baseSetting.toFixed(1).replace('.0', '')} (Burr: ${dialInOffsetSteps > 0 ? '+' : ''}${dialInOffsetSteps})`
+      : `✨ Fleet Verified: ${baseSetting.toFixed(1).replace('.0', '')}`;
+    const agingTag = agingOffsetSteps !== 0
+      ? ` • Dag ${daysOffRoastToday} afgas: ${agingOffsetSteps > 0 ? '+' : ''}${agingOffsetSteps}`
+      : '';
+    explanation = `${verifiedBadge}${agingTag} → Mål: ${formattedSetting}`;
+  } else {
+    const parts: string[] = [`Base: ${baseSetting.toFixed(1).replace('.0', '')}`];
+    if (roastOffsetSteps !== 0) {
+      parts.push(`${activeBean.roastLevel} roast: ${roastOffsetSteps > 0 ? '+' : ''}${roastOffsetSteps}`);
+    }
+    if (agingOffsetSteps !== 0) {
+      parts.push(`Day ${daysOffRoastToday} degas: ${agingOffsetSteps > 0 ? '+' : ''}${agingOffsetSteps}`);
+    }
+    explanation = `${parts.join(' • ')} → Target: ${formattedSetting}`;
   }
-  if (agingOffsetSteps !== 0) {
-    parts.push(`Day ${daysOffRoastToday} degas: ${agingOffsetSteps > 0 ? '+' : ''}${agingOffsetSteps}`);
-  }
-  const explanation = `${parts.join(' • ')} → Target: ${formattedSetting}`;
 
   return {
     baseSetting,

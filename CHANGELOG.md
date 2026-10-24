@@ -2,6 +2,24 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.11] - 2026-10-24
+### Etape 90: Hierarkisk Bayesian Flåde-Konsensus Engine & In-App "Fleet Verified" Badges
+- **Hierarkisk Bayesian Flåde-Konsensus Engine ([fleetConsensusEngine.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetConsensusEngine.ts)):**
+  - Implementeret det teoretiske rammeværk: $\text{Indstilling}_{i, u} = \beta_{\text{bønne}} + \beta_{\text{maskine}} + \beta_{\text{kværn}} + u_i$, hvor $u_i$ er baristaens individuelle nulpunkt-offset.
+  - **Cold-Start & Offline Bibliotek for Specialty Kaffe:** Pre-indekserede flådepriors for førende specialty kaffer (Coffee Collective Kieni, April Coffee Worka Sakaro, Prolog Colombia El Paraiso, La Cabra San Fermin, Hedekaffe Espresso Blend, Lavazza Super Crema m.fl.) på tværs af populære kværne (Baratza ESP Pro, Niche Zero, DF64 Gen 2, Eureka Specialita).
+  - **Darcy-Ergun Kurvetranslation:** Automatisk justering af kværntrin ved skift mellem kurvestørrelser (f.eks. +1.5 trin på 51 mm Dedica for at balancere højere puckmodstand mod 58 mm standard).
+  - **Individuelt Burr-Offset ($u_i$):** Appen estimerer løbende brugerens personlige kværnoffset baseret på tidligere succesfulde dials mod flådens gennemsnit.
+- **Grind Intelligence & Dial-In Integration ([grindIntelligence.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/grindIntelligence.ts)):**
+  - Udvidet `predictOptimalGrindSetting` med ny beslutningsgren `'fleet_consensus'`.
+  - Når en bruger scanner en ny bønne uden egne ankre, overtager flådens Bayesian prior straks som fundament.
+- **In-App "Fleet Verified" Badges & Taktilt UI ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx) & [PreBrewCoachBanner.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/PreBrewCoachBanner.tsx)):**
+  - **Dial-In Studio:** Viser en gylden terracotta-indrammet anbefalingsboks med `✨ Fleet Verified Prior (Bayes Prior)` og knap `Sæt flåde-mål X.X`.
+  - **Pre-Brew Coach Banner:** Proaktiv vejledning på Coffee Bar skærmen før brygningen, når der findes flådekonsensus for den aktive kaffebønne.
+- **Admin Flowbean Lab Udvidelse ([FlowbeanLabDashboard.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowbeanLabDashboard.tsx)):**
+  - Nyt matrixpanel med verificerede specialty bønne-priors, ristegrad, flåde-sample size ($N$) og kværnopsætning.
+- **Telemetri Vektor Udvidelse ([fleetTelemetry.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetTelemetry.ts) & [supabase.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/supabase.ts)):**
+  - Tilføjet `beanKey` i `FleetShotTelemetryVector` og opdateret SQL-migreringen med kolonnen `bean_key` og indeks `idx_fleet_bean_grinder`.
+
 ## [1.21.10] - 2026-10-24
 ### Etape 89: Flowbean Lab (Kvantitativ & Kvalitativ Flåde-AI Forskning i AdminPortal)
 - **Flowbean Lab Forskningspanel ([FlowbeanLabDashboard.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowbeanLabDashboard.tsx)):**

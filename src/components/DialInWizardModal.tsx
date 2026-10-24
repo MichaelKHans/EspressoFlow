@@ -699,6 +699,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               anchor,
               referenceAnchorForGrinder: refAnchor,
               currentSetting: grindSetting,
+              machineName,
             });
 
             const aiTargetNum = parseFloat(aiPred.formattedSetting);
@@ -912,15 +913,29 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 </div>
 
                 {/* AI Adaptive Intelligence Recommendation Card */}
-                <div className="bg-[#FAF7F2] p-2.5 rounded-xl border border-[#DECFC0] flex items-center justify-between gap-2 shadow-2xs">
+                <div
+                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 shadow-2xs transition-all ${
+                    aiPred.reason === 'fleet_consensus'
+                      ? 'bg-gradient-to-r from-[#FAF7F2] to-[#FFF8F3] border-[#C26D52]/40 shadow-xs ring-1 ring-[#C26D52]/15'
+                      : 'bg-[#FAF7F2] border-[#DECFC0]'
+                  }`}
+                >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-[#2C2018] text-[#FAF7F2] flex items-center justify-center shrink-0 shadow-2xs">
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 shadow-2xs ${
+                        aiPred.reason === 'fleet_consensus'
+                          ? 'bg-gradient-to-br from-[#2C2018] to-[#453326] text-amber-300'
+                          : 'bg-[#2C2018] text-[#FAF7F2]'
+                      }`}
+                    >
                       <Sparkles className="w-4 h-4 text-[#C26D52]" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] font-bold text-[#2C2018]">
-                          {profile.validTransitionsCount >= 5
+                          {aiPred.reason === 'fleet_consensus'
+                            ? (aiPred.details.isFleetVerified !== false ? '✨ Fleet Verified Prior' : '🌐 Flåde-konsensus Prior')
+                            : profile.validTransitionsCount >= 5
                             ? `${t('grind.master_calibrated')} (${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
                             : profile.validTransitionsCount >= 2
                             ? `${t('grind.adaptive_active')} (${profile.validTransitionsCount} bryg • ${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
@@ -929,6 +944,11 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                         {isAtAiTarget && (
                           <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#72806B]/15 text-[#72806B] font-mono font-bold">
                             ✓ Dialed In
+                          </span>
+                        )}
+                        {aiPred.reason === 'fleet_consensus' && (
+                          <span className="text-[8px] px-1.5 py-0.2 rounded-full bg-[#C26D52]/15 text-[#C26D52] font-mono font-bold uppercase tracking-wider">
+                            Bayes Prior
                           </span>
                         )}
                       </div>

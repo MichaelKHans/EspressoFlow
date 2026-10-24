@@ -312,6 +312,7 @@ CREATE TABLE IF NOT EXISTS fleet_shot_telemetry (
   math_version VARCHAR(20) NOT NULL,
   machine_key VARCHAR(100) NOT NULL,
   grinder_key VARCHAR(100) NOT NULL,
+  bean_key VARCHAR(120),
   physics_class VARCHAR(40) NOT NULL,
   basket_diameter_mm NUMERIC(4,1),
   dose_g NUMERIC(5,2) NOT NULL,
@@ -327,8 +328,11 @@ CREATE TABLE IF NOT EXISTS fleet_shot_telemetry (
   user_fingerprint VARCHAR(64)
 );
 
+ALTER TABLE fleet_shot_telemetry ADD COLUMN IF NOT EXISTS bean_key VARCHAR(120);
+
 CREATE INDEX IF NOT EXISTS idx_fleet_created_at ON fleet_shot_telemetry(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_fleet_machine_grinder ON fleet_shot_telemetry(machine_key, grinder_key);
+CREATE INDEX IF NOT EXISTS idx_fleet_bean_grinder ON fleet_shot_telemetry(bean_key, grinder_key);
 CREATE INDEX IF NOT EXISTS idx_fleet_math_version ON fleet_shot_telemetry(math_version);
 
 ALTER TABLE fleet_shot_telemetry ENABLE ROW LEVEL SECURITY;

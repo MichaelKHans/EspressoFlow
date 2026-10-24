@@ -84,6 +84,7 @@ export async function recordShotFleetTelemetry(
     mathVersion: CURRENT_MATH_VERSION,
     machineKey,
     grinderKey,
+    beanKey: toGearKey(shot.coffeeName || 'unknown-bean'),
     physicsClass: physics,
     basketDiameterMm,
     doseG: Math.round(shot.doseGrams * 100) / 100,
