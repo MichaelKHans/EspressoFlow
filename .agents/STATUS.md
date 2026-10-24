@@ -6,6 +6,7 @@
 - **Design System:** Espresso Warmth (`#FAF7F2`, `#FFFDF9`, `#2C2018`, `#C26D52`) + `Courier Prime`
 - **Forretningsmodel:** 7 dages in-app prøveperiode $\rightarrow$ $4.99 / 49,- DKK Lifetime Unlock (RevenueCat)
 - **Repository:** `MichaelKHans/EspressoFlow`
+- **Master Vision & Flådedata:** Se [FLEET_INTELLIGENCE_LAB.md](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/FLEET_INTELLIGENCE_LAB.md) for komplet matematisk og strategisk blueprint for Flowbean Lab, flådelæring, Bayesian konsensus og crowdsourced udstyr.
 
 ---
 

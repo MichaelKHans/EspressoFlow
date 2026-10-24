@@ -324,6 +324,8 @@ flowchart TD
 | `crowdsourced_gear_submissions` | `id` (PK), `category`, `brand`, `model`, `specs` (JSONB), `notes`, `user_fingerprint`, `status` ('pending'/'approved') | Fællesskabskø for brugeroprettet udstyr. Anonyme specifikationer uden private fotos. 1-klik godkendelse i Admin Hub. |
 | `fleet_shot_telemetry` | `id` (PK), `math_version`, `machine_key`, `grinder_key`, `physics_class`, `basket_diameter_mm`, `dose_g`, `yield_g`, `brew_time_s`, `flow_curve_1hz` | Ultrakompakt (<450 bytes) anonymiseret telemetri til Bayesian flådekonsensus og Flowbean Lab forskningspanel. |
 
+> 🔬 **Uddybende Dataguide & Vision:** Se [FLEET_INTELLIGENCE_LAB.md](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/FLEET_INTELLIGENCE_LAB.md) for den fulde arkitektur, Darcy-Ergun modstandsskalering, Bayesiansk flådelæring og databeskyttelse.
+
 ### Oversigt over Nøgler i LocalStorage:
 | Nøgle | Type / Model | Beskrivelse |
 | :--- | :--- | :--- |
