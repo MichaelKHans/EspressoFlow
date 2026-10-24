@@ -2,6 +2,23 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.6] - 2026-10-24
+### Etape 85: Præcis Baratza Encore ESP Pro Dual-Zone Hardware-Kalibrering (1–60 Skala & 1–40 Espresso Grænse)
+- **Autentisk Baratza Encore ESP Pro Specifikation ([gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts)):**
+  - Opdateret `grinder-baratza-esp-pro` så den præcist afspejler den ægte hardware:
+    - Fuld skala: `minSetting: 1.0` til `maxSetting: 60.0` (med 0.5 digital mikro-step opløsning som bekræftet på det digitale display).
+    - Espresso Zone (`ESP`): `espressoMaxSetting: 40.0` (fra 40.0 og ned lyser displayets `ESP` ikon).
+    - Filter Zone: Fra `40.5` op til `60.0` (slukket `ESP` ikon, dedikeret til Pour Over/Filter).
+    - Standard Baratza Encore ESP (ikke-pro) forbliver uændret 1–20 micro og 21–40 filter.
+- **Automatisk Profil-Migrering ([storage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/storage.ts)):**
+  - Tilføjet automatisk opgraderingslogik i `loadGrinders()`, så eksisterende gemte profiler af Baratza Encore ESP Pro i brugerens lokale browser-lagring (`localStorage`) automatisk migreres fra 1–40 til 1–60 og split ved 40.0 uden datatab.
+- **Dynamisk Taktil Lineal & Zoneindikator ([GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx)):**
+  - Taktil skydelineal viser nu 60 mekaniske caliper ticks for ESP Pro (mod 40 for standard ESP) med tydelig terracotta split-streg præcist ved 40.0.
+  - Dynamisk split-badge over linealen: `Split (40.0)` for Pro og `Split (20.0)` for standard ESP.
+  - Dynamisk step-enhed: `MICRO-STEP` for $\le 40.0$ og `MACRO-STEP` for $> 40.0$.
+  - Forklarende zone-tekst under linealen: `● 1–40: 20µm Micro-Steps (Espresso)` og `● 41–60: Macro-Steps (Filter & V60)`.
+  - Bekræftet og visuelt verificeret via Android Emulator (`Pixel_10_Pro_XL`).
+
 ## [1.21.5] - 2026-10-24
 ### Etape 84: Eliminering af Hvid Skærm Nedbrud ved "Start Shot" & Taktil Scroll-Shield på Kamera-Sigtepunkt
 - **Løst Kritisk "Hvid Skærm" Crash ved Start Shot ([FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**

@@ -25,6 +25,20 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-24 -- Etape 85: Præcis Baratza Encore ESP Pro Dual-Zone Hardware-Kalibrering (1–60 Skala & 1–40 Espresso Grænse) (v1.21.6)
+- **Autentisk Baratza Encore ESP Pro Profil & Skala ([gearCatalog.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/data/gearCatalog.ts)):**
+  - Opdateret Baratza Encore ESP Pro med 1.0–60.0 skala og split ved 40.0 baseret på brugerens direkte fotos af det fysiske digitale display.
+  - Espresso zone (`ESP`): Indstillinger 1.0–40.0 regnes som mikro-steps til espresso (hvor det fysiske display tænder `ESP` ikonet).
+  - Filter zone: Indstillinger 40.5–60.0 regnes som makro-steps til pour over / filter (hvor `ESP` ikonet slukker).
+  - Standard Baratza Encore ESP (ikke-pro) forbliver uændret 1–20 micro og 21–40 filter.
+- **Automatisk Profil-Migrering i LocalStorage ([storage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/storage.ts)):**
+  - Tilføjet automatisk migrering i `loadGrinders()`, så eksisterende gemte profiler af Baratza Encore ESP Pro i `localStorage` opgraderes til 1–60 og split ved 40.0.
+- **Taktil Skydelineal & Visuel Verifikation ([GearStationView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/GearStationView.tsx)):**
+  - Skydelineal viser nu 60 mekaniske caliper ticks for Pro med fremhævet terracotta split-streg ved 40.0 og badge `Split (40.0)`.
+  - Step-tekst skifter dynamisk mellem `MICRO-STEP` ($\le 40.0$) og `MACRO-STEP` ($> 40.0$).
+  - Forklarende zone-tekst: `● 1–40: 20µm Micro-Steps (Espresso)` og `● 41–60: Macro-Steps (Filter & V60)`.
+  - Verificeret og testet live på Android emulator (`Pixel_10_Pro_XL`) med fungerende steppere og dynamisk skifte mellem zoner.
+
 ### 2026-10-24 -- Etape 84: Fejlfinding & Løsning af Hvid Skærm Crash ved Start Shot samt Taktil Scroll-Shield på Kamera (v1.21.5)
 - **Fejlfinding & Direkte Test i Android Studio Emulator (`emulator-5554`):**
   - Etableret direkte adgang til Android Studio via `adb` og Chrome DevTools port-forwarding (`localhost:9222`).

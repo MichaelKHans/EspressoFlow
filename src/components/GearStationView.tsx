@@ -129,11 +129,11 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
       name: 'Baratza Encore ESP Pro',
       type: 'stepped' as const,
       defaultSetting: '15.0',
-      stepUnit: 'micro-steps',
+      stepUnit: 'micro-steps (1-40 espresso / 41-60 filter)',
       burrType: 'M2 40mm Steel Conical',
       minSetting: 1.0,
-      maxSetting: 40.0,
-      espressoMaxSetting: 20.0,
+      maxSetting: 60.0,
+      espressoMaxSetting: 40.0,
     };
 
   // Pre-infusion & machine profile
@@ -191,6 +191,10 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
     activeGrinder.name.toLowerCase().includes('baratza') &&
     activeGrinder.name.toLowerCase().includes('esp');
 
+  const isDualZoneBaratzaPro =
+    isDualZoneBaratza &&
+    activeGrinder.name.toLowerCase().includes('pro');
+
   // Resilient Espresso zone threshold: saved profile -> resolveGrinderSpecs -> dual-zone fallback -> 40% of max
   const resolvedSpecs =
     resolveGrinderSpecs(activeGrinder.name) ||
@@ -204,12 +208,14 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
   const effectiveMax =
     activeGrinder.maxSetting ??
     resolvedSpecs?.maxSetting ??
-    (isDualZoneBaratza ? 40.0 : 30.0);
+    (isDualZoneBaratzaPro ? 60.0 : isDualZoneBaratza ? 40.0 : 30.0);
 
   const effectiveEspressoMax =
     activeGrinder.espressoMaxSetting ??
     resolvedSpecs?.espressoMaxSetting ??
-    (isDualZoneBaratza
+    (isDualZoneBaratzaPro
+      ? 40.0
+      : isDualZoneBaratza
       ? 20.0
       : effectiveMax > 0
       ? effectiveMax * 0.4
@@ -552,7 +558,7 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
                   {currentGrindNum.toFixed(1)}
                 </span>
                 <span className="text-[11px] text-[#7A6E65] uppercase font-mono font-medium">
-                  {isDualZoneBaratza && currentGrindNum > 20.0
+                  {isDualZoneBaratza && currentGrindNum > effectiveEspressoMax
                     ? t('gear.macro_step')
                     : t('gear.micro_step')}
                 </span>
@@ -589,7 +595,7 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
 
                 {isDualZoneBaratza ? (
                   <span className="font-bold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
-                    Split (20.0)
+                    Split ({effectiveEspressoMax.toFixed(1)})
                   </span>
                 ) : effectiveEspressoMax > 0 ? (
                   <span className="font-semibold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
@@ -617,33 +623,38 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
                 {/* Mechanical Caliper Ticks (z-0 behind text) */}
                 <div className="absolute inset-0 px-3 flex items-end pointer-events-none z-0">
                   <div className="relative w-full h-full">
-                    {Array.from({ length: isDualZoneBaratza ? 40 : 31 }, (_, idx) => {
-                      const tickVal = isDualZoneBaratza
-                        ? idx + 1
-                        : effectiveMin +
-                          (idx / 30) * (effectiveMax - effectiveMin);
-                      const percent = (idx / (isDualZoneBaratza ? 39 : 30)) * 100;
-                      const isSplit = isDualZoneBaratza && tickVal === 20;
-                      const isMajor = idx === 0 || idx === (isDualZoneBaratza ? 39 : 30);
-                      const isMid = isDualZoneBaratza ? tickVal % 5 === 0 : idx % 5 === 0;
+                    {(() => {
+                      const tickCount = isDualZoneBaratzaPro ? 60 : isDualZoneBaratza ? 40 : 31;
+                      const maxTickIdx = tickCount - 1;
+                      const splitTarget = Math.round(effectiveEspressoMax);
 
-                      let tickHeight = 'h-2 w-[1px] bg-[#D0BDAA]/70';
-                      if (isSplit) {
-                        tickHeight = 'h-6 w-0.5 bg-[#C26D52]';
-                      } else if (isMajor) {
-                        tickHeight = 'h-4 w-0.5 bg-[#2C2018]';
-                      } else if (isMid) {
-                        tickHeight = 'h-3 w-0.5 bg-[#A6998E]';
-                      }
+                      return Array.from({ length: tickCount }, (_, idx) => {
+                        const tickVal = isDualZoneBaratza
+                          ? idx + 1
+                          : effectiveMin + (idx / maxTickIdx) * (effectiveMax - effectiveMin);
+                        const percent = (idx / maxTickIdx) * 100;
+                        const isSplit = isDualZoneBaratza && tickVal === splitTarget;
+                        const isMajor = idx === 0 || idx === maxTickIdx;
+                        const isMid = isDualZoneBaratza ? tickVal % 5 === 0 : idx % 5 === 0;
 
-                      return (
-                        <div
-                          key={`tick-${idx}`}
-                          className={`absolute bottom-0 -translate-x-1/2 ${tickHeight}`}
-                          style={{ left: `${percent}%` }}
-                        />
-                      );
-                    })}
+                        let tickHeight = 'h-2 w-[1px] bg-[#D0BDAA]/70';
+                        if (isSplit) {
+                          tickHeight = 'h-6 w-0.5 bg-[#C26D52]';
+                        } else if (isMajor) {
+                          tickHeight = 'h-4 w-0.5 bg-[#2C2018]';
+                        } else if (isMid) {
+                          tickHeight = 'h-3 w-0.5 bg-[#A6998E]';
+                        }
+
+                        return (
+                          <div
+                            key={`tick-${idx}`}
+                            className={`absolute bottom-0 -translate-x-1/2 ${tickHeight}`}
+                            style={{ left: `${percent}%` }}
+                          />
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
 
@@ -667,7 +678,16 @@ export const GearStationView: React.FC<GearStationViewProps> = ({
               </div>
 
               {/* Dynamic Zone Explanation for Baratza ESP / All Other Grinders */}
-              {isDualZoneBaratza ? (
+              {isDualZoneBaratzaPro ? (
+                <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
+                  <span className="text-[#C26D52] font-semibold">
+                    ● 1–40: 20µm Micro-Steps (Espresso)
+                  </span>
+                  <span className="text-[#72806B] font-semibold">
+                    ● 41–60: Macro-Steps (Filter & V60)
+                  </span>
+                </div>
+              ) : isDualZoneBaratza ? (
                 <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
                   <span className="text-[#C26D52] font-semibold">
                     ● 1–20: 20µm Micro-Steps (Espresso)

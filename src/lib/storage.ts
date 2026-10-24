@@ -226,16 +226,29 @@ export function loadGrinders(): GrinderProfile[] {
         name: 'Baratza Encore ESP Pro',
         type: 'stepped',
         defaultSetting: '15.0',
-        stepUnit: 'micro-steps (1-20 espresso / 21-40 filter)',
+        stepUnit: 'micro-steps (1-40 espresso / 41-60 filter)',
         secondsPerStep: 2.5,
         inSetup: true,
         burrType: 'M2 40mm Steel Conical',
         minSetting: 1.0,
-        maxSetting: 40.0,
-        espressoMaxSetting: 20.0,
+        maxSetting: 60.0,
+        espressoMaxSetting: 40.0,
       };
       grinders.unshift(proProfile);
       needsSave = true;
+    }
+
+    // Auto-migrate Baratza Encore ESP Pro if saved with legacy 40.0 maxSetting / 20.0 espresso boundary
+    const existingPro = grinders.find(
+      (g) => g.id === 'grinder-baratza-esp-pro' || g.name === 'Baratza Encore ESP Pro'
+    );
+    if (existingPro) {
+      if (existingPro.maxSetting !== 60.0 || existingPro.espressoMaxSetting !== 40.0) {
+        existingPro.maxSetting = 60.0;
+        existingPro.espressoMaxSetting = 40.0;
+        existingPro.stepUnit = 'micro-steps (1-40 espresso / 41-60 filter)';
+        needsSave = true;
+      }
     }
 
     // Comprehensive dial-in specification backfill for ALL saved grinders
@@ -300,13 +313,13 @@ export function getDefaultGrinders(): GrinderProfile[] {
       name: 'Baratza Encore ESP Pro',
       type: 'stepped',
       defaultSetting: '15.0',
-      stepUnit: 'micro-steps (1-20 espresso / 21-40 filter)',
+      stepUnit: 'micro-steps (1-40 espresso / 41-60 filter)',
       secondsPerStep: 2.5,
       inSetup: true,
       burrType: 'M2 40mm Steel Conical',
       minSetting: 1.0,
-      maxSetting: 40.0,
-      espressoMaxSetting: 20.0,
+      maxSetting: 60.0,
+      espressoMaxSetting: 40.0,
     },
     {
       id: 'grinder-baratza-esp',
