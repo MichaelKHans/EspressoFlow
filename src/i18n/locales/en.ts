@@ -612,6 +612,7 @@ export const en = {
   'drink.adjust_in_studio': 'All adjustments are calibrated together in Dial-In Studio.',
   'drink.fine_tune_here': 'Fine-tune here →',
   'drink.apply_suggestion': 'Apply',
+  'drink.suggestion_applied': 'Ready',
   'drink.switch_btn': 'Switch',
   'scale.safety_label': 'Scale Safety:',
   'common.remove': 'Remove',

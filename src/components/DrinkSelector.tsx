@@ -24,10 +24,14 @@ import {
   saveDrinkGrindSetting,
   resolveDrinkCalibration,
   loadShots,
+  loadOrCreateGrinderProfile,
+  getAnchorForBean,
+  getLatestAnchorForGrinder,
   loadFrenchPressSettings,
   saveFrenchPressSettings,
   type FrenchPressSettings,
 } from '../lib/storage';
+import { predictOptimalGrindSetting } from '../lib/grindIntelligence';
 import { GRINDER_CALIBRATIONS, calculateTargetExtractionTime } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
 import { matchBeansForDrink, getOptimalBeanGuidanceForDrink } from '../lib/beanMatcher';
@@ -97,7 +101,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   onGrindSettingChange,
   onSwitchBean,
   onScanBean,
-  onUpdateBeanDialIn: _onUpdateBeanDialIn,
+  onUpdateBeanDialIn,
   isAllDrinksModalOpen,
   onOpenAllDrinksModal,
   onCloseAllDrinksModal,
@@ -144,7 +148,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   };
   const [isLibraryExpanded, setIsLibraryExpanded] = useState<boolean>(false); // Collapsed by default per user request!
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'milk' | 'black' | 'dessert'>('all');
-  const [drinkGrinds] = useState<Record<string, string>>(() => loadDrinkGrindSettings());
+  const [drinkGrinds, setDrinkGrinds] = useState<Record<string, string>>(() => loadDrinkGrindSettings());
 
   const selectedDrinkCardRef = useRef<HTMLDivElement>(null);
 
@@ -309,21 +313,63 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     unitName: currentGrinder.stepUnit || 'steps',
   };
 
-  // Compute calibration analysis & improvement advice
+  // Grinder profile and AI Grind Intelligence prediction
+  const grinderProfile = loadOrCreateGrinderProfile(currentGrinder.name, {
+    type: currentGrinder.type,
+    minSetting: currentGrinder.minSetting,
+    maxSetting: currentGrinder.maxSetting,
+    espressoMaxSetting: currentGrinder.espressoMaxSetting,
+  });
+  const anchor = getAnchorForBean(currentBean.id, currentGrinder.name, activeMachineOrBrewer);
+  const refAnchor = getLatestAnchorForGrinder(currentGrinder.name, activeMachineOrBrewer);
+
+  const aiPred = predictOptimalGrindSetting({
+    grinderProfile,
+    activeBean: currentBean,
+    anchor,
+    referenceAnchorForGrinder: refAnchor,
+    currentSetting: currentSettingInput,
+    machineName: activeMachineOrBrewer,
+    lastShot: lastShotForDrink ? {
+      grindSetting: lastShotForDrink.grindSetting,
+      totalTimeSeconds: lastShotForDrink.totalTimeSeconds,
+      targetTimeSeconds: targetTime,
+      actualYieldGrams: lastShotForDrink.actualYieldGrams,
+      channelingDetected: Boolean(lastShotForDrink.channelingDetected || (typeof lastShotForDrink.channeling === 'object' && lastShotForDrink.channeling?.detected)),
+      channeling: lastShotForDrink.channeling,
+      tasteRating: lastShotForDrink.tasteRating,
+    } : undefined,
+  });
+
+  // Compute calibration analysis & improvement advice (synchronized with AI engine)
   const dialInAnalysis = (() => {
+    const numericCurrent = parseFloat(currentSettingInput);
+    const suggestedTarget = aiPred.formattedSetting;
+    const numericTarget = parseFloat(suggestedTarget);
+    const isAlreadyAdjusted =
+      !isNaN(numericCurrent) &&
+      !isNaN(numericTarget) &&
+      Math.abs(numericCurrent - numericTarget) < 0.1;
+
     if (!lastShotForDrink) {
       return {
         hasHistory: false,
         status: 'uncalibrated' as const,
         summary: `Target: ~${targetTime}s for ${targetYield}g yield`,
         tip: selectedDrink.dialInTip,
+        suggestedSetting: aiPred.reason === 'fleet_consensus' ? suggestedTarget : undefined,
+        isAlreadyAdjusted,
       };
     }
 
     const actualTime = lastShotForDrink.totalTimeSeconds;
     const deltaT = actualTime - targetTime;
+    const isChanneling = Boolean(
+      lastShotForDrink.channelingDetected ||
+      (typeof lastShotForDrink.channeling === 'object' && lastShotForDrink.channeling?.detected)
+    );
 
-    if (lastShotForDrink.channelingDetected) {
+    if (isChanneling) {
       return {
         hasHistory: true,
         status: 'channeling' as const,
@@ -331,6 +377,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         actualYield: lastShotForDrink.actualYieldGrams,
         summary: `Channeling spike detected (${actualTime.toFixed(1)}s)`,
         tip: 'Puck integrity failed. Water channeled through a dry pocket. Keep current grind setting and use WDT needles with a flat, level tamp.',
+        suggestedSetting: undefined,
+        isAlreadyAdjusted: true,
       };
     }
 
@@ -341,44 +389,36 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
         actualTime,
         actualYield: lastShotForDrink.actualYieldGrams,
         summary: `Dialed In: Last shot hit ${actualTime.toFixed(1)}s (target ~${targetTime}s)`,
-        tip: `Setting ${lastShotForDrink.grindSetting} is in the Golden Extraction Zone (1.2–1.6 g/s). Locked and ready!`,
+        tip: `Setting ${lastShotForDrink.grindSetting || currentSettingInput} is in the Golden Extraction Zone (1.2–1.6 g/s). Locked and ready!`,
+        suggestedSetting: suggestedTarget,
+        isAlreadyAdjusted: true,
       };
     }
 
     if (deltaT < -2.0) {
-      // Ran fast (e.g. 21s vs target 27s) -> needs finer
-      const deltaSec = Math.abs(deltaT);
-      const steps = Math.max(0.5, Math.round((deltaSec / grinderSpec.secondsPerStep) * 2) / 2);
-      const numericCurrent = parseFloat(currentSettingInput);
-      const suggested = !isNaN(numericCurrent) ? (numericCurrent - steps).toFixed(1).replace('.0', '') : '';
-
       return {
         hasHistory: true,
         status: 'fast' as const,
         actualTime,
         actualYield: lastShotForDrink.actualYieldGrams,
-        steps,
-        suggestedSetting: suggested,
+        steps: Math.abs(aiPred.stepDelta),
+        suggestedSetting: suggestedTarget,
+        isAlreadyAdjusted,
         summary: `Fast Flow (${actualTime.toFixed(1)}s vs target ${targetTime}s)`,
-        tip: `Grind ${steps} ${grinderSpec.unitName} FINER to slow flow down to target ~${targetTime}s.`,
+        tip: `Grind ${Math.abs(aiPred.stepDelta)} ${grinderSpec.unitName} FINER to ${suggestedTarget} to slow flow down to target ~${targetTime}s.`,
       };
     }
-
-    // Ran slow (e.g. 35s vs target 27s) -> needs coarser
-    const deltaSec = deltaT;
-    const steps = Math.max(0.5, Math.round((deltaSec / grinderSpec.secondsPerStep) * 2) / 2);
-    const numericCurrent = parseFloat(currentSettingInput);
-    const suggested = !isNaN(numericCurrent) ? (numericCurrent + steps).toFixed(1).replace('.0', '') : '';
 
     return {
       hasHistory: true,
       status: 'slow' as const,
       actualTime,
       actualYield: lastShotForDrink.actualYieldGrams,
-      steps,
-      suggestedSetting: suggested,
+      steps: Math.abs(aiPred.stepDelta),
+      suggestedSetting: suggestedTarget,
+      isAlreadyAdjusted,
       summary: `Slow Flow (${actualTime.toFixed(1)}s vs target ${targetTime}s)`,
-      tip: `Grind ${steps} ${grinderSpec.unitName} COARSER to speed flow up to target ~${targetTime}s.`,
+      tip: `Grind ${Math.abs(aiPred.stepDelta)} ${grinderSpec.unitName} COARSER to ${suggestedTarget} to speed flow up to target ~${targetTime}s.`,
     };
   })();
 
@@ -1035,14 +1075,17 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                             ({grinderSpec.unitName})
                           </span>
                         </div>
-                        {Boolean(dialInAnalysis.suggestedSetting) && (
+                        {Boolean(dialInAnalysis.suggestedSetting) && !dialInAnalysis.isAlreadyAdjusted && (
                           <button
                             type="button"
                             onClick={() => {
                               if (dialInAnalysis.suggestedSetting) {
-                                setCurrentSettingInput(dialInAnalysis.suggestedSetting);
-                                onGrindSettingChange?.(dialInAnalysis.suggestedSetting);
-                                saveDrinkGrindSetting(calibrationKey, dialInAnalysis.suggestedSetting);
+                                const newSetting = dialInAnalysis.suggestedSetting;
+                                setCurrentSettingInput(newSetting);
+                                onGrindSettingChange?.(newSetting);
+                                saveDrinkGrindSetting(calibrationKey, newSetting);
+                                setDrinkGrinds((prev) => ({ ...prev, [calibrationKey]: newSetting }));
+                                onUpdateBeanDialIn?.({ grindSetting: newSetting });
                               }
                             }}
                             className="px-2 py-0.5 rounded-lg bg-[#C26D52]/10 hover:bg-[#C26D52] text-[#C26D52] hover:text-white border border-[#C26D52]/30 text-[10px] font-sans font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
@@ -1051,6 +1094,15 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                             <span>💡 {dialInAnalysis.suggestedSetting}</span>
                             <span className="text-[9px] uppercase font-bold">({t('drink.apply_suggestion')})</span>
                           </button>
+                        )}
+                        {Boolean(dialInAnalysis.suggestedSetting) && dialInAnalysis.isAlreadyAdjusted && (
+                          <div
+                            className="px-2 py-0.5 rounded-lg bg-[#72806B]/15 text-[#54624F] border border-[#72806B]/30 text-[10px] font-sans font-bold flex items-center gap-1 shrink-0"
+                            title={`${t('drink.suggestion_applied') || 'Ready'} (${currentSettingInput})`}
+                          >
+                            <Check className="w-3 h-3 text-[#72806B]" />
+                            <span>{t('drink.suggestion_applied') || 'Ready'}</span>
+                          </div>
                         )}
                       </div>
                       <div className="text-[10px] text-[#7A6E65] truncate">

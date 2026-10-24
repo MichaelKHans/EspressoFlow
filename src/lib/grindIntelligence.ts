@@ -10,7 +10,7 @@
  * Zero AI tokens, zero network requests, zero cloud costs.
  */
 
-import type { RoastLevel, ShotRecord } from '../types/espresso';
+import type { RoastLevel, ShotRecord, TasteRating } from '../types/espresso';
 import { GRINDER_CALIBRATIONS } from './espressoMath';
 import { toGearKey } from './brewPhysics';
 import { resolveFleetConsensus, getBurrOffsetForGrinder } from './fleetConsensusEngine';
@@ -326,6 +326,7 @@ export function predictOptimalGrindSetting(params: {
   activeBean: {
     id: string;
     name: string;
+    roaster?: string;
     roastDate: string;
     roastLevel: RoastLevel;
     grindSetting?: string;
@@ -335,8 +336,26 @@ export function predictOptimalGrindSetting(params: {
   currentSetting?: string;
   machineName?: string;
   basketDiameterMm?: number;
+  lastShot?: {
+    grindSetting?: string;
+    totalTimeSeconds: number;
+    targetTimeSeconds?: number;
+    actualYieldGrams?: number;
+    channelingDetected?: boolean;
+    channeling?: boolean | { detected: boolean };
+    tasteRating?: TasteRating;
+  };
 }): PredictedGrindAdjustment {
-  const { grinderProfile, activeBean, anchor, referenceAnchorForGrinder, currentSetting, machineName, basketDiameterMm } = params;
+  const {
+    grinderProfile,
+    activeBean,
+    anchor,
+    referenceAnchorForGrinder,
+    currentSetting,
+    machineName,
+    basketDiameterMm,
+    lastShot,
+  } = params;
   const kEff = Math.max(1.0, grinderProfile.effectiveSecondsPerUnit);
 
   const fallbackSettingNum = currentSetting
@@ -351,6 +370,7 @@ export function predictOptimalGrindSetting(params: {
   let roastOffsetSteps = 0;
   let agingOffsetSteps = 0;
   let dialInOffsetSteps = 0;
+  let explanation = '';
 
   const now = Date.now();
   const roastTime = new Date(activeBean.roastDate).getTime();
@@ -364,7 +384,57 @@ export function predictOptimalGrindSetting(params: {
     !!referenceAnchorForGrinder &&
     (!referenceAnchorForGrinder.grinderId || toGearKey(referenceAnchorForGrinder.grinderId) === profileGrinderKey);
 
-  if (anchor && anchorMatchesGrinder && anchor.beanId === activeBean.id) {
+  // 0. Precedence: Recent Shot History on this Grinder & Bean
+  const hasValidLastShot = Boolean(
+    lastShot &&
+    typeof lastShot.totalTimeSeconds === 'number' &&
+    lastShot.totalTimeSeconds > 0
+  );
+
+  const isLastShotChanneling = Boolean(
+    hasValidLastShot &&
+    (lastShot?.channelingDetected ||
+      (typeof lastShot?.channeling === 'object' && lastShot.channeling?.detected))
+  );
+
+  if (hasValidLastShot) {
+    const shotSettingNum = lastShot?.grindSetting
+      ? parseFloat(lastShot.grindSetting)
+      : fallbackSettingNum;
+    baseSetting = !isNaN(shotSettingNum) ? shotSettingNum : fallbackSettingNum;
+
+    if (isLastShotChanneling) {
+      reason = 'dial_in_adjustment';
+      dialInOffsetSteps = 0;
+      explanation = `Kanalisering detekteret (${lastShot!.totalTimeSeconds.toFixed(1)}s). Behold ${baseSetting.toFixed(1).replace('.0', '')} og brug WDT-nåle til at forbedre puck-strukturen.`;
+    } else {
+      const actualTime = lastShot!.totalTimeSeconds;
+      const targetT = lastShot!.targetTimeSeconds || 27.0;
+      const deltaT = actualTime - targetT;
+
+      if (Math.abs(deltaT) <= 2.0) {
+        reason = 'golden_anchor';
+        dialInOffsetSteps = 0;
+        explanation = `Spot-on! Sidste skud ramte ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Kværn er i Golden Zone på ${baseSetting.toFixed(1).replace('.0', '')}.`;
+      } else {
+        const rawSteps = Math.abs(deltaT) / kEff;
+        const steps = Math.max(0.5, Math.round(rawSteps * 2) / 2);
+        reason = 'dial_in_adjustment';
+
+        if (deltaT > 2.0) {
+          // Ran slow (e.g. 41s vs 25s) -> coarser (+)
+          dialInOffsetSteps = steps;
+          const targetNum = baseSetting + steps;
+          explanation = `Sidste skud tog ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Juster +${steps} trin grovere til ${targetNum.toFixed(1).replace('.0', '')} for hurtigere flow.`;
+        } else {
+          // Ran fast (e.g. 18s vs 25s) -> finer (-)
+          dialInOffsetSteps = -steps;
+          const targetNum = Math.max(0.5, baseSetting - steps);
+          explanation = `Sidste skud tog ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Juster -${steps} trin finere til ${targetNum.toFixed(1).replace('.0', '')} for mere modstand.`;
+        }
+      }
+    }
+  } else if (anchor && anchorMatchesGrinder && anchor.beanId === activeBean.id) {
     // We already have a dialed-in anchor for this specific bean
     baseSetting = anchor.anchorSetting;
     reason = 'golden_anchor';
@@ -389,6 +459,7 @@ export function predictOptimalGrindSetting(params: {
     (() => {
       const fleetMatch = resolveFleetConsensus({
         beanName: activeBean.name,
+        roaster: activeBean.roaster,
         roastLevel: activeBean.roastLevel,
         grinderName: grinderProfile.grinderId,
         machineName,
@@ -441,25 +512,26 @@ export function predictOptimalGrindSetting(params: {
   const direction: PredictedGrindAdjustment['direction'] =
     stepDelta < 0 ? 'finer' : stepDelta > 0 ? 'coarser' : 'keep';
 
-  // Construct clear, calm explanation
-  let explanation = '';
-  if (reason === 'fleet_consensus') {
-    const verifiedBadge = dialInOffsetSteps !== 0
-      ? `✨ Flåde-konsensus: ${baseSetting.toFixed(1).replace('.0', '')} (Burr: ${dialInOffsetSteps > 0 ? '+' : ''}${dialInOffsetSteps})`
-      : `✨ Fleet Verified: ${baseSetting.toFixed(1).replace('.0', '')}`;
-    const agingTag = agingOffsetSteps !== 0
-      ? ` • Dag ${daysOffRoastToday} afgas: ${agingOffsetSteps > 0 ? '+' : ''}${agingOffsetSteps}`
-      : '';
-    explanation = `${verifiedBadge}${agingTag} → Mål: ${formattedSetting}`;
-  } else {
-    const parts: string[] = [`Base: ${baseSetting.toFixed(1).replace('.0', '')}`];
-    if (roastOffsetSteps !== 0) {
-      parts.push(`${activeBean.roastLevel} roast: ${roastOffsetSteps > 0 ? '+' : ''}${roastOffsetSteps}`);
+  // Construct clear, calm explanation if not already set by last shot
+  if (!explanation) {
+    if (reason === 'fleet_consensus') {
+      const verifiedBadge = dialInOffsetSteps !== 0
+        ? `✨ Flåde-konsensus: ${baseSetting.toFixed(1).replace('.0', '')} (Burr: ${dialInOffsetSteps > 0 ? '+' : ''}${dialInOffsetSteps})`
+        : `✨ Fleet Verified: ${baseSetting.toFixed(1).replace('.0', '')}`;
+      const agingTag = agingOffsetSteps !== 0
+        ? ` • Dag ${daysOffRoastToday} afgas: ${agingOffsetSteps > 0 ? '+' : ''}${agingOffsetSteps}`
+        : '';
+      explanation = `${verifiedBadge}${agingTag} → Mål: ${formattedSetting}`;
+    } else {
+      const parts: string[] = [`Base: ${baseSetting.toFixed(1).replace('.0', '')}`];
+      if (roastOffsetSteps !== 0) {
+        parts.push(`${activeBean.roastLevel} roast: ${roastOffsetSteps > 0 ? '+' : ''}${roastOffsetSteps}`);
+      }
+      if (agingOffsetSteps !== 0) {
+        parts.push(`Day ${daysOffRoastToday} degas: ${agingOffsetSteps > 0 ? '+' : ''}${agingOffsetSteps}`);
+      }
+      explanation = `${parts.join(' • ')} → Target: ${formattedSetting}`;
     }
-    if (agingOffsetSteps !== 0) {
-      parts.push(`Day ${daysOffRoastToday} degas: ${agingOffsetSteps > 0 ? '+' : ''}${agingOffsetSteps}`);
-    }
-    explanation = `${parts.join(' • ')} → Target: ${formattedSetting}`;
   }
 
   return {

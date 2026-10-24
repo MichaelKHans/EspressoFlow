@@ -2,6 +2,27 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.12] - 2026-10-24
+### Etape 91: Harmoniseret Dial-In Anbefalingsmotor & Udryddelse af Feedback-Loop
+- **Harmoniseret Central Dial-In Motor ([grindIntelligence.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/grindIntelligence.ts)):**
+  - Udvidet `predictOptimalGrindSetting` til at acceptere `lastShot` med fuld historik (kværnindstilling, tid, måltid, kanalisering og smagsvurdering).
+  - Skabt stram, prioriteret beslutningshierarki:
+    1. Fysisk skudkalibrering på det aktive udstyr (hvis kanalisering $\rightarrow$ bevar indstilling og giv puck-prep råd; hvis inden for $\pm 2.0$s $\rightarrow$ Golden Zone forankring; hvis afvigelse $\rightarrow$ beregn korrektion relativt til `lastShot.grindSetting`).
+    2. Manuelt gemt Golden Anchor på bønnen (`bean.dialInPresets`).
+    3. Bayesian Flådekonsensus (`resolveFleetConsensus`).
+    4. Reference-ankre for risteri/oprindelse.
+    5. Standard baseline for ristegrad.
+- **Udryddelse af Uendeligt Feedback-Loop i Coffee Bar ([DrinkSelector.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DrinkSelector.tsx)):**
+  - Fjernet den naive lineære formel (`currentSettingInput + steps`), der førte til uendelig forøgelse (fx 39.5 $\rightarrow$ 46.0 $\rightarrow$ 52.5) ved gentagne klik.
+  - Implementeret `isAlreadyAdjusted` tilstand: Når brugerens aktuelle kværnindstilling matcher AI'ens mål (`|aktuel - mål| < 0.1`), skifter knappen til en bekræftende `✓ Ready` / `✓ Klar` status frem for at foreslå nye ændringer.
+  - Synkroniseret gemmeproces ved anvendelse af forslag: opdaterer øjeblikkeligt `currentSettingInput`, drikkens gemte kværntrin, `localStorage` og `onUpdateBeanDialIn`.
+- **Ensartet Anbefaling på Tværs af Skærme ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx) & [PreBrewCoachBanner.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/PreBrewCoachBanner.tsx)):**
+  - Begge komponenter forbinder nu direkte til den harmoniserede motor med `lastShotForDrink`, så både Dial-In Studio, Pre-Brew Coach Banner og Coffee Bar altid viser det nøjagtigt samme ciffer.
+- **Risteri-Aware Flåde-Matching ([fleetConsensusEngine.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetConsensusEngine.ts)):**
+  - Tilføjet 'lavazza-espresso-barista-gran-crema' specifikt i offline priors og forbedret fuzzy matching med både risteri- og bønnenøgle.
+- **Lokalisering ([en.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/en.ts) & [da.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/da.ts)):**
+  - Tilføjet nøgle `'drink.suggestion_applied': 'Ready'` / `'Klar'`.
+
 ## [1.21.11] - 2026-10-24
 ### Etape 90: Hierarkisk Bayesian Flåde-Konsensus Engine & In-App "Fleet Verified" Badges
 - **Hierarkisk Bayesian Flåde-Konsensus Engine ([fleetConsensusEngine.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetConsensusEngine.ts)):**

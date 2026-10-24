@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.9 (IndexedDB Billedlager, "Opret Eget Udstyr" Wizard, Crowdsourcing & Fleet Telemetry Motor)  
+> **Gældende version:** v1.21.12 (Harmoniseret Dial-In Anbefalingsmotor, Feedback-Loop Sikring & Bayesian Flådekonsensus)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -520,11 +520,21 @@ For at opbygge verdens mest præcise kaffeteknologiske flådemodel, anvender Flo
 
 ### 11.3 Hierarkisk Bayesian Flåde-Konsensus Engine ([fleetConsensusEngine.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetConsensusEngine.ts))
 - **Formel:** $\text{Indstilling}_{i, u} = \beta_{\text{bønne}} + \beta_{\text{maskine}} + \beta_{\text{kværn}} + u_i$.
-- **Cold-Start Specialty Priors:** Forudindlæst flådeviden for specialty kaffer (f.eks. Coffee Collective Kieni, April, Prolog, La Cabra, Hedekaffe) mod Baratza ESP Pro, Niche Zero m.fl.
+- **Cold-Start Specialty Priors:** Forudindlæst flådeviden for specialty kaffer (f.eks. Coffee Collective Kieni, April, Prolog, La Cabra, Hedekaffe, Lavazza m.fl.) mod Baratza ESP Pro, Niche Zero m.fl.
 - **Darcy-Ergun Kurvetranslation:** Automatisk omregning af kværntrin ved kurveskift (f.eks. 51 mm Dedica $\rightarrow +1.5$ trin mod 58 mm standard).
 - **Individuelt Burr Offset ($u_i$):** Appen isolerer baristaens personlige nulpunkt, så flådens anbefaling korrigeres for brugerens specifikke kværnkalibrering.
 - **In-App Badges:** Vises i `DialInWizardModal.tsx` og `PreBrewCoachBanner.tsx` som `✨ Fleet Verified Prior` med 1-klik overførsel til kværnen.
 - **Masterdokument:** Se den udtømmende videnskabelige specifikation i [FLEET_INTELLIGENCE_LAB.md](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/FLEET_INTELLIGENCE_LAB.md).
 
-
-
+### 11.4 Harmoniseret Dial-In Motor & Feedback-Loop Sikring ([grindIntelligence.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/grindIntelligence.ts) & [DrinkSelector.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DrinkSelector.tsx))
+- **Single Source of Truth (`predictOptimalGrindSetting`):**
+  - Alle skærme (`DrinkSelector.tsx`, `DialInWizardModal.tsx`, `PreBrewCoachBanner.tsx`) trækker på præcis den samme beslutningsmotor og deler samme `lastShotForDrink`.
+  - **Prioriteret beslutningshierarki:**
+    1. `lastShot` fysisk skuddata (hvis kanalisering $\rightarrow$ bevar kværnindstilling og foreslå WDT/prep; hvis inden for $\pm 2.0$s af måltid $\rightarrow$ Golden Zone forankring; hvis afvigelse $\rightarrow$ justering i mikrotrin beregnet direkte mod `lastShot.grindSetting`).
+    2. Manuelt gemt Golden Anchor på bønnen (`bean.dialInPresets`).
+    3. Bayesian Flådekonsensus Prior (`resolveFleetConsensus`).
+    4. Reference-ankre for risteri/oprindelse.
+    5. Standard ristegrad baseline.
+- **Feedback-Loop Terminal Tilstand:**
+  - `DrinkSelector.tsx` anvender `isAlreadyAdjusted = Math.abs(numericCurrent - numericTarget) < 0.1`.
+  - Når baristaen sætter kværnen til den anbefalede værdi, låser UI'et fast i en bekræftet `✓ Ready` (`✓ Klar`) tilstand i stedet for at lave uendelige additive trin baseret på forældede forslag.

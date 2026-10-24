@@ -45,6 +45,11 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
     return null;
   }
 
+  // Find the most recent shot for this drink (or by name match)
+  const lastShot = shots.find(
+    (s) => s.drinkId === activeDrinkId || (s.drinkName || '').toLowerCase() === activeDrinkName.toLowerCase()
+  );
+
   // Check Adaptive Grind Intelligence (On-Device AI Engine)
   const profile = loadOrCreateGrinderProfile(grinderName);
   const anchor = currentBean ? getAnchorForBean(currentBean.id, grinderName, machineName) : undefined;
@@ -57,17 +62,21 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
         referenceAnchorForGrinder: refAnchor,
         currentSetting: currentGrindSetting,
         machineName,
+        lastShot: lastShot ? {
+          grindSetting: lastShot.grindSetting,
+          totalTimeSeconds: lastShot.totalTimeSeconds,
+          targetTimeSeconds: 27.0,
+          actualYieldGrams: lastShot.actualYieldGrams,
+          channelingDetected: Boolean(lastShot.channelingDetected || (typeof lastShot.channeling === 'object' && lastShot.channeling?.detected)),
+          channeling: lastShot.channeling,
+          tasteRating: lastShot.tasteRating,
+        } : undefined,
       })
     : null;
 
-  // Find the most recent shot for this drink (or by name match)
-  const lastShot = shots.find(
-    (s) => s.drinkId === activeDrinkId || (s.drinkName || '').toLowerCase() === activeDrinkName.toLowerCase()
-  );
-
   const hasProactiveAiAdvice = Boolean(
     aiPred &&
-    (aiPred.reason === 'roast_shift' || aiPred.reason === 'degas_drift' || aiPred.reason === 'fleet_consensus') &&
+    (aiPred.reason === 'roast_shift' || aiPred.reason === 'degas_drift' || aiPred.reason === 'fleet_consensus' || aiPred.reason === 'dial_in_adjustment') &&
     aiPred.formattedSetting !== currentGrindSetting
   );
 
@@ -144,6 +153,11 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
           delta: aiPred.stepDelta > 0 ? `+${aiPred.stepDelta}` : `${aiPred.stepDelta}`,
         }) ||
         `Smart Roast Shift: ${currentBean?.name} is ${currentBean?.roastLevel}. Based on your ${grinderName.split(' ')[0]} profile, ${aiPred.formattedSetting} is recommended (${aiPred.stepDelta > 0 ? `+${aiPred.stepDelta}` : aiPred.stepDelta} steps).`;
+    } else if (aiPred.reason === 'dial_in_adjustment') {
+      badgeBorder = 'border-amber-500/40 bg-amber-500/10 text-amber-900';
+      bannerBorder = 'border-amber-300/80 bg-[#FFFDF9]';
+      verdictTitle = '🎯 Barista Coach Justering';
+      adviceSummary = aiPred.explanation;
     } else {
       badgeBorder = 'border-[#C26D52]/40 bg-[#C26D52]/10 text-[#8C3F27]';
       bannerBorder = 'border-[#C26D52]/30 bg-[#FFFDF9]';

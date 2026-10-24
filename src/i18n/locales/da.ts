@@ -614,6 +614,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'drink.adjust_in_studio': 'Alle justeringer foretages samlet i Dial-In Studio.',
   'drink.fine_tune_here': 'Finjustér her →',
   'drink.apply_suggestion': 'Anvend',
+  'drink.suggestion_applied': 'Klar',
   'drink.switch_btn': 'Skift',
   'scale.safety_label': 'Vægt-sikkerhed:',
   'common.remove': 'Fjern',

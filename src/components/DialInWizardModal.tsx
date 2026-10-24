@@ -6,6 +6,7 @@ import {
   loadOrCreateGrinderProfile,
   getAnchorForBean,
   getLatestAnchorForGrinder,
+  loadShots,
 } from '../lib/storage';
 import { formatTemperature, getRecommendedBrewTemp, calculateTargetExtractionTime } from '../lib/espressoMath';
 import { predictOptimalGrindSetting } from '../lib/grindIntelligence';
@@ -693,6 +694,16 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             });
             const anchor = getAnchorForBean(activeBean.id, grinderIdentifier, machineName);
             const refAnchor = getLatestAnchorForGrinder(grinderIdentifier, machineName);
+
+            const allShots = loadShots();
+            const lastShotForDrink = allShots.find(
+              (s) =>
+                (s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase()) &&
+                (!s.coffeeName || s.coffeeName === activeBean.name)
+            ) || allShots.find(
+              (s) => s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase()
+            );
+
             const aiPred = predictOptimalGrindSetting({
               grinderProfile: profile,
               activeBean: activeBean,
@@ -700,6 +711,15 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               referenceAnchorForGrinder: refAnchor,
               currentSetting: grindSetting,
               machineName,
+              lastShot: lastShotForDrink ? {
+                grindSetting: lastShotForDrink.grindSetting,
+                totalTimeSeconds: lastShotForDrink.totalTimeSeconds,
+                targetTimeSeconds: drink.expectedTimeSeconds || 27.0,
+                actualYieldGrams: lastShotForDrink.actualYieldGrams,
+                channelingDetected: Boolean(lastShotForDrink.channelingDetected || (typeof lastShotForDrink.channeling === 'object' && lastShotForDrink.channeling?.detected)),
+                channeling: lastShotForDrink.channeling,
+                tasteRating: lastShotForDrink.tasteRating,
+              } : undefined,
             });
 
             const aiTargetNum = parseFloat(aiPred.formattedSetting);
@@ -935,6 +955,8 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                         <span className="text-[10px] font-bold text-[#2C2018]">
                           {aiPred.reason === 'fleet_consensus'
                             ? (aiPred.details.isFleetVerified !== false ? '✨ Fleet Verified Prior' : '🌐 Flåde-konsensus Prior')
+                            : aiPred.reason === 'dial_in_adjustment'
+                            ? '🎯 Barista Coach Justering'
                             : profile.validTransitionsCount >= 5
                             ? `${t('grind.master_calibrated')} (${profile.effectiveSecondsPerUnit.toFixed(1)}s/trin)`
                             : profile.validTransitionsCount >= 2
@@ -949,6 +971,11 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                         {aiPred.reason === 'fleet_consensus' && (
                           <span className="text-[8px] px-1.5 py-0.2 rounded-full bg-[#C26D52]/15 text-[#C26D52] font-mono font-bold uppercase tracking-wider">
                             Bayes Prior
+                          </span>
+                        )}
+                        {aiPred.reason === 'dial_in_adjustment' && (
+                          <span className="text-[8px] px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-800 font-mono font-bold uppercase tracking-wider">
+                            Sidste Bryg
                           </span>
                         )}
                       </div>

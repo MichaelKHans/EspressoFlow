@@ -26,6 +26,25 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-24 -- Etape 91: Harmoniseret Dial-In Anbefalingsmotor & Udryddelse af Feedback-Loop (v1.21.12)
+- **Harmoniseret Central Dial-In Motor ([grindIntelligence.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/grindIntelligence.ts)):**
+  - Udvidet `predictOptimalGrindSetting` med `lastShot` input, der giver historisk fysisk skuddata førsteprioritet i beslutningshierarkiet foran ankre og flådepriors.
+  - Ved kanalisering: bevarer kværnindstilling og foreslår puck prep (WDT/tamper).
+  - Ved skud inden for $\pm 2.0$s: låser i Golden Anchor Zone.
+  - Ved afvigende tid: beregner mikrotrinsjustering relativt til `lastShot.grindSetting` i stedet for det flygtige inputfelt.
+- **Udryddelse af Uendeligt Feedback-Loop i Coffee Bar ([DrinkSelector.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DrinkSelector.tsx)):**
+  - Fjernet den naive lineære formel, der akkumulerede trin ved gentagne klik.
+  - Implementeret `isAlreadyAdjusted` terminal tilstand (`|aktuel - mål| < 0.1`): Knappen skifter til `✓ Ready` / `✓ Klar` og stopper med at foreslå nye ændringer.
+  - Synkroniseret gemmeproces ved klik: Opdaterer omgående `currentSettingInput`, gemmer i `drinkGrinds` og i `localStorage` samt kalder `onUpdateBeanDialIn`.
+- **Ensartet Anbefaling på Tværs af Skærme ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx) & [PreBrewCoachBanner.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/PreBrewCoachBanner.tsx)):**
+  - Samlet alle komponenter om samme motor og `lastShotForDrink`, så ingen skærme viser modsatrettede eller divergerende tal.
+- **Risteri-Aware Flåde Matching ([fleetConsensusEngine.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetConsensusEngine.ts)):**
+  - Tilføjet 'lavazza-espresso-barista-gran-crema' i offline priors og styrket fuzzy matching på tværs af risteri og bønnenavn.
+- **Kompilering & Mobil Validering:**
+  - `npm run build` passerer 100% fejlfrit.
+  - Synkroniseret til Android og iOS via `npx cap sync`.
+  - Bekræftet på fysisk enhed og emulator uden flimren eller feedback-loop.
+
 ### 2026-10-24 -- Etape 90: Hierarkisk Bayesian Flåde-Konsensus Engine & In-App "Fleet Verified" Badges (v1.21.11)
 - **Hierarkisk Bayesian Flåde-Konsensus Engine ([fleetConsensusEngine.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetConsensusEngine.ts)):**
   - Implementeret det teoretiske rammeværk: $\text{Indstilling}_{i, u} = \beta_{\text{bønne}} + \beta_{\text{maskine}} + \beta_{\text{kværn}} + u_i$, hvor $u_i$ er baristaens individuelle nulpunkt-offset.

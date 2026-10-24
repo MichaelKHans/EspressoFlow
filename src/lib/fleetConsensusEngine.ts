@@ -115,6 +115,16 @@ export const KNOWN_OFFLINE_FLEET_PRIORS: Record<string, {
       'niche-zero': { setting: 18.5, shots: 164, timeS: 28.6 },
     },
   },
+  // Lavazza - Espresso Barista Gran Crema (Classic Medium/Medium-Dark)
+  'lavazza-espresso-barista-gran-crema': {
+    roastLevel: 'medium',
+    grinderSettings: {
+      'baratza-encore-esp-pro': { setting: 16.0, shots: 128, timeS: 27.8 },
+      'baratza-encore-esp': { setting: 16.0, shots: 196, timeS: 27.5 },
+      'niche-zero': { setting: 16.5, shots: 110, timeS: 27.9 },
+      'turin-df64-gen-2': { setting: 15.0, shots: 72, timeS: 27.2 },
+    },
+  },
 };
 
 /**
@@ -198,26 +208,34 @@ export function toBeanKey(beanName?: string): string {
  */
 export function resolveFleetConsensus(params: {
   beanName: string;
+  roaster?: string;
   roastLevel: RoastLevel;
   grinderName: string;
   machineName?: string;
   basketDiameterMm?: number;
 }): FleetBeanConsensus | null {
-  const { beanName, roastLevel, grinderName, machineName, basketDiameterMm } = params;
+  const { beanName, roaster, roastLevel, grinderName, machineName, basketDiameterMm } = params;
   if (!beanName || !grinderName) return null;
 
   const bKey = toBeanKey(beanName);
+  const fullBeanKey = roaster ? toBeanKey(`${roaster} ${beanName}`) : bKey;
   const gKey = toGearKey(grinderName);
   const mKey = machineName ? toGearKey(machineName) : undefined;
 
-  // 1. Check Offline Specialty Roaster Priors
-  let match = KNOWN_OFFLINE_FLEET_PRIORS[bKey];
+  // 1. Check Offline Specialty Roaster Priors (exact or prefixed with roaster)
+  let match = KNOWN_OFFLINE_FLEET_PRIORS[bKey] || KNOWN_OFFLINE_FLEET_PRIORS[fullBeanKey];
 
   // If no exact bean match, check if we have a match for the roaster prefix
   if (!match) {
-    const roasterKey = Object.keys(KNOWN_OFFLINE_FLEET_PRIORS).find((k) =>
-      bKey.startsWith(k.split('-')[0])
-    );
+    const roasterNormalized = roaster ? toGearKey(roaster) : '';
+    const roasterKey = Object.keys(KNOWN_OFFLINE_FLEET_PRIORS).find((k) => {
+      const priorRoaster = k.split('-')[0];
+      return (
+        bKey.startsWith(priorRoaster) ||
+        fullBeanKey.startsWith(priorRoaster) ||
+        (roasterNormalized && (roasterNormalized.includes(priorRoaster) || priorRoaster.includes(roasterNormalized)))
+      );
+    });
     if (roasterKey) {
       match = KNOWN_OFFLINE_FLEET_PRIORS[roasterKey];
     }
