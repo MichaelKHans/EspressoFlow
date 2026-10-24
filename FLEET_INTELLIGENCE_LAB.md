@@ -169,5 +169,5 @@ $$\text{Indstilling}_{i, u} = \underbrace{\beta_{\text{bønne}} + \beta_{\text{m
 | **Etape 3: "Opret Eget Udstyr" Wizard** | **Gennemført (v1.21.9)** | `CustomGearCreatorModal.tsx` integreret i `AddGearModal.tsx`. |
 | **Etape 4: Telemetrimotor & Queue** | **Gennemført (v1.21.9)** | `fleetTelemetry.ts` med 1Hz flowkurve-sampling og opt-out. |
 | **Etape 5: Supabase Tabeller & Migrering** | **Gennemført (v1.21.9)** | Tabeller og RLS scripts i `20261024_crowdsourced_gear_and_telemetry.sql`. |
-| **Etape 6: Admin Flowbean Lab Dashboard** | *Næste Etape* | Visuelt analysepanel i Admin Portal: Channeling heatmap, basket 51 vs 58 mm grafer, override rate måler. |
-| **Etape 7: Bayesian Flåde-Konsensus Engine** | *Planlagt* | Supabase Edge Function der beregner globale priors og serverer "Fleet Verified" badges i appen. |
+| **Etape 6: Admin Flowbean Lab Dashboard** | **Gennemført (v1.21.10)** | Visuelt analysepanel i Admin Portal (`FlowbeanLabDashboard.tsx`): Channeling heatmap, basket 51 vs 58 mm grafer, override rate måler, SVG 1Hz flowkurve og remote tuning sandbox. |
+| **Etape 7: Bayesian Flåde-Konsensus Engine** | *Næste Etape* | Supabase Edge Function der beregner globale priors og serverer "Fleet Verified" badges i appen. |

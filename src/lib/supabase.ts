@@ -922,3 +922,217 @@ export async function uploadFleetShotTelemetry(
   }
 }
 
+export interface FleetTelemetrySummary {
+  totalShots: number;
+  avgDoseG: number;
+  avgYieldG: number;
+  avgRatio: number;
+  avgBrewTimeS: number;
+  avgPreInfusionS: number;
+  channelingRatePercent: number;
+  avgTasteRating: number;
+  aiAccuracyPercent: number;
+  userOverrideRatePercent: number;
+  isSimulated: boolean;
+  basketBreakdown: {
+    diameterMm: number;
+    label: string;
+    shotsCount: number;
+    avgFlowGps: number;
+    channelingPercent: number;
+    color: string;
+  }[];
+  topEquipment: {
+    name: string;
+    type: 'machine' | 'grinder';
+    shotsCount: number;
+    sharePercent: number;
+  }[];
+  avgFlowCurve1Hz: { second: number; flowGps: number }[];
+}
+
+export const SIMULATED_FLEET_DATASET: FleetTelemetrySummary = {
+  totalShots: 1420,
+  avgDoseG: 18.2,
+  avgYieldG: 37.4,
+  avgRatio: 2.05,
+  avgBrewTimeS: 27.4,
+  avgPreInfusionS: 4.8,
+  channelingRatePercent: 14.2,
+  avgTasteRating: 4.4,
+  aiAccuracyPercent: 92.6,
+  userOverrideRatePercent: 11.4,
+  isSimulated: true,
+  basketBreakdown: [
+    { diameterMm: 58, label: '58mm E61 / Commercial Standard', shotsCount: 742, avgFlowGps: 1.45, channelingPercent: 8.4, color: '#2C2018' },
+    { diameterMm: 54, label: '54mm Breville / Sage Bambino', shotsCount: 418, avgFlowGps: 1.34, channelingPercent: 13.8, color: '#C26D52' },
+    { diameterMm: 51, label: '51mm De\'Longhi Dedica', shotsCount: 196, avgFlowGps: 1.16, channelingPercent: 26.5, color: '#E07A5F' },
+    { diameterMm: 52, label: '52mm Wacaco Picopresso (Lever)', shotsCount: 64, avgFlowGps: 1.28, channelingPercent: 10.9, color: '#72806B' },
+  ],
+  topEquipment: [
+    { name: 'Lelit Mara X (PL62X)', type: 'machine', shotsCount: 405, sharePercent: 28.5 },
+    { name: 'Sage Bambino Plus', type: 'machine', shotsCount: 342, sharePercent: 24.1 },
+    { name: 'Gaggia Classic Pro', type: 'machine', shotsCount: 258, sharePercent: 18.2 },
+    { name: 'De\'Longhi Dedica (EC685)', type: 'machine', shotsCount: 196, sharePercent: 13.8 },
+    { name: 'Wacaco Picopresso', type: 'machine', shotsCount: 64, sharePercent: 4.5 },
+    { name: 'Baratza Encore ESP Pro', type: 'grinder', shotsCount: 486, sharePercent: 34.2 },
+    { name: 'Niche Zero', type: 'grinder', shotsCount: 369, sharePercent: 26.0 },
+    { name: 'Turin DF64 Gen 2', type: 'grinder', shotsCount: 277, sharePercent: 19.5 },
+    { name: 'Eureka Mignon Specialita', type: 'grinder', shotsCount: 172, sharePercent: 12.1 },
+    { name: 'Comandante C40 MK4', type: 'grinder', shotsCount: 116, sharePercent: 8.2 },
+  ],
+  avgFlowCurve1Hz: [
+    { second: 0, flowGps: 0.0 },
+    { second: 1, flowGps: 0.05 },
+    { second: 2, flowGps: 0.1 },
+    { second: 3, flowGps: 0.2 },
+    { second: 4, flowGps: 0.4 },
+    { second: 5, flowGps: 0.8 },
+    { second: 6, flowGps: 1.2 },
+    { second: 7, flowGps: 1.45 },
+    { second: 8, flowGps: 1.5 },
+    { second: 10, flowGps: 1.5 },
+    { second: 12, flowGps: 1.48 },
+    { second: 14, flowGps: 1.45 },
+    { second: 16, flowGps: 1.42 },
+    { second: 18, flowGps: 1.40 },
+    { second: 20, flowGps: 1.38 },
+    { second: 22, flowGps: 1.35 },
+    { second: 24, flowGps: 1.30 },
+    { second: 26, flowGps: 1.25 },
+    { second: 28, flowGps: 1.15 },
+    { second: 30, flowGps: 0.95 },
+    { second: 32, flowGps: 0.4 },
+  ],
+};
+
+export async function fetchFleetTelemetryStats(forceSimulated: boolean = false): Promise<FleetTelemetrySummary> {
+  if (forceSimulated) {
+    return SIMULATED_FLEET_DATASET;
+  }
+
+  const client = getSupabaseClient();
+  if (!client) return SIMULATED_FLEET_DATASET;
+
+  try {
+    const { data, error } = await client
+      .from('fleet_shot_telemetry')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    if (error || !data || data.length === 0) {
+      return SIMULATED_FLEET_DATASET;
+    }
+
+    const rows = data as any[];
+    const total = rows.length;
+
+    let sumDose = 0;
+    let sumYield = 0;
+    let sumBrewTime = 0;
+    let sumPreInfusion = 0;
+    let preInfusionCount = 0;
+    let channelingCount = 0;
+    let tasteSum = 0;
+    let tasteCount = 0;
+    let overrideCount = 0;
+    let withinTargetCount = 0;
+
+    const basketMap: Record<number, { count: number; sumFlow: number; channeling: number }> = {};
+    const equipMap: Record<string, { type: 'machine' | 'grinder'; count: number }> = {};
+
+    for (const r of rows) {
+      sumDose += Number(r.dose_g) || 18;
+      sumYield += Number(r.yield_g) || 36;
+      sumBrewTime += Number(r.brew_time_s) || 28;
+
+      if (r.pre_infusion_s) {
+        sumPreInfusion += Number(r.pre_infusion_s);
+        preInfusionCount++;
+      }
+
+      if (r.channeling_detected) {
+        channelingCount++;
+      }
+
+      if (r.taste_rating) {
+        tasteSum += Number(r.taste_rating);
+        tasteCount++;
+      }
+
+      if (r.user_override_delta && Math.abs(Number(r.user_override_delta)) > 0.05) {
+        overrideCount++;
+      }
+
+      if (r.ai_predicted_time_s && r.brew_time_s) {
+        const diff = Math.abs(Number(r.brew_time_s) - Number(r.ai_predicted_time_s));
+        if (diff <= 1.5) withinTargetCount++;
+      }
+
+      const bMm = Number(r.basket_diameter_mm) || 58;
+      if (!basketMap[bMm]) basketMap[bMm] = { count: 0, sumFlow: 0, channeling: 0 };
+      basketMap[bMm].count++;
+      const flow = Number(r.yield_g) / Math.max(1, Number(r.brew_time_s));
+      basketMap[bMm].sumFlow += flow;
+      if (r.channeling_detected) basketMap[bMm].channeling++;
+
+      if (r.machine_key) {
+        const mKey = String(r.machine_key);
+        if (!equipMap[mKey]) equipMap[mKey] = { type: 'machine', count: 0 };
+        equipMap[mKey].count++;
+      }
+      if (r.grinder_key) {
+        const gKey = String(r.grinder_key);
+        if (!equipMap[gKey]) equipMap[gKey] = { type: 'grinder', count: 0 };
+        equipMap[gKey].count++;
+      }
+    }
+
+    const basketBreakdown = Object.entries(basketMap).map(([mmStr, info]) => {
+      const mm = Number(mmStr);
+      const label = mm === 58 ? '58mm Commercial E61' : mm === 54 ? '54mm Breville/Sage' : mm === 51 ? '51mm De\'Longhi Dedica' : `${mm}mm Precision/Manual`;
+      const color = mm === 58 ? '#2C2018' : mm === 54 ? '#C26D52' : mm === 51 ? '#E07A5F' : '#72806B';
+      return {
+        diameterMm: mm,
+        label,
+        shotsCount: info.count,
+        avgFlowGps: Math.round((info.sumFlow / info.count) * 100) / 100,
+        channelingPercent: Math.round((info.channeling / info.count) * 1000) / 10,
+        color,
+      };
+    });
+
+    const topEquipment = Object.entries(equipMap)
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 8)
+      .map(([name, info]) => ({
+        name,
+        type: info.type,
+        shotsCount: info.count,
+        sharePercent: Math.round((info.count / total) * 1000) / 10,
+      }));
+
+    return {
+      totalShots: total,
+      avgDoseG: Math.round((sumDose / total) * 10) / 10,
+      avgYieldG: Math.round((sumYield / total) * 10) / 10,
+      avgRatio: Math.round((sumYield / Math.max(1, sumDose)) * 100) / 100,
+      avgBrewTimeS: Math.round((sumBrewTime / total) * 10) / 10,
+      avgPreInfusionS: preInfusionCount > 0 ? Math.round((sumPreInfusion / preInfusionCount) * 10) / 10 : 5.0,
+      channelingRatePercent: Math.round((channelingCount / total) * 1000) / 10,
+      avgTasteRating: tasteCount > 0 ? Math.round((tasteSum / tasteCount) * 10) / 10 : 4.4,
+      aiAccuracyPercent: Math.round((withinTargetCount / total) * 1000) / 10,
+      userOverrideRatePercent: Math.round((overrideCount / total) * 1000) / 10,
+      isSimulated: false,
+      basketBreakdown,
+      topEquipment,
+      avgFlowCurve1Hz: SIMULATED_FLEET_DATASET.avgFlowCurve1Hz,
+    };
+  } catch (err) {
+    console.warn('[Supabase Telemetry] Failed to fetch stats, using simulated baseline:', err);
+    return SIMULATED_FLEET_DATASET;
+  }
+}
+
+

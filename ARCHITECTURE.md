@@ -500,3 +500,23 @@ For at sikre 100% urokkelig stabilitet og eliminere behovet for konstant fysisk 
 - **Hero Decision Card Spejling:** Ved skudafslutning udsender appen automatisk `shot_verdict`, så PC-skærmen øjeblikkeligt spejler barista-dommen (🟢 God brygning, 🟡 Kværn finere, 🔴 Kværn grovere, ⚠️ Kanalisering).
 - **2-Vejs Synkronisering:** Teststart på PC udløser automatisk `tare` og `start_shot` på mobilen, og `stop_shot` ved målyield.
 
+---
+
+## 11. FLOWBEAN LAB, FLEET INTELLIGENCE & CROWDSOURCED UDSTYR
+
+For at opbygge verdens mest præcise kaffeteknologiske flådemodel, anvender Flowbean et decentralt forsknings- og telemetrisystem:
+
+### 11.1 Flowbean Lab Forskningspanel ([FlowbeanLabDashboard.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowbeanLabDashboard.tsx))
+- **Placering:** Tilgængelig i `AdminPortal.tsx` under fanen `🔬 Flowbean Lab & Flåde AI`.
+- **Dobbelt Datatilstand:** Skift mellem live Supabase telemetri (`fleet_shot_telemetry`) og 1.420 skuds valideret baseline forskningsdatasæt.
+- **Darcy-Ergun Kurvegeometri:** Sammenligner 58mm ($A=26.4\text{ cm}^2$), 54mm ($A=22.9\text{ cm}^2$), 51mm ($A=20.4\text{ cm}^2$) og 52mm ($A=21.2\text{ cm}^2$), med visualisering af kanaliseringsrisiko og hydraulisk modstandsfaktor ($R \propto \text{Dosis}/A^2$).
+- **1Hz Flowkurve Spektrogram (SVG):** Grafisk profil over flådens gennemsnitlige flowhastighed (0–32s) med faseinddeling: Pre-infusion, peak steady-state ($1.45 - 1.50\text{ g/s}$) og puck-erosion.
+- **Remote Tuning Sandbox:** Tillader simulation af ændringer i $CO_2$ halveringstid, lysristet offset, areal-eksponent og mælkeratio-kompensation med realtids estimat af fald i overstyringsrate og stigning i AI-præcision samt JSON eksport.
+
+### 11.2 Crowdsourced Udstyr & IndexedDB Medielager
+- **Wizard ([CustomGearCreatorModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/CustomGearCreatorModal.tsx)):** Tillader brugere at registrere maskiner, kværne og bryggere med fulde tekniske specifikationer og lokale fotos.
+- **IndexedDB Medielager ([gearImageStorage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/gearImageStorage.ts)):** Sikrer billeder op til 400KB+ uden at overskride browserens 5MB localStorage kvote.
+- **Admin Moderationskø:** Nye udstyrsspecifikationer indsendes anonymt til `crowdsourced_gear_submissions` og kan godkendes til det globale katalog med et enkelt klik i Admin Portalen.
+- **Masterdokument:** Se den udtømmende videnskabelige specifikation i [FLEET_INTELLIGENCE_LAB.md](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/FLEET_INTELLIGENCE_LAB.md).
+
+

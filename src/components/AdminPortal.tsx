@@ -39,6 +39,7 @@ import {
   Archive,
   ThumbsUp,
   RotateCcw,
+  FlaskConical,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, UserAccessState } from '../types/espresso';
 import { isTelemetryEnabled, setTelemetryEnabled } from '../lib/scaleTelemetry';
@@ -60,6 +61,7 @@ import {
   compressImageToDataUrl,
 } from '../lib/beanCatalogMatcher';
 import { AdminLicenseManager } from './AdminLicenseManager';
+import { FlowbeanLabDashboard } from './FlowbeanLabDashboard';
 
 interface AdminPortalProps {
   onBack: () => void;
@@ -353,7 +355,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [pinInput, setPinInput] = useState<string>('');
   const [pinError, setPinError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'curator' | 'security' | 'supabase' | 'licenses'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'curator' | 'security' | 'supabase' | 'licenses' | 'lab'>('metrics');
   const [telemetryActive, setTelemetryActive] = useState<boolean>(() => isTelemetryEnabled());
 
   // Gear Moderation State
@@ -1074,6 +1076,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           >
             <KeyRound className="w-3.5 h-3.5 text-[#C26D52]" />
             <span>Licenser, Salg & Bogføring</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('lab')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition shrink-0 ${
+              activeTab === 'lab'
+                ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
+                : 'bg-white hover:bg-[#FAF7F2] text-[#7A6E65] border border-[#E8DFD5]'
+            }`}
+          >
+            <FlaskConical className="w-3.5 h-3.5 text-[#C26D52]" />
+            <span>Flowbean Lab & Flåde AI</span>
           </button>
         </div>
 
@@ -3063,6 +3078,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {activeTab === 'licenses' && (
           <AdminLicenseManager onNotify={(msg) => alert(msg)} />
         )}
+
+        {/* TAB 7: Flowbean Lab & Fleet Intelligence */}
+        {activeTab === 'lab' && <FlowbeanLabDashboard />}
       </main>
     </div>
   );

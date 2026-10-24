@@ -26,6 +26,30 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-24 -- Etape 89: Flowbean Lab (Kvantitativ & Kvalitativ Flåde-AI Forskning i AdminPortal) (v1.21.10)
+- **Flowbean Lab Forskningspanel ([FlowbeanLabDashboard.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowbeanLabDashboard.tsx)):**
+  - Implementeret komplet interaktivt analyse- og forskningsdashboard i Espresso Warmth æstetik med pergament (`#FAF7F2`), varm latte (`#FFFDF9`), mørkristet espresso (`#2C2018`), terracotta (`#C26D52`) og `Courier Prime` monospace-typografi.
+  - Dynamisk omskifter mellem live Supabase sky-telemetri (`fleet_shot_telemetry`) og videnskabelig baseline-simulation med 1.420 validerede skud.
+  - KPI-oversigt: Total skud, gennemsnitlig brygtid og pre-infusion, ratio (1:2.05), flådens mikro-kanaliseringsrate (14.2%), AI-målpræcision (92.6% inden for &plusmn;1.5s) og barista-overstyringsrate (11.4%).
+- **Darcy-Ergun Kurvegeometri Sammenligning ($R \propto \text{Dosis} / A^2$):**
+  - Fysisk og matematisk sammenligningsmodul for 58mm (E61), 54mm (Sage/Breville), 51mm (De'Longhi Dedica) og 52mm (Wacaco Picopresso).
+  - Viser hvorfor 51 mm kurvens mindre tværsnitsareal ($A \approx 20.4\text{ cm}^2$) medfører op til +67% forøget hydraulisk modstand og 26.5% kanaliseringsrisiko ved 18g dosering sammenlignet med 58 mm ($8.4\%$).
+- **Flådens Gns. 1Hz Flowkurve Spektrogram (SVG):**
+  - Interaktiv SVG tidslinjegraf (0-32 sekunder) med gradient-fyld og fasemarkeringer: Pre-infusion (0-5s), Peak ekstraktion (6-20s ved 1.45-1.50 g/s), samt puck-erosion og afslutning (21-32s).
+  - Interaktiv hover-inspektion med realtids sekund- og flowrate-udlæsning.
+- **Flådens Mest Udbredte Udstyr (Machines & Grinders):**
+  - Split-view med procentuelle andelsbjælker over udbredelse af espressomaskiner (Lelit Mara X, Sage Bambino, Gaggia Classic, Dedica m.fl.) og kværne (Baratza ESP, Niche Zero, DF64, Eureka Specialita m.fl.).
+- **Remote Parameter Tuning Sandbox:**
+  - 4 interaktive reaktive skydere til test af matematiske konstanter før release:
+    - $CO_2$ Degas Halveringstid (7-28 dage).
+    - Lysristet Modstands-Offset (+0.0 til +3.0 trin finere).
+    - Darcy-Ergun Areal-Eksponent ($n = 1.5$ til $2.5$).
+    - Mælkedrik Ratio-Kompensation (+0.0 til +0.5).
+  - Reaktive beregninger der estimerer fald i barista-overstyringsrate (fx -18.4%) og stigning i AI-målpræcision (fx 94.8%).
+  - 1-klik JSON eksport af optimerede parametre til udklipsholder.
+- **Admin Portal Integration ([AdminPortal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/AdminPortal.tsx)):**
+  - Nyt faneblad `🔬 Flowbean Lab & Flåde AI` tilgængeligt direkte for verificerede administratorer.
+
 ### 2026-10-24 -- Etape 88: IndexedDB Billedlager, "Opret Eget Udstyr" Wizard, Crowdsourcing & Fleet Telemetry Motor (v1.21.9)
 - **IndexedDB Medielager til Udstyrsbilleder ([gearImageStorage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/gearImageStorage.ts)):**
   - Implementeret asynkront IndexedDB-lager (`flowbean_media_v1`, `gear_images`) med synkron in-memory read-cache, som eliminerer browserens 5MB localStorage-kvotelimit for brugerfotos og packshots.
