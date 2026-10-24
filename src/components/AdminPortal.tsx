@@ -49,6 +49,9 @@ import {
   adminVerifyGlobalBean,
   adminDeleteGlobalBean,
   adminCreateGlobalBean,
+  fetchPendingGearSubmissions,
+  adminApproveGearSubmission,
+  type CrowdsourcedGearSubmission,
   type GlobalCoffeeBean,
 } from '../lib/supabase';
 import {
@@ -262,6 +265,80 @@ CREATE POLICY "Allow public insert scale_diagnostic_sessions"
 DROP POLICY IF EXISTS "Allow public read scale_diagnostic_sessions" ON scale_diagnostic_sessions;
 CREATE POLICY "Allow public read scale_diagnostic_sessions"
   ON scale_diagnostic_sessions FOR SELECT
+  USING (true);
+
+-- 8. CROWDSOURCED GEAR SUBMISSIONS (Eget Udstyr & Fællesskabskatalog)
+CREATE TABLE IF NOT EXISTS crowdsourced_gear_submissions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  category VARCHAR(30) NOT NULL,
+  brand VARCHAR(100) NOT NULL,
+  model VARCHAR(150) NOT NULL,
+  sub_category VARCHAR(100),
+  specs JSONB NOT NULL DEFAULT '{}',
+  notes TEXT,
+  user_fingerprint VARCHAR(64),
+  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by VARCHAR(100)
+);
+
+CREATE INDEX IF NOT EXISTS idx_crowd_gear_status ON crowdsourced_gear_submissions(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_crowd_gear_category ON crowdsourced_gear_submissions(category);
+
+ALTER TABLE crowdsourced_gear_submissions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public insert crowdsourced_gear" ON crowdsourced_gear_submissions;
+CREATE POLICY "Allow public insert crowdsourced_gear"
+  ON crowdsourced_gear_submissions FOR INSERT
+  WITH CHECK (status = 'pending' OR status IS NULL);
+
+DROP POLICY IF EXISTS "Allow public read approved gear" ON crowdsourced_gear_submissions;
+CREATE POLICY "Allow public read approved gear"
+  ON crowdsourced_gear_submissions FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Allow admin update crowdsourced_gear" ON crowdsourced_gear_submissions;
+CREATE POLICY "Allow admin update crowdsourced_gear"
+  ON crowdsourced_gear_submissions FOR UPDATE
+  USING (true);
+
+-- 9. FLEET SHOT TELEMETRY (<450 bytes compact telemetry vectors for Flowbean Lab)
+CREATE TABLE IF NOT EXISTS fleet_shot_telemetry (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  math_version VARCHAR(20) NOT NULL,
+  machine_key VARCHAR(100) NOT NULL,
+  grinder_key VARCHAR(100) NOT NULL,
+  physics_class VARCHAR(40) NOT NULL,
+  basket_diameter_mm NUMERIC(4,1),
+  dose_g NUMERIC(5,2) NOT NULL,
+  yield_g NUMERIC(5,2) NOT NULL,
+  brew_time_s NUMERIC(5,2) NOT NULL,
+  pre_infusion_s NUMERIC(5,2),
+  grind_setting VARCHAR(30),
+  flow_curve_1hz JSONB DEFAULT '[]',
+  taste_rating INT CHECK (taste_rating >= 1 AND taste_rating <= 5),
+  channeling_detected BOOLEAN DEFAULT FALSE,
+  ai_predicted_time_s NUMERIC(5,2),
+  user_override_delta NUMERIC(5,2),
+  user_fingerprint VARCHAR(64)
+);
+
+CREATE INDEX IF NOT EXISTS idx_fleet_created_at ON fleet_shot_telemetry(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fleet_machine_grinder ON fleet_shot_telemetry(machine_key, grinder_key);
+CREATE INDEX IF NOT EXISTS idx_fleet_math_version ON fleet_shot_telemetry(math_version);
+
+ALTER TABLE fleet_shot_telemetry ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public insert fleet_shot_telemetry" ON fleet_shot_telemetry;
+CREATE POLICY "Allow public insert fleet_shot_telemetry"
+  ON fleet_shot_telemetry FOR INSERT
+  WITH CHECK (dose_g > 0 AND yield_g > 0 AND brew_time_s > 0);
+
+DROP POLICY IF EXISTS "Allow public read fleet_shot_telemetry" ON fleet_shot_telemetry;
+CREATE POLICY "Allow public read fleet_shot_telemetry"
+  ON fleet_shot_telemetry FOR SELECT
   USING (true);`;
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
@@ -278,6 +355,34 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'metrics' | 'beans' | 'curator' | 'security' | 'supabase' | 'licenses'>('metrics');
   const [telemetryActive, setTelemetryActive] = useState<boolean>(() => isTelemetryEnabled());
+
+  // Gear Moderation State
+  const [pendingGear, setPendingGear] = useState<CrowdsourcedGearSubmission[]>([]);
+  const [isLoadingPendingGear, setIsLoadingPendingGear] = useState(false);
+  const [gearFeedback, setGearFeedback] = useState<string | null>(null);
+
+  const loadPendingGear = useCallback(async () => {
+    setIsLoadingPendingGear(true);
+    const items = await fetchPendingGearSubmissions();
+    setPendingGear(items);
+    setIsLoadingPendingGear(false);
+  }, []);
+
+  const handleApproveGear = async (item: CrowdsourcedGearSubmission) => {
+    if (!item.id) return;
+    const ok = await adminApproveGearSubmission(item.id);
+    if (ok) {
+      setPendingGear((prev) => prev.filter((g) => g.id !== item.id));
+      setGearFeedback(`✓ ${item.brand} ${item.model} godkendt til det globale katalog!`);
+      setTimeout(() => setGearFeedback(null), 3500);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'supabase' || activeTab === 'curator') {
+      void loadPendingGear();
+    }
+  }, [activeTab, loadPendingGear]);
 
   const handleToggleTelemetry = () => {
     const next = !telemetryActive;
@@ -2760,6 +2865,90 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               ) : (
                 <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-xs text-[#7A6E65] text-center">
                   No beans synced yet. Once the SQL schema is provisioned, kickstart seeds will appear here.
+                </div>
+              )}
+            </div>
+
+            {/* ⚙️ Crowdsourced Gear Moderation Hub */}
+            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-5 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E8DFD5] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center font-bold">
+                    ⚙️
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase text-[#2C2018] flex items-center gap-2">
+                      <span>Gear Moderation & Fællesskabskø</span>
+                      {pendingGear.length > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#C26D52] text-white">
+                          {pendingGear.length} afventer
+                        </span>
+                      )}
+                    </h4>
+                    <p className="text-[10px] text-[#7A6E65] font-sans">
+                      Brugerindsendte maskiner og kværne med tekniske specifikationer klar til 1-klik godkendelse.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={loadPendingGear}
+                  disabled={isLoadingPendingGear}
+                  className="px-3 py-1.5 rounded-lg border border-[#E8DFD5] hover:bg-[#FAF7F2] text-[#7A6E65] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer self-start sm:self-auto"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingPendingGear ? 'animate-spin text-[#C26D52]' : ''}`} />
+                  <span>Genindlæs kø</span>
+                </button>
+              </div>
+
+              {gearFeedback && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-xs text-emerald-800 font-bold flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>{gearFeedback}</span>
+                </div>
+              )}
+
+              {pendingGear.length > 0 ? (
+                <div className="space-y-2.5">
+                  {pendingGear.map((g) => (
+                    <div
+                      key={g.id || `${g.brand}-${g.model}`}
+                      className="p-3.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-md bg-[#2C2018] text-[#FAF7F2] text-[9px] font-bold uppercase">
+                            {g.category}
+                          </span>
+                          <span className="font-bold text-[#2C2018] text-sm">
+                            {g.brand} {g.model}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-[#7A6E65] font-mono">
+                          {g.subCategory || JSON.stringify(g.specs)}
+                        </div>
+                        {g.notes && (
+                          <p className="text-[10px] text-stone-600 italic">"{g.notes}"</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleApproveGear(g)}
+                          className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 transition"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Godkend til katalog</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-xs text-[#7A6E65] text-center">
+                  Ingen ubehandlede udstyrs-indsendelser i køen lige nu.
                 </div>
               )}
             </div>

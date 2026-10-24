@@ -742,3 +742,183 @@ export async function adminCreateGlobalBean(
   }
 }
 
+// -------------------------------------------------------------------------
+// Crowdsourced Gear Submissions & Moderation Hub (Etape 5)
+// -------------------------------------------------------------------------
+export interface CrowdsourcedGearSubmission {
+  id?: string;
+  brand: string;
+  model: string;
+  category: 'machine' | 'grinder' | 'brewer' | 'kettle';
+  subCategory?: string;
+  specs: any;
+  notes?: string;
+  user_fingerprint?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  created_at?: string;
+}
+
+export async function submitCrowdsourcedGear(
+  submission: Omit<CrowdsourcedGearSubmission, 'user_fingerprint' | 'status'>
+): Promise<{ success: boolean; error?: string }> {
+  const payload: CrowdsourcedGearSubmission = {
+    ...submission,
+    user_fingerprint: getDeviceFingerprint(),
+    status: 'pending',
+  };
+
+  const client = getSupabaseClient();
+  if (!client) {
+    queuePendingGearSubmissionLocally(payload);
+    return { success: true };
+  }
+
+  try {
+    const { error } = await client.from('crowdsourced_gear_submissions').insert({
+      brand: payload.brand,
+      model: payload.model,
+      category: payload.category,
+      sub_category: payload.subCategory || null,
+      specs: payload.specs,
+      notes: payload.notes || null,
+      user_fingerprint: payload.user_fingerprint,
+      status: 'pending',
+    });
+
+    if (error) {
+      console.debug('[Supabase Crowdsource] Remote insert deferred (offline/schema pending):', error.message);
+      queuePendingGearSubmissionLocally(payload);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    queuePendingGearSubmissionLocally(payload);
+    return { success: false, error: msg };
+  }
+}
+
+function queuePendingGearSubmissionLocally(payload: CrowdsourcedGearSubmission) {
+  try {
+    const key = 'flowbean_queued_gear_submissions_v1';
+    const raw = localStorage.getItem(key);
+    const queue: CrowdsourcedGearSubmission[] = raw ? JSON.parse(raw) : [];
+    queue.push(payload);
+    localStorage.setItem(key, JSON.stringify(queue.slice(-20)));
+  } catch {
+    // Ignore quota issues
+  }
+}
+
+export async function fetchPendingGearSubmissionsCount(): Promise<number> {
+  const client = getSupabaseClient();
+  if (!client) return 0;
+  try {
+    const { count, error } = await client
+      .from('crowdsourced_gear_submissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    if (error) return 0;
+    return count || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function fetchPendingGearSubmissions(): Promise<CrowdsourcedGearSubmission[]> {
+  const client = getSupabaseClient();
+  if (!client) return [];
+  try {
+    const { data, error } = await client
+      .from('crowdsourced_gear_submissions')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) return [];
+    return (data as CrowdsourcedGearSubmission[]) || [];
+  } catch {
+    return [];
+  }
+}
+
+export async function adminApproveGearSubmission(id: string): Promise<boolean> {
+  const client = getSupabaseClient();
+  if (!client) return false;
+  try {
+    const { error } = await client
+      .from('crowdsourced_gear_submissions')
+      .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+      .eq('id', id);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+// -------------------------------------------------------------------------
+// Flowbean Fleet Shot Telemetry Vector (<450 bytes) (Etape 4 & 5)
+// -------------------------------------------------------------------------
+export interface FleetShotTelemetryVector {
+  id?: string;
+  mathVersion: string;
+  machineKey: string;
+  grinderKey: string;
+  physicsClass: string;
+  basketDiameterMm?: number;
+  doseG: number;
+  yieldG: number;
+  brewTimeS: number;
+  preInfusionS?: number;
+  grindSetting: string;
+  flowCurve1Hz?: number[];
+  tasteRating?: number;
+  channelingDetected?: boolean;
+  aiPredictedTimeS?: number;
+  userOverrideDelta?: number;
+  userFingerprint?: string;
+}
+
+export async function uploadFleetShotTelemetry(
+  vector: Omit<FleetShotTelemetryVector, 'userFingerprint'>
+): Promise<{ success: boolean; error?: string }> {
+  const payload: FleetShotTelemetryVector = {
+    ...vector,
+    userFingerprint: getDeviceFingerprint(),
+  };
+
+  const client = getSupabaseClient();
+  if (!client) return { success: true };
+
+  try {
+    const { error } = await client.from('fleet_shot_telemetry').insert({
+      math_version: payload.mathVersion,
+      machine_key: payload.machineKey,
+      grinder_key: payload.grinderKey,
+      physics_class: payload.physicsClass,
+      basket_diameter_mm: payload.basketDiameterMm || null,
+      dose_g: payload.doseG,
+      yield_g: payload.yieldG,
+      brew_time_s: payload.brewTimeS,
+      pre_infusion_s: payload.preInfusionS || null,
+      grind_setting: payload.grindSetting,
+      flow_curve_1hz: payload.flowCurve1Hz || [],
+      taste_rating: payload.tasteRating || null,
+      channeling_detected: payload.channelingDetected ?? false,
+      ai_predicted_time_s: payload.aiPredictedTimeS || null,
+      user_override_delta: payload.userOverrideDelta || null,
+      user_fingerprint: payload.userFingerprint,
+    });
+
+    if (error) {
+      console.debug('[Supabase Telemetry] Shot upload deferred:', error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  }
+}
+

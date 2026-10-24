@@ -24,6 +24,10 @@ export interface GearSpecs {
   preInfusionControl?: 'adjustable' | 'fixed' | 'none';
   preInfusionNote?: string;
   defaultCapacityMl?: number;
+  basketDiameterMm?: number; // 58, 54, 52, 51, etc.
+  basketType?: 'precision' | 'standard' | 'pressurized';
+  physicsClass?: string;
+  isCustom?: boolean;
 }
 
 export interface GearCatalogItem {

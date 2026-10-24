@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { loadGearImageOverrides } from '../../lib/storage';
+import { getGearImageDataUrl } from '../../lib/gearImageStorage';
 
 interface GearImageProps {
   src?: string;
@@ -25,9 +26,18 @@ export const GearImage: React.FC<GearImageProps> = ({
 
   const checkOverride = () => {
     try {
-      const overrides = loadGearImageOverrides();
       const idKey = gearId ? gearId.toLowerCase().trim() : '';
       const altKey = alt.toLowerCase().trim();
+
+      // 1. IndexedDB high-capacity local store first
+      const idbDataUrl = (idKey && getGearImageDataUrl(idKey)) || getGearImageDataUrl(altKey);
+      if (idbDataUrl) {
+        setOverrideSrc(idbDataUrl);
+        return;
+      }
+
+      // 2. Legacy / synchronous overrides fallback
+      const overrides = loadGearImageOverrides();
       const found = (idKey && overrides[idKey]) || overrides[altKey];
       if (found?.dataUrl) {
         setOverrideSrc(found.dataUrl);

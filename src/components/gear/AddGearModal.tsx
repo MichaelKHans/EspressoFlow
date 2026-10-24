@@ -9,7 +9,8 @@ import {
 import type { GearCatalogItem } from '../../data/gearCatalog';
 import { GearImage } from './GearImage';
 import { useTranslation } from '../../i18n';
-import { loadGearImageOverrides } from '../../lib/storage';
+import { loadGearImageOverrides, loadCustomGearCatalog } from '../../lib/storage';
+import { CustomGearCreatorModal } from './CustomGearCreatorModal';
 
 interface AddGearModalProps {
   isOpen: boolean;
@@ -32,8 +33,7 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [showCustomCreatorModal, setShowCustomCreatorModal] = useState(false);
   const [overridesVersion, setOverridesVersion] = useState(0);
 
   useEffect(() => {
@@ -67,6 +67,10 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
     categoryTitle = t('gear.catalog_select_kettle');
   }
 
+  // Prepend custom user equipment for this category
+  const customItems = loadCustomGearCatalog().filter((item) => item.category === category);
+  catalog = [...customItems, ...catalog];
+
   const filtered = catalog.filter((item) => {
     const q = search.toLowerCase();
     return (
@@ -75,24 +79,6 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
       (item.subCategory && item.subCategory.toLowerCase().includes(q))
     );
   });
-
-  const handleAddCustom = () => {
-    if (!customName.trim()) return;
-    const customItem: GearCatalogItem = {
-      id: `custom-${Date.now()}`,
-      name: customName.trim(),
-      brand: 'Custom',
-      category,
-      subCategory: 'Brugerdefineret model',
-      image: '',
-      description: 'Manuelt tilføjet model',
-      specs: {},
-    };
-    onAddGear(customItem);
-    setCustomName('');
-    setShowCustomInput(false);
-    onClose();
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs font-mono text-xs">
@@ -169,6 +155,11 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
                     <span className="text-[9px] uppercase font-bold text-[#C26D52]">
                       {item.brand}
                     </span>
+                    {item.specs?.isCustom && (
+                      <span className="px-1.5 py-0.2 rounded-md bg-[#C26D52]/10 border border-[#C26D52]/30 text-[#C26D52] text-[8px] font-bold">
+                        Eget udstyr
+                      </span>
+                    )}
                     <span className="text-[9px] text-[#7A6E65]">●</span>
                     <span className="text-[9px] text-[#7A6E65] truncate font-mono">
                       {item.subCategory}
@@ -231,7 +222,7 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
               <p>{t('gear.catalog_no_match', { query: search })}</p>
               <button
                 type="button"
-                onClick={() => setShowCustomInput(true)}
+                onClick={() => setShowCustomCreatorModal(true)}
                 className="text-xs text-[#C26D52] font-bold underline cursor-pointer"
               >
                 {t('gear.catalog_create_custom_prompt', { query: search })}
@@ -242,42 +233,27 @@ export const AddGearModal: React.FC<AddGearModalProps> = ({
 
         {/* Custom Gear Option in Bottom Footer */}
         <div className="p-3 sm:p-4 border-t border-[#D0BDAA] bg-[#FAF7F2]">
-          {showCustomInput ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                placeholder={t('gear.catalog_custom_placeholder')}
-                className="flex-1 px-3 py-2 rounded-xl border border-[#D0BDAA] bg-white text-xs text-[#2C2018] focus:outline-none focus:border-[#C26D52]"
-              />
-              <button
-                type="button"
-                onClick={handleAddCustom}
-                className="px-3.5 py-2 rounded-xl bg-[#2C2018] text-white font-bold cursor-pointer hover:bg-[#3D2D22] shrink-0"
-              >
-                {t('gear.catalog_add_btn')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCustomInput(false)}
-                className="px-2 py-2 text-stone-500 hover:text-stone-800 text-xs cursor-pointer"
-              >
-                {t('gear.catalog_custom_cancel')}
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowCustomInput(true)}
-              className="w-full py-2 rounded-xl border border-dashed border-[#D0BDAA] text-[#7A6E65] hover:text-[#2C2018] hover:border-[#2C2018] text-xs font-mono flex items-center justify-center gap-1.5 transition cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-[#C26D52]" />
-              <span>{t('gear.catalog_missing_custom_btn')}</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowCustomCreatorModal(true)}
+            className="w-full py-2.5 rounded-xl border border-dashed border-[#D0BDAA] hover:border-[#2C2018] bg-white text-[#2C2018] text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-[0.99]"
+          >
+            <Plus className="w-4 h-4 text-[#C26D52]" />
+            <span>+ Opret brugerdefineret udstyr (specifikationer & foto)</span>
+          </button>
         </div>
       </div>
+
+      {/* Custom Gear Creator Wizard */}
+      <CustomGearCreatorModal
+        isOpen={showCustomCreatorModal}
+        onClose={() => setShowCustomCreatorModal(false)}
+        defaultCategory={category}
+        onCreated={(newItem) => {
+          onAddGear(newItem);
+          onClose();
+        }}
+      />
     </div>
   );
 };

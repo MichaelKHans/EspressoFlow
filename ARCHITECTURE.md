@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.8 (BrewPhysics Taksonomi, Maskine-Isolering i Læringen & Flerdimensionel Kalibreringsnøgle)  
+> **Gældende version:** v1.21.9 (IndexedDB Billedlager, "Opret Eget Udstyr" Wizard, Crowdsourcing & Fleet Telemetry Motor)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -320,6 +320,9 @@ flowchart TD
 | :--- | :--- | :--- |
 | `global_coffee_beans` | `barcode` (PK), `name`, `roaster`, `roast_level`, `origin_country`, `suitable_for`, `flavor_notes`, `avg_rating`, `ratings_count`, `verifications_count`, `is_verified`, `expert_score`, `expert_source`, `image_url` | Centralt bønnekatalog. Offentlig læsning, bruger-crowdsourcing (sanitiseret), kurator-verificering og sletning med RLS. |
 | `bean_drink_ratings` | `id` (PK), `barcode` (FK), `user_fingerprint`, `rating` (1-5), `drink_type`, `brew_ratio`, `comment` | Barista-bedømmelser pr. drikketype (Pure Espresso, Flat White, Cortado) med automatisk 70% konsensus-aggregering. |
+| `scale_diagnostic_sessions` | `id` (PK), `session_id`, `device_info`, `recipe_info`, `telemetry_samples`, `initial_image`, `final_image` | Sort boks fly-data optager for real-time OCR kameratelemetri, frame rejection og diagnostik. |
+| `crowdsourced_gear_submissions` | `id` (PK), `category`, `brand`, `model`, `specs` (JSONB), `notes`, `user_fingerprint`, `status` ('pending'/'approved') | Fællesskabskø for brugeroprettet udstyr. Anonyme specifikationer uden private fotos. 1-klik godkendelse i Admin Hub. |
+| `fleet_shot_telemetry` | `id` (PK), `math_version`, `machine_key`, `grinder_key`, `physics_class`, `basket_diameter_mm`, `dose_g`, `yield_g`, `brew_time_s`, `flow_curve_1hz` | Ultrakompakt (<450 bytes) anonymiseret telemetri til Bayesian flådekonsensus og Flowbean Lab forskningspanel. |
 
 ### Oversigt over Nøgler i LocalStorage:
 | Nøgle | Type / Model | Beskrivelse |
@@ -335,8 +338,10 @@ flowchart TD
 | `flowbean_bean_anchors_v1` | `Record<string, BeanCalibrationAnchor>` | Dial-in ankre låst i Golden Zone (24-32s uden kanalisering) til beregning af afgasning og ristegrads-skift. |
 | `espresso_curator_checklist` | `Record<string, boolean>` | Kuratorens afkrydsede periodiske kvalitetstjek. |
 | `espresso_last_curator_audit` | `string (YYYY-MM-DD)` | Dato for senest gennemførte officielle kurator-revision. |
-| `flowbean_card_themes_v1` | `Record<string, string>` | Aktive baggrundstema-id'er pr. kort (`barista_deck`, `beandex_banner`, `grinder_fleet`, etc.). |
-| `flowbean_card_bg_adjustments_v1` | `Record<string, CardBackgroundAdjustments>` | Admin finjusteringer for sløring (0-16px), gennemsigtighed (10-100%), lysstyrke, kontrast og farvetone-overlay. |
+| `flowbean_custom_gear_catalog_v1` | `GearCatalogItem[]` | Lokalt katalog over brugerens egne oprettede maskiner, kværne, bryggere og kedler med fulde væskemekaniske specifikationer. |
+| `flowbean_gear_image_overrides_v1` | `Record<string, GearImageOverride>` | Legacy overrides for packshots (evakueres automatisk til IndexedDB). |
+| `flowbean_fleet_telemetry_opt_in_v1` | `'true' \| 'false'` | Brugerens samtykke til anonym flåde-telemetri (standard: slået til med opt-out). |
+| `flowbean_media_v1 (IndexedDB)` | ObjectStore: `gear_images` | **Højkapacitets IndexedDB-medielager**: Gemmer brugerens egne udstyrsbilleder og kamerafotos sikkert uden risiko for localStorage-kvoteoverskridelse. |
 
 ---
 

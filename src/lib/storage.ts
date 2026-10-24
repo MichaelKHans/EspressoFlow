@@ -1,5 +1,7 @@
 import type { ShotRecord, ShotDataPoint, UserAccessState, CoffeeBeanProfile, GrinderProfile, TempUnit, EspressoMachineProfile } from '../types/espresso';
-import { MACHINE_CATALOG, resolveGrinderSpecs } from '../data/gearCatalog';
+import { MACHINE_CATALOG, resolveGrinderSpecs, type GearCatalogItem } from '../data/gearCatalog';
+import { saveGearImageDataUrl, deleteGearImageDataUrl } from './gearImageStorage';
+import { recordShotFleetTelemetry } from './fleetTelemetry';
 
 const STORAGE_KEYS = {
   SHOTS: 'espressoflow_shots_v1',
@@ -25,6 +27,7 @@ const STORAGE_KEYS = {
   KETTLES_IN_SETUP: 'espressoflow_kettles_in_setup_v1',
   FRENCH_PRESS_SETTINGS: 'espressoflow_french_press_settings_v1',
   GEAR_IMAGE_OVERRIDES: 'flowbean_gear_image_overrides_v1',
+  CUSTOM_GEAR_CATALOG: 'flowbean_custom_gear_catalog_v1',
 };
 
 const TRIAL_DURATION_DAYS = 7;
@@ -126,6 +129,9 @@ export function saveShot(shot: ShotRecord): void {
       });
       localStorage.setItem(STORAGE_KEYS.SHOTS, JSON.stringify(pruned));
     }
+
+    // Fire-and-forget compact fleet shot telemetry
+    void recordShotFleetTelemetry(shot);
   } catch (err) {
     console.error('Failed to save shot record', err);
   }
@@ -917,21 +923,31 @@ export function getMachineTempProfile(machineName: string): Partial<EspressoMach
   });
 
   const catalogSpecs = catalogMatch?.specs;
-  const catalogProfile: Partial<EspressoMachineProfile> = catalogSpecs
+
+  // 2.5 Check user custom gear catalog
+  const customMachines = loadCustomGearCatalog().filter((c) => c.category === 'machine');
+  const customMatch = customMachines.find((c) => {
+    const cName = c.name.toLowerCase().trim();
+    return cName === normName || cName.includes(normName) || normName.includes(cName);
+  });
+  const customSpecs = customMatch?.specs;
+  const effectiveSpecs = catalogSpecs || customSpecs;
+
+  const catalogProfile: Partial<EspressoMachineProfile> = effectiveSpecs
     ? {
-        tempControl: catalogSpecs.tempControl,
-        minTempC: catalogSpecs.tempControl === 'fixed' ? (catalogSpecs.defaultTempC ?? 93) : 88,
-        maxTempC: catalogSpecs.tempControl === 'fixed' ? (catalogSpecs.defaultTempC ?? 93) : 96,
-        defaultTempC: catalogSpecs.defaultTempC,
-        defaultPreInfusionSeconds: catalogSpecs.defaultPreInfusionSeconds,
-        preInfusionControl: catalogSpecs.preInfusionControl,
-        preInfusionNote: catalogSpecs.preInfusionNote,
-        maxPumpBar: catalogSpecs.pumpBar,
+        tempControl: effectiveSpecs.tempControl,
+        minTempC: effectiveSpecs.tempControl === 'fixed' ? (effectiveSpecs.defaultTempC ?? 93) : 88,
+        maxTempC: effectiveSpecs.tempControl === 'fixed' ? (effectiveSpecs.defaultTempC ?? 93) : 96,
+        defaultTempC: effectiveSpecs.defaultTempC,
+        defaultPreInfusionSeconds: effectiveSpecs.defaultPreInfusionSeconds,
+        preInfusionControl: effectiveSpecs.preInfusionControl,
+        preInfusionNote: effectiveSpecs.preInfusionNote,
+        maxPumpBar: effectiveSpecs.pumpBar,
       }
     : {};
 
   // Merge: preset takes precedence on combo grinder fields, catalog supplies verified hydraulic & pre-infusion specs
-  if (preset || catalogSpecs) {
+  if (preset || effectiveSpecs) {
     return {
       tempControl: preset?.tempControl ?? catalogProfile.tempControl ?? 'pid',
       minTempC: preset?.minTempC ?? catalogProfile.minTempC ?? 88,
@@ -1331,6 +1347,13 @@ export function saveGearImageOverride(override: GearImageOverride): void {
     current[key] = override;
     current[nameKey] = override;
     localStorage.setItem(STORAGE_KEYS.GEAR_IMAGE_OVERRIDES, JSON.stringify(current));
+
+    // Also persist into high-capacity IndexedDB
+    void saveGearImageDataUrl(key, override.dataUrl, { gearName: override.gearName });
+    if (nameKey !== key) {
+      void saveGearImageDataUrl(nameKey, override.dataUrl, { gearName: override.gearName });
+    }
+
     window.dispatchEvent(new CustomEvent('flowbean_gear_images_updated'));
   } catch (err) {
     console.error('Failed to save gear image override', err);
@@ -1343,9 +1366,52 @@ export function removeGearImageOverride(gearKeyOrName: string): void {
     const key = gearKeyOrName.toLowerCase().trim();
     delete current[key];
     localStorage.setItem(STORAGE_KEYS.GEAR_IMAGE_OVERRIDES, JSON.stringify(current));
+
+    // Also remove from IndexedDB
+    void deleteGearImageDataUrl(key);
+
     window.dispatchEvent(new CustomEvent('flowbean_gear_images_updated'));
   } catch (err) {
     console.error('Failed to remove gear image override', err);
+  }
+}
+
+// -------------------------------------------------------------
+// Custom User Equipment Catalog Storage (Etape 3)
+// -------------------------------------------------------------
+export function loadCustomGearCatalog(): GearCatalogItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CUSTOM_GEAR_CATALOG);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomGearCatalogItem(item: GearCatalogItem): void {
+  try {
+    const catalog = loadCustomGearCatalog();
+    const existingIdx = catalog.findIndex((g) => g.id === item.id || g.name.toLowerCase() === item.name.toLowerCase());
+    if (existingIdx >= 0) {
+      catalog[existingIdx] = item;
+    } else {
+      catalog.push(item);
+    }
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_GEAR_CATALOG, JSON.stringify(catalog));
+    window.dispatchEvent(new CustomEvent('flowbean_custom_gear_updated', { detail: { item } }));
+  } catch (err) {
+    console.error('Failed to save custom gear catalog item', err);
+  }
+}
+
+export function deleteCustomGearCatalogItem(itemId: string): void {
+  try {
+    const catalog = loadCustomGearCatalog();
+    const filtered = catalog.filter((g) => g.id !== itemId && g.name.toLowerCase() !== itemId.toLowerCase());
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_GEAR_CATALOG, JSON.stringify(filtered));
+    window.dispatchEvent(new CustomEvent('flowbean_custom_gear_updated', { detail: { id: itemId } }));
+  } catch (err) {
+    console.error('Failed to delete custom gear catalog item', err);
   }
 }
 

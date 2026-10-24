@@ -2,6 +2,30 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.9] - 2026-10-24
+### Etape 88: IndexedDB Billedlager, "Opret Eget Udstyr" Wizard, Crowdsourcing & Fleet Telemetry Motor
+- **IndexedDB Medielager til Udstyrsbilleder ([gearImageStorage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/gearImageStorage.ts)):**
+  - Implementeret asynkront IndexedDB-lager (`flowbean_media_v1`, `gear_images`) med synkron in-memory read-cache, som eliminerer browserens 5MB localStorage-kvotelimit for brugerfotos og packshots.
+  - Automatisk migrering af legacy base64-billeder ud af localStorage for at frigøre kvote og forhindre `QuotaExceededError`.
+  - Integreret direkte i `GearImage.tsx` og `storage.ts`.
+- **"Opret Eget Udstyr" Wizard ([CustomGearCreatorModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/CustomGearCreatorModal.tsx)):**
+  - Oprettet dedikeret Flowbean modal for registrering af eget udstyr (Espressomaskiner, Kaffekværne, Filterbryggere og Elkedler).
+  - Maskiner: Valg af kurvestørrelse (58mm standard, 54mm Sage, 52mm Picopresso, 51mm Dedica eller brugerdefineret), kurvetype (præcision vs. tryksat ventilkurv), kedel/varmelegeme, pumpetryk og pre-infusion.
+  - Kværne: Knivtype (konisk vs. flad), knivstørrelse (mm), trinvis vs. trinløs, skala-grænser samt differentieret espresso-zone split (fx Baratza ESP 1-40).
+  - Bryggere & Kedler: Fuld understøttelse af percolation, immersion, immersion-tryk (AeroPress) og moka, samt svanehals og variabel PID.
+  - Kamera/foto-upload: Billeder komprimeres og gemmes 100% lokalt og privat på telefonen i IndexedDB.
+- **Katalog-Integration & Badge ([AddGearModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/gear/AddGearModal.tsx)):**
+  - Brugerdefineret udstyr fremhæves automatisk øverst i kataloget med et "Eget udstyr" terracotta-badge.
+  - Knappen "+ Opret brugerdefineret udstyr (specifikationer & foto)" åbner nu den fulde wizard i stedet for et simpelt tekstfelt.
+- **Supabase Fællesskabs-Crowdsourcing & Admin Moderation Hub ([supabase.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/supabase.ts) & [AdminPortal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/AdminPortal.tsx)):**
+  - Tabel `crowdsourced_gear_submissions`: Modtager anonymiserede gear-specifikationer (helt uden private fotos af hensyn til privatliv og lagerplads).
+  - Nyt administrationskort i Admin Portalen: "Gear Moderation & Fællesskabskø" med tæller for afventende gear-indsendelser og 1-klik godkendelse til det officielle katalog.
+- **Fleet Shot Telemetry Engine (<450 bytes) ([fleetTelemetry.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetTelemetry.ts)):**
+  - Ultrakompakt anonymiseret shot-vektor med 1Hz nedskaleret flowkurve, kurvestørrelse, dosis, yield, kontakt-tid, channeling-indikator og AI target.
+  - Klargjort til Bayesian konsensus og "Flowbean Lab" kvalitativ forskning i Admin Portalen.
+- **Supabase SQL Migreringsfil ([20261024_crowdsourced_gear_and_telemetry.sql](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/supabase/migrations/20261024_crowdsourced_gear_and_telemetry.sql)):**
+  - Fuldstændig idempotent SQL script til oprettelse af `crowdsourced_gear_submissions` og `fleet_shot_telemetry` med korrekte RLS policies og indeks.
+
 ## [1.21.8] - 2026-10-24
 ### Etape 87: BrewPhysics Taksonomi, Maskine-Isolering i Læringen & Flerdimensionel Kalibreringsnøgle
 - **BrewPhysics Taksonomi ([brewPhysics.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/brewPhysics.ts)):**
