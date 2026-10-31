@@ -29,6 +29,7 @@ import {
   Thermometer,
 } from 'lucide-react';
 import { getOptimalBeanGuidanceForDrink, matchBeansForDrink } from '../lib/beanMatcher';
+import { TactileGrindDial } from './TactileGrindDial';
 
 export const getRoastBadgeStyles = (level: RoastLevel) => {
   switch (level) {
@@ -682,7 +683,6 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 : 20.0);
 
             const currentGrindNum = parseFloat(grindSetting) || 15.0;
-            const isEspressoZone = currentGrindNum <= effectiveEspressoMax;
 
             // Universal Adaptive ML recommendation
             const grinderIdentifier = activeGrinder.name || activeGrinder.id;
@@ -726,211 +726,17 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             const hasAiTarget = !isNaN(aiTargetNum) && aiTargetNum >= effectiveMin && aiTargetNum <= effectiveMax;
             const isAtAiTarget = hasAiTarget && Math.abs(currentGrindNum - aiTargetNum) < 0.1;
 
-            const stepDelta = activeGrinder.type === 'stepless' ? 0.2 : 0.5;
-            const stepGrind = (deltaDir: number) => {
-              const nextVal = Math.min(
-                effectiveMax,
-                Math.max(effectiveMin, Math.round((currentGrindNum + deltaDir * stepDelta) * 10) / 10)
-              );
-              setGrindSetting(nextVal.toFixed(1));
-            };
-
-            const tickCount = isDualZoneBaratzaPro ? 60 : isDualZoneBaratza ? 40 : 31;
-            const maxTickIdx = tickCount - 1;
-            const splitTarget = Math.round(effectiveEspressoMax);
-
             return (
               <div className="space-y-3">
-                {/* Tactile Grinder Hero Box */}
-                <div className="bg-white p-3 rounded-xl border border-[#E8DFD5] space-y-2.5 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold font-mono text-[#2C2018] tracking-tight">
-                        {currentGrindNum.toFixed(1)}
-                      </span>
-                      <span className="text-[11px] text-[#7A6E65] uppercase font-mono font-medium">
-                        {isDualZoneBaratza && currentGrindNum > effectiveEspressoMax
-                          ? t('gear.macro_step') || 'Macro-Step'
-                          : t('gear.micro_step') || 'Micro-Step'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* Zone badge */}
-                      <span
-                        className={`text-[9px] font-bold uppercase font-mono px-2 py-0.5 rounded-md border ${
-                          isEspressoZone
-                            ? 'text-[#C26D52] bg-[#C26D52]/10 border-[#C26D52]/30'
-                            : 'text-[#72806B] bg-[#72806B]/10 border-[#72806B]/30'
-                        }`}
-                      >
-                        {isEspressoZone
-                          ? t('gear.espresso_zone') || 'Espresso Zone'
-                          : t('gear.filter_zone') || 'Filter & Pour Over Zone'}
-                      </span>
-
-                      {/* Stepper Buttons */}
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => stepGrind(-1)}
-                          className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#D0BDAA] text-[#2C2018] hover:bg-white hover:border-[#C26D52] font-bold text-base flex items-center justify-center transition active:scale-90 cursor-pointer shadow-2xs"
-                          title={`Finer (-${stepDelta})`}
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => stepGrind(1)}
-                          className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#D0BDAA] text-[#2C2018] hover:bg-white hover:border-[#C26D52] font-bold text-base flex items-center justify-center transition active:scale-90 cursor-pointer shadow-2xs"
-                          title={`Coarser (+${stepDelta})`}
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Header Label Row ABOVE ruler */}
-                  <div className="flex items-center justify-between text-[10px] font-mono select-none px-1 pt-1">
-                    <span className="font-bold text-[#C26D52]">
-                      Fine ({effectiveMin.toFixed(effectiveMin % 1 === 0 ? 0 : 1)})
-                    </span>
-
-                    {isDualZoneBaratza ? (
-                      <span className="font-bold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
-                        Split ({effectiveEspressoMax.toFixed(1)})
-                      </span>
-                    ) : effectiveEspressoMax > 0 ? (
-                      <span className="font-semibold text-stone-600 bg-white/80 border border-[#D0BDAA] px-2 py-0.5 rounded-md text-[9px] shadow-2xs">
-                        Espresso ≤ {effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}
-                      </span>
-                    ) : null}
-
-                    <span className="font-bold text-[#72806B]">
-                      Coarse ({effectiveMax.toFixed(effectiveMax % 1 === 0 ? 0 : 1)})
-                    </span>
-                  </div>
-
-                  {/* Caliper Ruler Box with Notch & AI Target */}
-                  <div
-                    className="relative w-full h-9 bg-[#FAF7F2] rounded-xl border border-[#D0BDAA] px-3 flex items-center overflow-hidden shadow-2xs cursor-pointer select-none"
-                    title="Tap or drag to set grind"
-                    onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const clickX = e.clientX - rect.left;
-                      const pct = Math.max(0, Math.min(1, clickX / rect.width));
-                      const newSetting = effectiveMin + pct * (effectiveMax - effectiveMin);
-                      const stepPrecision = activeGrinder.type === 'stepless' ? 0.1 : 0.5;
-                      const rounded = Math.round(newSetting / stepPrecision) * stepPrecision;
-                      const clamped = Math.min(effectiveMax, Math.max(effectiveMin, rounded));
-                      setGrindSetting(clamped.toFixed(1));
-                    }}
-                  >
-                    {/* Caliper Ticks */}
-                    <div className="absolute inset-0 px-3 flex items-end pointer-events-none z-0">
-                      <div className="relative w-full h-full">
-                        {Array.from({ length: tickCount }, (_, idx) => {
-                          const tickVal = isDualZoneBaratza
-                            ? idx + 1
-                            : effectiveMin + (idx / maxTickIdx) * (effectiveMax - effectiveMin);
-                          const percent = (idx / maxTickIdx) * 100;
-                          const isSplit = isDualZoneBaratza && tickVal === splitTarget;
-                          const isMajor = idx === 0 || idx === maxTickIdx;
-                          const isMid = isDualZoneBaratza ? tickVal % 5 === 0 : idx % 5 === 0;
-
-                          let tickHeight = 'h-2 w-[1px] bg-[#D0BDAA]/70';
-                          if (isSplit) {
-                            tickHeight = 'h-6 w-0.5 bg-[#C26D52]';
-                          } else if (isMajor) {
-                            tickHeight = 'h-4 w-0.5 bg-[#2C2018]';
-                          } else if (isMid) {
-                            tickHeight = 'h-3 w-0.5 bg-[#A6998E]';
-                          }
-
-                          return (
-                            <div
-                              key={`tick-${idx}`}
-                              className={`absolute bottom-0 -translate-x-1/2 ${tickHeight}`}
-                              style={{ left: `${percent}%` }}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* AI Target Notch on Ruler (if available) */}
-                    {hasAiTarget && (
-                      <div
-                        className="absolute bottom-0 top-0 w-0.5 bg-[#C26D52]/70 pointer-events-none z-10 transition-all duration-150"
-                        style={{
-                          left: `${Math.min(
-                            96,
-                            Math.max(
-                              4,
-                              ((aiTargetNum - effectiveMin) /
-                                Math.max(0.1, effectiveMax - effectiveMin)) *
-                                100
-                            )
-                          )}%`,
-                        }}
-                      >
-                        <div
-                          className="absolute -top-1 -translate-x-1/2 w-2 h-2 rounded-full bg-[#C26D52] ring-2 ring-white shadow-xs"
-                          title={`AI Target: ${aiTargetNum.toFixed(1)}`}
-                        />
-                      </div>
-                    )}
-
-                    {/* Current Position Thumb Notch */}
-                    <div
-                      className="absolute bottom-0 top-0 w-1 bg-[#2C2018] shadow-sm transition-all duration-150 pointer-events-none z-20"
-                      style={{
-                        left: `${Math.min(
-                          96,
-                          Math.max(
-                            4,
-                            ((currentGrindNum - effectiveMin) /
-                              Math.max(0.1, effectiveMax - effectiveMin)) *
-                              100
-                          )
-                        )}%`,
-                      }}
-                    >
-                      <div className="w-3.5 h-3.5 rounded-full bg-[#2C2018] -translate-x-1.25 -translate-y-1 shadow-md border-2 border-white" />
-                    </div>
-                  </div>
-
-                  {/* Dynamic Zone Explanation */}
-                  {isDualZoneBaratzaPro ? (
-                    <div className="flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
-                      <span className="text-[#C26D52] font-semibold">
-                        ● 1–40: 20µm Micro-Steps (Espresso)
-                      </span>
-                      <span className="text-[#72806B] font-semibold">
-                        ● 41–60: Macro-Steps (Filter & V60)
-                      </span>
-                    </div>
-                  ) : isDualZoneBaratza ? (
-                    <div className="flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
-                      <span className="text-[#C26D52] font-semibold">
-                        ● 1–20: 20µm Micro-Steps (Espresso)
-                      </span>
-                      <span className="text-[#72806B] font-semibold">
-                        ● 21–40: 90µm Macro-Steps (Filter & V60)
-                      </span>
-                    </div>
-                  ) : effectiveEspressoMax > 0 ? (
-                    <div className="flex items-center justify-between text-[10px] text-[#7A6E65] px-1 font-sans">
-                      <span className="text-[#C26D52] font-semibold">
-                        ● ≤ {effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}: Espresso Dial-In Zone
-                      </span>
-                      <span className="text-[#72806B] font-semibold">
-                        ● &gt; {effectiveEspressoMax.toFixed(effectiveEspressoMax % 1 === 0 ? 0 : 1)}: Filter / Coarse Range
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
+                {/* Tactile Grinder Hero Box & Caliper Ruler */}
+                <TactileGrindDial
+                  currentSetting={grindSetting}
+                  onSettingChange={(val) => setGrindSetting(val)}
+                  grinder={activeGrinder}
+                  aiSuggestedSetting={hasAiTarget ? aiPred.formattedSetting : undefined}
+                  isAlreadyAdjusted={isAtAiTarget}
+                  showAiSuggestion={false}
+                />
 
                 {/* AI Adaptive Intelligence Recommendation Card */}
                 <div

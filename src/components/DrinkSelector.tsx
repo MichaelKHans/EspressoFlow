@@ -23,6 +23,8 @@ import {
   loadDrinkGrindSettings,
   saveDrinkGrindSetting,
   resolveDrinkCalibration,
+  saveDrinkCalibration,
+  buildDrinkCalibrationKey,
   loadShots,
   loadOrCreateGrinderProfile,
   getAnchorForBean,
@@ -31,6 +33,7 @@ import {
   saveFrenchPressSettings,
   type FrenchPressSettings,
 } from '../lib/storage';
+import { TactileGrindDial } from './TactileGrindDial';
 import { predictOptimalGrindSetting } from '../lib/grindIntelligence';
 import { GRINDER_CALIBRATIONS, calculateTargetExtractionTime } from '../lib/espressoMath';
 import { ArchitecturalCup } from './ArchitecturalCup';
@@ -430,6 +433,32 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   const isDialedIn = Boolean(
     drinkGrinds[calibrationKey] || (dialInAnalysis.hasHistory && dialInAnalysis.status === 'dialed_in')
   );
+
+  const handleApplyGrindSetting = (newSetting: string) => {
+    setCurrentSettingInput(newSetting);
+    onGrindSettingChange?.(newSetting);
+    saveDrinkGrindSetting(calibrationKey, newSetting);
+    const multiKey = buildDrinkCalibrationKey(currentBean.id, selectedDrink.id, currentGrinder.name, activeMachineOrBrewer);
+    saveDrinkGrindSetting(multiKey, newSetting);
+    setDrinkGrinds((prev) => ({
+      ...prev,
+      [calibrationKey]: newSetting,
+      [multiKey]: newSetting,
+    }));
+    onUpdateBeanDialIn?.({ grindSetting: newSetting });
+
+    const payload = {
+      doseGrams: effectiveDose,
+      targetYieldGrams: effectiveYield,
+      grindSetting: newSetting,
+      brewTempC: currentBean.brewTempC,
+      grinderName: currentGrinder.name,
+      machineName: selectedDrink.method !== 'pour_over' ? machineName : undefined,
+      filterBrewer: selectedDrink.method === 'pour_over' ? filterBrewer : undefined,
+    };
+    saveDrinkCalibration(calibrationKey, payload);
+    saveDrinkCalibration(multiKey, payload);
+  };
 
   const toggleDeckDrink = (drinkId: string) => {
     let updated: string[];
@@ -949,7 +978,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   </div>
 
                   {/* Unified Grinder & Bean Calibration Card */}
-                  <div className="rounded-xl bg-white border border-[#E8DFD5] grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E8DFD5] overflow-hidden text-xs shadow-xs">
+                  <div className="rounded-xl bg-white border border-[#E8DFD5] grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-[#E8DFD5] overflow-hidden text-xs shadow-xs">
                     {/* Active Bean Info or Empty Bag Notice */}
                     {(() => {
                       const activeBeans = (allBeans || []).filter((b) => !b.isFinished);
@@ -957,7 +986,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
 
                       if (isBeanEmptied) {
                         return (
-                          <div className="p-3.5 space-y-2.5 bg-[#FAF7F2] border-b sm:border-b-0 sm:border-r border-[#E8DFD5]">
+                          <div className="md:col-span-5 p-3.5 space-y-2.5 bg-[#FAF7F2] border-b md:border-b-0 md:border-r border-[#E8DFD5]">
                             <div className="flex items-center justify-between">
                               <span className="text-[9.5px] uppercase font-bold text-amber-900 flex items-center gap-1.5 font-mono">
                                 <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" /> {t('drink.no_active_bean')}
@@ -1011,7 +1040,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                       }
 
                       return (
-                        <div className="p-3 space-y-1.5">
+                        <div className="md:col-span-5 p-3 space-y-1.5">
                           <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
                             <span>{t('drink.active_bean_label') || 'Active Coffee Bean'}</span>
                             <span className="text-[#72806B] font-bold">{score}% match</span>
@@ -1058,61 +1087,23 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                       );
                     })()}
 
-                    {/* Grinder & Dial Setting */}
-                    <div className="p-3 space-y-1.5">
-                      <div className="text-[9px] uppercase font-bold text-[#7A6E65] flex items-center justify-between">
-                        <span>{t('drink.grinder_setting_label') || 'Grinder & Setting'}</span>
-                        <span className="text-[#C26D52] font-bold">
-                          {currentGrinder.name.split(' ')[0]}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-1 flex-wrap">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-base font-bold text-[#2C2018] font-mono">
-                            {t('drink.setting_label') || 'Setting'} {currentSettingInput}
-                          </span>
-                          <span className="text-[9px] text-[#7A6E65]">
-                            ({grinderSpec.unitName})
-                          </span>
-                        </div>
-                        {Boolean(dialInAnalysis.suggestedSetting) && !dialInAnalysis.isAlreadyAdjusted && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (dialInAnalysis.suggestedSetting) {
-                                const newSetting = dialInAnalysis.suggestedSetting;
-                                setCurrentSettingInput(newSetting);
-                                onGrindSettingChange?.(newSetting);
-                                saveDrinkGrindSetting(calibrationKey, newSetting);
-                                setDrinkGrinds((prev) => ({ ...prev, [calibrationKey]: newSetting }));
-                                onUpdateBeanDialIn?.({ grindSetting: newSetting });
-                              }
-                            }}
-                            className="px-2 py-0.5 rounded-lg bg-[#C26D52]/10 hover:bg-[#C26D52] text-[#C26D52] hover:text-white border border-[#C26D52]/30 text-[10px] font-sans font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
-                            title={`${t('drink.apply_suggestion')}: ${dialInAnalysis.suggestedSetting}`}
-                          >
-                            <span>💡 {dialInAnalysis.suggestedSetting}</span>
-                            <span className="text-[9px] uppercase font-bold">({t('drink.apply_suggestion')})</span>
-                          </button>
-                        )}
-                        {Boolean(dialInAnalysis.suggestedSetting) && dialInAnalysis.isAlreadyAdjusted && (
-                          <div
-                            className="px-2 py-0.5 rounded-lg bg-[#72806B]/15 text-[#54624F] border border-[#72806B]/30 text-[10px] font-sans font-bold flex items-center gap-1 shrink-0"
-                            title={`${t('drink.suggestion_applied') || 'Ready'} (${currentSettingInput})`}
-                          >
-                            <Check className="w-3 h-3 text-[#72806B]" />
-                            <span>{t('drink.suggestion_applied') || 'Ready'}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-[#7A6E65] truncate">
-                        {t('drink.target_time_label') || 'Target Time'}: ~{targetTime}s ({targetYield}g)
-                      </div>
+                    {/* Grinder & Dial Setting (Tactile Dial with Steppers & Caliper Ruler) */}
+                    <div className="md:col-span-7 p-3 sm:p-3.5 bg-[#FFFDF9]">
+                      <TactileGrindDial
+                        currentSetting={currentSettingInput}
+                        onSettingChange={handleApplyGrindSetting}
+                        grinder={currentGrinder}
+                        aiSuggestedSetting={dialInAnalysis.suggestedSetting}
+                        isAlreadyAdjusted={dialInAnalysis.isAlreadyAdjusted}
+                        showAiSuggestion={true}
+                        targetTime={targetTime}
+                        targetYield={targetYield}
+                      />
                     </div>
 
                     {/* Pour Over Brewer & Kettle Banner (When method is pour_over) */}
                     {selectedDrink.method === 'pour_over' && filterBrewer && (
-                      <div className="col-span-1 sm:col-span-2 p-2.5 px-3 bg-[#FAF7F2] border-t border-[#E8DFD5] flex items-center justify-between gap-2 flex-wrap text-[11px]">
+                      <div className="col-span-1 md:col-span-12 p-2.5 px-3 bg-[#FAF7F2] border-t border-[#E8DFD5] flex items-center justify-between gap-2 flex-wrap text-[11px]">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs">🫗</span>
                           <span className="text-[#7A6E65] uppercase font-bold text-[9px] tracking-wider">

@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.14 (Dedikeret Viewport-Locked Live Brew Cockpit, Zero-Scroll Shot Mode & 30 FPS Standby)  
+> **Gældende version:** v1.21.15 (Taktil Kværnvisning & Hurtig-Indstilling på Drikkekortet, Zero-Scroll Brew Cockpit)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -539,3 +539,9 @@ For at opbygge verdens mest præcise kaffeteknologiske flådemodel, anvender Flo
 - **Feedback-Loop Terminal Tilstand:**
   - `DrinkSelector.tsx` anvender `isAlreadyAdjusted = Math.abs(numericCurrent - numericTarget) < 0.1`.
   - Når baristaen sætter kværnen til den anbefalede værdi, låser UI'et fast i en bekræftet `✓ Ready` (`✓ Klar`) tilstand i stedet for at lave uendelige additive trin baseret på forældede forslag.
+
+### 11.5 Taktil Kværnvisning & Skydelære (`TactileGrindDial.tsx`)
+- **Delt visuel komponent:** Samler den taktile kværnvisning fra Dial-In guiden i en genanvendelig komponent (`TactileGrindDial.tsx`), som nu er integreret direkte på Coffee Bar drikkekortet i `DrinkSelector.tsx` og i `DialInWizardModal.tsx`.
+- **Caliper Ruler (Skydelære):** Viser dynamiske centimeterticks, halvticks og split-mærker (f.eks. ved 20 på Baratza ESP). Giver baristaen mulighed for direkte klik-til-indstilling, interaktiv visuel nål (`thumb`) og tydeligt AI-mærke (`notch`).
+- **Universel Kværnunderstøttelse:** Håndterer stepless (0.2 delta), stepped (0.5 delta) og specialiserede dual-zone kværne (Baratza ESP og ESP Pro) med zone-badges.
+- **Kryds-App Persistens:** Justeringer fra drikkekortet gemmes øjeblikkeligt i `drinkGrinds` (både sammensat nøgle `drinkId_beanId_grinderId` og simpel `drinkId`), opdaterer den aktive bønnes dial-in presets, og persisteres i `drinkCalibration`.

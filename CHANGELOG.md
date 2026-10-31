@@ -2,6 +2,20 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.15] - 2026-10-31
+### Etape 94: Taktil Kværnvisning & Hurtig-Indstilling på Coffee Bar Drikkekortet
+- **Universel Taktil Kværnkomponent ([TactileGrindDial.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/TactileGrindDial.tsx)):**
+  - Udviklet en dedikeret, genanvendelig komponent til kværnjustering, der forener visuel taktil æstetik på tværs af både `DrinkSelector` og `DialInWizardModal`.
+  - Understøtter trinløse kværne (0.2 trin), trindelte kværne (0.5 trin), og dobbeltzone-kværne (Baratza Encore ESP & ESP Pro) med differentierede mikro- og makrozoner.
+  - Viser stort monospace tal (`font-mono text-2xl sm:text-3xl`), enhed, zone-badge (f.eks. `Espresso Zone`), og store taktile `-` og `+` stepper-knapper med `active:scale-90` trykrespons.
+  - Interaktiv skydelære (Caliper Ruler) med dynamiske ticks (hovedmærker, splitmarkeringer, halvmærker og almindelige streger), direkte klik/tap for hurtig navigation, AI-anbefalingsmarkør (terracotta indhak) og aktuel nåleposition.
+  - Integreret AI-anbefalingshandling: 1-tap knap der viser AI-målet (f.eks. `AI Mål: 18.0`) og lader baristaen anvende forslaget med et enkelt tryk eller bekræfter `✓ Klar til bryg`, når indstillingen er ramt.
+- **Direkte Kværnjustering på Kaffebordets Drikkekort ([DrinkSelector.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DrinkSelector.tsx)):**
+  - Integreret `TactileGrindDial` direkte på det valgte drikkekort i Coffee Bar, så baristaen lynhurtigt kan finjustere kværnen lige inden skuddet startes på Scale Cam – uden at skulle åbne Dial-In guiden.
+  - Øjeblikkelig kryds-app persistens: Justeringer opdaterer omgående lokal state, kalder `onGrindSettingChange`, gemmer i `localStorage` (både under sammensat kalibrerings-nøgle og simpel nøgle via `saveDrinkGrindSetting`), opdaterer den aktive bønnes dial-in anker (`onUpdateBeanDialIn`), og persisterer i drik-kalibreringen (`saveDrinkCalibration`).
+- **Harmonisering af Dial-In Wizard ([DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx)):**
+  - Refaktoreret Dial-In guiden til at anvende den fælles `TactileGrindDial`-komponent, hvilket garanterer 100% pixel-perfekt ensartethed på tværs af kortvisning og modalvindue.
+
 ## [1.21.14] - 2026-10-31
 ### Etape 93: Dedikeret Viewport-Locked Live Brew Cockpit (Zero-Scroll Shot Mode)
 - **Dedikeret Viewport-Locked Live Brew Cockpit ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
