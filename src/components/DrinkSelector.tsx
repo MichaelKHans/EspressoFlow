@@ -247,16 +247,17 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     selectedDrink.expectedTimeSeconds
   );
 
-  // Find most recent shot for this drink or bean
+  // Find most recent valid shot for this drink or bean (excluding flagged OCR anomalies)
   const allShots = shots || loadShots();
   const lastShotForDrink = allShots.find(
     (s) =>
+      !s.isOcrAnomaly &&
       (s.drinkId === selectedDrink.id || s.drinkName?.toLowerCase() === selectedDrink.name.toLowerCase()) &&
       (!s.coffeeName || s.coffeeName === currentBean.name)
   ) || allShots.find(
-    (s) => s.drinkId === selectedDrink.id || s.drinkName?.toLowerCase() === selectedDrink.name.toLowerCase()
+    (s) => !s.isOcrAnomaly && (s.drinkId === selectedDrink.id || s.drinkName?.toLowerCase() === selectedDrink.name.toLowerCase())
   );
-  const lastShotForBean = allShots.find((s) => s.coffeeName === currentBean.name);
+  const lastShotForBean = allShots.find((s) => !s.isOcrAnomaly && s.coffeeName === currentBean.name);
 
   // Harmonized grind setting resolution:
   // 1. Explicit dial-in calibration for this bean + drink
@@ -341,6 +342,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
       channelingDetected: Boolean(lastShotForDrink.channelingDetected || (typeof lastShotForDrink.channeling === 'object' && lastShotForDrink.channeling?.detected)),
       channeling: lastShotForDrink.channeling,
       tasteRating: lastShotForDrink.tasteRating,
+      isOcrAnomaly: lastShotForDrink.isOcrAnomaly,
     } : undefined,
   });
 

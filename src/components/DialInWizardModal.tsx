@@ -698,10 +698,11 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
             const allShots = loadShots();
             const lastShotForDrink = allShots.find(
               (s) =>
+                !s.isOcrAnomaly &&
                 (s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase()) &&
                 (!s.coffeeName || s.coffeeName === activeBean.name)
             ) || allShots.find(
-              (s) => s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase()
+              (s) => !s.isOcrAnomaly && (s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase())
             );
 
             const aiPred = predictOptimalGrindSetting({
@@ -719,6 +720,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                 channelingDetected: Boolean(lastShotForDrink.channelingDetected || (typeof lastShotForDrink.channeling === 'object' && lastShotForDrink.channeling?.detected)),
                 channeling: lastShotForDrink.channeling,
                 tasteRating: lastShotForDrink.tasteRating,
+                isOcrAnomaly: lastShotForDrink.isOcrAnomaly,
               } : undefined,
             });
 

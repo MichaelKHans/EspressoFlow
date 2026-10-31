@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.15 (Taktil Kværnvisning & Hurtig-Indstilling på Drikkekortet, Zero-Scroll Brew Cockpit)  
+> **Gældende version:** v1.21.16 (Forenet Zero-Scroll Scale Cockpit & Optisk Målefejls-Rapportering)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -330,7 +330,7 @@ flowchart TD
 ### Oversigt over Nøgler i LocalStorage:
 | Nøgle | Type / Model | Beskrivelse |
 | :--- | :--- | :--- |
-| `espresso_shots` | `ShotRecord[]` | Alle gennemførte espresso-shots med telemetripunkter og smagsrating. |
+| `espresso_shots` | `ShotRecord[]` | Alle gennemførte espresso-shots med telemetripunkter, smagsrating og `isOcrAnomaly` / `correctedYieldGrams` fejlbeskyttelse. |
 | `espresso_beans` | `CoffeeBeanProfile[]` | Baristaens personlige bønnekartotek (Beandex) inkl. posefotos og smagsnoter. |
 | `espresso_grinders` | `GrinderProfile[]` | Baristaens kværn-flåde (trindelt / trinløs, aktiv kværn). |
 | `espresso_user_access` | `UserAccessState` | Status for 7 dages prøveperiode eller Lifetime Pro oplåsning. |
@@ -359,7 +359,7 @@ graph TD
     %% Hovedvisninger (Styres af 5-faners Mobile Bottom Nav på mobil / Desktop Header Bar)
     App --> DrinkTab[DrinkSelector.tsx<br/>Barista Deck & Espresso/Pour Over Toggle]
     App --> PreBrewCoach[PreBrewCoachBanner.tsx<br/>Hukommelse & Proaktiv Kværnrådgivning før bryg]
-    App --> MonitorTab[ScaleMonitor.tsx<br/>Live Scale Cam, OCR, Bloom/Steep & Flowgraf]
+    App --> MonitorTab[ScaleMonitor.tsx<br/>Forenet Zero-Scroll Scale Cockpit, Fast Søgerhøjde, Tare/Start/Stop, OCR, Flowgraf & Optisk Fejlbeskyttelse]
     App --> BeandexTab[BeandexView.tsx<br/>Bønnekartotek, Beandex Smagsnoter, Fotos]
     App --> LogbookTab[Logbook.tsx<br/>Dagsopdelt historik, kurver & smag]
     App --> GearTab[GearStationView.tsx<br/>Hardware-hylde, Karruseller for Kværne, Maskiner, Bryggere & Kedler, Caliper Ruler, PID & Cafiza Tracker]

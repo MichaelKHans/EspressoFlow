@@ -344,6 +344,7 @@ export function predictOptimalGrindSetting(params: {
     channelingDetected?: boolean;
     channeling?: boolean | { detected: boolean };
     tasteRating?: TasteRating;
+    isOcrAnomaly?: boolean;
   };
 }): PredictedGrindAdjustment {
   const {
@@ -387,6 +388,7 @@ export function predictOptimalGrindSetting(params: {
   // 0. Precedence: Recent Shot History on this Grinder & Bean
   const hasValidLastShot = Boolean(
     lastShot &&
+    !lastShot.isOcrAnomaly &&
     typeof lastShot.totalTimeSeconds === 'number' &&
     lastShot.totalTimeSeconds > 0
   );

@@ -26,6 +26,20 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-31 -- Etape 95: Forenet Zero-Scroll Scale Cockpit & Optisk Målefejls-Rapportering (v1.21.16)
+- **Forenet, Urokkeligt Scale Cockpit (Zero-Scroll & Nul Modal-Hop) ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - Kamera- og bryggevisning forenet til ét fastlåst `fixed inset-0 z-40 bg-[#FAF7F2]` cockpit med safe-area insets uden lodret scrolling overhovedet.
+  - Kameraets søgerfelt har nu identisk, fast højde (`h-36 sm:h-40 shrink-0`) før, under og efter brygning – nul layout-spring eller størrelsesændringer, når der trykkes på Start.
+  - Ergonomisk top-header med `[← Bar]` hurtig-returknap, live pulserende status med OCR FPS (`LIVE 30 FPS`), aktuel drik & opskriftsmål, `Stop Cam`, `LED`, `Lab` samt `Afbryd`.
+  - Glidende bundhandling: Stor taktil `[Tare (0.0g)]` + `[▶ START SHOT]` i standby forvandles på nøjagtig samme position til en fuldbredde `[■ STOP SHOT]` knap under aktiv brygning.
+  - Integreret `FlowChart` kurve direkte i cockpittet via `liveChartSlot` både i standby og under bryg.
+- **Optisk Målefejls-Rapportering & AI-Beskyttelse ([ShotSummaryModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ShotSummaryModal.tsx), [grindIntelligence.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/grindIntelligence.ts) & [espresso.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/types/espresso.ts)):**
+  - Tilføjet dedikeret "Optisk Måling & Fejlrapportering" sektion på `ShotSummaryModal` med 1-tap `[Flag Glitch]` / `[✓ Flagged]` knap.
+  - Hvis kameraet aflæste forkert pga. genskin eller damp, kan baristaen flage fejlen og valgfrit indtaste den reelle vægt (`correctedYieldGrams`).
+  - Fejlflagede skud (`isOcrAnomaly: true`) udelukkes omgående fra kværn-evaluering i `grindIntelligence.ts`, `DrinkSelector.tsx`, `DialInWizardModal.tsx` og `PreBrewCoachBanner.tsx`, så AI'ens kværnanbefalinger forbliver 100% uforurenede og præcise.
+- **Global-First i18n ([en.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/en.ts)):**
+  - Definerede lokaliseringsnøgler til optisk fejlrapportering (`shotsummary.flag_ocr_error`, `shotsummary.flag_ocr_error_sub`, `shotsummary.ocr_flagged_badge`, `shotsummary.ocr_flagged_desc`, `shotsummary.correct_weight_label`, `scale.back_to_bar`).
+
 ### 2026-10-31 -- Etape 94: Taktil Kværnvisning & Hurtig-Indstilling på Coffee Bar Drikkekortet (v1.21.15)
 - **Universel Taktil Kværnkomponent ([TactileGrindDial.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/TactileGrindDial.tsx)):**
   - Udviklet en dedikeret, genanvendelig komponent til kværnjustering, der forener visuel taktil æstetik på tværs af både `DrinkSelector` og `DialInWizardModal`.

@@ -485,6 +485,12 @@ export const en = {
   'shotsummary.apply_grind': 'Set Grinder to {setting}',
   'shotsummary.applied_grind': '✓ Grinder Updated',
   'shotsummary.share_shot': 'Share Shot Card',
+  'shotsummary.flag_ocr_error': 'Report Measurement Error',
+  'shotsummary.flag_ocr_error_sub': 'Exclude this shot from AI dial-in learning if scale display was misread',
+  'shotsummary.ocr_flagged_badge': '⚠️ OCR Error Flagged',
+  'shotsummary.ocr_flagged_desc': 'Excluded from AI grind recommendations & fleet learning',
+  'shotsummary.correct_weight_label': 'Correct Final Weight (g):',
+  'scale.back_to_bar': 'Bar',
 
   // Shot Card Sharing & Viral Promo
   'share.card_title': 'Share Barista Shot Card',

@@ -15,6 +15,7 @@ import {
   Share2,
   ShieldAlert,
   ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { ShotShareModal } from './ShotShareModal';
@@ -544,6 +545,71 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
               <div className="text-[11px] text-[#7A6E65] bg-white p-2 rounded-xl border border-[#E8DFD5] flex items-center gap-1.5">
                 <Flame className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
                 <span>{advice.roastAdvice}</span>
+              </div>
+            )}
+          </div>
+
+          {/* OCR Optical Anomaly & Measurement Error Flagging */}
+          <div className={`p-3 rounded-2xl border transition ${
+            shot.isOcrAnomaly
+              ? 'bg-amber-500/10 border-amber-500/40 text-amber-900'
+              : 'bg-[#FAF7F2] border-[#E8DFD5] text-[#7A6E65]'
+          }`}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <AlertTriangle className={`w-4 h-4 shrink-0 ${shot.isOcrAnomaly ? 'text-amber-600' : 'text-[#7A6E65]'}`} />
+                <div className="min-w-0">
+                  <span className="text-xs font-bold block truncate font-mono">
+                    {shot.isOcrAnomaly ? t('shotsummary.ocr_flagged_badge') : t('shotsummary.flag_ocr_error')}
+                  </span>
+                  <span className="text-[10px] leading-tight block opacity-80">
+                    {shot.isOcrAnomaly ? t('shotsummary.ocr_flagged_desc') : t('shotsummary.flag_ocr_error_sub')}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const updated: ShotRecord = {
+                    ...shot,
+                    isOcrAnomaly: !shot.isOcrAnomaly,
+                    ocrAnomalyReason: !shot.isOcrAnomaly ? 'Optical misread / reflection' : undefined,
+                  };
+                  onUpdateShot(updated);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition shrink-0 cursor-pointer active:scale-95 border ${
+                  shot.isOcrAnomaly
+                    ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                    : 'bg-white hover:bg-amber-50 border-[#E8DFD5] text-[#2C2018]'
+                }`}
+              >
+                {shot.isOcrAnomaly ? '✓ Flagged' : 'Flag Glitch'}
+              </button>
+            </div>
+
+            {/* Optional manual weight correction if flagged */}
+            {shot.isOcrAnomaly && (
+              <div className="mt-2.5 pt-2 border-t border-amber-500/20 flex items-center gap-2">
+                <span className="text-[10.5px] font-mono shrink-0">
+                  {t('shotsummary.correct_weight_label')}
+                </span>
+                <input
+                  type="number"
+                  step="0.1"
+                  defaultValue={shot.correctedYieldGrams || shot.actualYieldGrams}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val) && val > 0) {
+                      onUpdateShot({
+                        ...shot,
+                        correctedYieldGrams: val,
+                      });
+                    }
+                  }}
+                  className="w-20 px-2 py-1 text-xs rounded-lg border border-amber-500/30 bg-white text-[#2C2018] font-mono font-bold"
+                />
+                <span className="text-xs font-mono text-amber-800">g</span>
               </div>
             )}
           </div>

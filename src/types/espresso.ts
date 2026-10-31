@@ -116,6 +116,9 @@ export interface ShotRecord {
   brewTempC?: number;
   tasteRating?: TasteRating;
   notes?: string;
+  isOcrAnomaly?: boolean; // Flagged as optical scale measurement error / artifact
+  ocrAnomalyReason?: string; // Optional reason (e.g. "Reflection on scale", "Misread digit")
+  correctedYieldGrams?: number; // Optional barista manual correction of final weight
   dataPoints: ShotDataPoint[];
 }
 

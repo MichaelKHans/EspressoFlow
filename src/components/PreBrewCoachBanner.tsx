@@ -45,9 +45,9 @@ export const PreBrewCoachBanner: React.FC<PreBrewCoachBannerProps> = ({
     return null;
   }
 
-  // Find the most recent shot for this drink (or by name match)
+  // Find the most recent valid shot for this drink (excluding OCR anomalies)
   const lastShot = shots.find(
-    (s) => s.drinkId === activeDrinkId || (s.drinkName || '').toLowerCase() === activeDrinkName.toLowerCase()
+    (s) => !s.isOcrAnomaly && (s.drinkId === activeDrinkId || (s.drinkName || '').toLowerCase() === activeDrinkName.toLowerCase())
   );
 
   // Check Adaptive Grind Intelligence (On-Device AI Engine)

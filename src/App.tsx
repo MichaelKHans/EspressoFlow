@@ -16,7 +16,6 @@ import { TrialCountdownBanner } from './components/TrialCountdownBanner';
 import { CentralBeanVaultModal } from './components/CentralBeanVaultModal';
 import { BeandexView } from './components/BeandexView';
 import { ShotSummaryModal } from './components/ShotSummaryModal';
-import { PreBrewCoachBanner } from './components/PreBrewCoachBanner';
 import { SettingsModal } from './components/SettingsModal';
 import { CoffeeBeanIcon } from './components/CustomCoffeeIcons';
 import { useMobileBackHandler } from './lib/useMobileBackHandler';
@@ -70,7 +69,7 @@ import {
   calculateNormalizedShotTime,
   getFactorySecondsPerStep,
 } from './lib/grindIntelligence';
-import { analyzeChanneling, analyzeExtractionDynamics, RATIO_PRESETS, ROAST_PRESETS, formatTemperature, calculateBeanFreshness } from './lib/espressoMath';
+import { analyzeChanneling, analyzeExtractionDynamics, RATIO_PRESETS, ROAST_PRESETS, calculateBeanFreshness } from './lib/espressoMath';
 import { subscribeToRemoteCommands, broadcastShotVerdict } from './lib/antiLiveSync';
 import { redeemLicenseKey } from './lib/licenseEngine';
 import { GearStationView } from './components/GearStationView';
@@ -344,6 +343,7 @@ export function App() {
       const drinkGrinds = loadDrinkGrindSettings();
       const lastShotForDrink = shots.find(
         (s) =>
+          !s.isOcrAnomaly &&
           (s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase()) &&
           (!s.coffeeName || s.coffeeName === currentBean.name)
       );
@@ -366,10 +366,11 @@ export function App() {
       const drinkGrinds = loadDrinkGrindSettings();
       const lastShotForDrink = shots.find(
         (s) =>
+          !s.isOcrAnomaly &&
           (s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase()) &&
           (!s.coffeeName || s.coffeeName === currentBean.name)
       );
-      const lastShotForBean = shots.find((s) => s.coffeeName === currentBean.name);
+      const lastShotForBean = shots.find((s) => !s.isOcrAnomaly && s.coffeeName === currentBean.name);
 
       if (drinkGrinds[legacyKey]) {
         setGrindSetting(drinkGrinds[legacyKey]);
@@ -1146,121 +1147,40 @@ export function App() {
               />
             )}
 
-        {/* Tab 1: Live Monitor & Flow Dynamics */}
+        {/* Tab 1: Live Monitor & Flow Dynamics (Unified Viewport-Locked Scale Cockpit) */}
         {activeTab === 'monitor' && (
-          <div className="space-y-4">
-            {/* Active Brew Recipe Badge (Standby only) */}
-            {!isBrewing && (
-              <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-3 text-xs font-mono shadow-xs flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#C26D52] shrink-0 animate-pulse" />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-bold text-[#2C2018]">{activeDrink.name}</span>
-                      <span className="text-[#7A6E65]">•</span>
-                      <span className="text-[#2C2018] truncate font-medium">{currentBean.name}</span>
-                      {activeDrink.method === 'pour_over' && (
-                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#C26D52]/15 text-[#C26D52] font-bold border border-[#C26D52]/30">
-                          🫗 POUR OVER
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-[#7A6E65] flex items-center gap-1.5 flex-wrap mt-0.5">
-                      <span>
-                        {activeDrink.method === 'pour_over' ? 'Coffee: ' : ''}{doseGrams}g →{' '}
-                        <strong className="text-[#C26D52]">{targetYieldGrams}g{activeDrink.method === 'pour_over' ? ' water' : ''}</strong>
-                      </span>
-                      <span>•</span>
-                      <span>
-                        Grind: <strong className="text-[#2C2018]">{grindSetting}</strong>{' '}
-                        ({currentGrinder.name.split(' ')[0]})
-                      </span>
-                      {activeDrink.method === 'pour_over' && filterBrewer && (
-                        <>
-                          <span>•</span>
-                          <span>
-                            Brewer: <strong className="text-[#2C2018]">{filterBrewer.split('(')[0].trim()}</strong>
-                          </span>
-                        </>
-                      )}
-                      <span>•</span>
-                      <span>
-                        Temp: <strong className="text-[#C26D52]">{formatTemperature(currentBean.brewTempC || 93, tempUnit)}</strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsDialInWizardOpen(true)}
-                  className="px-2.5 py-1.5 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] font-bold text-xs shrink-0 flex items-center gap-1.5 transition"
-                  title="Open Dial-In Studio to adjust recipe"
-                >
-                  <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
-                  <span>{t('scale.open_dialin')}</span>
-                </button>
-              </div>
-            )}
- 
-            {/* Pre-Brew Coach Recommendation Banner (Proactive Memory from Last Brew - Standby only) */}
-            {!isBrewing && (
-              <PreBrewCoachBanner
-                activeDrinkId={activeDrinkId}
-                activeDrinkName={activeDrink.name}
-                currentGrindSetting={grindSetting}
-                grinderName={currentGrinder.name}
-                machineName={machineName}
-                shots={shots}
-                onApplyGrindSetting={handleApplyGrindAdjustment}
-                isBrewing={isBrewing}
-                currentBean={currentBean}
-              />
-            )}
-
-            <ScaleMonitor
-              isBrewing={isBrewing}
-              onBrewStart={handleBrewStart}
-              onBrewFinish={handleBrewFinish}
-              onBrewCancel={handleBrewCancel}
-              onLivePointsUpdate={handleLivePointsUpdate}
-              targetDose={doseGrams}
-              targetYield={targetYieldGrams}
-              machinePreInfusionSetting={machinePreInfusion}
-              method={activeDrink.method || 'espresso'}
-              brewStyle={activeDrink.brewStyle || 'percolation'}
-              steepSeconds={activeDrink.steepSeconds}
-              plungeWarning={activeDrink.plungeWarning}
-              bloomSeconds={activeDrink.pourOverGuide?.bloomSeconds || 45}
-              bloomWaterGrams={activeDrink.pourOverGuide?.bloomWaterGrams || (doseGrams * 3)}
-              targetFlowRateMin={activeDrink.pourOverGuide?.flowRateMinGps || 4.0}
-              targetFlowRateMax={activeDrink.pourOverGuide?.flowRateMaxGps || 6.0}
-              drinkName={activeDrink.name}
-              liveChartSlot={
-                <FlowChart
-                  points={currentPoints}
-                  targetYield={targetYieldGrams}
-                  doseGrams={doseGrams}
-                  channelingEvent={analyzeChanneling(currentPoints)}
-                  preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
-                  isLive={true}
-                  compact={true}
-                  method={activeDrink.method || 'espresso'}
-                />
-              }
-            />
-
-            {!isBrewing && (
+          <ScaleMonitor
+            isBrewing={isBrewing}
+            onNavigateToBar={() => setActiveTab('drinks')}
+            onBrewStart={handleBrewStart}
+            onBrewFinish={handleBrewFinish}
+            onBrewCancel={handleBrewCancel}
+            onLivePointsUpdate={handleLivePointsUpdate}
+            targetDose={doseGrams}
+            targetYield={targetYieldGrams}
+            machinePreInfusionSetting={machinePreInfusion}
+            method={activeDrink.method || 'espresso'}
+            brewStyle={activeDrink.brewStyle || 'percolation'}
+            steepSeconds={activeDrink.steepSeconds}
+            plungeWarning={activeDrink.plungeWarning}
+            bloomSeconds={activeDrink.pourOverGuide?.bloomSeconds || 45}
+            bloomWaterGrams={activeDrink.pourOverGuide?.bloomWaterGrams || (doseGrams * 3)}
+            targetFlowRateMin={activeDrink.pourOverGuide?.flowRateMinGps || 4.0}
+            targetFlowRateMax={activeDrink.pourOverGuide?.flowRateMaxGps || 6.0}
+            drinkName={activeDrink.name}
+            liveChartSlot={
               <FlowChart
-                points={currentPoints.length > 0 ? currentPoints : (lastFinishedShot?.dataPoints || [])}
+                points={isBrewing ? currentPoints : (currentPoints.length > 0 ? currentPoints : (lastFinishedShot?.dataPoints || []))}
                 targetYield={targetYieldGrams}
                 doseGrams={doseGrams}
-                channelingEvent={analyzeChanneling(currentPoints.length > 0 ? currentPoints : (lastFinishedShot?.dataPoints || []))}
+                channelingEvent={analyzeChanneling(isBrewing ? currentPoints : (currentPoints.length > 0 ? currentPoints : (lastFinishedShot?.dataPoints || [])))}
                 preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
-                isLive={false}
+                isLive={isBrewing}
+                compact={true}
                 method={activeDrink.method || 'espresso'}
               />
-            )}
-          </div>
+            }
+          />
         )}
 
         {/* Tab 2: Analog Logbook */}

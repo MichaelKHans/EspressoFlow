@@ -18,6 +18,7 @@ import {
   FlaskConical,
   Radio,
   X,
+  ArrowLeft,
 } from 'lucide-react';
 import type { ShotDataPoint } from '../types/espresso';
 import { DripperIcon } from './CustomCoffeeIcons';
@@ -53,6 +54,7 @@ interface ScaleMonitorProps {
   targetFlowRateMax?: number;
   liveChartSlot?: React.ReactNode;
   drinkName?: string;
+  onNavigateToBar?: () => void;
 }
 
 export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
@@ -74,6 +76,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
   targetFlowRateMax = 6.0,
   liveChartSlot,
   drinkName,
+  onNavigateToBar,
 }) => {
   const { t, language } = useTranslation();
   const [currentWeight, setCurrentWeight] = useState<number>(0.0);
@@ -1066,36 +1069,63 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   return (
     <div
-      className={
-        isBrewing
-          ? 'fixed inset-0 z-[100] bg-[#FAF7F2] flex flex-col justify-between overflow-hidden select-none p-2 sm:p-3'
-          : 'bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] shadow-xs overflow-hidden'
-      }
-      style={
-        isBrewing
-          ? {
-              paddingTop: 'max(0.6rem, env(safe-area-inset-top, 0px))',
-              paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0px))',
-            }
-          : undefined
-      }
+      className="fixed inset-0 z-40 bg-[#FAF7F2] flex flex-col justify-between overflow-hidden select-none p-2 sm:p-3"
+      style={{
+        paddingTop: 'max(0.6rem, env(safe-area-inset-top, 0px))',
+        paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0px))',
+      }}
     >
-      {/* Viewfinder Header - Responsive on mobile */}
-      {isBrewing ? (
-        <div className="px-2.5 py-1.5 border-b border-[#E8DFD5] bg-[#FAF7F2] flex items-center justify-between gap-2 shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+      {/* Viewfinder Barista Header - Ergonomic & Responsive (Unified, never jumps) */}
+      <div className="px-2.5 py-1.5 border-b border-[#E8DFD5] bg-[#FAF7F2] flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          {onNavigateToBar && !isBrewing && (
+            <button
+              type="button"
+              onClick={onNavigateToBar}
+              className="text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white hover:bg-[#FAF7F2] text-[#2C2018] font-mono font-bold flex items-center gap-1 transition shadow-2xs cursor-pointer active:scale-95 shrink-0"
+              title="Return to Coffee Bar"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-[#C26D52]" />
+              <span>{t('scale.back_to_bar')}</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                isBrewing
+                  ? 'bg-amber-500 animate-pulse'
+                  : cameraState === 'live'
+                  ? 'bg-[#72806B] animate-pulse'
+                  : cameraState === 'demo'
+                  ? 'bg-amber-500'
+                  : 'bg-[#7A6E65]'
+              }`}
+            />
             <span className="font-bold text-xs uppercase tracking-wider text-[#2C2018] font-mono truncate">
               {drinkName || 'LIVE SHOT'}
             </span>
-            <span className="text-[10px] text-[#7A6E65] font-mono hidden xs:inline">
+            <span className="text-[10px] text-[#7A6E65] font-mono hidden xs:inline truncate">
               ({targetDose}g → {targetYield}g)
             </span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[9px] px-2 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider bg-amber-400 text-black animate-pulse">
-              Brewing
-            </span>
+
+          <span
+            className={`text-[9px] px-2 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider shrink-0 ${
+              isBrewing
+                ? 'bg-amber-400 text-black animate-pulse'
+                : isZeroDetected
+                ? 'bg-emerald-500/20 text-emerald-700 border border-emerald-400/30'
+                : 'bg-[#C26D52]/15 text-[#C26D52] border border-[#C26D52]/30'
+            }`}
+          >
+            {isBrewing ? 'Brewing' : isZeroDetected ? 'Tare 0.0g' : `LIVE ${ocrFps} FPS`}
+          </span>
+        </div>
+
+        {/* Right Action Chips: Stop Cam, Align, LED, Afbryd */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {isBrewing ? (
             <button
               type="button"
               onClick={handleCancelBrewing}
@@ -1105,121 +1135,56 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <RotateCcw className="w-3 h-3" />
               <span>{t('scale.reset')}</span>
             </button>
-          </div>
-        </div>
-      ) : (
-        <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-[#E8DFD5] bg-[#FAF7F2] flex items-center justify-between gap-2">
-          {/* Left: Mode Status with Pulsating Indicator & State Badge */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <div
-              className={`w-2.5 h-2.5 rounded-full ${
-                cameraState === 'live'
-                  ? 'bg-[#72806B] animate-pulse'
-                  : cameraState === 'demo'
-                  ? 'bg-amber-500'
-                  : 'bg-[#7A6E65]'
-              }`}
-            />
-            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono">
+          ) : (
+            <>
               {cameraState === 'live' ? (
-                <>
-                  <span className="sm:hidden">LIVE {ocrFps} FPS</span>
-                  <span className="hidden sm:inline">{t('scale.ocr_active', { fps: ocrFps })}</span>
-                </>
-              ) : cameraState === 'demo' ? (
-                'Demo'
-              ) : (
-                'Standby'
-              )}
-            </span>
-
-            <span
-              className={`text-[9px] px-2 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider ${
-                isBrewing
-                  ? 'bg-amber-400 text-black animate-pulse'
-                  : isZeroDetected
-                  ? 'bg-emerald-500/20 text-emerald-700 border border-emerald-400/30'
-                  : 'bg-[#C26D52]/15 text-[#C26D52] border border-[#C26D52]/30'
-              }`}
-            >
-              {isBrewing ? 'Brewing' : isZeroDetected ? 'Tare 0.0g' : 'Ready'}
-            </span>
-          </div>
-
-          {/* Right / Controls: Compact Action Chips */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {cameraState === 'standby' ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleStartCamera}
-                  className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-[#72806B] bg-[#72806B]/15 hover:bg-[#72806B]/25 text-[#72806B] font-mono font-bold transition flex items-center gap-1 shadow-xs"
-                >
-                  <Camera className="w-3 h-3" />
-                  <span>{t('scale.start_cam_btn')}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleStartDemo}
-                  className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] font-mono transition"
-                >
-                  {t('scale.demo_btn')}
-                </button>
-              </>
-            ) : cameraState === 'live' ? (
-              isBrewing ? (
-                <div
-                  className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-300 font-mono font-bold flex items-center gap-1 shadow-xs select-none"
-                  title={t('scale.focus_locked_tooltip')}
-                >
-                  <Lock className="w-3 h-3 text-amber-400" />
-                  <span>{t('scale.focus_locked_brewing')}</span>
-                </div>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleStopCamera}
-                    className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] font-mono font-medium transition flex items-center gap-1 shadow-xs"
-                    title="Stop camera and return to standby"
-                  >
-                    <VideoOff className="w-3 h-3" />
-                    <span>{t('scale.stop_cam_btn')}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleRecenter}
-                    className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] hover:text-[#2C2018] font-mono transition flex items-center gap-1 shadow-xs active:scale-95"
-                    title="Re-center alignment target box on display"
-                  >
-                    <Crosshair className="w-3 h-3 text-[#C26D52]" />
-                    <span>{t('scale.align')}</span>
-                  </button>
-                </>
-              )
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={handleStartCamera}
-                  className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-lg border border-[#72806B] bg-[#72806B]/15 text-[#72806B] font-mono font-bold flex items-center gap-1 shadow-xs"
-                >
-                  <Camera className="w-3 h-3" />
-                  <span>{t('scale.start_cam_btn')}</span>
-                </button>
                 <button
                   type="button"
                   onClick={handleStopCamera}
-                  className="text-[10px] sm:text-[11px] px-2 py-1 rounded-lg border border-[#E8DFD5] bg-white text-[#7A6E65] font-mono transition"
+                  className="text-[10px] px-2 py-1 rounded-lg border border-[#B85B48]/40 bg-[#B85B48]/10 hover:bg-[#B85B48]/20 text-[#B85B48] font-mono font-medium transition flex items-center gap-1 shadow-xs"
+                  title="Stop camera"
                 >
-                  Standby
+                  <VideoOff className="w-3 h-3" />
+                  <span className="hidden xs:inline">{t('scale.stop_cam_btn')}</span>
                 </button>
-              </>
-            )}
-          </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleStartCamera}
+                  className="text-[10px] px-2.5 py-1 rounded-lg border border-[#72806B] bg-[#72806B]/15 text-[#72806B] font-mono font-bold flex items-center gap-1 shadow-xs"
+                >
+                  <Camera className="w-3 h-3" />
+                  <span>{t('scale.start_cam_btn')}</span>
+                </button>
+              )}
+
+              {hasTorch && (
+                <button
+                  type="button"
+                  onClick={handleToggleTorch}
+                  className={`p-1.5 rounded-lg text-xs transition cursor-pointer border ${
+                    isTorchOn
+                      ? 'bg-amber-400 text-black border-amber-500 shadow-xs'
+                      : 'border-[#E8DFD5] bg-white text-[#7A6E65] hover:bg-[#FAF7F2]'
+                  }`}
+                  title="Toggle LED / Flashlight"
+                >
+                  <Zap className="w-3 h-3" />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowTestLabModal(true)}
+                className="p-1.5 rounded-lg text-xs transition cursor-pointer border border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 shadow-2xs"
+                title="Anti Optical Test Lab"
+              >
+                <FlaskConical className="w-3 h-3" />
+              </button>
+            </>
+          )}
         </div>
-      )}
+      </div>
 
       {cameraError && (
         <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs flex items-center gap-2 font-mono shrink-0">
@@ -1235,9 +1200,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         onTouchEnd={!isBrewing ? handleTouchEnd : undefined}
         onTouchCancel={!isBrewing ? handleTouchCancel : undefined}
         style={{ touchAction: 'pan-y' }}
-        className={`relative ${
-          isBrewing ? 'h-28 sm:h-32 shrink-0 rounded-xl' : 'aspect-[16/10] cursor-crosshair'
-        } bg-[#1A1412] flex items-center justify-center overflow-hidden select-none transition-all duration-300`}
+        className="relative h-36 sm:h-40 shrink-0 rounded-2xl bg-[#1A1412] flex items-center justify-center overflow-hidden select-none transition-all duration-300"
       >
         {cameraState === 'standby' ? (
           <div className="absolute inset-0 bg-[#1A1412] flex flex-col items-center justify-center p-4 sm:p-6 text-center z-20 select-none animate-fadeIn">
@@ -1669,8 +1632,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
       )}
 
-      {/* Barista Control Deck */}
-      <div className={`p-2.5 sm:p-4 bg-[#FFFDF9] border-t border-[#E8DFD5] flex flex-col font-mono ${isBrewing ? 'flex-1 justify-between gap-2 overflow-hidden min-h-0' : 'gap-3'}`}>
+      {/* Barista Control Deck - Unified Viewport-Locked Ergonomics */}
+      <div className="p-2 sm:p-3 bg-[#FFFDF9] border-t border-[#E8DFD5] flex-1 flex flex-col justify-between overflow-hidden min-h-0 font-mono gap-1.5 sm:gap-2">
         {/* Real-Time Monospace Telemetry Grid (Uncluttered, High-Visibility) */}
         <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center select-none shrink-0">
           {/* 1. Live Weight / Yield */}
@@ -1723,9 +1686,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
         </div>
 
-        {/* Real-time Pre-infusion vs Active Flow split pill during active extraction */}
-        {isBrewing && (
-          <div className="flex items-center justify-between text-[11px] bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-xl text-amber-900 font-mono shadow-2xs shrink-0">
+        {/* Real-time Status & Phase Split Pill */}
+        {isBrewing ? (
+          <div className="flex items-center justify-between text-[11px] bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-xl text-amber-900 font-mono shadow-2xs shrink-0">
             {brewStyle === 'immersion' ? (
               elapsedTime < steepSeconds ? (
                 <span className="animate-pulse flex items-center gap-1.5 font-bold">
@@ -1772,47 +1735,38 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               {method === 'pour_over' ? 'Water: ' : 'Target: '}{targetYield}g
             </span>
           </div>
+        ) : (
+          <div className="flex items-center justify-between text-[11px] bg-[#FAF7F2] border border-[#E8DFD5] px-2.5 py-1 rounded-xl text-[#7A6E65] font-mono shadow-2xs shrink-0">
+            <div className="flex items-center gap-1.5 min-w-0 truncate">
+              {method === 'pour_over' ? (
+                <DripperIcon className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
+              ) : (
+                <Coffee className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
+              )}
+              <span className="truncate">
+                {isZeroDetected ? 'Ready • Tap Start Shot to brew' : 'Tare scale to 0.0g before start'}
+              </span>
+            </div>
+            <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
+              <span className="text-[#C26D52]">{targetDose}g</span> → <span className="text-[#72806B]">{targetYield}g</span>
+            </div>
+          </div>
         )}
 
-        {/* Live Extraction Curve Slot (Dedicated Live Brew Cockpit integration) */}
-        {isBrewing && liveChartSlot && (
-          <div className="flex-1 min-h-[110px] max-h-[190px] w-full flex flex-col justify-center overflow-hidden">
+        {/* Live Extraction Curve Slot (Always integrated, never jumps) */}
+        {liveChartSlot && (
+          <div className="flex-1 min-h-[90px] max-h-[180px] w-full flex flex-col justify-center overflow-hidden">
             {liveChartSlot}
           </div>
         )}
 
         {/* Plunge Force Scale Protection Warning (AeroPress & French Press) - Visible in standby */}
         {plungeWarning && !isBrewing && (
-          <div className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs font-mono text-amber-900 shadow-2xs">
+          <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs font-mono text-amber-900 shadow-2xs shrink-0">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span className="text-[10.5px] sm:text-xs leading-tight font-medium">
+            <span className="text-[10.5px] leading-tight font-medium">
               {t('scale.plunge_warning')}
             </span>
-          </div>
-        )}
-
-        {/* Status / Guidance Banner (Only in Standby) */}
-        {!isBrewing && (
-          <div className="px-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between gap-2 text-xs font-mono">
-            <div className="flex items-center gap-2 text-[#7A6E65]">
-              <div className="text-[#C26D52] shrink-0">
-                {method === 'pour_over' ? (
-                  <DripperIcon className="w-4 h-4" />
-                ) : (
-                  <Coffee className="w-4 h-4" />
-                )}
-              </div>
-              <span className="text-[11px] sm:text-xs leading-tight">
-                {brewStyle === 'immersion'
-                  ? (t('scale.tare_immersion_hint') || 'Place brewer on scale, tare, add water to target, steep & remove before plunging')
-                  : method === 'pour_over'
-                  ? (t('scale.tare_pourover_hint') || 'Place brewer, filter & coffee on scale, then tare to 0.0g')
-                  : t('scale.manual_start_hint')}
-              </span>
-            </div>
-            <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
-              <span className="text-[#C26D52]">{targetDose}g</span> → <span className="text-[#72806B]">{targetYield}g</span>
-            </div>
           </div>
         )}
 
@@ -1833,7 +1787,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <button
                 type="button"
                 onClick={handleStartBrewing}
-                className="flex-1 px-4 py-3 rounded-xl bg-[#2C2018] hover:bg-[#3D2C22] text-[#FAF7F2] text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-sm transition active:scale-95 border border-[#C26D52]/40 cursor-pointer"
+                className="flex-1 px-4 py-3.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2C22] text-[#FAF7F2] text-xs font-bold font-mono flex items-center justify-center gap-2 shadow-sm transition active:scale-95 border border-[#C26D52]/40 cursor-pointer"
               >
                 <Play className="w-4 h-4 text-[#C26D52] fill-[#C26D52]" />
                 <span>
