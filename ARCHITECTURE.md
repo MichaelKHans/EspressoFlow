@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.12 (Harmoniseret Dial-In Anbefalingsmotor, Feedback-Loop Sikring & Bayesian Flådekonsensus)  
+> **Gældende version:** v1.21.13 (Center-Slot Aiming, 30 FPS Standby, Tare Zero Guard & Foreshortening 770g-Sikring)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -129,11 +129,11 @@ Kernen i Espresso Flow er den canvas-baserede computer vision motor, der aflæse
 flowchart LR
     subgraph Vision Pipeline (Client-Side Canvas 480x240 - Zero-GC OCRScratchPool)
         Video[HTML5 Camera Stream] --> FrameGrab[Offscreen Canvas 480x240]
-        FrameGrab --> CropROI[Crop til Region-of-Interest]
+        FrameGrab --> CropROI[Crop til Center-Slot Region-of-Interest]
         CropROI --> ChromaBoost[Kroma-Boostet Binarisering mod Hvidt Spotlight-Genskin]
         ChromaBoost --> PolarityGate{LED Mode & Hvid Baggrund?}
         PolarityGate -- Ja (Papir/Bog afvises) --> DropNoise[Kasser: Returner Null]
-        PolarityGate -- Nej --> MarginMask[4% Margin Mask mod kabinetstøj]
+        PolarityGate -- Nej --> MarginMask[6% Margin Mask mod kabinet- og facadestøj]
         MarginMask --> IntegerThresh[Integer Bradley-Roth Kontrast + Local Contrast Gate]
         IntegerThresh --> MorphOpen[1D Horisontal Morfologisk Åbning mod Bloom-Broer]
         MorphOpen --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]

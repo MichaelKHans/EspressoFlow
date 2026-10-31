@@ -26,6 +26,24 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-10-31 -- Etape 92: Klippefast Center-Slot Aiming, 30 FPS Standby & Tare Zero Guard (v1.21.13)
+- **Klippefast Center-Slot Aiming ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Forankret scanningszonen permanent i det optiske centrum (`{ x: 0.5, y: 0.5 }`).
+  - Fjernet skærm-tryk teleportation: Tapping i søgeren udløser hardware autofokus-puls og point-of-interest, men flytter aldrig scanningszonen væk fra centrum.
+  - Elimineret utilsigtet retikel-hop til maskinens blanke chassis/ben og refleksioner.
+  - Tilføjet diskrete sigtestreger (Center Alignment Ticks) på venstre og højre side af retiklen, så baristaen let kan glide telefonen på plads med vægtens tal lige i centerlinjen.
+- **Oprydning i Barista Toolbar ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Fjernet den forvirrende firkant-knap (`[ ]` / Scan inspector) fra hovedværktøjslinjen for at give en ren, uforstyrret barista-oplevelse. Flyttet binariserings-inspektion ind som en overskuelig toggle i Test Lab modalen.
+  - Fjernet redundant Center-knap, da søgeren nu altid er 100% centreret.
+- **Fuld 30 FPS i Søgeren ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Ændret standby OCR interval fra 80 ms (12.5–13 FPS) til 33 ms (~30 FPS), så vægtsøgning føles øjeblikkelig, lynhurtig og flydende uden slør.
+- **Eliminering af 770.0g Skråvinkel-Spøgelset & Tare Zero Guard ([ocr7segment.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/ocr7segment.ts)):**
+  - Udelukket segment `f` fra `'7'` mønstervarianter (`[[1, 1, 1, 0, 0, 0, 0]]`) og tilføjet topologisk diskvalificering: et `7`-tal må aldrig have venstresidetegn (`seg.e` eller `seg.f`) eller bundbjælke (`seg.d`). Forhindrer at et `0`-tal set i 40°+ vinkel fejlfortolkes som `7`.
+  - Tilføjet **Tare Zero Guard**: I standby nulstiller enhver aflæsning $\le 0.3$g øjeblikkeligt vægtens tilstand til `0.0g` og nulstiller filterafvigelser.
+  - Forbedret binariseringskant-maskering (øget fra 4% til 6%) for at eliminere vægtens ydre kabinetkanter og afrundede rammer.
+  - Sikret at auto-polaritetsdetektion aldrig falder tilbage til LCD på mørke LED-scener.
+  - Justeret Dual-Row Valley Splitter til at detektere og adskille stablede rækker (Vægt øverst, Timer nederst) ned til 34px højde og med 3+ pixels dalbredde.
+
 ### 2026-10-24 -- Etape 91: Harmoniseret Dial-In Anbefalingsmotor & Udryddelse af Feedback-Loop (v1.21.12)
 - **Harmoniseret Central Dial-In Motor ([grindIntelligence.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/grindIntelligence.ts)):**
   - Udvidet `predictOptimalGrindSetting` med `lastShot` input, der giver historisk fysisk skuddata førsteprioritet i beslutningshierarkiet foran ankre og flådepriors.

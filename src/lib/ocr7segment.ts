@@ -79,8 +79,7 @@ const PATTERN_VARIANTS: Record<string, number[][]> = {
     [0, 0, 1, 1, 1, 1, 1], // 6 without top bar
   ],
   '7': [
-    [1, 1, 1, 0, 0, 0, 0], // standard 7
-    [1, 1, 1, 0, 0, 1, 0], // 7 with segment f
+    [1, 1, 1, 0, 0, 0, 0], // standard 7 (never has left-side strokes on digital scales)
   ],
   '8': [[1, 1, 1, 1, 1, 1, 1]],
   '9': [
@@ -329,8 +328,8 @@ export function binarizeROI(
   const ledFloor = Math.max(28, Math.min(85, (otsuThreshold * 70) >> 7)); // Capped at 85 so spotlight reflection doesn't poison threshold
   const lcdCeiling = Math.min(210, (otsuThreshold * 147) >> 7);
 
-  const marginX = Math.max(3, Math.floor(width * 0.04));
-  const marginY = Math.max(3, Math.floor(height * 0.04));
+  const marginX = Math.max(4, Math.floor(width * 0.06));
+  const marginY = Math.max(4, Math.floor(height * 0.06));
 
   for (let y = marginY; y < height - marginY; y++) {
     const y1 = y - windowRadius < 0 ? 0 : y - windowRadius;
@@ -515,7 +514,7 @@ function probeDigitSegments(
     if (char === '-' && (sampleMask & 0b1111110) !== 0) continue;
     if (char === '2' && (seg.c && seg.f)) continue; // '2' has NO segment c (bottom-right) or f (top-left)
     if (char === '6' && (seg.b || lowerHole)) continue; // '6' has NO segment b (top-right) & bottom loop must be hollow
-    if (char === '7' && (seg.d || seg.g)) continue; // '7' has NO bottom bar d or center bar g!
+    if (char === '7' && (seg.d || seg.g || seg.e)) continue; // '7' has NO bottom bar d, center bar g, or bottom-left e!
     if (char === '3' && (seg.e && seg.f)) continue;
     if (char === '9' && upperHole) continue; // '9' top loop must be hollow
 
@@ -556,6 +555,19 @@ function probeDigitSegments(
     if (seg.b || seg.e || !hasSolidGBar) {
       return {
         segments: { ...seg, g: hasSolidGBar },
+        matchChar: '0',
+        confidence: Math.max(0.92, bestScore),
+      };
+    }
+  }
+
+  // 7 vs 0 check (Eliminates 770.0g foreshortening hallucination at 40°+ tilt):
+  // Digit '7' consists strictly of top bar 'a' and right side 'b'+'c'.
+  // If left side strokes (e or f) are detected, or bottom bar 'd' has any signal, it is a '0' (or '1')
+  if (bestMatch === '7') {
+    if (seg.e || seg.f || seg.d) {
+      return {
+        segments: { ...seg, g: false },
         matchChar: '0',
         confidence: Math.max(0.92, bestScore),
       };
@@ -825,7 +837,7 @@ function parseDigitsFromBinary(
 
   // Dynamic row threshold: adapts to actual digit stroke intensity
   const rowThreshold = Math.max(3, Math.floor(maxRowCount * 0.16));
-  const minRowH = Math.max(26, Math.floor(height * 0.12)); // Real digital scale rows are >= 26px (rejects small book text)
+  const minRowH = Math.max(16, Math.floor(height * 0.10)); // Digital scale rows are >= 16px
   const rawRowBands: { start: number; end: number }[] = [];
   let inRow = false;
   let rowStart = 0;
@@ -868,19 +880,18 @@ function parseDigitsFromBinary(
     }
   }
 
-  // Dual-Row Valley Splitter: If row is overly tall (H >= height * 0.70) and contains both Weight + Timer,
-  // split at the most prominent horizontal valley between the two rows
+  // Dual-Row Valley Splitter: If row contains stacked Weight + Timer, split at horizontal valley
   const rowBands: { start: number; end: number }[] = [];
   for (const b of mergedRowBands) {
     const bH = b.end - b.start;
-    if (bH >= Math.floor(height * 0.70)) {
+    if (bH >= Math.max(34, Math.floor(height * 0.44))) {
       const searchY1 = b.start + Math.floor(bH * 0.25);
       const searchY2 = b.start + Math.floor(bH * 0.75);
       let minVal = Infinity;
       let splitY = -1;
       let lowRowCount = 0;
       for (let y = searchY1; y <= searchY2; y++) {
-        if (smoothedRows[y] <= Math.max(rowThreshold * 1.2, Math.floor(maxRowCount * 0.12))) {
+        if (smoothedRows[y] <= Math.max(rowThreshold * 1.5, Math.floor(maxRowCount * 0.18))) {
           lowRowCount++;
         }
         if (smoothedRows[y] < minVal) {
@@ -890,10 +901,10 @@ function parseDigitsFromBinary(
       }
       if (
         splitY !== -1 &&
-        lowRowCount >= 10 &&
-        minVal <= Math.max(rowThreshold, Math.floor(maxRowCount * 0.10)) &&
-        splitY - b.start >= minRowH &&
-        b.end - splitY >= minRowH
+        lowRowCount >= 3 &&
+        minVal <= Math.max(rowThreshold * 1.5, Math.floor(maxRowCount * 0.18)) &&
+        splitY - b.start >= Math.max(14, Math.floor(minRowH * 0.7)) &&
+        b.end - splitY >= Math.max(14, Math.floor(minRowH * 0.7))
       ) {
         rowBands.push({ start: b.start, end: splitY });
         rowBands.push({ start: splitY, end: b.end });
@@ -1793,13 +1804,14 @@ export function recognizeScaleDigits(
     ledBinarized.detectedPolarity
   );
 
-  // If LED result has high confidence and valid weight, return immediately
-  if (resLED.confidence >= 0.70 && resLED.weight !== null && ledBinarized.detectedPolarity === 'led') {
+  // If detected scene is dark with glowing digits (LED polarity):
+  // NEVER fall back to LCD on a dark scene! Inverting dark into bright creates false shadows and hallucinations.
+  if (ledBinarized.detectedPolarity === 'led') {
     resLED.autoPolarityUsed = 'led';
     return resLED;
   }
 
-  // 2. Try LCD mode (classic kitchen scales: Soehnle, Taylor, Amazon basics)
+  // 2. Try LCD mode (classic kitchen scales: Soehnle, Taylor, Amazon basics with light background)
   const lcdBinarized = binarizeROI(imageData, true);
   const resLCD = parseDigitsFromBinary(
     lcdBinarized.binary,
@@ -1853,8 +1865,8 @@ export class ScaleReadingFilter {
       return { weight: this.weight, flowRate: Math.max(0, this.flowRate), isOutlier: true };
     }
 
-    // 1. Instant Tare Zero Lock (<= 0.3g when already near zero)
-    if (newReading <= 0.3 && Math.abs(this.weight) <= 0.4) {
+    // 1. Instant Tare Zero Lock (<= 0.3g when already near zero, or anytime in standby)
+    if (newReading <= 0.3 && (!isBrewing || Math.abs(this.weight) <= 0.4)) {
       this.weight = 0.0;
       this.flowRate = 0.0;
       this.altCount = 0;

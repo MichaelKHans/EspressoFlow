@@ -393,9 +393,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     const relX = Math.max(0.18, Math.min(0.82, normX));
     const relY = Math.max(0.18, Math.min(0.82, normY));
 
-    const newCenter = { x: relX, y: relY };
-    roiCenterRef.current = newCenter;
-    setRoiCenter(newCenter);
+    // Clean Center-Locked Slot: Reticle stays firmly anchored at optical center (0.5, 0.5)
+    // Physical positioning by nudging the phone prevents erratic reticle jumps to machine casing/glare
     setTapFeedback({ x: clickX, y: clickY });
     setTimeout(() => setTapFeedback(null), 1400);
 
@@ -546,7 +545,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
     canvasRef.current = offscreen;
     const ctx = offscreen.getContext('2d', { willReadFrequently: true });
 
-    const ocrIntervalMs = isBrewing ? 33 : 80;
+    const ocrIntervalMs = 33; // High-performance 30 FPS across both standby and active brewing
     let lastFrameTime = performance.now();
 
     ocrIntervalRef.current = window.setInterval(() => {
@@ -620,18 +619,8 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           const maxW = Math.max(...calibrationHistoryRef.current.map((e) => e.weight));
           const deltaW = maxW - minW;
 
-          // Finger tap on scale plate detected (weight jumps by ≥ 4.0g)
+          // Finger tap on scale plate detected (weight jumps by ≥ 4.0g) - lock focus
           if (deltaW >= 4.0) {
-            const box = smoothedBoundingBoxRef.current || result.boundingBox;
-            if (box) {
-              const candCenterX = cropX + (box.x + box.width / 2) * (cropW / offscreen.width);
-              const candCenterY = cropY + (box.y + box.height / 2) * (cropH / offscreen.height);
-              const newNormX = Math.max(0.18, Math.min(0.82, candCenterX / vW));
-              const newNormY = Math.max(0.18, Math.min(0.82, candCenterY / vH));
-              roiCenterRef.current = { x: newNormX, y: newNormY };
-              setRoiCenter({ x: newNormX, y: newNormY });
-            }
-
             handleToggleFocusLockRef.current(true);
             isCalibratingRef.current = false;
             setIsCalibrating(false);
@@ -1357,6 +1346,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <div className={`absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
               <div className={`absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 ${isBrewing ? 'border-amber-400' : isDigitLocked ? 'border-[#10B981]' : 'border-[#C26D52]'}`} />
 
+              {/* Barista Center Alignment Ticks (Slide scale into center line) */}
+              <div className={`absolute top-1/2 -left-2.5 w-2 h-0.5 ${isBrewing ? 'bg-amber-400' : isDigitLocked ? 'bg-[#10B981]' : 'bg-[#C26D52]/80'} -translate-y-1/2`} />
+              <div className={`absolute top-1/2 -right-2.5 w-2 h-0.5 ${isBrewing ? 'bg-amber-400' : isDigitLocked ? 'bg-[#10B981]' : 'bg-[#C26D52]/80'} -translate-y-1/2`} />
+
               {/* Precise Auto-Detected Digit Bounding Box (Subtle, non-obscuring outline without text blocking the view) */}
               {lastOcrResult && cameraState === 'live' && (() => {
                 const box = smoothedBoundingBoxRef.current || lastOcrResult.boundingBox;
@@ -1537,22 +1530,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 <Zap className="w-3.5 h-3.5" />
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowInspector(!showInspector);
-              }}
-              className={`p-1.5 rounded-md text-xs transition cursor-pointer ${
-                showInspector
-                  ? 'bg-[#C26D52] text-white shadow-xs'
-                  : 'bg-white/10 text-[#E8DFD5]/80 hover:bg-white/20'
-              }`}
-              title="Toggle OCR diagnostic inspector"
-            >
-              <Scan className="w-3.5 h-3.5" />
-            </button>
 
             {/* Anti Optical Test Lab & Live Stream */}
             <button
@@ -1903,6 +1880,26 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 }`}
               >
                 {isLiveSyncActive ? 'AKTIV' : 'FRA'}
+              </button>
+            </div>
+
+            {/* Diagnostic Inspector Drawer Toggle */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold flex items-center gap-1.5 text-[#C26D52]">
+                  <Scan className="w-3.5 h-3.5" />
+                  <span>{t('scale.inspector_title') || 'Vision Inspector'}</span>
+                </div>
+                <div className="text-[10px] text-[#E8DFD5]/60 mt-0.5">Vis diagnostisk binariserings-panel under søgeren</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInspector(!showInspector)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                  showInspector ? 'bg-[#C26D52] text-white' : 'bg-white/10 text-gray-400'
+                }`}
+              >
+                {showInspector ? 'AKTIV' : 'FRA'}
               </button>
             </div>
 
