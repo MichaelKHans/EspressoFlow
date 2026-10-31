@@ -2,8 +2,24 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
-## [1.21.13] - 2026-10-31
-### Etape 92: Klippefast Center-Slot Aiming, 30 FPS Standby & Tare Zero Guard
+## [1.21.14] - 2026-10-31
+### Etape 93: Dedikeret Viewport-Locked Live Brew Cockpit (Zero-Scroll Shot Mode)
+- **Dedikeret Viewport-Locked Live Brew Cockpit ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - **Zero-Scroll Garanti:** Ved start af brygning (`isBrewing === true`) forvandles visningen til et fastlåst `fixed inset-0 z-[100]` Live Brew Cockpit, der er skræddersyet til mobilskærmens dimensioner (`100dvh`) uden lodret scrolling – selv på ultra-kompakte skærme som iPhone SE.
+  - **Ergonomisk Top-til-Bund Barista-Stak:**
+    1. **Cockpit Top Header:** Pulserende bryggestatus, drikkens navn (`Double Espresso`), målvægt (`18g → 36g`) og en diskret `Afbryd`-knap til nødstop uden lagring.
+    2. **Kamera Søgerstribe (~110-120px):** Kompakt søger med klippefast center-slot aiming (`{ x: 0.5, y: 0.5 }`), optisk retikel med alignment ticks og tilt-vinkelindikator. Tapping i søgeren genaktiverer hardware autofokus.
+    3. **Monospace Telemetri-Grid (4 Felter):** Højtkontrast, urokkelig visning af `WEIGHT`, `FLOW`, `TIME` og `RATIO`.
+    4. **Split-Fase Status-Pill:** Realtidsvisning af Pre-infusion vs. aktivt flow for espresso, eller Bloom vs. pour-rate pacing for pour-over.
+    5. **Integreret Live FlowChart Kurve:** Kurven renderes direkte inde i cockpittet over stop-knappen via `liveChartSlot`, så baristaen kan overvåge ekstraktionens dynamik og golden zone i realtid.
+    6. **Kæmpe Taktil "STOP SHOT" Knap:** Fuld bredde i bunden af skærmen i varm terracotta/mørk rød (`#B85B48`), nem at ramme blindt med tommelfingeren uden at flytte blikket fra koppen.
+  - **Fase-Opdelt Barista-Oplevelse:**
+    - Under aktiv brygning skjules den mobile bundnavigationsbar (`nav`), opskriftsbadges og coach-bannere for at eliminere enhver distraktion eller fejltryk.
+    - Først når der trykkes på "STOP SHOT", afsluttes cockpittet, skuddet gemmes automatisk, og den dybdegående `ShotSummaryModal` åbner med sensorisk rating, kanaliseringsevaluering og kværnanbefaling. Lukning returnerer rent til standardnavigationen.
+- **Letvægts Live FlowChart Optimering ([FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**
+  - Tilføjet `compact` tilstand med reduceret akse-padding (`height = 150`), inline header og minimalistisk et-linjes legend.
+  - Udjævnet initial tilstand: Ved `isLive === true` renderes grafens koordinatsystem og golden zone bånd øjeblikkeligt (i stedet for det tomme statiske Gauge-kort), så kurven ikke hopper eller popper under opstart.
+
 - **Klippefast Center-Slot Aiming ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
   - Forankret scanningszonen permanent i det optiske centrum (`{ x: 0.5, y: 0.5 }`).
   - Fjernet skærm-tryk teleportation: Tapping i søgeren udløser hardware autofokus-puls og point-of-interest, men flytter aldrig scanningszonen væk fra centrum.

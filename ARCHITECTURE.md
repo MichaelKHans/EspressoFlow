@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.13 (Center-Slot Aiming, 30 FPS Standby, Tare Zero Guard & Foreshortening 770g-Sikring)  
+> **Gældende version:** v1.21.14 (Dedikeret Viewport-Locked Live Brew Cockpit, Zero-Scroll Shot Mode & 30 FPS Standby)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -89,11 +89,12 @@ flowchart TD
     FocusLocked --> ModeSelect{Startmetode?}
     ModeSelect -- Manuel Start --> BaristaPress[Barista trykker Start Shot knap]
     ModeSelect -- Vægt-Trigger --> WeightDetect[Auto-start ved vægtstigning]
-    BaristaPress --> OCRStream[Live OCR Computer Vision<br/>20-30 FPS aflæsning af tal (med 50Hz sub-pixel dæmpning)]
-    WeightDetect --> OCRStream
+    BaristaPress --> LiveCockpit[Live Brew Cockpit Mode<br/>Viewport-Locked 100dvh Zero-Scroll<br/>Søger + 4 Tal + Live Kurve + Stop]
+    WeightDetect --> LiveCockpit
+    LiveCockpit --> OCRStream[Live OCR Computer Vision<br/>20-30 FPS aflæsning af tal (med 50Hz sub-pixel dæmpning)]
     OCRStream --> ExtractionEngine[Ekstraktionsmotor: Beregn Flow Rate,<br/>Tid, Ratio & Kanaliseringsspikes]
     ExtractionEngine --> StopBrew{Stop Kriterium nået?}
-    StopBrew -- Barista trykker Stop / Target Yield nået --> ShotFinished[Shot Afsluttet]
+    StopBrew -- Barista trykker STOP SHOT --> ShotFinished[Shot Afsluttet & Cockpit lukkes]
 
     %% Post-Shot Feedback
     ShotFinished --> SummaryModal[Immediate Post-Shot Summary Modal]

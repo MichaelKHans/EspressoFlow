@@ -15,6 +15,7 @@ interface FlowChartProps {
   averageFlowGps?: number;
   flowProfile?: FlowProfileType;
   flowStabilityPercent?: number;
+  compact?: boolean;
 }
 
 export const FlowChart: React.FC<FlowChartProps> = ({
@@ -28,12 +29,19 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   averageFlowGps,
   flowProfile,
   flowStabilityPercent,
+  compact = false,
 }) => {
   const { t, language } = useTranslation();
 
   // Normalize points: If non-live and curve starts with a dead flatline (>= 1.0s before first drip),
   // trim it so the chart starts cleanly at first drip (t = 0.0s)
   const { displayPoints, timeOffset } = React.useMemo(() => {
+    if (isLive && points.length === 0) {
+      return {
+        displayPoints: [{ timeSeconds: 0.0, weightGrams: 0.0, flowRateGps: 0.0 }],
+        timeOffset: 0,
+      };
+    }
     if (isLive || points.length === 0) return { displayPoints: points, timeOffset: 0 };
     let firstDripIdx = 0;
     while (firstDripIdx < points.length && points[firstDripIdx].weightGrams < 0.3) {
@@ -58,7 +66,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
     return { displayPoints: points, timeOffset: 0 };
   }, [points, isLive]);
 
-  if (points.length === 0) {
+  if (points.length === 0 && !isLive) {
     return (
       <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-6 text-center">
         <Gauge className="w-8 h-8 text-[#7A6E65]/50 mx-auto mb-2" />
@@ -80,11 +88,11 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const maxFlow = isPourOver ? 8.0 : 4.0; // max scale for g/s
 
   const width = 600;
-  const height = 210;
-  const padLeft = 45;
-  const padRight = 44; // Room for right-side flow axis
-  const padTop = 22;
-  const padBottom = 25;
+  const height = compact ? 150 : 210;
+  const padLeft = compact ? 38 : 45;
+  const padRight = compact ? 38 : 44; // Room for right-side flow axis
+  const padTop = compact ? 14 : 22;
+  const padBottom = compact ? 18 : 25;
 
   const chartW = width - padLeft - padRight;
   const chartH = height - padTop - padBottom;
@@ -117,18 +125,18 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const currentRatio = doseGrams > 0 && lastPoint ? (lastPoint.weightGrams / doseGrams).toFixed(1) : '0.0';
 
   return (
-    <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-4 shadow-xs">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-1.5">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-[#C26D52] shrink-0" />
-          <span className="text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono truncate">
-            {t('chart.title')}
+    <div className={`bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] ${compact ? 'p-2 sm:p-2.5 shadow-2xs flex-1 flex flex-col justify-between overflow-hidden' : 'p-4 shadow-xs'}`}>
+      <div className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-2 flex-col sm:flex-row items-start sm:items-center'} gap-1.5`}>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C26D52] shrink-0" />
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono truncate">
+            {compact ? 'LIVE FLOW DYNAMICS' : t('chart.title')}
           </span>
         </div>
 
         {isLive ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/15 text-[#C26D52] text-xs font-mono font-bold border border-[#C26D52]/30 animate-pulse shrink-0">
-            <span className="w-2 h-2 rounded-full bg-[#C26D52]" />
+          <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-[#C26D52]/15 text-[#C26D52] text-[10px] sm:text-xs font-mono font-bold border border-[#C26D52]/30 animate-pulse shrink-0">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#C26D52]" />
             <span>LIVE {isPourOver ? 'POUR OVER' : 'TELEMETRY'}</span>
           </div>
         ) : !isPourOver && channelingEvent?.detected ? (
@@ -152,7 +160,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
       </div>
 
       {/* SVG Canvas with Dual Y-Axis */}
-      <div className="w-full overflow-x-auto">
+      <div className={`w-full overflow-x-auto ${compact ? 'flex-1 flex items-center' : ''}`}>
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto select-none font-mono text-[10px]">
           <defs>
             <clipPath id="chart-area-clip">
@@ -394,47 +402,69 @@ export const FlowChart: React.FC<FlowChartProps> = ({
       </div>
 
       {/* Legend & Stats */}
-      <div className="mt-3 pt-3 border-t border-[#E8DFD5] flex flex-wrap items-center justify-between text-xs font-mono text-[#7A6E65] gap-2">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-1 bg-[#2C2018] rounded-full inline-block" />
-            <span>{t('chart.yield')}: {lastPoint?.weightGrams.toFixed(1) || '0.0'}g</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-1 bg-[#C26D52] rounded-full inline-block" />
-            <span>
-              {isLive ? t('chart.flow') : t('chart.avg_flow')}: {
-                isLive
-                  ? (lastPoint?.flowRateGps.toFixed(1) || '0.0')
-                  : (averageFlowGps !== undefined
-                      ? averageFlowGps.toFixed(2)
-                      : (() => {
-                          const active = points.filter((p) => p.flowRateGps > 0.1);
-                          return active.length > 0
-                            ? (active.reduce((acc, p) => acc + p.flowRateGps, 0) / active.length).toFixed(2)
-                            : (lastPoint?.flowRateGps.toFixed(1) || '0.0');
-                        })())
-              } g/s
+      {compact ? (
+        <div className="mt-1.5 pt-1.5 border-t border-[#E8DFD5] flex items-center justify-between text-[10px] font-mono text-[#7A6E65]">
+          <div className="flex items-center gap-2.5">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-1 bg-[#2C2018] rounded-full inline-block" />
+              <span>{lastPoint?.weightGrams.toFixed(1) || '0.0'}g</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-1 bg-[#C26D52] rounded-full inline-block" />
+              <span>{lastPoint?.flowRateGps.toFixed(1) || '0.0'} g/s</span>
+            </span>
+            <span className="flex items-center gap-1 text-[#8A5A2B]">
+              <span className="w-2 h-2 bg-[#D4A373]/50 border border-[#D4A373] rounded-xs inline-block" />
+              <span>1.2–1.8</span>
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 bg-[#D4A373]/50 border border-[#D4A373] rounded-xs inline-block" />
-            <span className="text-[#8A5A2B]">1.2–1.8</span>
+          <div className="text-[#72806B] font-bold">
+            1:{currentRatio}
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 bg-[#72806B]/30 rounded-xs inline-block" />
-            <span className="text-[#72806B]">{t('chart.ratio')}: 1:{currentRatio}</span>
+        </div>
+      ) : (
+        <div className="mt-3 pt-3 border-t border-[#E8DFD5] flex flex-wrap items-center justify-between text-xs font-mono text-[#7A6E65] gap-2">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-1 bg-[#2C2018] rounded-full inline-block" />
+              <span>{t('chart.yield')}: {lastPoint?.weightGrams.toFixed(1) || '0.0'}g</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-1 bg-[#C26D52] rounded-full inline-block" />
+              <span>
+                {isLive ? t('chart.flow') : t('chart.avg_flow')}: {
+                  isLive
+                    ? (lastPoint?.flowRateGps.toFixed(1) || '0.0')
+                    : (averageFlowGps !== undefined
+                        ? averageFlowGps.toFixed(2)
+                        : (() => {
+                            const active = points.filter((p) => p.flowRateGps > 0.1);
+                            return active.length > 0
+                              ? (active.reduce((acc, p) => acc + p.flowRateGps, 0) / active.length).toFixed(2)
+                              : (lastPoint?.flowRateGps.toFixed(1) || '0.0');
+                          })())
+                } g/s
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 bg-[#D4A373]/50 border border-[#D4A373] rounded-xs inline-block" />
+              <span className="text-[#8A5A2B]">1.2–1.8</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 bg-[#72806B]/30 rounded-xs inline-block" />
+              <span className="text-[#72806B]">{t('chart.ratio')}: 1:{currentRatio}</span>
+            </div>
+            {flowProfile && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#FAF7F2] border border-[#DECFC0] text-[#2C2018] uppercase tracking-wider font-bold">
+                {flowProfile} {flowStabilityPercent !== undefined ? `(${flowStabilityPercent}%)` : ''}
+              </span>
+            )}
           </div>
-          {flowProfile && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#FAF7F2] border border-[#DECFC0] text-[#2C2018] uppercase tracking-wider font-bold">
-              {flowProfile} {flowStabilityPercent !== undefined ? `(${flowStabilityPercent}%)` : ''}
-            </span>
-          )}
+          <div className="text-[11px]">
+            {t('chart.target_dose_yield', { yield: targetYield, dose: doseGrams })}
+          </div>
         </div>
-        <div className="text-[11px]">
-          {t('chart.target_dose_yield', { yield: targetYield, dose: doseGrams })}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -1149,69 +1149,73 @@ export function App() {
         {/* Tab 1: Live Monitor & Flow Dynamics */}
         {activeTab === 'monitor' && (
           <div className="space-y-4">
-            {/* Active Brew Recipe Badge */}
-            <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-3 text-xs font-mono shadow-xs flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#C26D52] shrink-0 animate-pulse" />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-bold text-[#2C2018]">{activeDrink.name}</span>
-                    <span className="text-[#7A6E65]">•</span>
-                    <span className="text-[#2C2018] truncate font-medium">{currentBean.name}</span>
-                    {activeDrink.method === 'pour_over' && (
-                      <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#C26D52]/15 text-[#C26D52] font-bold border border-[#C26D52]/30">
-                        🫗 POUR OVER
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-[#7A6E65] flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <span>
-                      {activeDrink.method === 'pour_over' ? 'Coffee: ' : ''}{doseGrams}g →{' '}
-                      <strong className="text-[#C26D52]">{targetYieldGrams}g{activeDrink.method === 'pour_over' ? ' water' : ''}</strong>
-                    </span>
-                    <span>•</span>
-                    <span>
-                      Grind: <strong className="text-[#2C2018]">{grindSetting}</strong>{' '}
-                      ({currentGrinder.name.split(' ')[0]})
-                    </span>
-                    {activeDrink.method === 'pour_over' && filterBrewer && (
-                      <>
-                        <span>•</span>
-                        <span>
-                          Brewer: <strong className="text-[#2C2018]">{filterBrewer.split('(')[0].trim()}</strong>
+            {/* Active Brew Recipe Badge (Standby only) */}
+            {!isBrewing && (
+              <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-3 text-xs font-mono shadow-xs flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#C26D52] shrink-0 animate-pulse" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-bold text-[#2C2018]">{activeDrink.name}</span>
+                      <span className="text-[#7A6E65]">•</span>
+                      <span className="text-[#2C2018] truncate font-medium">{currentBean.name}</span>
+                      {activeDrink.method === 'pour_over' && (
+                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#C26D52]/15 text-[#C26D52] font-bold border border-[#C26D52]/30">
+                          🫗 POUR OVER
                         </span>
-                      </>
-                    )}
-                    <span>•</span>
-                    <span>
-                      Temp: <strong className="text-[#C26D52]">{formatTemperature(currentBean.brewTempC || 93, tempUnit)}</strong>
-                    </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-[#7A6E65] flex items-center gap-1.5 flex-wrap mt-0.5">
+                      <span>
+                        {activeDrink.method === 'pour_over' ? 'Coffee: ' : ''}{doseGrams}g →{' '}
+                        <strong className="text-[#C26D52]">{targetYieldGrams}g{activeDrink.method === 'pour_over' ? ' water' : ''}</strong>
+                      </span>
+                      <span>•</span>
+                      <span>
+                        Grind: <strong className="text-[#2C2018]">{grindSetting}</strong>{' '}
+                        ({currentGrinder.name.split(' ')[0]})
+                      </span>
+                      {activeDrink.method === 'pour_over' && filterBrewer && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            Brewer: <strong className="text-[#2C2018]">{filterBrewer.split('(')[0].trim()}</strong>
+                          </span>
+                        </>
+                      )}
+                      <span>•</span>
+                      <span>
+                        Temp: <strong className="text-[#C26D52]">{formatTemperature(currentBean.brewTempC || 93, tempUnit)}</strong>
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setIsDialInWizardOpen(true)}
+                  className="px-2.5 py-1.5 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] font-bold text-xs shrink-0 flex items-center gap-1.5 transition"
+                  title="Open Dial-In Studio to adjust recipe"
+                >
+                  <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>{t('scale.open_dialin')}</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsDialInWizardOpen(true)}
-                className="px-2.5 py-1.5 rounded-xl border border-[#E8DFD5] bg-[#FAF7F2] hover:bg-[#E8DFD5] text-[#2C2018] font-bold text-xs shrink-0 flex items-center gap-1.5 transition"
-                title="Open Dial-In Studio to adjust recipe"
-              >
-                <Sliders className="w-3.5 h-3.5 text-[#C26D52]" />
-                <span>{t('scale.open_dialin')}</span>
-              </button>
-            </div>
+            )}
  
-            {/* Pre-Brew Coach Recommendation Banner (Proactive Memory from Last Brew) */}
-            <PreBrewCoachBanner
-              activeDrinkId={activeDrinkId}
-              activeDrinkName={activeDrink.name}
-              currentGrindSetting={grindSetting}
-              grinderName={currentGrinder.name}
-              machineName={machineName}
-              shots={shots}
-              onApplyGrindSetting={handleApplyGrindAdjustment}
-              isBrewing={isBrewing}
-              currentBean={currentBean}
-            />
+            {/* Pre-Brew Coach Recommendation Banner (Proactive Memory from Last Brew - Standby only) */}
+            {!isBrewing && (
+              <PreBrewCoachBanner
+                activeDrinkId={activeDrinkId}
+                activeDrinkName={activeDrink.name}
+                currentGrindSetting={grindSetting}
+                grinderName={currentGrinder.name}
+                machineName={machineName}
+                shots={shots}
+                onApplyGrindSetting={handleApplyGrindAdjustment}
+                isBrewing={isBrewing}
+                currentBean={currentBean}
+              />
+            )}
 
             <ScaleMonitor
               isBrewing={isBrewing}
@@ -1230,17 +1234,32 @@ export function App() {
               bloomWaterGrams={activeDrink.pourOverGuide?.bloomWaterGrams || (doseGrams * 3)}
               targetFlowRateMin={activeDrink.pourOverGuide?.flowRateMinGps || 4.0}
               targetFlowRateMax={activeDrink.pourOverGuide?.flowRateMaxGps || 6.0}
+              drinkName={activeDrink.name}
+              liveChartSlot={
+                <FlowChart
+                  points={currentPoints}
+                  targetYield={targetYieldGrams}
+                  doseGrams={doseGrams}
+                  channelingEvent={analyzeChanneling(currentPoints)}
+                  preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
+                  isLive={true}
+                  compact={true}
+                  method={activeDrink.method || 'espresso'}
+                />
+              }
             />
 
-            <FlowChart
-              points={currentPoints}
-              targetYield={targetYieldGrams}
-              doseGrams={doseGrams}
-              channelingEvent={analyzeChanneling(currentPoints)}
-              preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
-              isLive={isBrewing}
-              method={activeDrink.method || 'espresso'}
-            />
+            {!isBrewing && (
+              <FlowChart
+                points={currentPoints.length > 0 ? currentPoints : (lastFinishedShot?.dataPoints || [])}
+                targetYield={targetYieldGrams}
+                doseGrams={doseGrams}
+                channelingEvent={analyzeChanneling(currentPoints.length > 0 ? currentPoints : (lastFinishedShot?.dataPoints || []))}
+                preInfusionSeconds={lastFinishedShot?.preInfusionSeconds}
+                isLive={false}
+                method={activeDrink.method || 'espresso'}
+              />
+            )}
           </div>
         )}
 
@@ -1594,7 +1613,9 @@ export function App() {
       {/* Mobile Bottom Navigation Bar (Thumb-First 5-Tab Bar - Exclusively Professional Vector Icons, Zero Emojis) */}
       <nav
         aria-label="Mobile Navigation Bar"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t-2 border-[#CBB8A3] shadow-[0_-4px_24px_rgba(44,32,24,0.08)] select-none"
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t-2 border-[#CBB8A3] shadow-[0_-4px_24px_rgba(44,32,24,0.08)] select-none ${
+          isBrewing ? 'hidden pointer-events-none' : 'block'
+        }`}
         style={{ paddingBottom: 'max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))' }}
       >
         <div className="grid grid-cols-5 w-full max-w-lg mx-auto px-1 pt-1.5 pb-1">
