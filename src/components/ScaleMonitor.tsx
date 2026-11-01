@@ -1136,7 +1136,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
         {/* Right Header Info / Abort */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {isBrewing ? (
+          {isBrewing && (
             <button
               type="button"
               onClick={handleCancelBrewing}
@@ -1146,10 +1146,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <RotateCcw className="w-3 h-3" />
               <span>{t('scale.reset')}</span>
             </button>
-          ) : (
-            <span className="text-[10px] text-[#7A6E65] font-mono font-bold">
-              {targetDose}g → {targetYield}g
-            </span>
           )}
         </div>
       </div>
@@ -1670,7 +1666,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
             className="flex items-center justify-between text-[11px] bg-[#FAF7F2] hover:bg-[#E8DFD5]/40 border border-[#E8DFD5] px-2.5 py-1 rounded-xl text-[#7A6E65] font-mono shadow-2xs shrink-0 cursor-pointer active:scale-[0.99] transition"
             title="Tap to Start Shot"
           >
-            <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <div className="flex items-center gap-1.5 min-w-0 w-full">
               {method === 'pour_over' ? (
                 <DripperIcon className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
               ) : (
@@ -1680,15 +1676,12 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 {isZeroDetected ? 'Ready • Tap Start Shot to brew' : 'Tare scale to 0.0g • Tap Start Shot'}
               </span>
             </div>
-            <div className="shrink-0 text-right text-[11px] text-[#2C2018] font-bold">
-              <span className="text-[#C26D52]">{targetDose}g</span> → <span className="text-[#72806B]">{targetYield}g</span>
-            </div>
           </div>
         )}
 
         {/* Live Extraction Curve Slot (Always integrated, dynamically expanding to fill available space) */}
         {liveChartSlot && (
-          <div className="flex-1 min-h-[95px] w-full flex flex-col justify-center overflow-hidden my-0.5">
+          <div className="flex-1 min-h-[140px] w-full flex flex-col justify-center overflow-hidden my-0.5">
             {liveChartSlot}
           </div>
         )}

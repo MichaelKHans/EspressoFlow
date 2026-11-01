@@ -2,6 +2,17 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.20] - 2026-11-01
+### Etape 99: Markant Større Live Flow-Kurve, Bundintegreret 'LIVE FLOW' & Fjernelse af Overflødig Tekst
+- **Større Live Flow-Kurve & Optimeret Pladsudnyttelse ([FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx) & [ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Fjernet hele den øverste header-linje på flow-kortet i kompakt Cockpit-visning og flyttet `LIVE FLOW` ned i signatur-teksten under kurven.
+  - Fjernet det overflødige `Target: 1.2–1.8` badge i øverste højre hjørne, da zonen allerede fremgår klart i tegnforklaringen (`1.2–1.8`).
+  - Øget SVG-koordinathøjden fra 170 til 200 og reduceret top-padding (`padTop: 8`), hvilket udvider det effektive tegneareal for flow-kurven med over 26%.
+  - Hævet `min-h` for chart-slottet i `ScaleMonitor` til `140px`, så kurven udvider sig dynamisk ned mod startknapperne.
+- **Fjernelse af Overflødige Vægtmål & Truncation-Rens ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Fjernet det overflødige `17g → 34g` fra den absolutte top-header, hvilket giver fuld plads til driknavnet (`DOUBLE ESPRESSO` afkortes aldrig mere til `DOUBLE ESPR...`).
+  - Fjernet det gentagne `17g → 34g` fra tarerings-prompten, så vejledningen (`Ready • Tap Start Shot to brew` / `Tare scale to 0.0g • Tap Start Shot`) vises ubeskåret i fuld bredde uden `Tap Start S...`. Målopskriften fremgår fortsat krystalklart i den dedikerede Dial-In boks.
+
 ## [1.21.19] - 2026-11-01
 ### Etape 98: Hævet Menu-Knap over Systemnavigation & 3-Linjers Udstyrs-Layout med Kværn-Sync
 - **Løftet, Trykvenlig Udtræks-Knap over Android Systemnavigation ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**

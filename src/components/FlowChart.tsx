@@ -88,10 +88,10 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const maxFlow = isPourOver ? 8.0 : 4.0; // max scale for g/s
 
   const width = 600;
-  const height = compact ? 170 : 210;
+  const height = compact ? 200 : 210;
   const padLeft = compact ? 38 : 45;
   const padRight = compact ? 38 : 44; // Room for right-side flow axis
-  const padTop = compact ? 14 : 22;
+  const padTop = compact ? 8 : 22;
   const padBottom = compact ? 18 : 25;
 
   const chartW = width - padLeft - padRight;
@@ -126,42 +126,43 @@ export const FlowChart: React.FC<FlowChartProps> = ({
 
   return (
     <div className={`bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] ${compact ? 'p-1.5 sm:p-2 shadow-2xs flex-1 flex flex-col justify-between overflow-hidden' : 'p-4 shadow-xs'}`}>
-      <div className={`flex items-center justify-between ${compact ? 'mb-0.5' : 'mb-2 flex-col sm:flex-row items-start sm:items-center'} gap-1.5`}>
-        <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
-          <TrendingUp className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
-          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono truncate">
-            {compact ? (language === 'da' ? 'LIVE FLOW' : 'LIVE FLOW') : t('chart.title')}
-          </span>
-        </div>
+      {/* Top Header & Badges (Only in non-compact full views; in compact cockpit, LIVE FLOW is cleanly unified into the bottom legend) */}
+      {!compact && (
+        <div className="flex items-center justify-between mb-2 flex-col sm:flex-row items-start sm:items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+            <TrendingUp className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
+            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono truncate">
+              {t('chart.title')}
+            </span>
+          </div>
 
-        {isLive ? (
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#C26D52]/15 text-[#C26D52] text-[10px] font-mono font-bold border border-[#C26D52]/30 animate-pulse shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C26D52]" />
-            <span>LIVE {isPourOver ? 'POUR' : 'FLOW'}</span>
-          </div>
-        ) : !isPourOver && channelingEvent?.detected ? (
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#C26D52]/10 text-[#C26D52] text-[10px] font-mono font-semibold border border-[#C26D52]/30 shrink-0">
-            <AlertCircle className="w-3 h-3 text-[#C26D52]" />
-            <span className="whitespace-nowrap">
-              {t('chart.channeling_spike', {
-                time: channelingEvent.timestampSeconds !== undefined
-                  ? Math.max(0, Math.round((channelingEvent.timestampSeconds - timeOffset) * 10) / 10)
-                  : 0,
-                spike: channelingEvent.flowSpikeGps ?? 0,
-              })}
-            </span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1 text-[10px] font-mono text-[#72806B] bg-[#72806B]/10 px-1.5 py-0.5 rounded border border-[#72806B]/20 shrink-0 whitespace-nowrap">
-            <Sparkles className="w-2.5 h-2.5 text-[#72806B]" />
-            <span>
-              {compact
-                ? (isPourOver ? 'Pacing' : (language === 'da' ? 'Mål: 1.2–1.8' : 'Target: 1.2–1.8'))
-                : (isPourOver ? 'Steady Extraction' : t('chart.optimal_flow'))}
-            </span>
-          </div>
-        )}
-      </div>
+          {isLive ? (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#C26D52]/15 text-[#C26D52] text-[10px] font-mono font-bold border border-[#C26D52]/30 animate-pulse shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C26D52]" />
+              <span>LIVE {isPourOver ? 'POUR' : 'FLOW'}</span>
+            </div>
+          ) : !isPourOver && channelingEvent?.detected ? (
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#C26D52]/10 text-[#C26D52] text-[10px] font-mono font-semibold border border-[#C26D52]/30 shrink-0">
+              <AlertCircle className="w-3 h-3 text-[#C26D52]" />
+              <span className="whitespace-nowrap">
+                {t('chart.channeling_spike', {
+                  time: channelingEvent.timestampSeconds !== undefined
+                    ? Math.max(0, Math.round((channelingEvent.timestampSeconds - timeOffset) * 10) / 10)
+                    : 0,
+                  spike: channelingEvent.flowSpikeGps ?? 0,
+                })}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 text-[10px] font-mono text-[#72806B] bg-[#72806B]/10 px-1.5 py-0.5 rounded border border-[#72806B]/20 shrink-0 whitespace-nowrap">
+              <Sparkles className="w-2.5 h-2.5 text-[#72806B]" />
+              <span>
+                {isPourOver ? 'Steady Extraction' : t('chart.optimal_flow')}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* SVG Canvas with Dual Y-Axis */}
       <div className={`w-full overflow-hidden ${compact ? 'flex-1 flex items-center justify-center min-h-0' : 'overflow-x-auto'}`}>
@@ -405,25 +406,47 @@ export const FlowChart: React.FC<FlowChartProps> = ({
         </svg>
       </div>
 
-      {/* Legend & Stats */}
+      {/* Legend & Stats (Unified with LIVE FLOW label) */}
       {compact ? (
-        <div className="mt-1.5 pt-1.5 border-t border-[#E8DFD5] flex items-center justify-between text-[10px] font-mono text-[#7A6E65]">
-          <div className="flex items-center gap-2.5">
-            <span className="flex items-center gap-1">
-              <span className="w-2.5 h-1 bg-[#2C2018] rounded-full inline-block" />
-              <span>{lastPoint?.weightGrams.toFixed(1) || '0.0'}g</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2.5 h-1 bg-[#C26D52] rounded-full inline-block" />
-              <span>{lastPoint?.flowRateGps.toFixed(1) || '0.0'} g/s</span>
-            </span>
-            <span className="flex items-center gap-1 text-[#8A5A2B]">
-              <span className="w-2 h-2 bg-[#D4A373]/50 border border-[#D4A373] rounded-xs inline-block" />
-              <span>1.2–1.8</span>
-            </span>
+        <div className="mt-1 pt-1 border-t border-[#E8DFD5] flex items-center justify-between text-[10px] font-mono text-[#7A6E65]">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* LIVE FLOW badge moved here below the chart */}
+            <div className="flex items-center gap-1 font-bold text-[#2C2018] uppercase tracking-wider shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
+              <span className="text-[10px]">LIVE FLOW</span>
+              {isLive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C26D52] animate-pulse" />
+              )}
+            </div>
+
+            <span className="text-[#E8DFD5]">•</span>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-1 bg-[#2C2018] rounded-full inline-block" />
+                <span>{lastPoint?.weightGrams.toFixed(1) || '0.0'}g</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-1 bg-[#C26D52] rounded-full inline-block" />
+                <span>{lastPoint?.flowRateGps.toFixed(1) || '0.0'} g/s</span>
+              </span>
+              <span className="flex items-center gap-1 text-[#8A5A2B]">
+                <span className="w-2 h-2 bg-[#D4A373]/50 border border-[#D4A373] rounded-xs inline-block" />
+                <span>1.2–1.8</span>
+              </span>
+            </div>
           </div>
-          <div className="text-[#72806B] font-bold">
-            1:{currentRatio}
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            {!isPourOver && channelingEvent?.detected ? (
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#C26D52]/10 text-[#C26D52] text-[9.5px] font-semibold border border-[#C26D52]/30 shrink-0">
+                <AlertCircle className="w-2.5 h-2.5 text-[#C26D52]" />
+                <span>Spike</span>
+              </div>
+            ) : null}
+            <div className="text-[#72806B] font-bold">
+              1:{currentRatio}
+            </div>
           </div>
         </div>
       ) : (
