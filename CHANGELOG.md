@@ -2,6 +2,13 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.25] - 2026-11-01
+### Etape 104: Løsning af Minified React Error #310 i BeanScannerModal
+- **Korrekt Hook-Placering og Håndtering af Betingede Renders ([BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**
+  - Rettet `Minified React error #310` ("Rendered more hooks than during the previous render"), som udløstes ved tryk på *"Scan Coffee Bag"*.
+  - Årsag: `if (!isOpen) return null;` lå placeret i midten af komponenten før de nye `useMemo` hooks (`activeDrinkIds`, `previewBean`, `drinkMatches`). Når brugeren åbnede scanneren (`isOpen === true`), kaldte React ekstra hooks, hvilket overtrådte Reacts Rules of Hooks.
+  - Løsning: Flyttet `if (!isOpen) return null;` ned til umiddelbart før JSX `return (...)`. Alle hooks eksekveres nu i uforanderlig rækkefølge og med identisk tælling på tværs af alle renders.
+
 ## [1.21.24] - 2026-11-01
 ### Etape 103: Dot-Matrix Datostempel OCR, Visuel Riste-Tidslinje i Review & Bar Drink Matchmaker
 - **Dot-Matrix / Prik-Matrix Datostempel Genkendelse ([bagImageUtil.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagImageUtil.ts), [bagOcr.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagOcr.ts), [bagScanner.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagScanner.ts), [FreshnessRadarModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FreshnessRadarModal.tsx), [BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**

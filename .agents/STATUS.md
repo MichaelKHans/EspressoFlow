@@ -26,6 +26,12 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-11-01 -- Etape 104: Løsning af Minified React Error #310 i BeanScannerModal (v1.21.25)
+- **Eliminering af Betinget Hook-Kald ([BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**
+  - Identificeret og løst Minified React Error #310 ("Rendered more hooks than during the previous render"), der forårsagede ErrorBoundary crash ved åbning af "Scan Coffee Bag".
+  - Flyttet `if (!isOpen) return null;` til bunden lige før JSX return. Sikrer at alle 20+ hooks i `BeanScannerModal` altid eksekveres i 100% konsistent rækkefølge uanset om modalen er lukket eller åben.
+  - Kompileret og testet lokalt uden fejl (`npm run build`).
+
 ### 2026-11-01 -- Etape 103: Dot-Matrix Datostempel OCR, Visuel Riste-Tidslinje i Review & Bar Drink Matchmaker (v1.21.24)
 - **Prik-Matrix / Dot-Matrix Datostempel Genkendelse ([bagImageUtil.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagImageUtil.ts), [bagOcr.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagOcr.ts), [bagScanner.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagScanner.ts), [FreshnessRadarModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FreshnessRadarModal.tsx), [BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**
   - Udviklet `preprocessDotMatrixOcr()` med adaptiv Otsu tærskling og 1px morfologisk dilation, som binder isolerede blækprikker sammen til sammenhængende talcifre.

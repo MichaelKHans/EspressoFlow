@@ -279,8 +279,6 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     };
   }, [isOpen, isCameraActive, scannedResult, scanLoop]);
 
-  if (!isOpen) return null;
-
   // Handle barcode lookup
   const handleLookupManualBarcode = async (codeToSearch?: string) => {
     const code = codeToSearch || manualCode;
@@ -664,6 +662,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setShowNameSuggestions(false);
     startCamera();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
