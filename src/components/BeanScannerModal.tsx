@@ -37,6 +37,7 @@ import {
   isBarcodeDetectorSupported,
   KNOWN_BARCODE_DATABASE,
   type ScannedBeanInfo,
+  normalizeDateStringToISO,
 } from '../lib/bagScanner';
 import { upsertGlobalBean } from '../lib/supabase';
 import { resolveGrinder } from '../lib/storage';
@@ -135,7 +136,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setScannedResult(info);
     setEditName(info.name);
     setEditRoaster(info.roaster || '');
-    setEditRoastDate(info.roastDate);
+    setEditRoastDate(normalizeDateStringToISO(info.roastDate));
     setEditRoastLevel(info.roastLevel);
     setEditFlavorNotes(info.flavorNotes || []);
     setEditImageUrl(info.imageUrl);
@@ -244,7 +245,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       setShowRoasterSuggestions(false);
       setShowNameSuggestions(false);
       if (initialRoastDate) {
-        setEditRoastDate(initialRoastDate);
+        setEditRoastDate(normalizeDateStringToISO(initialRoastDate));
       }
       startCamera();
     } else {
@@ -390,7 +391,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       });
 
       if (ocrResult.roastDate) {
-        setEditRoastDate(ocrResult.roastDate);
+        const normalized = normalizeDateStringToISO(ocrResult.roastDate);
+        setEditRoastDate(normalized);
         if (ocrResult.formatDescription) {
           setDateScanNote(ocrResult.formatDescription);
         }
@@ -400,8 +402,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
         setDateScanError(null);
         setFeedbackMessage(
           ocrResult.isEstimatedFromBBD
-            ? `Estimated roast date from Best Before: ${ocrResult.roastDate}`
-            : `Production roast date confirmed: ${ocrResult.roastDate}`
+            ? `Estimated roast date from Best Before: ${normalized}`
+            : `Production roast date confirmed: ${normalized}`
         );
         setIsDateCameraOpen(false);
         stopCamera();
@@ -434,7 +436,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       });
 
       if (ocrResult.roastDate) {
-        setEditRoastDate(ocrResult.roastDate);
+        const normalized = normalizeDateStringToISO(ocrResult.roastDate);
+        setEditRoastDate(normalized);
         if (ocrResult.formatDescription) {
           setDateScanNote(ocrResult.formatDescription);
         }
@@ -444,8 +447,8 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
         setDateScanError(null);
         setFeedbackMessage(
           ocrResult.isEstimatedFromBBD
-            ? `Estimated roast date from Best Before: ${ocrResult.roastDate}`
-            : `Production roast date confirmed: ${ocrResult.roastDate}`
+            ? `Estimated roast date from Best Before: ${normalized}`
+            : `Production roast date confirmed: ${normalized}`
         );
       } else {
         if (ocrResult.detectedRoastLevel) {
@@ -462,10 +465,11 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     }
   };
 
-  // Calculate days off roast (supports negative for future date detection)
+  // Calculate days off roast (supports negative for future date detection with European ISO normalization)
   const getDaysOffRoast = (dateStr: string): number => {
     if (!dateStr) return 0;
-    const roast = new Date(dateStr);
+    const iso = normalizeDateStringToISO(dateStr);
+    const roast = new Date(iso);
     if (isNaN(roast.getTime())) return 7;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -484,7 +488,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
       id: `bean_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       name: editName.trim(),
       roaster: editRoaster.trim() || undefined,
-      roastDate: editRoastDate || new Date().toISOString().split('T')[0],
+      roastDate: normalizeDateStringToISO(editRoastDate) || new Date().toISOString().split('T')[0],
       roastLevel: editRoastLevel,
       doseGrams: editDose,
       ratioStyle: editRatio,
@@ -635,7 +639,15 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 
           {/* Camera Viewfinder (when not yet scanned) */}
           {!scannedResult && (
-            <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-[#2C2018]/20 flex items-center justify-center shadow-inner">
+            <div
+              className={`relative rounded-2xl overflow-hidden bg-black border border-[#2C2018]/20 flex items-center justify-center shadow-inner transition-all ${
+                mode === 'bag_vision'
+                  ? 'w-full aspect-[3/4] max-h-[52vh]'
+                  : mode === 'barcode'
+                  ? 'w-full aspect-[4/3] max-h-[38vh]'
+                  : 'w-full aspect-[4/3] max-h-[42vh]'
+              }`}
+            >
               <video
                 ref={videoRef}
                 playsInline
@@ -645,19 +657,34 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 
               {/* Reticle / Target Overlay */}
               {isCameraActive && (
-                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-6">
+                <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-4">
                   {mode === 'bag_vision' ? (
-                    <div className="relative w-48 h-56 border-2 border-[#C26D52] rounded-2xl shadow-xl flex items-center justify-center bg-[#C26D52]/5">
-                      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#C26D52] rounded-tl-lg" />
-                      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#C26D52] rounded-tr-lg" />
-                      <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#C26D52] rounded-bl-lg" />
-                      <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#C26D52] rounded-br-lg" />
-                      <span className="absolute -bottom-6 text-[10px] font-mono text-white/95 bg-black/75 px-2.5 py-0.5 rounded-full backdrop-blur-xs whitespace-nowrap shadow-sm">
-                        {t('bean.reticle_center_bag')}
-                      </span>
+                    <div className="relative w-[74%] max-w-[270px] aspect-[2/3] border-2 border-[#C26D52] rounded-2xl shadow-[0_0_25px_rgba(194,109,82,0.35)] flex flex-col items-center justify-between p-3.5 bg-[#C26D52]/5">
+                      <div className="absolute top-0 left-0 w-5 h-5 border-t-3 border-l-3 border-[#C26D52] rounded-tl-xl" />
+                      <div className="absolute top-0 right-0 w-5 h-5 border-t-3 border-r-3 border-[#C26D52] rounded-tr-xl" />
+                      <div className="absolute bottom-0 left-0 w-5 h-5 border-b-3 border-l-3 border-[#C26D52] rounded-bl-xl" />
+                      <div className="absolute bottom-0 right-0 w-5 h-5 border-b-3 border-r-3 border-[#C26D52] rounded-br-xl" />
+
+                      <div className="w-full text-center">
+                        <span className="text-[9.5px] font-mono font-bold text-white/90 bg-black/60 px-2 py-0.5 rounded-full border border-white/10 shadow-xs">
+                          {t('bean.reticle_bag_top') || 'TOP AF POSEN'}
+                        </span>
+                      </div>
+
+                      <div className="w-full h-1/2 border border-dashed border-[#C26D52]/40 rounded-lg flex items-center justify-center">
+                        <span className="text-[10px] font-mono text-white/95 bg-black/80 px-2.5 py-0.5 rounded-full backdrop-blur-xs whitespace-nowrap shadow-sm">
+                          {t('bean.reticle_center_bag')}
+                        </span>
+                      </div>
+
+                      <div className="w-full text-center">
+                        <span className="text-[9.5px] font-mono font-bold text-white/90 bg-black/60 px-2 py-0.5 rounded-full border border-white/10 shadow-xs">
+                          {t('bean.reticle_bag_bottom') || 'BUND / DATOSTEMPEL'}
+                        </span>
+                      </div>
                     </div>
                   ) : mode === 'barcode' ? (
-                    <div className="relative w-48 h-28 border-2 border-dashed border-[#C26D52] rounded-lg shadow-lg flex items-center justify-center">
+                    <div className="relative w-56 h-28 border-2 border-dashed border-[#C26D52] rounded-lg shadow-lg flex items-center justify-center">
                       <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#C26D52]" />
                       <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#C26D52]" />
                       <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#C26D52]" />
@@ -668,10 +695,14 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       </span>
                     </div>
                   ) : (
-                    <div className="relative w-56 h-36 border-2 border-[#72806B] rounded-lg shadow-lg flex items-center justify-center bg-[#72806B]/5">
-                      <div className="w-full h-0.5 bg-[#72806B]/70 animate-bounce" />
-                      <span className="absolute -bottom-6 text-[10px] font-mono text-white/90 bg-black/60 px-2 py-0.5 rounded">
-                        Aim at Roast Date Stamp
+                    <div className="relative w-64 h-32 border-2 border-[#72806B] rounded-xl shadow-[0_0_20px_rgba(114,128,107,0.35)] flex items-center justify-center bg-[#72806B]/5">
+                      <div className="absolute top-0 left-0 w-3.5 h-3.5 border-t-2 border-l-2 border-[#72806B] rounded-tl" />
+                      <div className="absolute top-0 right-0 w-3.5 h-3.5 border-t-2 border-r-2 border-[#72806B] rounded-tr" />
+                      <div className="absolute bottom-0 left-0 w-3.5 h-3.5 border-b-2 border-l-2 border-[#72806B] rounded-bl" />
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 border-b-2 border-r-2 border-[#72806B] rounded-br" />
+                      <div className="w-full h-0.5 bg-[#72806B]/80 shadow-[0_0_8px_#72806B] animate-pulse" />
+                      <span className="absolute -bottom-6 text-[10px] font-mono font-semibold text-white/95 bg-black/75 px-2.5 py-0.5 rounded-full shadow-sm border border-white/10">
+                        {t('bean.aim_roast_date') || 'Aim at Roast Date Stamp'}
                       </span>
                     </div>
                   )}
@@ -739,8 +770,47 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
             </div>
           )}
 
-          {/* Quick Capture & Upload Controls for Barcode and Date modes */}
-          {!scannedResult && mode !== 'bag_vision' && (
+          {/* Dedicated Capture & Upload Controls for Date mode */}
+          {!scannedResult && mode === 'label_date' && (
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleDateCameraCapture}
+                disabled={isScanning || isDateOcrScanning || !isCameraActive}
+                className="w-full py-3 px-4 rounded-xl bg-[#72806B] hover:bg-[#5D6B57] disabled:opacity-50 text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+              >
+                <Calendar className="w-4 h-4 text-[#FFFDF9]" />
+                <span>
+                  {isDateOcrScanning
+                    ? t('radar.reading_date') || 'Scanner datostempel...'
+                    : t('bean.scan_date_from_cam') || '📷 Scan Datostempel fra Kamera'}
+                </span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isScanning || isDateOcrScanning}
+                  className="flex-1 py-2 px-3 rounded-xl bg-white border border-[#E8DFD5] text-[#2C2018] text-xs font-semibold hover:bg-[#FAF7F2] transition flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-[#72806B]" />
+                  <span>{t('bean.choose_gallery_btn')}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Capture & Upload Controls for Barcode mode */}
+          {!scannedResult && mode === 'barcode' && (
             <div className="flex items-center gap-2">
               <input
                 ref={fileInputRef}
@@ -1208,7 +1278,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
 
                     {isDateCameraOpen ? (
                       <div className="space-y-2.5 mt-1">
-                        <div className="relative rounded-xl overflow-hidden bg-black aspect-video border border-[#72806B]/50 flex items-center justify-center shadow-inner">
+                        <div className="relative rounded-2xl overflow-hidden bg-black aspect-[4/3] max-h-[38vh] border border-[#72806B]/50 flex items-center justify-center shadow-inner">
                           <video
                             ref={videoRef}
                             playsInline
@@ -1375,7 +1445,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       type="date"
                       value={editRoastDate}
                       onChange={(e) => {
-                        setEditRoastDate(e.target.value);
+                        setEditRoastDate(normalizeDateStringToISO(e.target.value));
                         setDateScanNote(null);
                       }}
                       className="w-full px-3 py-2 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-xs font-mono font-semibold text-[#2C2018] focus:outline-none focus:border-[#C26D52]"

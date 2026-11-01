@@ -6,10 +6,11 @@ import {
   Plus,
   Camera,
   Layers,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { useTranslation } from '../i18n';
-import { extractDatesAndRoastFromBagText } from '../lib/bagScanner';
+import { extractDatesAndRoastFromBagText, normalizeDateStringToISO } from '../lib/bagScanner';
 import { preprocessImageForOcr } from '../lib/bagImageUtil';
 
 export type FreshnessStatus = 'peak' | 'past_peak' | 'stale' | 'degassing';
@@ -114,7 +115,8 @@ export function evaluateDateFreshness(
   rawSnippet?: string,
   lang: string = 'da'
 ): FreshnessVerdict {
-  const roast = new Date(dateStr);
+  const iso = normalizeDateStringToISO(dateStr);
+  const roast = new Date(iso);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const roastZero = new Date(roast);
@@ -125,7 +127,7 @@ export function evaluateDateFreshness(
 
   if (diffDays < 5) {
     return {
-      date: dateStr,
+      date: iso,
       daysOffRoast: diffDays,
       status: 'degassing',
       statusLabel: isDa ? '💨 FRISKRISTET • AFGASSER CO₂' : '💨 FRESH ROAST • DEGASSING',
@@ -148,7 +150,7 @@ export function evaluateDateFreshness(
     };
   } else if (diffDays <= 30) {
     return {
-      date: dateStr,
+      date: iso,
       daysOffRoast: diffDays,
       status: 'peak',
       statusLabel: isDa ? '✨ GODKENDT • PEAK VINDUET' : '✨ APPROVED • PEAK WINDOW',
@@ -167,7 +169,7 @@ export function evaluateDateFreshness(
     };
   } else if (diffDays <= 55) {
     return {
-      date: dateStr,
+      date: iso,
       daysOffRoast: diffDays,
       status: 'past_peak',
       statusLabel: isDa ? '🟡 ACCEPTABEL • EFTER PEAK' : '🟡 ACCEPTABLE • PAST PEAK',
@@ -186,7 +188,7 @@ export function evaluateDateFreshness(
     };
   } else {
     return {
-      date: dateStr,
+      date: iso,
       daysOffRoast: diffDays,
       status: 'stale',
       statusLabel: isDa ? '🔴 ADVARSEL • FOR GAMMEL' : '🔴 WARNING • TOO OLD',
@@ -224,12 +226,15 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
   const [verdict, setVerdict] = useState<FreshnessVerdict | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [autoResetCountdown, setAutoResetCountdown] = useState<number>(0);
+  const [scanFeedbackMsg, setScanFeedbackMsg] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const verdictLockRef = useRef<boolean>(false);
+  const lastPassiveOcrRef = useRef<number>(0);
 
   // Stop camera tracks cleanly
   const stopCamera = useCallback(() => {
@@ -284,6 +289,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
     setVerdict(null);
     verdictLockRef.current = false;
     setAutoResetCountdown(0);
+    setScanFeedbackMsg(null);
     try {
       Haptics.impact({ style: ImpactStyle.Light });
     } catch {
@@ -291,88 +297,180 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
     }
   }, []);
 
-  // Optical analysis cycle
+  // Apply discovered date stamp and evaluate barista verdict
+  const handleDateRecognized = useCallback(
+    (rawDate: string, isEstimated: boolean, snippet?: string) => {
+      const iso = normalizeDateStringToISO(rawDate);
+      if (!iso) return;
+      verdictLockRef.current = true;
+      const newVerdict = evaluateDateFreshness(iso, isEstimated, snippet, language);
+      setVerdict(newVerdict);
+      setScanFeedbackMsg(null);
+      playRadarAudio(newVerdict.status);
+      triggerRadarHaptic(newVerdict.status);
+
+      // Start 4-second auto-reset timer
+      setAutoResetCountdown(4);
+      countdownIntervalRef.current = setInterval(() => {
+        setAutoResetCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownIntervalRef.current!);
+            countdownIntervalRef.current = null;
+            verdictLockRef.current = false;
+            setVerdict(null);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    },
+    [language]
+  );
+
+  // Execute optical scan from live video frame or uploaded file
+  const executeRadarOcr = useCallback(
+    async (fileSource?: File | Blob) => {
+      if (verdictLockRef.current || isAnalyzing) return;
+      setIsAnalyzing(true);
+      setScanFeedbackMsg(t('radar.reading_date') || 'Læser datostempel...');
+
+      try {
+        let extractedDate: string | null = null;
+        let isBBD = false;
+        let snippetText: string | undefined = undefined;
+
+        if (fileSource) {
+          const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
+          const res = await scanCoffeeBagForDateAndRoast(fileSource);
+          if (res.roastDate) {
+            extractedDate = res.roastDate;
+            isBBD = res.isEstimatedFromBBD;
+            snippetText = res.rawMatchedSnippet || res.formatDescription || undefined;
+          }
+        } else {
+          if (!videoRef.current || videoRef.current.videoWidth === 0) {
+            setIsAnalyzing(false);
+            setScanFeedbackMsg(null);
+            return;
+          }
+
+          const crop = {
+            x: 0.15,
+            y: 0.32,
+            width: 0.7,
+            height: 0.36,
+          };
+
+          const canvas = preprocessImageForOcr(videoRef.current, crop, false);
+
+          // Tier 1: Try Native TextDetector if supported
+          if (typeof window !== 'undefined' && 'TextDetector' in window) {
+            try {
+              const TextDetectorClass = (
+                window as unknown as {
+                  TextDetector: new () => { detect: (s: unknown) => Promise<Array<{ rawValue: string }>> };
+                }
+              ).TextDetector;
+              const detector = new TextDetectorClass();
+              const detected = await detector.detect(canvas);
+              if (detected && detected.length > 0) {
+                const rawText = detected.map((d: { rawValue: string }) => d.rawValue).join('\n');
+                const parsed = extractDatesAndRoastFromBagText(rawText);
+                if (parsed.roastDate) {
+                  extractedDate = parsed.roastDate;
+                  isBBD = parsed.isEstimatedFromBBD;
+                  snippetText = parsed.rawMatchedSnippet || parsed.formatDescription || undefined;
+                }
+              }
+            } catch (e) {
+              console.debug('Radar TextDetector failed, fallback to OCR', e);
+            }
+          }
+
+          // Tier 2: Tesseract OCR Web Worker Fallback
+          if (!extractedDate) {
+            const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
+            const res = await scanCoffeeBagForDateAndRoast(canvas);
+            if (res.roastDate) {
+              extractedDate = res.roastDate;
+              isBBD = res.isEstimatedFromBBD;
+              snippetText = res.rawMatchedSnippet || res.formatDescription || undefined;
+            }
+          }
+        }
+
+        if (extractedDate) {
+          handleDateRecognized(extractedDate, isBBD, snippetText);
+        } else {
+          setScanFeedbackMsg(t('bean.date_not_found') || 'Ingen dato fundet. Hold kameraet tæt på datostemplet.');
+          setTimeout(() => setScanFeedbackMsg(null), 3000);
+        }
+      } catch (err) {
+        console.warn('Radar scan error', err);
+        setScanFeedbackMsg('Scanning fejlede. Prøv igen med bedre belysning.');
+        setTimeout(() => setScanFeedbackMsg(null), 3000);
+      } finally {
+        setIsAnalyzing(false);
+      }
+    },
+    [isAnalyzing, t, handleDateRecognized]
+  );
+
+  // File upload handler
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await executeRadarOcr(file);
+    if (e.target) e.target.value = '';
+  };
+
+  // Passive optical analysis loop
   const runRadarScanCycle = useCallback(async () => {
     if (!videoRef.current || !isCameraActive || verdictLockRef.current) {
       loopTimeoutRef.current = setTimeout(runRadarScanCycle, 350);
       return;
     }
 
-    if (videoRef.current.readyState >= videoRef.current.HAVE_ENOUGH_DATA) {
-      try {
-        setIsAnalyzing(true);
-        // Crop specifically to the center scanning reticle (faster OCR, zero distractions)
-        // reticle: center 70% width, 32% height
-        const crop = {
-          x: 0.15,
-          y: 0.34,
-          width: 0.7,
-          height: 0.32,
-        };
-
-        const canvas = preprocessImageForOcr(videoRef.current, crop, false);
-
-        // 1. Fast Path: Native Browser Shape Detection TextDetector
-        let detectedRawText = '';
-        if (typeof window !== 'undefined' && 'TextDetector' in window) {
-          try {
-            const TextDetectorClass = (
-              window as unknown as {
-                TextDetector: new () => { detect: (s: unknown) => Promise<Array<{ rawValue: string }>> };
-              }
-            ).TextDetector;
-            const detector = new TextDetectorClass();
-            const detected = await detector.detect(canvas);
-            if (detected && detected.length > 0) {
-              detectedRawText = detected.map((d: { rawValue: string }) => d.rawValue).join('\n');
+    if (videoRef.current.readyState >= videoRef.current.HAVE_ENOUGH_DATA && !isAnalyzing) {
+      // 1. Fast Path: Native Browser Shape Detection TextDetector
+      if (typeof window !== 'undefined' && 'TextDetector' in window) {
+        try {
+          const crop = { x: 0.15, y: 0.32, width: 0.7, height: 0.36 };
+          const canvas = preprocessImageForOcr(videoRef.current, crop, false);
+          const TextDetectorClass = (
+            window as unknown as {
+              TextDetector: new () => { detect: (s: unknown) => Promise<Array<{ rawValue: string }>> };
             }
-          } catch (e) {
-            console.debug('Radar native TextDetector skipped', e);
+          ).TextDetector;
+          const detector = new TextDetectorClass();
+          const detected = await detector.detect(canvas);
+          if (detected && detected.length > 0) {
+            const rawText = detected.map((d: { rawValue: string }) => d.rawValue).join('\n');
+            const parsed = extractDatesAndRoastFromBagText(rawText);
+            if (parsed.roastDate) {
+              handleDateRecognized(
+                parsed.roastDate,
+                parsed.isEstimatedFromBBD,
+                parsed.rawMatchedSnippet || parsed.formatDescription || undefined
+              );
+              return;
+            }
           }
+        } catch (e) {
+          console.debug('Radar fast path skipped', e);
         }
-
-        // 2. Parse text with date & BBD extractor
-        if (detectedRawText.trim().length > 0) {
-          const parsed = extractDatesAndRoastFromBagText(detectedRawText);
-          if (parsed.roastDate) {
-            verdictLockRef.current = true;
-            const newVerdict = evaluateDateFreshness(
-              parsed.roastDate,
-              parsed.isEstimatedFromBBD,
-              parsed.rawMatchedSnippet || parsed.formatDescription || undefined,
-              language
-            );
-            setVerdict(newVerdict);
-            playRadarAudio(newVerdict.status);
-            triggerRadarHaptic(newVerdict.status);
-
-            // Start 4-second auto-reset timer
-            setAutoResetCountdown(4);
-            countdownIntervalRef.current = setInterval(() => {
-              setAutoResetCountdown((prev) => {
-                if (prev <= 1) {
-                  clearInterval(countdownIntervalRef.current!);
-                  countdownIntervalRef.current = null;
-                  verdictLockRef.current = false;
-                  setVerdict(null);
-                  return 0;
-                }
-                return prev - 1;
-              });
-            }, 1000);
-            setIsAnalyzing(false);
-            return;
-          }
+      } else {
+        // 2. Periodic passive Tesseract OCR check every 2.5 seconds if phone is steady
+        const now = Date.now();
+        if (now - lastPassiveOcrRef.current > 2500) {
+          lastPassiveOcrRef.current = now;
+          executeRadarOcr();
         }
-      } catch (err) {
-        console.debug('Radar optical cycle error', err);
-      } finally {
-        setIsAnalyzing(false);
       }
     }
 
-    loopTimeoutRef.current = setTimeout(runRadarScanCycle, 350);
-  }, [isCameraActive, language]);
+    loopTimeoutRef.current = setTimeout(runRadarScanCycle, 400);
+  }, [isCameraActive, isAnalyzing, handleDateRecognized, executeRadarOcr]);
 
   // Start video stream
   const startCamera = useCallback(async () => {
@@ -500,10 +598,11 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
         {isCameraActive && (
           <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-6">
             <div
-              className={`relative w-72 h-36 border-2 rounded-2xl transition-all duration-300 flex items-center justify-center ${
+              onClick={() => !verdict && executeRadarOcr()}
+              className={`relative w-72 h-36 border-2 rounded-2xl transition-all duration-300 flex items-center justify-center pointer-events-auto cursor-pointer ${
                 verdict
                   ? `${verdict.badgeBorder} ${verdict.badgeBg} ${verdict.glowColor}`
-                  : 'border-[#C26D52]/80 bg-[#C26D52]/5 shadow-[0_0_20px_rgba(194,109,82,0.3)]'
+                  : 'border-[#C26D52]/80 bg-[#C26D52]/5 shadow-[0_0_20px_rgba(194,109,82,0.3)] active:scale-98'
               }`}
             >
               {/* Corner brackets */}
@@ -551,6 +650,57 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
               <span className="absolute -bottom-7 text-[10.5px] font-sans text-white/90 bg-black/85 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm text-center">
                 {t('radar.aim_hint')}
               </span>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Scan Action Bar */}
+        {isCameraActive && !verdict && (
+          <div className="absolute inset-x-4 bottom-5 z-20 flex flex-col items-center gap-2.5">
+            {scanFeedbackMsg && (
+              <div className="px-3.5 py-1.5 rounded-full bg-black/90 backdrop-blur-md border border-[#C26D52]/50 text-[#E58367] text-[11px] font-mono shadow-lg animate-fadeIn flex items-center gap-1.5">
+                <RefreshCw className="w-3 h-3 animate-spin text-[#C26D52]" />
+                <span>{scanFeedbackMsg}</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2.5 w-full max-w-sm">
+              <button
+                type="button"
+                onClick={() => executeRadarOcr()}
+                disabled={isAnalyzing}
+                className="flex-1 py-3 px-4 rounded-xl bg-linear-to-r from-[#C26D52] to-[#A95840] hover:from-[#A95840] hover:to-[#8C3D26] active:scale-95 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-xl flex items-center justify-center gap-2 cursor-pointer transition border border-white/10"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                    <span>{t('radar.reading_date')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 fill-white text-white" />
+                    <span>{t('radar.scan_now_btn') || '⚡ Scan Dato Nu'}</span>
+                  </>
+                )}
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAnalyzing}
+                title="Tag foto / vælg fra galleri"
+                className="p-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-white/90 shadow-md transition cursor-pointer"
+              >
+                <ImageIcon className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}

@@ -13,10 +13,12 @@ export interface CapturedBagFrame {
 
 /**
  * Capture and compress a frame from an active HTMLVideoElement
+ * Uses 1280px max dimension to guarantee that micro-typography, stamped roast dates,
+ * and roaster lot numbers remain razor sharp for Vision AI & OCR.
  */
 export function captureBagFrameFromVideo(
   video: HTMLVideoElement,
-  maxDimension = 768
+  maxDimension = 1280
 ): CapturedBagFrame | null {
   if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
     return null;
@@ -25,7 +27,7 @@ export function captureBagFrameFromVideo(
   const vWidth = video.videoWidth;
   const vHeight = video.videoHeight;
 
-  // Calculate scaled dimensions (keep aspect ratio, max dimension 768px)
+  // Calculate scaled dimensions (keep aspect ratio, max dimension 1280px)
   let targetWidth = vWidth;
   let targetHeight = vHeight;
 
@@ -39,7 +41,7 @@ export function captureBagFrameFromVideo(
     }
   }
 
-  // 1. Offscreen canvas for Vision AI payload (768px WebP)
+  // 1. Offscreen canvas for Vision AI payload (1280px WebP)
   const canvas = document.createElement('canvas');
   canvas.width = targetWidth;
   canvas.height = targetHeight;
@@ -50,8 +52,8 @@ export function captureBagFrameFromVideo(
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
 
-  // WebP compression at 0.82 quality gives crystal clear text with minimal bytes (<40KB)
-  const base64 = canvas.toDataURL('image/webp', 0.82);
+  // WebP compression at 0.85 quality gives crystal clear text with minimal bytes (~55-75KB)
+  const base64 = canvas.toDataURL('image/webp', 0.85);
 
   // 2. Offscreen canvas for 280x280 square profile thumbnail
   const thumbSize = 280;
@@ -93,11 +95,11 @@ export function captureBagFrameFromVideo(
 }
 
 /**
- * Compress an uploaded file or gallery image into a 768px WebP vision payload
+ * Compress an uploaded file or gallery image into a 1280px WebP vision payload
  */
 export async function compressFileToBagFrame(
   file: File | Blob,
-  maxDimension = 768
+  maxDimension = 1280
 ): Promise<CapturedBagFrame> {
   return new Promise((resolve, reject) => {
     const img = new Image();

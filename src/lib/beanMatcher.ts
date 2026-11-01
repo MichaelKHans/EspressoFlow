@@ -1,4 +1,5 @@
 import type { CoffeeBeanProfile, DrinkRecipe, RoastLevel } from '../types/espresso';
+import { normalizeDateStringToISO } from './bagScanner';
 
 export interface BeanMatchResult {
   bean: CoffeeBeanProfile;
@@ -36,7 +37,8 @@ function scoreBeanForDrink(bean: CoffeeBeanProfile, drink: DrinkRecipe): BeanMat
   }
 
   // Freshness bonus (7-21 days off roast is peak, <4 too fresh CO2, >30 stale)
-  const roastDate = new Date(bean.roastDate);
+  const isoRoast = normalizeDateStringToISO(bean.roastDate);
+  const roastDate = new Date(isoRoast);
   const diffDays = Math.floor((Date.now() - roastDate.getTime()) / (1000 * 60 * 60 * 24));
   const isFuture = diffDays < 0;
   const daysOff = Math.max(0, diffDays);

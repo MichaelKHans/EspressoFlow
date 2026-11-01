@@ -95,7 +95,7 @@ Guidelines:
 6. 'varietal': e.g. 'Geisha', 'SL28', 'Bourbon', 'Caturra', 'Ethiopian Heirloom', or null.
 7. 'altitude': e.g. '1900-2100m' or null if not printed.
 8. 'flavor_notes': Array of 2 to 6 sensory taste descriptors printed or indicated on the bag (e.g., ['Solbær', 'Rabarber', 'Karamel'] or ['Chokolade', 'Nødder']). Return in Danish or English as printed.
-9. 'roast_date': If a specific roast date (YYYY-MM-DD or DD/MM/YYYY) is visible on the label, return it. Otherwise null.
+9. 'roast_date': If a specific roast date (YYYY-MM-DD, DD/MM/YYYY, or DD-MM-YY) is visible on the label, ALWAYS normalize and return it in ISO format YYYY-MM-DD (e.g. European '09-10-26' or '09/10/2026' MUST be returned as '2026-10-09'). Otherwise null.
 10. 'confidence': Estimated accuracy score between 0.50 and 1.00.
 
 Return ONLY a strict JSON object with no markdown backticks, no markdown formatting:

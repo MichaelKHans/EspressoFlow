@@ -14,6 +14,7 @@ import type { RoastLevel, ShotRecord, TasteRating } from '../types/espresso';
 import { GRINDER_CALIBRATIONS } from './espressoMath';
 import { toGearKey } from './brewPhysics';
 import { resolveFleetConsensus, getBurrOffsetForGrinder } from './fleetConsensusEngine';
+import { normalizeDateStringToISO } from './bagScanner';
 
 export const GRIND_INTELLIGENCE_STORAGE_KEY = 'flowbean_grind_intelligence_v1';
 export const BEAN_ANCHORS_STORAGE_KEY = 'flowbean_bean_anchors_v1';
@@ -374,7 +375,8 @@ export function predictOptimalGrindSetting(params: {
   let explanation = '';
 
   const now = Date.now();
-  const roastTime = new Date(activeBean.roastDate).getTime();
+  const isoRoast = normalizeDateStringToISO(activeBean.roastDate);
+  const roastTime = new Date(isoRoast).getTime();
   const daysOffRoastToday = isNaN(roastTime) ? 7 : Math.max(0, Math.floor((now - roastTime) / (1000 * 60 * 60 * 24)));
 
   // Etape 0: An anchor is only valid on the same grinder scale it was dialed in on

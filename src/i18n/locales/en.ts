@@ -651,6 +651,7 @@ export const en = {
   'radar.days_ago': '{days} days ago',
   'radar.estimated_from_bbd': 'Estimated from Best Before date',
   'radar.ready_standby': 'Live Optical Radar Active',
+  'radar.scan_now_btn': '⚡ Scan Date Now',
 
   // Beandex Archive, Emptied Bags & Repurchase
   'beandex.tab_active_bags': 'Active Stock',
@@ -735,7 +736,10 @@ export const en = {
   'bean.tab_bag_ai': 'Bag AI',
   'bean.tab_barcode': 'Barcode',
   'bean.tab_roast_date': 'Roast Date',
+  'bean.reticle_bag_top': 'TOP OF BAG',
   'bean.reticle_center_bag': 'Center front of coffee bag',
+  'bean.reticle_bag_bottom': 'BOTTOM / DATE STAMP',
+  'bean.scan_date_from_cam': '📷 Scan Date Stamp from Camera',
   'bean.vision_analyzing': 'Beandex Vision AI analyzing...',
   'bean.scan_bag_front_btn': 'Scan Coffee Bag (Front)',
   'bean.choose_gallery_btn': 'Select Bag Photo from Library',

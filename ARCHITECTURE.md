@@ -216,28 +216,30 @@ flowchart TD
     %% Scanning
     CamFeed[Kamera / Billed-upload] --> ScanType{Scanningsfokus}
     
-    ScanType -- Beandex Bag Vision™ (Pose AI) --> CanvasScale[bagVisionClient: On-device WebP komprimering 768px <40KB]
+    ScanType -- Beandex Bag Vision™ (Pose AI) --> CanvasScale[bagVisionClient: On-device WebP komprimering 1280px ~60KB]
     CanvasScale --> EdgeFunction[Supabase Edge Function: scan-bag-vision]
     EdgeFunction --> GeminiAPI[Google Gemini Flash Multimodal: 3.5-flash-lite / 3.8-flash]
-    GeminiAPI --> VisionJSON[Struktureret JSON: Risteri, Navn, Ristegrad, Oprindelse, Noter]
-    VisionJSON --> FillMeta[Autoudfyld Risteri, Navn, Oprindelse & Smagsnoter]
+    GeminiAPI --> VisionJSON[Struktureret JSON: Risteri, Navn, Ristegrad, Oprindelse, Noter, ISO Ristedato]
+    VisionJSON --> DateNorm[normalizeDateStringToISO: Konvertering til YYYY-MM-DD]
+    DateNorm --> FillMeta[Autoudfyld Risteri, Navn, Oprindelse & Smagsnoter]
 
     ScanType -- Stregkode (EAN) --> BarcodeDecoder[Native BarcodeDetector API / Fallback]
     BarcodeDecoder --> LocalDB{Kendt i KNOWN_BARCODE_DATABASE?}
     LocalDB -- Ja --> FillMeta
     LocalDB -- Nej --> QueryCloud[Slå op i Supabase Central Vault]
 
-    ScanType -- Freshness Radar™ (Hyldescanner) --> ReticleCrop[bagImageUtil: 10x Center-Crop 70%x32% Canvas]
-    ReticleCrop --> FastDetect[Native TextDetector / bagScanner Date Parser]
+    ScanType -- Freshness Radar™ (Hyldescanner) --> ReticleCrop[bagImageUtil: 10x Center-Crop 70%x36% Canvas]
+    ReticleCrop --> FastDetect[Native TextDetector / Tesseract.js Worker Fallback]
     FastDetect --> VerdictCheck{Dato Genkendt?}
-    VerdictCheck -- Ja --> TrafficHUD[Trafiklys HUD: 🟢 Peak / 🟡 Efter Peak / 🔴 Gammel / 💨 Afgasser]
+    VerdictCheck -- Ja --> DateNormRadar[normalizeDateStringToISO: Sikring mod US Dato-flip]
+    DateNormRadar --> TrafficHUD[Trafiklys HUD: 🟢 Peak / 🟡 Efter Peak / 🔴 Gammel / 💨 Afgasser]
     TrafficHUD --> HapticFeedback[Haptik & Dual-Tone Chime D5->A5]
     TrafficHUD --> AutoResetTimer[4s Auto-Reset Countdown Bar]
     TrafficHUD --> OneTapSave[1-Tap: Gem Dato i Beandex el. Åbn Pose AI]
     VerdictCheck -- Nej --> FastDetect
 
     ScanType -- Poseetiket & Dato (Manuel) --> OCRBag[OCR Tekstgenkendelse]
-    OCRBag --> DateParser[Dansk Ristedato- & MHD Heuristik]
+    OCRBag --> DateParser[Dansk Ristedato- & MHD Heuristik + normalizeDateStringToISO]
     DateParser --> DateCheck{Er dato fundet?}
     DateCheck -- Nordisk Ristedato (fx 02/03-26) --> ExtractRoastDate[Sæt Ristedato]
     DateCheck -- Italiensk MHD (fx 30/03/2028) --> Subtract24Months[Træk 24 mdr fra: Estimeret Ristedato]

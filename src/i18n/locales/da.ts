@@ -647,6 +647,7 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'radar.days_ago': '{days} dage siden',
   'radar.estimated_from_bbd': 'Beregnet ud fra Bedst Før dato',
   'radar.ready_standby': 'Optisk Radar er klar',
+  'radar.scan_now_btn': '⚡ Scan Dato Nu',
 
   // Beandex Archive, Emptied Bags & Repurchase
   'beandex.tab_active_bags': 'Aktive Poser',
@@ -731,7 +732,10 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'bean.tab_bag_ai': 'Pose AI',
   'bean.tab_barcode': 'Stregkode',
   'bean.tab_roast_date': 'Ristedato',
+  'bean.reticle_bag_top': 'TOP AF POSEN',
   'bean.reticle_center_bag': 'Centrér kaffeposens forside',
+  'bean.reticle_bag_bottom': 'BUND / DATOSTEMPEL',
+  'bean.scan_date_from_cam': '📷 Scan Datostempel fra Kamera',
   'bean.vision_analyzing': 'Beandex Vision AI analyserer...',
   'bean.scan_bag_front_btn': 'Scan Kaffepose (Forside)',
   'bean.choose_gallery_btn': 'Vælg posefoto fra Galleri',

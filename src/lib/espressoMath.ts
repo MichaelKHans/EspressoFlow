@@ -8,6 +8,7 @@ import type {
   FlowProfileType,
   ExtractionTelemetrySummary,
 } from '../types/espresso';
+import { normalizeDateStringToISO } from './bagScanner';
 
 /**
  * Specialty Coffee Golden Zone Parameters
@@ -681,7 +682,8 @@ export function calculateBeanFreshness(
   roastLevel: RoastLevel = 'medium',
   dateOpenedStr?: string
 ): BeanFreshnessStatus {
-  const roastTime = new Date(roastDateStr).getTime();
+  const isoRoast = normalizeDateStringToISO(roastDateStr);
+  const roastTime = new Date(isoRoast).getTime();
   const now = Date.now();
   const daysOffRoast = isNaN(roastTime)
     ? 0

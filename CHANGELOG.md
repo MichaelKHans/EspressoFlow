@@ -2,6 +2,24 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.23] - 2026-11-01
+### Etape 102: Robust Europæisk Datonormalisering (ISO YYYY-MM-DD), Opretstående Pose-Viewfinder & Aktiv Freshness Radar
+- **Fejlretning af Europæisk Datoberegning & Normalisering ([bagScanner.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagScanner.ts), [geminiBagVision.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/geminiBagVision.ts), [espressoMath.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/espressoMath.ts)):**
+  - Rettet alvorlig dato-flip fejl, hvor en scanning af fx `09-10-26` (9. oktober 2026 på en Hedekaffe-pose) blev parset af JavaScript `new Date()` som amerikansk format `MM-DD-YY` (10. september 2026), hvilket resulterede i `52 days off roast` i stedet for det korrekte `23 dage`.
+  - Introduceret central `normalizeDateStringToISO()` funktion, der konverterer alle europæiske formater (`DD-MM-YYYY`, `DD-MM-YY`, `DD/MM/YY`, `DD.MM.YY`, danske måneder som `9. okt. 2026`) til standard ISO `YYYY-MM-DD` (`2026-10-09`).
+  - Løst problem hvor HTML5 `<input type="date">` viste et tomt felt, fordi browseren kræver striks ISO `YYYY-MM-DD`. Feltet viser nu automatisk den scannede dato i telefonens native datoformat.
+  - Sikret `calculateBeanFreshness`, `getDaysOffRoast`, `beanMatcher` og `grindIntelligence` mod dato-flips.
+- **Aktiv Freshness Radar OCR & Manuel Trigger ([FreshnessRadarModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FreshnessRadarModal.tsx)):**
+  - Rettet fejl hvor scanneren "gjorde ingenting", fordi den udelukkende ventede på eksperimentel `window.TextDetector` (Shape Detection API), som ikke findes i standard mobile WebViews/browsere.
+  - Implementeret automatisk Tesseract.js Worker fallback (`scanCoffeeBagForDateAndRoast`), så scanning altid virker på tværs af iOS Safari, Android WebView og Chrome.
+  - Tilføjet en fremtrædende **"⚡ Scan Dato Nu"** action-knap samt gjort hele søgerammen (reticlet) trykfølsom for øjeblikkelig scanning.
+  - Tilføjet mulighed for fotoupload/galleri som fallback ved vanskelige lysrefleksioner på skinnende kaffeposer.
+- **Opretstående Kaffepose-Viewfinder i Højformat ([BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**
+  - Ændret kamera-viewfinderen fra widescreen `aspect-video` (16:9 landskab, som skar 70% af kaffeposen væk) til et rummeligt **højformat (portrait)** `aspect-[3/4] max-h-[52vh]`.
+  - Nyt opretstående kaffepose-reticle (`w-[74%] max-w-[270px] aspect-[2/3]`) med tydelige hjørnerammer, kaffepose-silhuet, topmarkør og datostempel-zone i bunden.
+  - Øget opløsningen i `captureBagFrameFromVideo` og `compressFileToBagFrame` ([bagVisionClient.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagVisionClient.ts)) fra 768px til 1280px ved 0.85 WebP kvalitet, hvilket giver over 2.5x skarpere detaljer så selv mikroskopisk skrift og batch-stempler læses med maksimal præcision.
+  - Tilføjet dedikeret "📷 Scan Datostempel fra Kamera" knap under søgeren i `mode === 'label_date'`, så der kan scannes direkte fra live-kameraet uden om galleriet.
+
 ## [1.21.22] - 2026-11-01
 ### Etape 101: Standby Reset-Knap i Cockpit Header & Flåde-Fejlbeskyttelse
 - **Standby Nulstil-Knap i Cockpit Header ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**

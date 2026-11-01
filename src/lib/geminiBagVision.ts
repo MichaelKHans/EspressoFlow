@@ -5,7 +5,7 @@
  */
 
 import { getSupabaseClient } from './supabase';
-import type { ScannedBeanInfo } from './bagScanner';
+import { type ScannedBeanInfo, normalizeDateStringToISO } from './bagScanner';
 
 export interface BagVisionScanResult {
   success: boolean;
@@ -56,15 +56,17 @@ export async function scanBagWithVisionAI(
 
     const raw = data.data;
 
-    // 2. Format to ScannedBeanInfo
+    // 2. Format to ScannedBeanInfo with European/ISO Date Normalization
+    const normalizedRoastDate = normalizeDateStringToISO(raw.roast_date || '');
+
     const scanned: ScannedBeanInfo = {
       roaster: raw.roaster,
       name: raw.name,
       roastLevel: raw.roast_level || 'medium',
       originCountry: raw.origin_country || undefined,
       flavorNotes: Array.isArray(raw.flavor_notes) ? raw.flavor_notes : [],
-      roastDate: raw.roast_date || '',
-      hasExplicitRoastDate: Boolean(raw.roast_date),
+      roastDate: normalizedRoastDate,
+      hasExplicitRoastDate: Boolean(normalizedRoastDate),
       imageUrl: thumbnailBase64 || undefined,
       isVerified: false,
       detectedFormat: 'Beandex Bag Vision™ (AI)',

@@ -295,6 +295,110 @@ export function extractRoastLevelFromText(text: string): RoastLevel | null {
   return null;
 }
 
+export const formatISO = (year: number, month: number, day: number): string => {
+  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+  return `${year}-${pad(month)}-${pad(day)}`;
+};
+
+export const isValidDate = (year: number, month: number, day: number): boolean => {
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  const currentYear = new Date().getFullYear();
+  // Accept up to 5 years into the past and future for commercial coffee (e.g. 24-36 mo shelf life like Lavazza/Illy BBD)
+  if (year < currentYear - 5 || year > currentYear + 5) return false;
+  return true;
+};
+
+/**
+ * Intelligent parser for single date candidate strings.
+ * Prioritizes European/Nordic DD-MM-YYYY / DD-MM-YY formats standard in specialty coffee packaging.
+ */
+export const parseDateCandidate = (raw: string): { iso: string; year: number; month: number; day: number } | null => {
+  if (!raw) return null;
+
+  // 1. European & Nordic: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY or DD/MM-YY or DD-MM-YY (e.g. "09-10-26" or "02/03-26")
+  const euro = raw.match(/\b(0?[1-9]|[12]\d|3[01])\s*[-.\/]\s*(0?[1-9]|1[0-2])\s*[-.\/]\s*(202\d|203\d|\d{2})\b/);
+  if (euro) {
+    const day = parseInt(euro[1], 10);
+    const month = parseInt(euro[2], 10);
+    let year = parseInt(euro[3], 10);
+    if (year < 100) year += 2000;
+    if (isValidDate(year, month, day)) {
+      return { iso: formatISO(year, month, day), year, month, day };
+    }
+  }
+
+  // 2. ISO: YYYY-MM-DD or YYYY.MM.DD or YYYY/MM/DD
+  const iso = raw.match(/\b(202\d|203\d)\s*[-.\/]\s*(0?[1-9]|1[0-2])\s*[-.\/]\s*(0?[1-9]|[12]\d|3[01])\b/);
+  if (iso) {
+    const year = parseInt(iso[1], 10);
+    const month = parseInt(iso[2], 10);
+    const day = parseInt(iso[3], 10);
+    if (isValidDate(year, month, day)) {
+      return { iso: formatISO(year, month, day), year, month, day };
+    }
+  }
+
+  // 3. Text Month with Day: e.g. "14 SEP 2026", "14. maj 2026", "9. okt. 2026"
+  const textMonth = raw.match(/\b(0?[1-9]|[12]\d|3[01])[\s./-]+([a-zæøåéäöü]{3,10})[\s./,-]+(202\d|203\d|\d{2})\b/i);
+  if (textMonth) {
+    const day = parseInt(textMonth[1], 10);
+    const mKey = textMonth[2].toLowerCase().replace(/[.,]/g, '');
+    let year = parseInt(textMonth[3], 10);
+    if (year < 100) year += 2000;
+    const month = MONTH_MAP[mKey];
+    if (month && isValidDate(year, month, day)) {
+      return { iso: formatISO(year, month, day), year, month, day };
+    }
+  }
+
+  // 4. Text Month with Year only: e.g. "SEP 2027", "September 2027" (Common European BBD stamp)
+  const monthYearText = raw.match(/\b([a-zæøåéäöü]{3,10})\s*[-.\/,]?\s*(202\d|203\d|\d{2})\b/i);
+  if (monthYearText) {
+    const mKey = monthYearText[1].toLowerCase().replace(/[.,]/g, '');
+    const month = MONTH_MAP[mKey];
+    let year = parseInt(monthYearText[2], 10);
+    if (year < 100) year += 2000;
+    if (month && isValidDate(year, month, 1)) {
+      return { iso: formatISO(year, month, 1), year, month, day: 1 };
+    }
+  }
+
+  // 5. Numeric Month and Year only: e.g. "09/2027" or "03/2028"
+  const monthYearNum = raw.match(/\b(0?[1-9]|1[0-2])\s*[\/.-]\s*(202\d|203\d)\b/);
+  if (monthYearNum) {
+    const month = parseInt(monthYearNum[1], 10);
+    const year = parseInt(monthYearNum[2], 10);
+    if (isValidDate(year, month, 1)) {
+      return { iso: formatISO(year, month, 1), year, month, day: 1 };
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Normalizes any coffee roast/production date string to standard ISO YYYY-MM-DD.
+ * Converts European "09-10-26" or "09/10/2026" to "2026-10-09", avoiding US month-day flip bugs.
+ */
+export function normalizeDateStringToISO(raw: string | undefined | null): string {
+  if (!raw || typeof raw !== 'string') return '';
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+
+  // Already standard ISO YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  const parsed = parseDateCandidate(trimmed);
+  if (parsed && parsed.iso) {
+    return parsed.iso;
+  }
+
+  return trimmed;
+}
+
 /**
  * Robust multi-lingual date & roast level extraction engine from coffee bag text/stamps
  */
@@ -313,85 +417,6 @@ export function extractDatesAndRoastFromBagText(
       rawText: text || '',
     };
   }
-
-  const formatISO = (year: number, month: number, day: number): string => {
-    const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
-    return `${year}-${pad(month)}-${pad(day)}`;
-  };
-
-  const currentYear = new Date().getFullYear();
-
-  const isValidDate = (year: number, month: number, day: number): boolean => {
-    if (month < 1 || month > 12) return false;
-    if (day < 1 || day > 31) return false;
-    // Accept up to 5 years into the future for commercial coffee (e.g. 24-36 mo shelf life like Lavazza/Illy BBD)
-    if (year < currentYear - 5 || year > currentYear + 5) return false;
-    return true;
-  };
-
-  const parseDateCandidate = (raw: string): { iso: string; year: number; month: number; day: number } | null => {
-    if (!raw) return null;
-
-    // 1. European & Nordic: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY or DD/MM-YY (e.g. "02/03-26")
-    const euro = raw.match(/\b(0?[1-9]|[12]\d|3[01])\s*[-.\/]\s*(0?[1-9]|1[0-2])\s*[-.\/]\s*(202\d|203\d|\d{2})\b/);
-    if (euro) {
-      const day = parseInt(euro[1], 10);
-      const month = parseInt(euro[2], 10);
-      let year = parseInt(euro[3], 10);
-      if (year < 100) year += 2000;
-      if (isValidDate(year, month, day)) {
-        return { iso: formatISO(year, month, day), year, month, day };
-      }
-    }
-
-    // 2. ISO: YYYY-MM-DD or YYYY.MM.DD
-    const iso = raw.match(/\b(202\d|203\d)\s*[-.\/]\s*(0?[1-9]|1[0-2])\s*[-.\/]\s*(0?[1-9]|[12]\d|3[01])\b/);
-    if (iso) {
-      const year = parseInt(iso[1], 10);
-      const month = parseInt(iso[2], 10);
-      const day = parseInt(iso[3], 10);
-      if (isValidDate(year, month, day)) {
-        return { iso: formatISO(year, month, day), year, month, day };
-      }
-    }
-
-    // 3. Text Month with Day: e.g. "14 SEP 2026", "14. maj 2026"
-    const textMonth = raw.match(/\b(0?[1-9]|[12]\d|3[01])[\s./-]+([a-zæøåéäöü]{3,10})[\s./,-]+(202\d|203\d|\d{2})\b/i);
-    if (textMonth) {
-      const day = parseInt(textMonth[1], 10);
-      const mKey = textMonth[2].toLowerCase().replace(/[.,]/g, '');
-      let year = parseInt(textMonth[3], 10);
-      if (year < 100) year += 2000;
-      const month = MONTH_MAP[mKey];
-      if (month && isValidDate(year, month, day)) {
-        return { iso: formatISO(year, month, day), year, month, day };
-      }
-    }
-
-    // 4. Text Month with Year only: e.g. "SEP 2027", "September 2027" (Common European BBD stamp)
-    const monthYearText = raw.match(/\b([a-zæøåéäöü]{3,10})\s*[-.\/,]?\s*(202\d|203\d|\d{2})\b/i);
-    if (monthYearText) {
-      const mKey = monthYearText[1].toLowerCase().replace(/[.,]/g, '');
-      const month = MONTH_MAP[mKey];
-      let year = parseInt(monthYearText[2], 10);
-      if (year < 100) year += 2000;
-      if (month && isValidDate(year, month, 1)) {
-        return { iso: formatISO(year, month, 1), year, month, day: 1 };
-      }
-    }
-
-    // 5. Numeric Month and Year only: e.g. "09/2027" or "03/2028"
-    const monthYearNum = raw.match(/\b(0?[1-9]|1[0-2])\s*[\/.-]\s*(202\d|203\d)\b/);
-    if (monthYearNum) {
-      const month = parseInt(monthYearNum[1], 10);
-      const year = parseInt(monthYearNum[2], 10);
-      if (isValidDate(year, month, 1)) {
-        return { iso: formatISO(year, month, 1), year, month, day: 1 };
-      }
-    }
-
-    return null;
-  };
 
   // Determine brand heuristics for shelf life
   const combinedContextText = `${text} ${context?.roaster || ''} ${context?.beanName || ''}`.toLowerCase();
