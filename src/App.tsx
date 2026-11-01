@@ -1649,19 +1649,19 @@ export function App() {
         currentGrinderName={currentGrinder.name}
       />
 
-      {/* Shot Cockpit: Dedicated Floating Pull Handle (Positioned safely above Android system navigation bar) */}
+      {/* Shot Cockpit: Dedicated Floating Pull Handle (Positioned cleanly right above Android system navigation bar) */}
       {activeMode === 'flow' && activeTab === 'monitor' && !isBrewing && !isShotNavExpanded && (
         <button
           type="button"
           onClick={() => setIsShotNavExpanded(true)}
-          className="fixed z-50 left-1/2 -translate-x-1/2 px-5 h-9 rounded-full bg-[#2C2018] text-[#FAF7F2] border-2 border-[#C26D52] shadow-xl flex items-center gap-2 text-[11px] font-mono font-bold tracking-wider uppercase cursor-pointer pointer-events-auto active:scale-95 transition"
+          className="fixed z-50 left-1/2 -translate-x-1/2 px-4 h-7 rounded-full bg-[#2C2018] text-[#FAF7F2] border border-[#C26D52] shadow-md flex items-center gap-1.5 text-[10px] font-mono font-bold tracking-wider uppercase cursor-pointer pointer-events-auto active:scale-95 transition"
           style={{
-            bottom: 'max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem))',
+            bottom: 'max(1.15rem, calc(env(safe-area-inset-bottom, 0px) + 0.45rem))',
             touchAction: 'manipulation',
           }}
           title={t('scale.menu_pull_open')}
         >
-          <span className="w-4 h-1 rounded-full bg-[#C26D52]" />
+          <span className="w-3.5 h-1 rounded-full bg-[#C26D52]" />
           <span>{t('scale.menu_pull_open')}</span>
           <ChevronUp className="w-3.5 h-3.5 text-[#C26D52]" />
         </button>

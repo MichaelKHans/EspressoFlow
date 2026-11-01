@@ -1086,7 +1086,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       className="fixed left-0 right-0 bottom-0 z-40 bg-[#FAF7F2] flex flex-col overflow-hidden select-none px-2 sm:px-2.5 pt-1 gap-1"
       style={{
         top: 'var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem))',
-        paddingBottom: 'max(6.75rem, calc(env(safe-area-inset-bottom, 0px) + 6.25rem))',
+        paddingBottom: 'max(3.25rem, calc(env(safe-area-inset-bottom, 0px) + 2.75rem))',
       }}
     >
       {/* Viewfinder Barista Header - Ergonomic & Responsive (Unified, never jumps) */}
@@ -1681,7 +1681,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
         {/* Live Extraction Curve Slot (Always integrated, dynamically expanding to fill available space) */}
         {liveChartSlot && (
-          <div className="flex-1 min-h-[140px] w-full flex flex-col justify-center overflow-hidden my-0.5">
+          <div className="flex-1 min-h-[105px] w-full flex flex-col justify-center overflow-hidden my-0.5">
             {liveChartSlot}
           </div>
         )}

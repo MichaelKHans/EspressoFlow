@@ -26,6 +26,15 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-11-01 -- Etape 100: Perfekt Forankring af Menu-Pille & Afslappet Udstyrs-Position Uden Trængsel (v1.21.21)
+- **Korrekt Forankring af Menu-Knap Lige over Systemnavigation ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - Justeret placeringen af den flydende `MENU`-pilleknap ned fra `3.5rem` (56px) til `max(1.15rem, calc(env(safe-area-inset-bottom, 0px) + 0.45rem))` (~18px). Den svæver nu ikke længere oppe i det tomme rum, men hviler harmonisk lige over Androids systemknapper (`◁ ⬡ ≡`).
+  - Givet knappen en slank og præcis dimension (`h-7 px-4`), så den er hurtig og taktil at ramme uden at stjæle unødig vertikal højde.
+- **Afslappet Udstyrs- og Dial-In Position ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Reduceret bundmarginen (`paddingBottom`) på `ScaleMonitor` fra `6.75rem` (108px) til `max(3.25rem, calc(env(safe-area-inset-bottom, 0px) + 2.75rem))` (~52px).
+  - Denne ændring frigiver over 56 pixels vertikal plads og trækker den brune udstyrsboks ned, så den hviler lige oven over `MENU`-knappen uden at presses op eller overlappe `Tare` og `Start Shot` knapperne.
+  - Justeret `liveChartSlot` til `min-h-[105px] flex-1`, så kurven automatisk udnytter al ledig plads uden at klemme omgivende kontrolpaneler.
+
 ### 2026-11-01 -- Etape 99: Markant Større Live Flow-Kurve, Bundintegreret 'LIVE FLOW' & Fjernelse af Overflødig Tekst (v1.21.20)
 - **Større Live Flow-Kurve & Optimeret Pladsudnyttelse ([FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx) & [ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
   - Fjernet hele den øverste header-linje på flow-kortet i kompakt Cockpit-visning og flyttet `LIVE FLOW` ned i signatur-teksten under kurven.
