@@ -88,7 +88,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const maxFlow = isPourOver ? 8.0 : 4.0; // max scale for g/s
 
   const width = 600;
-  const height = compact ? 130 : 210;
+  const height = compact ? 170 : 210;
   const padLeft = compact ? 38 : 45;
   const padRight = compact ? 38 : 44; // Room for right-side flow axis
   const padTop = compact ? 14 : 22;
@@ -125,23 +125,23 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const currentRatio = doseGrams > 0 && lastPoint ? (lastPoint.weightGrams / doseGrams).toFixed(1) : '0.0';
 
   return (
-    <div className={`bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] ${compact ? 'p-2 sm:p-2.5 shadow-2xs flex-1 flex flex-col justify-between overflow-hidden' : 'p-4 shadow-xs'}`}>
-      <div className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-2 flex-col sm:flex-row items-start sm:items-center'} gap-1.5`}>
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C26D52] shrink-0" />
+    <div className={`bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] ${compact ? 'p-1.5 sm:p-2 shadow-2xs flex-1 flex flex-col justify-between overflow-hidden' : 'p-4 shadow-xs'}`}>
+      <div className={`flex items-center justify-between ${compact ? 'mb-0.5' : 'mb-2 flex-col sm:flex-row items-start sm:items-center'} gap-1.5`}>
+        <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+          <TrendingUp className="w-3.5 h-3.5 text-[#C26D52] shrink-0" />
           <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#2C2018] font-mono truncate">
-            {compact ? 'LIVE FLOW DYNAMICS' : t('chart.title')}
+            {compact ? (language === 'da' ? 'LIVE FLOW' : 'LIVE FLOW') : t('chart.title')}
           </span>
         </div>
 
         {isLive ? (
-          <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-[#C26D52]/15 text-[#C26D52] text-[10px] sm:text-xs font-mono font-bold border border-[#C26D52]/30 animate-pulse shrink-0">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#C26D52]" />
-            <span>LIVE {isPourOver ? 'POUR OVER' : 'TELEMETRY'}</span>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#C26D52]/15 text-[#C26D52] text-[10px] font-mono font-bold border border-[#C26D52]/30 animate-pulse shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C26D52]" />
+            <span>LIVE {isPourOver ? 'POUR' : 'FLOW'}</span>
           </div>
         ) : !isPourOver && channelingEvent?.detected ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#C26D52]/10 text-[#C26D52] text-xs font-mono font-semibold border border-[#C26D52]/30 shrink-0">
-            <AlertCircle className="w-3.5 h-3.5 text-[#C26D52]" />
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#C26D52]/10 text-[#C26D52] text-[10px] font-mono font-semibold border border-[#C26D52]/30 shrink-0">
+            <AlertCircle className="w-3 h-3 text-[#C26D52]" />
             <span className="whitespace-nowrap">
               {t('chart.channeling_spike', {
                 time: channelingEvent.timestampSeconds !== undefined
@@ -152,16 +152,20 @@ export const FlowChart: React.FC<FlowChartProps> = ({
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-[11px] font-mono text-[#72806B] bg-[#72806B]/10 px-2 py-0.5 rounded border border-[#72806B]/20 shrink-0 whitespace-nowrap">
-            <Sparkles className="w-3 h-3" />
-            <span>{isPourOver ? 'Steady Extraction' : t('chart.optimal_flow')}</span>
+          <div className="flex items-center gap-1 text-[10px] font-mono text-[#72806B] bg-[#72806B]/10 px-1.5 py-0.5 rounded border border-[#72806B]/20 shrink-0 whitespace-nowrap">
+            <Sparkles className="w-2.5 h-2.5 text-[#72806B]" />
+            <span>
+              {compact
+                ? (isPourOver ? 'Pacing' : (language === 'da' ? 'Mål: 1.2–1.8' : 'Target: 1.2–1.8'))
+                : (isPourOver ? 'Steady Extraction' : t('chart.optimal_flow'))}
+            </span>
           </div>
         )}
       </div>
 
       {/* SVG Canvas with Dual Y-Axis */}
-      <div className={`w-full overflow-x-auto ${compact ? 'flex-1 flex items-center' : ''}`}>
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto select-none font-mono text-[10px]">
+      <div className={`w-full overflow-hidden ${compact ? 'flex-1 flex items-center justify-center min-h-0' : 'overflow-x-auto'}`}>
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full max-h-full select-none font-mono text-[10px]">
           <defs>
             <clipPath id="chart-area-clip">
               <rect x={padLeft} y={padTop} width={chartW} height={chartH} />

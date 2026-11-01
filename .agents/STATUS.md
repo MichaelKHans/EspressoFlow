@@ -26,6 +26,18 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-11-01 -- Etape 97: Cockpit Skærmoptimering, Højere Live Flow-Kurve & Rummelig Udstyrs-Bundbjælke (v1.21.18)
+- **Højere Live Flow-Kurve & Nul Spildt Plads ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**
+  - Fjernet kunstig `max-h-[115px]` og `justify-between` mellemrum, så kurven nu fylder det fulde tilgængelige område (`flex-1 min-h-[95px]`, SVG højde 170).
+  - Ensartede, stramme gaps (`gap-1 sm:gap-1.5`) mellem telemetri-grid, status-pill, flow-kurve og start/stop-knapper.
+- **Kompakt Badge & Titel på Flow-Kurven ([FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**
+  - Titel forkortet til `LIVE FLOW` og badge forkortet til `✨ Mål: 1.2–1.8`, så der aldrig sker overskridelse af skærmkanten.
+- **100% Garanteret Synlighed på Alle Kameraknapper ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Optimeret værktøjslinjen under kameraet (`1x | 1.8x | 2.5x`, `▭ Smal/Bred`, `LED/LCD`, `⚡`, `🧪`, `⏹ Stop / 📷 Start`) med slanke paddings uden horisontal clipping.
+- **Rummelig 2-Rækkers Dial-In & Udstyrs-Bundbjælke ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Række 1: Opskrift (`17g → 34g • ~25s • 93°C`) + `✓ SYNC: 33.0` + `[🎚️ Dial-In]`.
+  - Række 2: Fuld bredde til begge gear: `Gear: De'Longhi Dedica • Baratza Encore ESP Pro` uden afskæring.
+
 ### 2026-11-01 -- Etape 96: Komplet Shot Cockpit Optimering, Udtræks-Bundmenu & Lukket Kværn/Udstyrs-Sync Loop (v1.21.17)
 - **100% Synlige Start & Stop Shot Knapper i Shot Mode ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**
   - Forankret `ScaleMonitor` præcist under `#app-header` (`top: var(--app-header-height)`) med `pb-6` i bunden til udtræks-håndtaget.

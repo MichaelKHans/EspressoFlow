@@ -2,6 +2,19 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.18] - 2026-11-01
+### Etape 97: Cockpit Skærmoptimering, Højere Live Flow-Kurve & Rummelig Udstyrs-Bundbjælke
+- **Udvidet, Højere Live Flow-Kurve & Fjernelse af Dødt Mellemrum ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**
+  - Fjernet `justify-between` og den kunstige `max-h-[115px]` begrænsning på live chart-slottet, så kurven nu udnytter skærmens fulde højde (`flex-1 min-h-[95px]` og SVG-højde øget fra 130 til 170).
+  - Ensartede, stramme mellemrum (`gap-1 sm:gap-1.5`) mellem telemetri-grid, status-pill, flow-kurve og start/stop-knapper, så intet spildes på tom luft.
+- **Kompakt Badge & Titel på Flow-Kurven ([FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**
+  - Afkortet titlen til `LIVE FLOW` og forkortet badge fra det afskårne `Optimal Flow Profile` til `✨ Mål: 1.2–1.8` / `✨ Target: 1.2–1.8`, så det aldrig klipper eller går ud over skærmkanten.
+- **100% Garanteret Synlighed på Alle Kameraknapper ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Optimeret værktøjslinjen under kameraet (`1x | 1.8x | 2.5x`, `▭ Smal/Bred`, `LED/LCD`, `⚡`, `🧪`, `⏹ Stop / 📷 Start`) med kompakte paddings og fjernet horisontal overflow, så `Stop`-knappen aldrig skæres af på smalle skærme.
+- **Rummelig 2-Rækkers Dial-In & Udstyrs-Bundbjælke ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Række 1: Målopskrift (`17g → 34g • ~25s • 93°C`) + `✓ SYNC: 33.0` badge + `[🎚️ Dial-In]` knap.
+  - Række 2: Fuld skærmbredde dedikeret til udstyr: `Gear: De'Longhi Dedica • Baratza Encore ESP Pro`, så både maskine og kværn kan læses 100% uden afskæring.
+
 ## [1.21.17] - 2026-11-01
 ### Etape 96: Komplet Shot Cockpit Optimering, Udtræks-Bundmenu & Lukket Kværn/Udstyrs-Sync Loop
 - **100% Synlige Start & Stop Shot Knapper i Shot Mode ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**

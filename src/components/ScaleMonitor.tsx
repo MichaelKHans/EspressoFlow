@@ -1083,7 +1083,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   return (
     <div
-      className="fixed left-0 right-0 bottom-0 z-40 bg-[#FAF7F2] flex flex-col justify-between overflow-hidden select-none px-2.5 pt-1 pb-6"
+      className="fixed left-0 right-0 bottom-0 z-40 bg-[#FAF7F2] flex flex-col overflow-hidden select-none px-2 sm:px-2.5 pt-1 pb-6 gap-1"
       style={{
         top: 'var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem))',
       }}
@@ -1375,7 +1375,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
         {/* Sleek 1-Line Camera Controls Toolbar (Hidden during active extraction) */}
         {!isBrewing && (
-          <div className="px-2 py-1 bg-[#1A1412] rounded-b-2xl border-t border-white/10 flex items-center justify-between gap-1 select-none shrink-0 overflow-x-auto no-scrollbar">
+          <div className="px-1.5 py-1 bg-[#1A1412] rounded-b-2xl border-t border-white/10 flex items-center justify-between gap-1 select-none shrink-0">
             {/* Optical Zoom Segmented Control */}
             <div className="flex items-center bg-white/10 rounded-lg p-0.5 shrink-0">
               {[1.0, 1.8, 2.5].map((z) => (
@@ -1386,7 +1386,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                     e.stopPropagation();
                     handleSetZoom(z);
                   }}
-                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold transition cursor-pointer ${
+                  className={`px-1.5 py-0.5 rounded-md text-[9.5px] font-mono font-bold transition cursor-pointer ${
                     Math.abs(zoomLevel - z) < 0.1
                       ? 'bg-[#C26D52] text-white shadow-2xs'
                       : 'text-[#E8DFD5]/80 hover:text-white'
@@ -1405,10 +1405,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                   e.stopPropagation();
                   handleSetRoiSize(roiSize === 'compact' ? 'standard' : 'compact');
                 }}
-                className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white/10 text-[#E8DFD5]/85 hover:bg-white/20 transition cursor-pointer"
+                className="px-1.5 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-white/10 text-[#E8DFD5]/85 hover:bg-white/20 transition cursor-pointer"
                 title="Skift sigtekorn-bredde (Smal / Bred)"
               >
-                ▭ {roiSize === 'compact' ? (language === 'da' ? 'Smal' : 'Compact') : (language === 'da' ? 'Bred' : 'Wide')}
+                ▭ {roiSize === 'compact' ? (language === 'da' ? 'Smal' : 'Smal') : (language === 'da' ? 'Bred' : 'Bred')}
               </button>
 
               <button
@@ -1417,7 +1417,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                   e.stopPropagation();
                   setDisplayMode(displayMode === 'led' ? 'lcd' : 'led');
                 }}
-                className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white/10 text-[#E8DFD5]/85 hover:bg-white/20 transition cursor-pointer"
+                className="px-1.5 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-white/10 text-[#E8DFD5]/85 hover:bg-white/20 transition cursor-pointer"
                 title="Toggle scale display type (LED bright digits or LCD dark digits)"
               >
                 {displayMode.toUpperCase()}
@@ -1430,7 +1430,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                     e.stopPropagation();
                     handleToggleTorch();
                   }}
-                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold transition cursor-pointer flex items-center ${
+                  className={`p-1 rounded-md text-[9.5px] font-mono font-bold transition cursor-pointer flex items-center ${
                     isTorchOn
                       ? 'bg-amber-400 text-black shadow-2xs'
                       : 'bg-white/10 text-[#E8DFD5]/85 hover:bg-white/20'
@@ -1447,7 +1447,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                   e.stopPropagation();
                   setShowTestLabModal(true);
                 }}
-                className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold transition flex items-center gap-1 cursor-pointer ${
+                className={`p-1 rounded-md text-[9.5px] font-mono font-bold transition flex items-center gap-1 cursor-pointer ${
                   isLiveSyncActive
                     ? 'bg-purple-900/70 text-purple-200 border border-purple-400/50'
                     : 'bg-white/10 text-[#E8DFD5]/85 hover:bg-white/20'
@@ -1455,7 +1455,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                 title="Anti Optical Test Lab & Live Stream"
               >
                 <FlaskConical className="w-3 h-3 text-purple-400" />
-                <span>Lab</span>
               </button>
 
               {cameraState === 'live' ? (
@@ -1465,7 +1464,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                     e.stopPropagation();
                     handleStopCamera();
                   }}
-                  className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#B85B48]/25 text-[#FCA5A5] border border-[#B85B48]/50 hover:bg-[#B85B48]/40 transition flex items-center gap-1 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-[#B85B48]/25 text-[#FCA5A5] border border-[#B85B48]/50 hover:bg-[#B85B48]/40 transition flex items-center gap-1 cursor-pointer"
                   title="Stop kamera"
                 >
                   <VideoOff className="w-3 h-3" />
@@ -1478,7 +1477,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
                     e.stopPropagation();
                     handleStartCamera();
                   }}
-                  className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#10B981]/25 text-emerald-300 border border-emerald-500/40 hover:bg-[#10B981]/35 transition flex items-center gap-1 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-md text-[9.5px] font-mono font-bold bg-[#10B981]/25 text-emerald-300 border border-emerald-500/40 hover:bg-[#10B981]/35 transition flex items-center gap-1 cursor-pointer"
                   title="Start kamera"
                 >
                   <Camera className="w-3 h-3" />
@@ -1562,11 +1561,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
       )}
 
       {/* Barista Control Deck - Unified Viewport-Locked Ergonomics */}
-      <div className="p-2 bg-[#FFFDF9] border border-[#E8DFD5] rounded-2xl flex-1 flex flex-col justify-between overflow-hidden min-h-0 font-mono gap-1.5 mt-1 shadow-2xs">
+      <div className="p-1.5 sm:p-2 bg-[#FFFDF9] border border-[#E8DFD5] rounded-2xl flex-1 flex flex-col overflow-hidden min-h-0 font-mono gap-1 sm:gap-1.5 mt-0.5 shadow-2xs">
         {/* Real-Time Monospace Telemetry Grid (Uncluttered, High-Visibility) */}
         <div className="grid grid-cols-4 gap-1.5 text-center select-none shrink-0">
           {/* 1. Live Weight / Yield */}
-          <div className="bg-[#FAF7F2] py-1.5 px-1.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
+          <div className="bg-[#FAF7F2] py-1 px-1.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
             <span className="text-[9px] uppercase tracking-wider text-[#7A6E65] font-mono block">
               {isBrewing ? t('active_bean.yield') : 'Weight'}
             </span>
@@ -1577,7 +1576,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
 
           {/* 2. Flow Rate */}
-          <div className="bg-[#FAF7F2] py-1.5 px-1.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
+          <div className="bg-[#FAF7F2] py-1 px-1.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
             <span className="text-[9px] uppercase tracking-wider text-[#7A6E65] font-mono block">
               Flow
             </span>
@@ -1590,7 +1589,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           {/* 3. Timer */}
           <div
             onClick={!isBrewing ? () => { setElapsedTime(0.0); startTimeRef.current = 0; } : undefined}
-            className={`bg-[#FAF7F2] py-1.5 px-1.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs ${
+            className={`bg-[#FAF7F2] py-1 px-1.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs ${
               !isBrewing ? 'cursor-pointer hover:bg-[#E8DFD5]/30 active:scale-95 transition' : ''
             }`}
             title={!isBrewing ? 'Tap to reset timer to 0.0s' : undefined}
@@ -1605,7 +1604,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
 
           {/* 4. Ratio */}
-          <div className="bg-[#FAF7F2] py-1.5 px-1.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
+          <div className="bg-[#FAF7F2] py-1 px-1.5 rounded-xl border border-[#E8DFD5] flex flex-col justify-center shadow-2xs">
             <span className="text-[9px] uppercase tracking-wider text-[#7A6E65] font-mono block">
               {t('active_bean.ratio')}
             </span>
@@ -1686,9 +1685,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
         )}
 
-        {/* Live Extraction Curve Slot (Always integrated, compact height so buttons are never pushed off-screen) */}
+        {/* Live Extraction Curve Slot (Always integrated, dynamically expanding to fill available space) */}
         {liveChartSlot && (
-          <div className="flex-1 min-h-[70px] max-h-[115px] w-full flex flex-col justify-center overflow-hidden">
+          <div className="flex-1 min-h-[95px] w-full flex flex-col justify-center overflow-hidden my-0.5">
             {liveChartSlot}
           </div>
         )}
@@ -1755,10 +1754,11 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
       </div>
 
-      {/* Bottom Dial-In & Equipment Sync Status Panel */}
-      <div className="mt-1 px-2.5 py-1.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] border border-[#C26D52]/30 flex items-center justify-between gap-2 shrink-0 font-mono shadow-xs">
-        <div className="min-w-0 flex flex-col">
-          <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-[#FAF7F2] truncate">
+      {/* Bottom Dial-In & Equipment Sync Status Panel (2 Clean Rows: Recipe + Both Gear Visible) */}
+      <div className="mt-0.5 px-2.5 py-1.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] border border-[#C26D52]/30 flex flex-col gap-1 shrink-0 font-mono shadow-xs">
+        {/* Row 1: Target recipe metrics & Sync/Dial-In actions */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[10.5px] sm:text-[11px] font-bold text-[#FAF7F2] truncate">
             <span className="text-[#C26D52]">{targetDose}g</span>
             <span className="text-[#E8DFD5]/50">→</span>
             <span className="text-[#10B981]">{targetYield}g</span>
@@ -1771,34 +1771,39 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               </>
             ) : null}
           </div>
-          <div className="text-[9px] text-[#E8DFD5]/65 truncate">
-            {machineName || 'Espresso Machine'} • {grinderName || 'Grinder'}
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-[10px] font-bold">
+              <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+              <span>SYNC: {grindSetting || '15.0'}</span>
+            </div>
+
+            {aiSuggestedSetting && aiSuggestedSetting !== grindSetting && (
+              <div className="px-1.5 py-0.5 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[9px] font-bold hidden xs:flex items-center gap-0.5">
+                <span>AI:{aiSuggestedSetting}</span>
+              </div>
+            )}
+
+            {onOpenDialIn && !isBrewing && (
+              <button
+                type="button"
+                onClick={onOpenDialIn}
+                className="px-2 py-0.5 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-2xs"
+                title="Åbn Dial-In Studio"
+              >
+                <Sliders className="w-3 h-3" />
+                <span>Dial-In</span>
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-[10px] font-bold">
-            <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-            <span>SYNC: {grindSetting || '15.0'}</span>
-          </div>
-
-          {aiSuggestedSetting && aiSuggestedSetting !== grindSetting && (
-            <div className="px-1.5 py-0.5 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[9px] font-bold hidden xs:flex items-center gap-0.5">
-              <span>AI:{aiSuggestedSetting}</span>
-            </div>
-          )}
-
-          {onOpenDialIn && !isBrewing && (
-            <button
-              type="button"
-              onClick={onOpenDialIn}
-              className="px-2 py-1 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-2xs"
-              title="Åbn Dial-In Studio"
-            >
-              <Sliders className="w-3 h-3" />
-              <span>Dial-In</span>
-            </button>
-          )}
+        {/* Row 2: Equipment (Full width: both machine and grinder fully visible!) */}
+        <div className="text-[9.5px] text-[#E8DFD5]/75 flex items-center gap-1.5 truncate border-t border-white/10 pt-1">
+          <span className="text-[#E8DFD5]/50 shrink-0">Gear:</span>
+          <span className="text-[#FAF7F2] font-medium truncate">{machineName || 'Espresso Machine'}</span>
+          <span className="text-[#E8DFD5]/40 shrink-0">•</span>
+          <span className="text-[#C26D52] font-semibold truncate">{grinderName || 'Grinder'}</span>
         </div>
       </div>
 
