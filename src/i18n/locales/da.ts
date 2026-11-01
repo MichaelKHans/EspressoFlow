@@ -85,6 +85,10 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'scale.target_guide': 'Mål: {dose}g → {yield}g',
   'scale.stop_and_save': 'Stop & Gem Shot ({duration}s)',
   'scale.align_hint': 'Ret fokusrammen mod vægtens display',
+  'scale.machine_label': 'Maskine:',
+  'scale.grinder_label': 'Kværn:',
+  'scale.menu_pull_open': 'Menu',
+  'scale.menu_pull_close': 'Skjul bundmenu',
 
   // Bean Vault & Scanner
   'bean.scan_bag': 'Scan Pose',

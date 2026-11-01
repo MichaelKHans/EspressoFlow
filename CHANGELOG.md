@@ -2,6 +2,19 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.19] - 2026-11-01
+### Etape 98: Hævet Menu-Knap over Systemnavigation & 3-Linjers Udstyrs-Layout med Kværn-Sync
+- **Løftet, Trykvenlig Udtræks-Knap over Android Systemnavigation ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - Rettet fejlen hvor `MENU`-knappen i Shot Cockpit lå delvist gemt under Androids 3-knappers systemlinje (`◁ ⬡ ≡`).
+  - Når menuen er minimeret i Shot Mode, svæver den nu som en dedikeret pilleknap sikkert hævet over systembaren (`bottom: max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem))`) med stor berøringsflade (`h-9 px-5 rounded-full`), terracotta kant og `MENU ▲`, 100% uafhængig af Android soft keys.
+  - Ved tryk på `MENU ▲` glider den fulde bundmenu (`Bar`, `Scale`, `Beandex`, `Logs`, `Gear`) op i fuld højde som på de øvrige faner, suppleret med mørk baggrunds-overlay for nem lukning samt en tydelig `[ ⎯⎯ Menu ▼ ]` minimeringsknap i toppen.
+- **3-Linjers Dedikeret Udstyrs- og Dial-In Layout ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Række 1: Mål-opskrift (`17g → 34g • ~25s • 93°C`) med hurtig `[🎚️ Dial-In]` knap til højre.
+  - Række 2: Espressomaskine / filterbrygger på sin egen fulde linje (`Maskine: De'Longhi Dedica (EC680 / EC685)`), så navnet aldrig afskæres.
+  - Række 3: Kværn på sin egen linje (`Kværn: Baratza Encore ESP Pro`) umiddelbart efterfulgt af det grønne synkroniserings-badge (`[✓ SYNC: 33.0]`), præcis som skitseret i barista-tegningen.
+- **Optimeret Cockpit Bundmargin ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Udvidet `paddingBottom` på `ScaleMonitor` til `max(6.75rem, calc(env(safe-area-inset-bottom, 0px) + 6.25rem))`, så udstyrsboksen, menu-pillen og systemknapperne har behagelig afstand uden overlap.
+
 ## [1.21.18] - 2026-11-01
 ### Etape 97: Cockpit Skærmoptimering, Højere Live Flow-Kurve & Rummelig Udstyrs-Bundbjælke
 - **Udvidet, Højere Live Flow-Kurve & Fjernelse af Dødt Mellemrum ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**

@@ -1083,9 +1083,10 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
 
   return (
     <div
-      className="fixed left-0 right-0 bottom-0 z-40 bg-[#FAF7F2] flex flex-col overflow-hidden select-none px-2 sm:px-2.5 pt-1 pb-6 gap-1"
+      className="fixed left-0 right-0 bottom-0 z-40 bg-[#FAF7F2] flex flex-col overflow-hidden select-none px-2 sm:px-2.5 pt-1 gap-1"
       style={{
         top: 'var(--app-header-height, calc(env(safe-area-inset-top, 0px) + 3.5rem))',
+        paddingBottom: 'max(6.75rem, calc(env(safe-area-inset-bottom, 0px) + 6.25rem))',
       }}
     >
       {/* Viewfinder Barista Header - Ergonomic & Responsive (Unified, never jumps) */}
@@ -1754,9 +1755,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
         </div>
       </div>
 
-      {/* Bottom Dial-In & Equipment Sync Status Panel (2 Clean Rows: Recipe + Both Gear Visible) */}
-      <div className="mt-0.5 px-2.5 py-1.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] border border-[#C26D52]/30 flex flex-col gap-1 shrink-0 font-mono shadow-xs">
-        {/* Row 1: Target recipe metrics & Sync/Dial-In actions */}
+      {/* Bottom Dial-In & Equipment Sync Status Panel (3 Clean Rows: Recipe + Machine + Grinder & Sync) */}
+      <div className="mt-0.5 px-3 py-1.5 rounded-xl bg-[#2C2018] text-[#FAF7F2] border border-[#C26D52]/30 flex flex-col gap-1.5 shrink-0 font-mono shadow-xs">
+        {/* Row 1: Target recipe metrics & Dial-In action */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-[10.5px] sm:text-[11px] font-bold text-[#FAF7F2] truncate">
             <span className="text-[#C26D52]">{targetDose}g</span>
@@ -1773,11 +1774,6 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-[10px] font-bold">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-              <span>SYNC: {grindSetting || '15.0'}</span>
-            </div>
-
             {aiSuggestedSetting && aiSuggestedSetting !== grindSetting && (
               <div className="px-1.5 py-0.5 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[9px] font-bold hidden xs:flex items-center gap-0.5">
                 <span>AI:{aiSuggestedSetting}</span>
@@ -1788,7 +1784,7 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               <button
                 type="button"
                 onClick={onOpenDialIn}
-                className="px-2 py-0.5 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-2xs"
+                className="px-2.5 py-1 rounded-lg bg-[#C26D52] hover:bg-[#b05d43] text-white text-[10px] font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-2xs"
                 title="Åbn Dial-In Studio"
               >
                 <Sliders className="w-3 h-3" />
@@ -1798,12 +1794,31 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </div>
         </div>
 
-        {/* Row 2: Equipment (Full width: both machine and grinder fully visible!) */}
-        <div className="text-[9.5px] text-[#E8DFD5]/75 flex items-center gap-1.5 truncate border-t border-white/10 pt-1">
-          <span className="text-[#E8DFD5]/50 shrink-0">Gear:</span>
-          <span className="text-[#FAF7F2] font-medium truncate">{machineName || 'Espresso Machine'}</span>
-          <span className="text-[#E8DFD5]/40 shrink-0">•</span>
-          <span className="text-[#C26D52] font-semibold truncate">{grinderName || 'Grinder'}</span>
+        {/* Row 2: Espresso Machine / Brewer (Dedicated line) */}
+        <div className="text-[10px] text-[#E8DFD5]/80 flex items-center gap-1.5 truncate border-t border-white/10 pt-1">
+          <span className="text-[#E8DFD5]/50 shrink-0 font-medium">
+            {t('scale.machine_label')}
+          </span>
+          <span className="text-[#FAF7F2] font-medium truncate">
+            {machineName || (method === 'pour_over' ? 'Filter Brewer' : 'Espresso Machine')}
+          </span>
+        </div>
+
+        {/* Row 3: Grinder on its own line, immediately followed by the SYNC badge */}
+        <div className="flex items-center justify-between gap-1.5 text-[10px] text-[#E8DFD5]/80 pt-0.5">
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <span className="text-[#E8DFD5]/50 shrink-0 font-medium">
+              {t('scale.grinder_label')}
+            </span>
+            <span className="text-[#C26D52] font-semibold truncate">
+              {grinderName || 'Grinder'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-[10px] font-bold shrink-0">
+            <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+            <span>SYNC: {grindSetting || '15.0'}</span>
+          </div>
         </div>
       </div>
 

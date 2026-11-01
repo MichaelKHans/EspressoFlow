@@ -1649,6 +1649,32 @@ export function App() {
         currentGrinderName={currentGrinder.name}
       />
 
+      {/* Shot Cockpit: Dedicated Floating Pull Handle (Positioned safely above Android system navigation bar) */}
+      {activeMode === 'flow' && activeTab === 'monitor' && !isBrewing && !isShotNavExpanded && (
+        <button
+          type="button"
+          onClick={() => setIsShotNavExpanded(true)}
+          className="fixed z-50 left-1/2 -translate-x-1/2 px-5 h-9 rounded-full bg-[#2C2018] text-[#FAF7F2] border-2 border-[#C26D52] shadow-xl flex items-center gap-2 text-[11px] font-mono font-bold tracking-wider uppercase cursor-pointer pointer-events-auto active:scale-95 transition"
+          style={{
+            bottom: 'max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem))',
+            touchAction: 'manipulation',
+          }}
+          title={t('scale.menu_pull_open')}
+        >
+          <span className="w-4 h-1 rounded-full bg-[#C26D52]" />
+          <span>{t('scale.menu_pull_open')}</span>
+          <ChevronUp className="w-3.5 h-3.5 text-[#C26D52]" />
+        </button>
+      )}
+
+      {/* Shot Mode Expanded Nav Backdrop */}
+      {activeMode === 'flow' && activeTab === 'monitor' && isShotNavExpanded && !isBrewing && (
+        <div
+          className="fixed inset-0 z-45 bg-black/40 backdrop-blur-2xs transition-opacity animate-fadeIn"
+          onClick={() => setIsShotNavExpanded(false)}
+        />
+      )}
+
       {/* Mobile Bottom Navigation Bar (Thumb-First 5-Tab Bar - Slides down with Pull Handle in Shot Mode) */}
       <nav
         aria-label="Mobile Navigation Bar"
@@ -1672,46 +1698,22 @@ export function App() {
           isBrewing
             ? 'translate-y-full pointer-events-none opacity-0'
             : activeMode === 'flow' && activeTab === 'monitor' && !isShotNavExpanded
-            ? 'translate-y-full'
+            ? 'translate-y-full pointer-events-none'
             : 'translate-y-0'
         }`}
         style={{ paddingBottom: 'max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))' }}
       >
-        {/* Pull Handle Tab (Active only in Shot Mode when not brewing) */}
-        {activeMode === 'flow' && activeTab === 'monitor' && !isBrewing && (
+        {/* Pull Handle Tab (Active only in Shot Mode when expanded to collapse) */}
+        {activeMode === 'flow' && activeTab === 'monitor' && isShotNavExpanded && !isBrewing && (
           <button
             type="button"
-            onClick={() => setIsShotNavExpanded((prev) => !prev)}
-            onTouchStart={(e) => {
-              e.stopPropagation();
-              setNavTouchStartY(e.touches[0].clientY);
-            }}
-            onTouchEnd={(e) => {
-              e.stopPropagation();
-              if (navTouchStartY !== null) {
-                const deltaY = e.changedTouches[0].clientY - navTouchStartY;
-                if (deltaY < -15) {
-                  setIsShotNavExpanded(true);
-                } else if (deltaY > 15) {
-                  setIsShotNavExpanded(false);
-                } else {
-                  setIsShotNavExpanded((prev) => !prev);
-                }
-                setNavTouchStartY(null);
-              } else {
-                setIsShotNavExpanded((prev) => !prev);
-              }
-            }}
-            className="absolute -top-6 left-1/2 -translate-x-1/2 px-4 h-6 rounded-t-xl bg-[#2C2018] text-[#FAF7F2] border-t border-x border-[#C26D52]/50 shadow-md flex items-center gap-1.5 text-[10px] font-mono font-bold tracking-wider uppercase cursor-pointer pointer-events-auto active:scale-95 transition"
-            title={isShotNavExpanded ? 'Skjul bundmenu' : 'Træk op eller tryk for bundmenu'}
+            onClick={() => setIsShotNavExpanded(false)}
+            className="absolute -top-7 left-1/2 -translate-x-1/2 px-5 h-7 rounded-t-xl bg-[#2C2018] text-[#FAF7F2] border-t-2 border-x-2 border-[#C26D52] shadow-md flex items-center gap-1.5 text-[10px] font-mono font-bold tracking-wider uppercase cursor-pointer pointer-events-auto active:scale-95 transition"
+            title={t('scale.menu_pull_close')}
           >
-            <span className="w-5 h-1 rounded-full bg-[#C26D52]" />
-            <span>Menu</span>
-            {isShotNavExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 text-[#C26D52]" />
-            ) : (
-              <ChevronUp className="w-3.5 h-3.5 text-[#C26D52]" />
-            )}
+            <span className="w-4 h-1 rounded-full bg-[#C26D52]" />
+            <span>{t('scale.menu_pull_open')}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#C26D52]" />
           </button>
         )}
 

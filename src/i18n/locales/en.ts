@@ -83,6 +83,10 @@ export const en = {
   'scale.target_guide': 'Target: {dose}g → {yield}g',
   'scale.stop_and_save': 'Stop & Save Shot ({duration}s)',
   'scale.align_hint': 'Point box at scale display',
+  'scale.machine_label': 'Machine:',
+  'scale.grinder_label': 'Grinder:',
+  'scale.menu_pull_open': 'Menu',
+  'scale.menu_pull_close': 'Hide Menu',
 
   // Bean Vault & Scanner
   'bean.scan_bag': 'Scan Bag',
