@@ -2,6 +2,23 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.24] - 2026-11-01
+### Etape 103: Dot-Matrix Datostempel OCR, Visuel Riste-Tidslinje i Review & Bar Drink Matchmaker
+- **Dot-Matrix / Prik-Matrix Datostempel Genkendelse ([bagImageUtil.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagImageUtil.ts), [bagOcr.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagOcr.ts), [bagScanner.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagScanner.ts), [FreshnessRadarModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FreshnessRadarModal.tsx), [BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**
+  - Implementeret ny `preprocessDotMatrixOcr()` billedbehandling med Otsu binarisering og 1px morfologisk dilation, der binder adskilte prik-blækprikker sammen til faste ciffer-streger, som Tesseract kan genkende.
+  - Tilføjet Pass 3 i `scanCoffeeBagForDateAndRoast` specifikt dedikeret til prik-matrix stempler (såsom Lavazza, Illy, Segafredo bønne-poser).
+  - Udvidet `parseDateCandidate` i `bagScanner.ts` til at håndtere kolon, lodrette streger og mellemrum som skilletegn (`[-.\/:| ]`) samt automatisk korrigere klassiske OCR-fejl i prik-matrix tal (fx 'O' som '0').
+  - Udvidet reticle-søgeområdet og tilføjet automatisk fallback til fuldframe scanning samt Gemini Bag Vision AI failover, hvis datostemplet er placeret i kanten eller på mørk skinnende folie.
+- **Visuel Riste-Tidslinje & Barista Freshness Note i Review-Skærm ([BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**
+  - Erstattet den simple tekstboks i Step 2 med den fulde visuelle `RoastTimelineBar` kendt fra Beandex: Viser nu den eksakte dato og hviledage som `Day 23 (2026-10-09)` ledsaget af statusmærke (`PEAK EXTRACT`, `RESTING`, `AGED BEAN`).
+  - Integreret det segmenterede tidslinjespor med nålemarkør og det intelligente Barista Freshness Intelligence Note-kort med parringsanbefalinger (fx egnethed til ren espresso, pour over eller mælkedrikke).
+- **Bar Drink Matchmaker Opdeling ([BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx), [beanMatcher.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/beanMatcher.ts), [en.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/en.ts), [da.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/da.ts)):**
+  - Tilføjet et nyt "🎯 Bar Drink Matchmaker" sektionskort i review-skærmen for den scannede kaffe.
+  - Viser live match-procenter (`% MATCH`) for alle baristaens aktive favoritter valgt i baren (`loadActiveBarDrinkIds()`), opdelt i to overskuelige kategorier:
+    - **Espresso Bar** (Double Espresso, Cappuccino, Flat White, Cortado, Latte, Americano osv.)
+    - **Pour Over Bar** (Hario V60, Chemex, Kalita Wave, AeroPress osv.)
+  - Match-procenterne beregnes i realtid med `scoreBeanForDrink()` baseret på ristningsgrad, aroma-profil og friskhed fra ristedatoen med farvekodede badges (smaragdgrøn for >= 85%, rav for >= 70%).
+
 ## [1.21.23] - 2026-11-01
 ### Etape 102: Robust Europæisk Datonormalisering (ISO YYYY-MM-DD), Opretstående Pose-Viewfinder & Aktiv Freshness Radar
 - **Fejlretning af Europæisk Datoberegning & Normalisering ([bagScanner.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/bagScanner.ts), [geminiBagVision.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/geminiBagVision.ts), [espressoMath.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/espressoMath.ts)):**

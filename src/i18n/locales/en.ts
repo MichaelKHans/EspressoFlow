@@ -749,6 +749,11 @@ export const en = {
   'bean.could_not_analyze_image': 'Could not analyze image.',
   'bean.vision_call_failed': 'Vision AI call failed. Check network and Supabase connection.',
   'bean.identified_msg': 'Identified: {name}',
+  'bean.bar_drink_matches_title': 'Bar Drink Matchmaker',
+  'bean.bar_favorites': 'Favorites in Bar',
+  'bean.espresso_bar_section': 'Espresso Bar',
+  'bean.pourover_bar_section': 'Pour Over Bar',
+  'bean.date_scan_hint': 'Take a photo of the date stamp on the bag above to calculate exact days off roast and CO₂ degassing.',
 
   // Radar & Matchmaker Tooltips
   'radar.quick_desc': 'Instant zero-tap shelf scanning with traffic-light HUD for roast dates & BBD.',

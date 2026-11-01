@@ -745,6 +745,11 @@ export const da: Partial<Record<TranslationKeys, string>> = {
   'bean.could_not_analyze_image': 'Kunne ikke analysere billedet.',
   'bean.vision_call_failed': 'Vision AI kaldet fejlede. Kontroller netværk og Supabase-forbindelse.',
   'bean.identified_msg': 'Genkendt: {name}',
+  'bean.bar_drink_matches_title': 'Bar Drink Matchmaker',
+  'bean.bar_favorites': 'Favoritter i Bar',
+  'bean.espresso_bar_section': 'Espresso Bar',
+  'bean.pourover_bar_section': 'Pour Over Bar',
+  'bean.date_scan_hint': 'Tag et foto af datostemplet på posen for at beregne præcise hviledage og aroma-guldvindue.',
 
   // Radar & Matchmaker Tooltips
   'radar.quick_desc': 'Lynhurtig zero-tap hyldescanning med trafiklys-HUD mod ristedatoer & BBD.',

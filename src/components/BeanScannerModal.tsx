@@ -8,7 +8,6 @@ import {
   Check,
   RefreshCw,
   AlertCircle,
-  Clock,
   Layers,
   Info,
   Flame,
@@ -40,12 +39,16 @@ import {
   normalizeDateStringToISO,
 } from '../lib/bagScanner';
 import { upsertGlobalBean } from '../lib/supabase';
-import { resolveGrinder } from '../lib/storage';
+import { resolveGrinder, loadActiveBarDrinkIds } from '../lib/storage';
 import {
   captureBagFrameFromVideo,
   compressFileToBagFrame,
 } from '../lib/bagVisionClient';
 import { scanBagWithVisionAI } from '../lib/geminiBagVision';
+import { RoastTimelineBar } from './RoastTimelineBar';
+import { calculateBeanFreshness } from '../lib/espressoMath';
+import { DRINK_RECIPES } from '../data/drinkRecipes';
+import { scoreBeanForDrink } from '../lib/beanMatcher';
 
 interface BeanScannerModalProps {
   isOpen: boolean;
@@ -385,10 +388,33 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setFeedbackMessage('Scanning date stamp on bag with OCR...');
     try {
       const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
-      const ocrResult = await scanCoffeeBagForDateAndRoast(videoRef.current, {
+      let ocrResult = await scanCoffeeBagForDateAndRoast(videoRef.current, {
         roaster: editRoaster,
         beanName: editName,
       });
+
+      // AI Fallback if local OCR failed
+      if (!ocrResult.roastDate && videoRef.current) {
+        try {
+          const frame = captureBagFrameFromVideo(videoRef.current, 1280);
+          if (frame?.base64) {
+            const aiRes = await scanBagWithVisionAI(frame.base64, frame.thumbnailBase64);
+            if (aiRes.success && aiRes.data?.roastDate) {
+              ocrResult = {
+                roastDate: aiRes.data.roastDate,
+                bestBeforeDate: null,
+                isEstimatedFromBBD: false,
+                detectedRoastLevel: aiRes.data.roastLevel || null,
+                confidence: 0.95,
+                formatDescription: aiRes.data.detectedFormat || 'Beandex Bag Vision™ (AI)',
+                rawText: '',
+              };
+            }
+          }
+        } catch (aiErr) {
+          console.debug('Vision AI date fallback skipped', aiErr);
+        }
+      }
 
       if (ocrResult.roastDate) {
         const normalized = normalizeDateStringToISO(ocrResult.roastDate);
@@ -430,10 +456,33 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
     setFeedbackMessage('Scanning date stamp on bag with OCR...');
     try {
       const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
-      const ocrResult = await scanCoffeeBagForDateAndRoast(file, {
+      let ocrResult = await scanCoffeeBagForDateAndRoast(file, {
         roaster: editRoaster,
         beanName: editName,
       });
+
+      // AI Fallback if local OCR failed
+      if (!ocrResult.roastDate) {
+        try {
+          const frame = await compressFileToBagFrame(file, 1280);
+          if (frame?.base64) {
+            const aiRes = await scanBagWithVisionAI(frame.base64, frame.thumbnailBase64);
+            if (aiRes.success && aiRes.data?.roastDate) {
+              ocrResult = {
+                roastDate: aiRes.data.roastDate,
+                bestBeforeDate: null,
+                isEstimatedFromBBD: false,
+                detectedRoastLevel: aiRes.data.roastLevel || null,
+                confidence: 0.95,
+                formatDescription: aiRes.data.detectedFormat || 'Beandex Bag Vision™ (AI)',
+                rawText: '',
+              };
+            }
+          }
+        } catch (aiErr) {
+          console.debug('Vision AI date photo fallback skipped', aiErr);
+        }
+      }
 
       if (ocrResult.roastDate) {
         const normalized = normalizeDateStringToISO(ocrResult.roastDate);
@@ -480,6 +529,75 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
   };
 
   const daysOff = getDaysOffRoast(editRoastDate);
+
+  // Load user's favorite/active drinks from the Bar
+  const activeDrinkIds = useMemo(() => loadActiveBarDrinkIds(), [isOpen]);
+
+  const previewBean: CoffeeBeanProfile = useMemo(
+    () => ({
+      id: 'preview-scanner-bean',
+      roaster: editRoaster || 'Specialty Roaster',
+      name: editName || 'Coffee Bean',
+      roastLevel: editRoastLevel,
+      roastDate: editRoastDate,
+      doseGrams: editDose,
+      targetYieldGrams: editTargetYield,
+      ratioStyle: 'standard',
+      grindSetting: editGrindSetting,
+      grinderName: selectedGrinderName || currentGrinderName || 'Baratza',
+      inStock: true,
+    }),
+    [
+      editRoaster,
+      editName,
+      editRoastLevel,
+      editRoastDate,
+      editDose,
+      editTargetYield,
+      editGrindSetting,
+      selectedGrinderName,
+      currentGrinderName,
+    ]
+  );
+
+  const getDrinkEmoji = (drink: (typeof DRINK_RECIPES)[0]): string => {
+    if (drink.method === 'pour_over') {
+      if (drink.id.includes('v60')) return '🌪️';
+      if (drink.id.includes('chemex')) return '⚗️';
+      if (drink.id.includes('aeropress')) return '🧪';
+      if (drink.id.includes('french-press')) return '🫖';
+      return '💧';
+    }
+    if (drink.category === 'milk') return '🥛';
+    if (drink.category === 'dessert') return '🍨';
+    return '☕';
+  };
+
+  // Compute match percentages for Espresso and Pour Over active bar drinks
+  const drinkMatches = useMemo(() => {
+    const activeDrinks = DRINK_RECIPES.filter((d) => activeDrinkIds.includes(d.id));
+    const list = activeDrinks.length > 0 ? activeDrinks : DRINK_RECIPES.slice(0, 8);
+
+    const espressoList = list.filter((d) => (d.method || 'espresso') === 'espresso');
+    const pourOverList = list.filter((d) => d.method === 'pour_over');
+
+    const scoreList = (drinks: typeof list) =>
+      drinks
+        .map((drink) => {
+          const result = scoreBeanForDrink(previewBean, drink);
+          return {
+            drink,
+            matchScore: result.matchScore,
+            reason: result.reason,
+          };
+        })
+        .sort((a, b) => b.matchScore - a.matchScore);
+
+    return {
+      espresso: scoreList(espressoList),
+      pourOver: scoreList(pourOverList),
+    };
+  }, [activeDrinkIds, previewBean]);
 
   // Save handler
   const handleConfirmSave = (makeActive: boolean = false) => {
@@ -1470,7 +1588,7 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                   </div>
                 </div>
 
-                {/* Freshness & CO2 Degassing Banner */}
+                {/* Visual Roast Freshness Timeline & Barista Recommendation */}
                 {editRoastDate ? (
                   daysOff < 0 ? (
                     <div className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 flex items-center gap-2.5 text-xs text-red-900">
@@ -1481,36 +1599,150 @@ export const BeanScannerModal: React.FC<BeanScannerModalProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div
-                      className={`p-2.5 rounded-lg border flex items-center gap-2.5 text-xs ${
-                        daysOff < 4
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-800'
-                          : daysOff <= 28
-                          ? 'bg-[#72806B]/10 border-[#72806B]/30 text-[#72806B]'
-                          : 'bg-[#2C2018]/5 border-[#2C2018]/15 text-[#7A6E65]'
-                      }`}
-                    >
-                      <Clock className="w-4 h-4 flex-shrink-0" />
-                      <div className="flex-1 text-[11px] leading-tight">
-                        <span className="font-bold">
-                          {daysOff === 0 ? 'Roasted Today' : `${daysOff} days off roast`}:
-                        </span>{' '}
-                        {daysOff < 4 ? (
-                          <span>Active CO₂ degassing. Rest 2–3 more days for calmer espresso flow.</span>
-                        ) : daysOff <= 28 ? (
-                          <span className="font-medium">Prime espresso extraction window. Optimum CO₂ release.</span>
-                        ) : (
-                          <span>Mature / Aged roast ({daysOff}d). May require a finer grind setting to maintain puck resistance.</span>
-                        )}
-                      </div>
+                    <div className="p-3 rounded-xl bg-white/70 border border-[#DECFC0] space-y-2 animate-fadeIn shadow-xs">
+                      {/* Exact Day count & ISO Date with segmented progress bar and pin */}
+                      <RoastTimelineBar
+                        roastDate={editRoastDate}
+                        roastLevel={editRoastLevel}
+                      />
+
+                      {/* Barista Freshness Intelligence Note */}
+                      {(() => {
+                        const freshness = calculateBeanFreshness(editRoastDate, editRoastLevel);
+                        return (
+                          <div
+                            className={`p-2.5 rounded-xl border text-[10.5px] leading-snug transition-all ${
+                              freshness.phase === 'stale'
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-950'
+                                : freshness.phase === 'past_peak'
+                                ? 'bg-stone-500/10 border-stone-400/30 text-stone-900'
+                                : freshness.phase === 'degassing'
+                                ? 'bg-[#C26D52]/10 border-[#C26D52]/30 text-[#8C3D26]'
+                                : 'bg-[#72806B]/10 border-[#72806B]/30 text-[#2E3C2B]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1 font-bold font-mono text-[9.5px] uppercase tracking-wide">
+                              <span>
+                                {freshness.phase === 'stale'
+                                  ? (t('beandex.freshness_stale_title') || '🥛 Best with Milk / Cortado')
+                                  : freshness.phase === 'past_peak'
+                                  ? (t('beandex.freshness_past_peak_title') || '⏱️ Past Peak • Grind Finer')
+                                  : freshness.phase === 'degassing'
+                                  ? (t('beandex.freshness_degassing_title') || '💨 Resting • Degassing CO₂')
+                                  : (t('beandex.freshness_peak_title') || '✨ Peak Flavor Window')}
+                              </span>
+                            </div>
+                            <p className="font-sans text-[10px] opacity-90 mt-0.5 leading-tight">
+                              {language === 'da'
+                                ? freshness.phase === 'stale'
+                                  ? 'Kaffeolierne er oxideret. Cremaen er tyndere – smager skønt med mælk (Flat White / Latte) eller som kort Ristretto.'
+                                  : freshness.phase === 'past_peak'
+                                  ? 'Aromaerne er blødere. Kværn et halvt trin finere for at bevare sødme og fylde.'
+                                  : freshness.phase === 'degassing'
+                                  ? 'Friskristet med højt CO₂. Lad hvile et par dage for renere smag uden boblende crema.'
+                                  : 'Maksimal aromaintensitet og tyk crema. Helt i top til ren espresso eller pour over!'
+                                : freshness.baristaTip}
+                            </p>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )
                 ) : (
                   <div className="p-2.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] flex items-center gap-2 text-xs text-[#7A6E65]">
                     <Info className="w-4 h-4 text-[#C26D52] shrink-0" />
                     <span className="text-[11px]">
-                      Take a photo of the date stamp on the bag above to calculate exact days off roast and CO₂ degassing.
+                      {t('bean.date_scan_hint') || 'Tag et foto af datostemplet på posen for at beregne præcise hviledage og aroma-guldvindue.'}
                     </span>
+                  </div>
+                )}
+
+                {/* 🎯 Bar Drink Matchmaker Breakdown */}
+                {(drinkMatches.espresso.length > 0 || drinkMatches.pourOver.length > 0) && (
+                  <div className="p-3 rounded-xl bg-white/70 border border-[#DECFC0] space-y-3 shadow-xs animate-fadeIn">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-[#2C2018]">
+                        <Sparkles className="w-3.5 h-3.5 text-[#C26D52]" />
+                        <span>{t('bean.bar_drink_matches_title') || 'Bar Drink Matchmaker'}</span>
+                      </div>
+                      <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[#C26D52]/15 text-[#C26D52]">
+                        {drinkMatches.espresso.length + drinkMatches.pourOver.length} {t('bean.bar_favorites') || 'Favoritter'}
+                      </span>
+                    </div>
+
+                    {/* Espresso Section */}
+                    {drinkMatches.espresso.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-[#7A6E65]">
+                          <span>☕ {t('bean.espresso_bar_section') || 'Espresso Bar'}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {drinkMatches.espresso.map(({ drink, matchScore }) => {
+                            const badgeColor =
+                              matchScore >= 85
+                                ? 'bg-emerald-500/15 text-emerald-800 border-emerald-400/30'
+                                : matchScore >= 70
+                                ? 'bg-amber-500/15 text-amber-900 border-amber-400/30'
+                                : 'bg-stone-500/15 text-stone-700 border-stone-400/30';
+                            return (
+                              <div
+                                key={drink.id}
+                                className="px-2 py-1.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between shadow-2xs"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0 pr-1">
+                                  <span className="text-sm shrink-0">{getDrinkEmoji(drink)}</span>
+                                  <span className="text-[11px] font-semibold text-[#2C2018] truncate">
+                                    {drink.name}
+                                  </span>
+                                </div>
+                                <span
+                                  className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${badgeColor}`}
+                                >
+                                  {matchScore}%
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pour Over Section */}
+                    {drinkMatches.pourOver.length > 0 && (
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-[#7A6E65]">
+                          <span>💧 {t('bean.pourover_bar_section') || 'Pour Over Bar'}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {drinkMatches.pourOver.map(({ drink, matchScore }) => {
+                            const badgeColor =
+                              matchScore >= 85
+                                ? 'bg-emerald-500/15 text-emerald-800 border-emerald-400/30'
+                                : matchScore >= 70
+                                ? 'bg-amber-500/15 text-amber-900 border-amber-400/30'
+                                : 'bg-stone-500/15 text-stone-700 border-stone-400/30';
+                            return (
+                              <div
+                                key={drink.id}
+                                className="px-2 py-1.5 rounded-lg bg-[#FAF7F2] border border-[#E8DFD5] flex items-center justify-between shadow-2xs"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0 pr-1">
+                                  <span className="text-sm shrink-0">{getDrinkEmoji(drink)}</span>
+                                  <span className="text-[11px] font-semibold text-[#2C2018] truncate">
+                                    {drink.name}
+                                  </span>
+                                </div>
+                                <span
+                                  className={`text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${badgeColor}`}
+                                >
+                                  {matchScore}%
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

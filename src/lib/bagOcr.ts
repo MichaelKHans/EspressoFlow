@@ -4,8 +4,8 @@ import {
   type BagExtractionContext,
 } from './bagScanner';
 
-import { preprocessImageForOcr } from './bagImageUtil';
-export { preprocessImageForOcr };
+import { preprocessImageForOcr, preprocessDotMatrixOcr } from './bagImageUtil';
+export { preprocessImageForOcr, preprocessDotMatrixOcr };
 
 /**
  * Runs OCR on a coffee bag image using native TextDetector or Tesseract.js in a background worker
@@ -64,14 +64,25 @@ export async function scanCoffeeBagForDateAndRoast(
     const text2 = ret2.data.text || '';
     const parsed2 = extractDatesAndRoastFromBagText(text2, context);
 
-    await worker.terminate();
-
     if (parsed2.roastDate) {
+      await worker.terminate();
       return parsed2;
     }
 
-    // If neither pass found a date, combine whatever text and roast level was seen
-    const combinedRaw = `${text1}\n${text2}`;
+    // Pass 3: Morphological Dot-Matrix Binarization (specifically for inkjet/dot-matrix stamps like Lavazza 30/03/2028)
+    const canvasDotMatrix = preprocessDotMatrixOcr(sourceEl);
+    const ret3 = await worker.recognize(canvasDotMatrix);
+    const text3 = ret3.data.text || '';
+    const parsed3 = extractDatesAndRoastFromBagText(text3, context);
+
+    await worker.terminate();
+
+    if (parsed3.roastDate) {
+      return parsed3;
+    }
+
+    // If none of the passes found a date, combine whatever text and roast level was seen
+    const combinedRaw = `${text1}\n${text2}\n${text3}`;
     return extractDatesAndRoastFromBagText(combinedRaw, context);
   } catch (err) {
     console.warn('Tesseract OCR error:', err);

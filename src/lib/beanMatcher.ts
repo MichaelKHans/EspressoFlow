@@ -22,7 +22,7 @@ const ROAST_COMPATIBILITY: Record<RoastLevel, Record<RoastLevel, number>> = {
  * Calculate how well a bean matches a drink recipe.
  * Considers roast level compatibility and freshness (days off roast).
  */
-function scoreBeanForDrink(bean: CoffeeBeanProfile, drink: DrinkRecipe): BeanMatchResult {
+export function scoreBeanForDrink(bean: CoffeeBeanProfile, drink: DrinkRecipe): BeanMatchResult {
   const idealLevels = drink.idealRoastLevels || ['medium'];
 
   // Best roast compatibility score across all ideal levels

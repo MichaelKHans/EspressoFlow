@@ -316,12 +316,31 @@ export const isValidDate = (year: number, month: number, day: number): boolean =
 export const parseDateCandidate = (raw: string): { iso: string; year: number; month: number; day: number } | null => {
   if (!raw) return null;
 
-  // 1. European & Nordic: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY or DD/MM-YY or DD-MM-YY (e.g. "09-10-26" or "02/03-26")
-  const euro = raw.match(/\b(0?[1-9]|[12]\d|3[01])\s*[-.\/]\s*(0?[1-9]|1[0-2])\s*[-.\/]\s*(202\d|203\d|\d{2})\b/);
+  // Clean common OCR misrecognitions for dot-matrix text (e.g. 'O'/'o' for '0')
+  const sanitized = raw
+    .replace(/([0-9\/\-.:|])[oO]([0-9\/\-.:|])/g, '$10$2')
+    .replace(/\b([0-3])[oO]\b/g, '$10')
+    .replace(/([0-3])[oO]([\/\-.:|])/g, '$10$2')
+    .replace(/([\/\-.:|])[oO]([1-9])([\/\-.:|])/g, '$10$2$3');
+
+  // 1. European & Nordic: DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY or DD:MM:YYYY or DD/MM-YY or DD-MM-YY (e.g. "09-10-26", "30/03/2028", "30:03:2028")
+  const euro = sanitized.match(/\b(0?[1-9]|[12]\d|3[01])\s*[-.\/:|]\s*(0?[1-9]|1[0-2])\s*[-.\/:|]\s*(202\d|203\d|\d{2})\b/);
   if (euro) {
     const day = parseInt(euro[1], 10);
     const month = parseInt(euro[2], 10);
     let year = parseInt(euro[3], 10);
+    if (year < 100) year += 2000;
+    if (isValidDate(year, month, day)) {
+      return { iso: formatISO(year, month, day), year, month, day };
+    }
+  }
+
+  // 1b. European with spaces: "30 03 2028" or "09 10 2026"
+  const euroSpace = sanitized.match(/\b(0?[1-9]|[12]\d|3[01])\s+([01]?[0-9]|1[0-2])\s+(202\d|203\d|\d{2})\b/);
+  if (euroSpace) {
+    const day = parseInt(euroSpace[1], 10);
+    const month = parseInt(euroSpace[2], 10);
+    let year = parseInt(euroSpace[3], 10);
     if (year < 100) year += 2000;
     if (isValidDate(year, month, day)) {
       return { iso: formatISO(year, month, day), year, month, day };
@@ -475,7 +494,7 @@ export function extractDatesAndRoastFromBagText(
   const bbdMatch = text.match(bbdRegex);
 
   // Lot / Batch pattern (e.g. Italian "Lotto n. / Batch n. / Lot N° : CK17DH 30/03/2028")
-  const lotRegex = /(?:lotto\s*(?:n\.?)?|batch\s*(?:n\.?|no\.?)?|lot\s*(?:n[°\.]?)?)[\s:\-\/.]*([a-z0-9\s:]{1,25}?)[\r\n\s]+([0-9]{1,2}\s*[-.\/]\s*[0-9]{1,2}\s*[-.\/]\s*(?:202\d|203\d|\d{2})|[a-zæøåéäöü]{3,10}\s+[0-9]{2,4})/i;
+  const lotRegex = /(?:lotto\s*(?:n\.?)?|batch\s*(?:n\.?|no\.?)?|lot\s*(?:n[°\.]?)?)[\s:\-\/.]*([a-z0-9\s:]{1,25}?)[\r\n\s]+([0-9]{1,2}\s*[-.\/:|]\s*[0-9]{1,2}\s*[-.\/:|]\s*(?:202\d|203\d|\d{2})|[a-zæøåéäöü]{3,10}\s+[0-9]{2,4})/i;
   const lotMatch = text.match(lotRegex);
 
   let confirmedBBD: string | null = null;

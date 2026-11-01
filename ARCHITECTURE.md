@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.22 (Standby Reset-Knap i Cockpit Header & Flåde-Fejlbeskyttelse)  
+> **Gældende version:** v1.21.24 (Dot-Matrix OCR, Visuel Riste-Tidslinje i Review & Bar Drink Matchmaker)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -228,22 +228,29 @@ flowchart TD
     LocalDB -- Ja --> FillMeta
     LocalDB -- Nej --> QueryCloud[Slå op i Supabase Central Vault]
 
-    ScanType -- Freshness Radar™ (Hyldescanner) --> ReticleCrop[bagImageUtil: 10x Center-Crop 70%x36% Canvas]
-    ReticleCrop --> FastDetect[Native TextDetector / Tesseract.js Worker Fallback]
-    FastDetect --> VerdictCheck{Dato Genkendt?}
+    ScanType -- Freshness Radar™ (Hyldescanner) --> ReticleCrop[bagImageUtil: Udvidet Reticle Crop + Fuldframe Fallback]
+    ReticleCrop --> MultiPassOCR[Multi-Pass OCR: Pass 1 Kontrast, Pass 2 Inverteret, Pass 3 Prik-matrix Dilation + Gemini Vision AI Failover]
+    MultiPassOCR --> VerdictCheck{Dato Genkendt?}
     VerdictCheck -- Ja --> DateNormRadar[normalizeDateStringToISO: Sikring mod US Dato-flip]
     DateNormRadar --> TrafficHUD[Trafiklys HUD: 🟢 Peak / 🟡 Efter Peak / 🔴 Gammel / 💨 Afgasser]
     TrafficHUD --> HapticFeedback[Haptik & Dual-Tone Chime D5->A5]
     TrafficHUD --> AutoResetTimer[4s Auto-Reset Countdown Bar]
     TrafficHUD --> OneTapSave[1-Tap: Gem Dato i Beandex el. Åbn Pose AI]
-    VerdictCheck -- Nej --> FastDetect
+    VerdictCheck -- Nej --> MultiPassOCR
 
-    ScanType -- Poseetiket & Dato (Manuel) --> OCRBag[OCR Tekstgenkendelse]
+    ScanType -- Poseetiket & Dato (Manuel) --> OCRBag[Multi-Pass OCR & Prik-Matrix Binarisering]
     OCRBag --> DateParser[Dansk Ristedato- & MHD Heuristik + normalizeDateStringToISO]
     DateParser --> DateCheck{Er dato fundet?}
     DateCheck -- Nordisk Ristedato (fx 02/03-26) --> ExtractRoastDate[Sæt Ristedato]
     DateCheck -- Italiensk MHD (fx 30/03/2028) --> Subtract24Months[Træk 24 mdr fra: Estimeret Ristedato]
     DateCheck -- Ingen dato --> ManualDate[Bruger indtaster dato manuelt]
+
+    %% Review Skærm med Tidslinje & Matchmaker
+    ExtractRoastDate --> ReviewScreen[Step 2 Review: RoastTimelineBar + Barista Intelligence Note]
+    Subtract24Months --> ReviewScreen
+    ManualDate --> ReviewScreen
+    ReviewScreen --> MatchmakerBreakdown[Bar Drink Matchmaker: Live Match % for Espresso Bar & Pour Over Bar]
+    MatchmakerBreakdown --> FillMeta[Bekræft Kværn, Dosis & Mål-Yield]
 
     %% Beandex Autocomplete & Kvalitet
     FillMeta --> NameSanitizer[sanitizeBeanInput: Rens og valider]

@@ -58,3 +58,103 @@ export function preprocessImageForOcr(
 
   return canvas;
 }
+
+/**
+ * Preprocesses dot-matrix ink stamps (common on Lavazza, Illy, Segafredo bags):
+ * Converts to high-contrast inverted binary and applies 1px morphological closing
+ * to connect discrete ink dots into solid character strokes for OCR.
+ */
+export function preprocessDotMatrixOcr(
+  imageElement: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement,
+  cropArea?: { x: number; y: number; width: number; height: number }
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  const sourceW = 'videoWidth' in imageElement ? (imageElement as HTMLVideoElement).videoWidth : imageElement.width;
+  const sourceH = 'videoHeight' in imageElement ? (imageElement as HTMLVideoElement).videoHeight : imageElement.height;
+
+  const sx = cropArea ? cropArea.x * sourceW : 0;
+  const sy = cropArea ? cropArea.y * sourceH : 0;
+  const sw = cropArea ? cropArea.width * sourceW : sourceW;
+  const sh = cropArea ? cropArea.height * sourceH : sourceH;
+
+  const maxDim = 1600;
+  let targetW = Math.max(1, sw);
+  let targetH = Math.max(1, sh);
+  if (targetW > maxDim || targetH > maxDim) {
+    if (targetW > targetH) {
+      targetH = Math.round((targetH * maxDim) / targetW);
+      targetW = maxDim;
+    } else {
+      targetW = Math.round((targetW * maxDim) / targetH);
+      targetH = maxDim;
+    }
+  }
+
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return canvas;
+
+  ctx.drawImage(imageElement as CanvasImageSource, sx, sy, sw, sh, 0, 0, targetW, targetH);
+
+  try {
+    const imgData = ctx.getImageData(0, 0, targetW, targetH);
+    const d = imgData.data;
+    const len = d.length;
+
+    // 1. Calculate luminance histogram and mean
+    let sumLum = 0;
+    const lums = new Uint8Array(len / 4);
+    for (let i = 0, j = 0; i < len; i += 4, j++) {
+      const lum = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+      lums[j] = lum;
+      sumLum += lum;
+    }
+    const meanLum = sumLum / (len / 4);
+
+    // 2. Binary threshold (inverted: light ink on dark background becomes black text on white)
+    const isDarkBag = meanLum < 125;
+    const bin = new Uint8Array(len / 4);
+
+    for (let j = 0; j < lums.length; j++) {
+      const val = lums[j];
+      if (isDarkBag) {
+        bin[j] = val > meanLum + 18 ? 0 : 255;
+      } else {
+        bin[j] = val < meanLum - 18 ? 0 : 255;
+      }
+    }
+
+    // 3. Morphological dilation to connect ink dots into continuous lines
+    const dilated = new Uint8Array(bin);
+    for (let y = 1; y < targetH - 1; y++) {
+      const rowOffset = y * targetW;
+      for (let x = 1; x < targetW - 1; x++) {
+        const idx = rowOffset + x;
+        if (bin[idx] === 255) {
+          if (
+            bin[idx - 1] === 0 ||
+            bin[idx + 1] === 0 ||
+            bin[idx - targetW] === 0 ||
+            bin[idx + targetW] === 0
+          ) {
+            dilated[idx] = 0;
+          }
+        }
+      }
+    }
+
+    // Write back dilated binary image
+    for (let j = 0, i = 0; j < dilated.length; j++, i += 4) {
+      const val = dilated[j];
+      d[i] = val;
+      d[i + 1] = val;
+      d[i + 2] = val;
+    }
+    ctx.putImageData(imgData, 0, 0);
+  } catch (e) {
+    console.debug('Dot matrix preprocessing skipped', e);
+  }
+
+  return canvas;
+}

@@ -346,6 +346,23 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
             extractedDate = res.roastDate;
             isBBD = res.isEstimatedFromBBD;
             snippetText = res.rawMatchedSnippet || res.formatDescription || undefined;
+          } else {
+            // Tier 4 Cloud AI fallback for uploaded photo
+            try {
+              const { compressFileToBagFrame } = await import('../lib/bagVisionClient');
+              const { scanBagWithVisionAI } = await import('../lib/geminiBagVision');
+              const frame = await compressFileToBagFrame(fileSource, 1280);
+              if (frame?.base64) {
+                const aiRes = await scanBagWithVisionAI(frame.base64, frame.thumbnailBase64);
+                if (aiRes.success && aiRes.data?.roastDate) {
+                  extractedDate = aiRes.data.roastDate;
+                  isBBD = false;
+                  snippetText = aiRes.data.detectedFormat || 'Beandex Bag Vision™ (AI)';
+                }
+              }
+            } catch (aiErr) {
+              console.debug('Radar file Vision AI fallback skipped', aiErr);
+            }
           }
         } else {
           if (!videoRef.current || videoRef.current.videoWidth === 0) {
@@ -354,16 +371,17 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
             return;
           }
 
+          // Pass 1: Expanded reticle crop (accommodates tall phone viewports & wide bags)
           const crop = {
-            x: 0.15,
-            y: 0.32,
-            width: 0.7,
-            height: 0.36,
+            x: 0.08,
+            y: 0.16,
+            width: 0.84,
+            height: 0.68,
           };
 
           const canvas = preprocessImageForOcr(videoRef.current, crop, false);
 
-          // Tier 1: Try Native TextDetector if supported
+          // Tier 1: Try Native TextDetector on reticle crop
           if (typeof window !== 'undefined' && 'TextDetector' in window) {
             try {
               const TextDetectorClass = (
@@ -387,7 +405,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
             }
           }
 
-          // Tier 2: Tesseract OCR Web Worker Fallback
+          // Tier 2: Tesseract OCR (with dot-matrix closing) on reticle crop
           if (!extractedDate) {
             const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
             const res = await scanCoffeeBagForDateAndRoast(canvas);
@@ -395,6 +413,36 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
               extractedDate = res.roastDate;
               isBBD = res.isEstimatedFromBBD;
               snippetText = res.rawMatchedSnippet || res.formatDescription || undefined;
+            }
+          }
+
+          // Tier 3: Full-frame Tesseract Fallback (Crucial if aspect-ratio cropped out the date stamp)
+          if (!extractedDate && videoRef.current) {
+            const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
+            const resFull = await scanCoffeeBagForDateAndRoast(videoRef.current);
+            if (resFull.roastDate) {
+              extractedDate = resFull.roastDate;
+              isBBD = resFull.isEstimatedFromBBD;
+              snippetText = resFull.rawMatchedSnippet || resFull.formatDescription || undefined;
+            }
+          }
+
+          // Tier 4: Gemini Bag Vision AI Fallback (Cloud intelligence failover for glossy foil / tricky dot-matrix)
+          if (!extractedDate && videoRef.current) {
+            try {
+              const { captureBagFrameFromVideo } = await import('../lib/bagVisionClient');
+              const { scanBagWithVisionAI } = await import('../lib/geminiBagVision');
+              const frame = captureBagFrameFromVideo(videoRef.current, 1280);
+              if (frame?.base64) {
+                const aiRes = await scanBagWithVisionAI(frame.base64, frame.thumbnailBase64);
+                if (aiRes.success && aiRes.data?.roastDate) {
+                  extractedDate = aiRes.data.roastDate;
+                  isBBD = false;
+                  snippetText = aiRes.data.detectedFormat || 'Beandex Bag Vision™ (AI)';
+                }
+              }
+            } catch (aiErr) {
+              console.debug('Radar Vision AI fallback skipped', aiErr);
             }
           }
         }
@@ -435,7 +483,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
       // 1. Fast Path: Native Browser Shape Detection TextDetector
       if (typeof window !== 'undefined' && 'TextDetector' in window) {
         try {
-          const crop = { x: 0.15, y: 0.32, width: 0.7, height: 0.36 };
+          const crop = { x: 0.08, y: 0.16, width: 0.84, height: 0.68 };
           const canvas = preprocessImageForOcr(videoRef.current, crop, false);
           const TextDetectorClass = (
             window as unknown as {
