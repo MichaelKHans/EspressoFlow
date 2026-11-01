@@ -26,6 +26,14 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-11-01 -- Etape 101: Standby Reset-Knap i Cockpit Header & Flåde-Fejlbeskyttelse (v1.21.22)
+- **Standby Nulstil-Knap i Cockpit Header ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Tilføjet en diskret `[↺ Nulstil]` knap i øverste højre hjørne af cockpit-headeren i standby.
+  - Tillader baristaen at nulstille kurven til et helt rent koordinatsystem, nulstille tid (`0.0s`), flow (`0.0 g/s`), vægtprøver og gen-tarere vægten med ét tryk uden at gemme eller forurene historikken.
+  - Under aktiv brygning forvandles knappen automatisk til den velkendte røde `[↺ Afbryd]` knap.
+- **Flåde-Fejlbeskyttelse & Admin Hub Dataintegritet:**
+  - Bekræftet at afbrudte og nulstillede skud aldrig uploader støj eller forurener Admin Hub flådedatabasen (`isOcrAnomaly`-beskyttelse).
+
 ### 2026-11-01 -- Etape 100: Perfekt Forankring af Menu-Pille & Afslappet Udstyrs-Position Uden Trængsel (v1.21.21)
 - **Korrekt Forankring af Menu-Knap Lige over Systemnavigation ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
   - Justeret placeringen af den flydende `MENU`-pilleknap ned fra `3.5rem` (56px) til `max(1.15rem, calc(env(safe-area-inset-bottom, 0px) + 0.45rem))` (~18px). Den svæver nu ikke længere oppe i det tomme rum, men hviler harmonisk lige over Androids systemknapper (`◁ ⬡ ≡`).

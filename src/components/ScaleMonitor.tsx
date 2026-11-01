@@ -1134,9 +1134,9 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
           </span>
         </div>
 
-        {/* Right Header Info / Abort */}
+        {/* Right Header Info / Abort / Standby Reset */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {isBrewing && (
+          {isBrewing ? (
             <button
               type="button"
               onClick={handleCancelBrewing}
@@ -1144,6 +1144,16 @@ export const ScaleMonitor: React.FC<ScaleMonitorProps> = ({
               title={t('scale.reset_title')}
             >
               <RotateCcw className="w-3 h-3" />
+              <span>{t('scale.reset')}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCancelBrewing}
+              className="text-[10px] px-2 py-0.5 rounded-lg border border-[#E8DFD5] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] font-mono font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer"
+              title={t('scale.reset_title') || 'Nulstil kurve og start forfra'}
+            >
+              <RotateCcw className="w-3 h-3 text-[#C26D52]" />
               <span>{t('scale.reset')}</span>
             </button>
           )}

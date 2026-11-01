@@ -2,6 +2,15 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.22] - 2026-11-01
+### Etape 101: Standby Reset-Knap i Cockpit Header & Flåde-Fejlbeskyttelse
+- **Standby Nulstil-Knap i Cockpit Header ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Tilføjet en diskret `[↺ Nulstil]` knap i øverste højre hjørne af cockpit-headeren i standby.
+  - Tillader baristaen at nulstille kurven til et helt rent koordinatsystem, nulstille tid (`0.0s`), flow (`0.0 g/s`), vægtprøver og gen-tarere vægten med ét tryk uden at gemme eller forurene historikken.
+  - Under aktiv brygning forvandles knappen automatisk til den velkendte røde `[↺ Afbryd]` knap.
+- **Flåde-Fejlbeskyttelse & Admin Hub Dataintegritet:**
+  - Bekræftet at afbrudte og nulstillede skud aldrig uploader støj eller forurener Admin Hub flådedatabasen (`isOcrAnomaly`-beskyttelse).
+
 ## [1.21.21] - 2026-11-01
 ### Etape 100: Perfekt Forankring af Menu-Pille & Afslappet Udstyrs-Position Uden Trængsel
 - **Korrekt Forankring af Menu-Knap Lige over Systemnavigation ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
