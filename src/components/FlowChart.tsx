@@ -36,7 +36,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   // Normalize points: If non-live and curve starts with a dead flatline (>= 1.0s before first drip),
   // trim it so the chart starts cleanly at first drip (t = 0.0s)
   const { displayPoints, timeOffset } = React.useMemo(() => {
-    if (isLive && points.length === 0) {
+    if ((isLive || compact) && points.length === 0) {
       return {
         displayPoints: [{ timeSeconds: 0.0, weightGrams: 0.0, flowRateGps: 0.0 }],
         timeOffset: 0,
@@ -64,9 +64,9 @@ export const FlowChart: React.FC<FlowChartProps> = ({
       }
     }
     return { displayPoints: points, timeOffset: 0 };
-  }, [points, isLive]);
+  }, [points, isLive, compact]);
 
-  if (points.length === 0 && !isLive) {
+  if (points.length === 0 && !isLive && !compact) {
     return (
       <div className="bg-[#FFFDF9] rounded-2xl border border-[#E8DFD5] p-6 text-center">
         <Gauge className="w-8 h-8 text-[#7A6E65]/50 mx-auto mb-2" />
@@ -88,7 +88,7 @@ export const FlowChart: React.FC<FlowChartProps> = ({
   const maxFlow = isPourOver ? 8.0 : 4.0; // max scale for g/s
 
   const width = 600;
-  const height = compact ? 150 : 210;
+  const height = compact ? 130 : 210;
   const padLeft = compact ? 38 : 45;
   const padRight = compact ? 38 : 44; // Room for right-side flow axis
   const padTop = compact ? 14 : 22;

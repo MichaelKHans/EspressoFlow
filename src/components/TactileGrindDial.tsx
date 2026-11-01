@@ -11,6 +11,7 @@ export interface TactileGrindDialProps {
   aiSuggestedSetting?: string;
   isAlreadyAdjusted?: boolean;
   showAiSuggestion?: boolean;
+  hideHeader?: boolean;
   targetTime?: number;
   targetYield?: number;
   compact?: boolean;
@@ -24,6 +25,7 @@ export const TactileGrindDial: React.FC<TactileGrindDialProps> = ({
   aiSuggestedSetting,
   isAlreadyAdjusted,
   showAiSuggestion = true,
+  hideHeader = false,
   targetTime,
   targetYield,
   compact = false,
@@ -98,16 +100,18 @@ export const TactileGrindDial: React.FC<TactileGrindDialProps> = ({
   return (
     <div className={`space-y-2 font-mono select-none ${className}`}>
       {/* Header Info */}
-      <div className="flex items-center justify-between text-[10px]">
-        <span className="text-[#7A6E65] uppercase font-bold tracking-wider">
-          {grinder.name.split(' ')[0]} ({grinder.stepUnit || (grinder.type === 'stepless' ? 'stepless' : 'steps')})
-        </span>
-        {targetTime !== undefined && targetYield !== undefined && (
-          <span className="text-[#7A6E65] text-[9.5px]">
-            Target: ~{targetTime}s ({targetYield}g)
+      {!hideHeader && (
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-[#7A6E65] uppercase font-bold tracking-wider truncate">
+            {grinder.name} ({grinder.type === 'stepless' ? 'Stepless' : 'Stepped'})
           </span>
-        )}
-      </div>
+          {targetTime !== undefined && targetYield !== undefined && (
+            <span className="text-[#7A6E65] text-[9.5px] shrink-0">
+              Target: ~{targetTime}s ({targetYield}g)
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Hero Display + Stepper */}
       <div className="bg-white p-2.5 sm:p-3 rounded-xl border border-[#E8DFD5] space-y-2 shadow-2xs">
@@ -117,10 +121,10 @@ export const TactileGrindDial: React.FC<TactileGrindDialProps> = ({
             <span className="text-2xl sm:text-3xl font-bold font-mono text-[#2C2018] tracking-tight">
               {currentGrindNum.toFixed(1)}
             </span>
-            <span className="text-[10px] sm:text-[11px] text-[#7A6E65] uppercase font-mono font-medium truncate">
-              {isDualZoneBaratza && currentGrindNum > effectiveEspressoMax
-                ? t('gear.macro_step') || 'Macro-Step'
-                : t('gear.micro_step') || 'Micro-Step'}
+            <span className="text-[10px] sm:text-[11px] text-[#7A6E65] uppercase font-mono font-medium shrink-0">
+              {isDualZoneBaratza
+                ? (currentGrindNum > effectiveEspressoMax ? 'Macro' : 'Micro')
+                : (grinder.type === 'stepless' ? 'Stepless' : 'Step')}
             </span>
           </div>
 

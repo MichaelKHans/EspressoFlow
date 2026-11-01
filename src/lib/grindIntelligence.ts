@@ -412,27 +412,50 @@ export function predictOptimalGrindSetting(params: {
     } else {
       const actualTime = lastShot!.totalTimeSeconds;
       const targetT = lastShot!.targetTimeSeconds || 27.0;
+      const isPourOverTarget = targetT >= 80;
+      const toleranceSec = isPourOverTarget ? 12.0 : 2.0;
+      const effectiveSlope = isPourOverTarget ? Math.max(10.0, kEff * 4.5) : kEff;
       const deltaT = actualTime - targetT;
+      const taste = lastShot!.tasteRating;
 
-      if (Math.abs(deltaT) <= 2.0) {
+      if (taste === 'balanced' && Math.abs(deltaT) <= toleranceSec * 2.0) {
         reason = 'golden_anchor';
         dialInOffsetSteps = 0;
-        explanation = `Spot-on! Sidste skud ramte ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Kværn er i Golden Zone på ${baseSetting.toFixed(1).replace('.0', '')}.`;
+        explanation = `Spot-on smag & flow! Sidste bryg (${actualTime.toFixed(1)}s) er markeret Balanceret. Kværn er låst i Golden Zone på ${baseSetting.toFixed(1).replace('.0', '')}.`;
+      } else if (Math.abs(deltaT) <= toleranceSec && (!taste || taste === 'balanced')) {
+        reason = 'golden_anchor';
+        dialInOffsetSteps = 0;
+        explanation = `Spot-on! Sidste bryg ramte ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Kværn er i Golden Zone på ${baseSetting.toFixed(1).replace('.0', '')}.`;
+      } else if (Math.abs(deltaT) <= toleranceSec && taste === 'sour') {
+        reason = 'dial_in_adjustment';
+        dialInOffsetSteps = -1.0;
+        const targetNum = Math.max(0.5, baseSetting - 1.0);
+        explanation = `Tiden ramte ${actualTime.toFixed(1)}s, men smagen var syrlig (under-ekstraheret). Juster -1 trin finere til ${targetNum.toFixed(1).replace('.0', '')} for højere ekstraktion.`;
+      } else if (Math.abs(deltaT) <= toleranceSec && taste === 'bitter') {
+        reason = 'dial_in_adjustment';
+        dialInOffsetSteps = 1.0;
+        const targetNum = baseSetting + 1.0;
+        explanation = `Tiden ramte ${actualTime.toFixed(1)}s, men smagen var bitter (over-ekstraheret). Juster +1 trin grovere til ${targetNum.toFixed(1).replace('.0', '')} for renere sødme.`;
+      } else if (Math.abs(deltaT) <= toleranceSec && taste === 'watery') {
+        reason = 'dial_in_adjustment';
+        dialInOffsetSteps = -0.5;
+        const targetNum = Math.max(0.5, baseSetting - 0.5);
+        explanation = `Tiden ramte ${actualTime.toFixed(1)}s, men koppen var tynd/vandet. Juster -0.5 trin finere til ${targetNum.toFixed(1).replace('.0', '')} for mere krop.`;
       } else {
-        const rawSteps = Math.abs(deltaT) / kEff;
+        const rawSteps = Math.min(6.0, Math.abs(deltaT) / effectiveSlope);
         const steps = Math.max(0.5, Math.round(rawSteps * 2) / 2);
         reason = 'dial_in_adjustment';
 
-        if (deltaT > 2.0) {
+        if (deltaT > toleranceSec) {
           // Ran slow (e.g. 41s vs 25s) -> coarser (+)
           dialInOffsetSteps = steps;
           const targetNum = baseSetting + steps;
-          explanation = `Sidste skud tog ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Juster +${steps} trin grovere til ${targetNum.toFixed(1).replace('.0', '')} for hurtigere flow.`;
+          explanation = `Sidste bryg tog ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Juster +${steps} trin grovere til ${targetNum.toFixed(1).replace('.0', '')} for hurtigere flow.`;
         } else {
           // Ran fast (e.g. 18s vs 25s) -> finer (-)
           dialInOffsetSteps = -steps;
           const targetNum = Math.max(0.5, baseSetting - steps);
-          explanation = `Sidste skud tog ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Juster -${steps} trin finere til ${targetNum.toFixed(1).replace('.0', '')} for mere modstand.`;
+          explanation = `Sidste bryg tog ${actualTime.toFixed(1)}s (mål ~${targetT.toFixed(0)}s). Juster -${steps} trin finere til ${targetNum.toFixed(1).replace('.0', '')} for mere modstand.`;
         }
       }
     }

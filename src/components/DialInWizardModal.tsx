@@ -52,6 +52,9 @@ interface DialInWizardModalProps {
   drink: DrinkRecipe;
   currentBean: CoffeeBeanProfile;
   currentGrinder: GrinderProfile;
+  activeGrindSetting?: string;
+  activeDoseGrams?: number;
+  activeTargetYieldGrams?: number;
   availableGrinders?: GrinderProfile[];
   allGrinders?: GrinderProfile[];
   allBeans?: CoffeeBeanProfile[];
@@ -79,6 +82,9 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   drink,
   currentBean,
   currentGrinder,
+  activeGrindSetting,
+  activeDoseGrams,
+  activeTargetYieldGrams,
   availableGrinders = [],
   allGrinders = [],
   allBeans = [],
@@ -110,9 +116,9 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     currentBean ||
     beanPool[0];
 
-  // Grinder selection state: defaults to bean's dialed grinder or current bar grinder
+  // Grinder selection state: defaults to current active bar grinder
   const [selectedGrinderName, setSelectedGrinderName] = useState<string>(() => {
-    const raw = activeBean.grinderName || currentGrinder.name;
+    const raw = currentGrinder.name || activeBean.grinderName;
     const res = resolveGrinder(raw, pool);
     return res?.name || raw;
   });
@@ -129,7 +135,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     ? (setupGrinders.some((g) => g.name === activeGrinder.name)
         ? setupGrinders
         : [activeGrinder, ...setupGrinders])
-    : pool.slice(0, 4);
+    : [activeGrinder];
 
   // Active machine or filter brewer depending on drink method
   const isFilter = drink.method === 'pour_over';
@@ -143,9 +149,9 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     activeMachineOrBrewer
   );
 
-  const initialDose = savedCalibration?.doseGrams || activeBean.doseGrams || drink.defaultDoseGrams || 18.0;
-  const initialYield = savedCalibration?.targetYieldGrams || (activeBean.doseGrams ? Math.round(activeBean.doseGrams * drink.targetRatio * 10) / 10 : drink.targetYieldGrams) || 36.0;
-  const initialGrind = savedCalibration?.grindSetting || activeBean.grindSetting || activeGrinder.defaultSetting || '15';
+  const initialDose = activeDoseGrams ?? savedCalibration?.doseGrams ?? activeBean.doseGrams ?? drink.defaultDoseGrams ?? 18.0;
+  const initialYield = activeTargetYieldGrams ?? savedCalibration?.targetYieldGrams ?? (activeBean.doseGrams ? Math.round(activeBean.doseGrams * drink.targetRatio * 10) / 10 : drink.targetYieldGrams) ?? 36.0;
+  const initialGrind = activeGrindSetting || savedCalibration?.grindSetting || activeBean.grindSetting || activeGrinder.defaultSetting || '15';
   const initialTemp = savedCalibration?.brewTempC || activeBean.brewTempC || getRecommendedBrewTemp(activeBean.roastLevel);
 
   const [doseGrams, setDoseGrams] = useState<number>(initialDose);
@@ -158,7 +164,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setSelectedBeanId(currentBean.id);
-      const raw = currentBean.grinderName || currentGrinder.name;
+      const raw = currentGrinder.name || currentBean.grinderName;
       const res = resolveGrinder(raw, pool);
       setSelectedGrinderName(res?.name || raw);
 
@@ -170,9 +176,9 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
         effMachineOrBrewer
       );
 
-      const effDose = cal?.doseGrams || currentBean.doseGrams || drink.defaultDoseGrams || 18.0;
-      const effYield = cal?.targetYieldGrams || (currentBean.doseGrams ? Math.round(currentBean.doseGrams * drink.targetRatio * 10) / 10 : drink.targetYieldGrams) || 36.0;
-      const effGrind = cal?.grindSetting || currentBean.grindSetting || currentGrinder.defaultSetting || '15';
+      const effDose = activeDoseGrams ?? cal?.doseGrams ?? currentBean.doseGrams ?? drink.defaultDoseGrams ?? 18.0;
+      const effYield = activeTargetYieldGrams ?? cal?.targetYieldGrams ?? (currentBean.doseGrams ? Math.round(currentBean.doseGrams * drink.targetRatio * 10) / 10 : drink.targetYieldGrams) ?? 36.0;
+      const effGrind = activeGrindSetting || cal?.grindSetting || currentBean.grindSetting || currentGrinder.defaultSetting || '15';
       const effTemp = cal?.brewTempC || currentBean.brewTempC || getRecommendedBrewTemp(currentBean.roastLevel);
 
       setDoseGrams(effDose);
@@ -184,6 +190,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
   }, [
     isOpen,
     drink.id,
+    drink.method,
     drink.defaultDoseGrams,
     drink.targetYieldGrams,
     drink.targetRatio,
@@ -197,6 +204,11 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     currentBean.roastLevel,
     currentGrinder.name,
     currentGrinder.defaultSetting,
+    activeGrindSetting,
+    activeDoseGrams,
+    activeTargetYieldGrams,
+    machineName,
+    filterBrewer,
   ]);
 
   if (!isOpen) return null;
@@ -581,72 +593,52 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
 
         {/* STEP 2: Grinder & Grind Setting for this Bean */}
         <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#FAF7F2] border border-[#E8DFD5] space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5" /> Step 2: Grinder & Setting for Bean
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-mono uppercase font-bold text-[#C26D52] tracking-wider flex items-center gap-1.5 shrink-0">
+              <Target className="w-3.5 h-3.5" /> Step 2: Grinder & Setting
             </span>
-            <span className="text-[10px] font-mono text-[#7A6E65]">
-              {activeGrinder.name.split(' ')[0]} ({activeGrinder.stepUnit || 'micro-steps'})
+            <span className="text-[10px] font-mono font-bold text-[#2C2018] bg-white px-2 py-0.5 rounded-md border border-[#E8DFD5] truncate">
+              {activeGrinder.name}
             </span>
           </div>
 
-          {/* Grinder selector from setup / library */}
-          <div className="space-y-1.5 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
-            <div className="flex items-center justify-between text-[10px] font-mono">
-              <span className="text-[#7A6E65] uppercase font-bold">
-                Select Grinder for this Bean:
-              </span>
-              <span className="text-[#C26D52] font-bold">
-                Selected: {activeGrinder.name.split(' ')[0]}
-              </span>
-            </div>
+          {/* Grinder selector from personal setup (Only shown as switcher when multiple grinders are in user's setup) */}
+          {displayGrinders.length > 1 && (
+            <div className="space-y-1.5 bg-white p-2.5 rounded-xl border border-[#E8DFD5]">
+              <div className="flex items-center justify-between text-[10px] font-mono">
+                <span className="text-[#7A6E65] uppercase font-bold">
+                  Select Grinder in Setup:
+                </span>
+                <span className="text-[#C26D52] font-bold">
+                  {activeGrinder.name}
+                </span>
+              </div>
 
-            {/* Tactile chips of grinders in setup */}
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
-              {displayGrinders.map((g) => {
-                const isSelected = g.name === activeGrinder.name;
-                return (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => handleSelectGrinder(g)}
-                    className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono font-medium transition flex items-center gap-1.5 cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-xs ring-1 ring-[#C26D52]'
-                        : 'bg-[#FAF7F2] hover:bg-[#E8DFD5]/50 text-[#7A6E65] border-[#E8DFD5]'
-                    }`}
-                  >
-                    {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#C26D52]" />}
-                    <span className="font-semibold">{g.name}</span>
-                    <span className="text-[9px] opacity-75">
-                      ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
-                    </span>
-                  </button>
-                );
-              })}
-
-              {/* If there are more grinders in the full library */}
-              {pool.length > displayGrinders.length && (
-                <div className="w-full pt-1">
-                  <select
-                    value={activeGrinder.name}
-                    onChange={(e) => {
-                      const found = pool.find((g) => g.name === e.target.value);
-                      if (found) handleSelectGrinder(found);
-                    }}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-[#E8DFD5] bg-[#FAF7F2] text-[11px] font-mono text-[#2C2018] focus:outline-hidden"
-                  >
-                    <option value="" disabled>Or select from all grinders in library...</option>
-                    {pool.map((g) => (
-                      <option key={g.id} value={g.name}>
-                        {g.name} ({g.type === 'stepless' ? 'Stepless' : 'Stepped'}, {g.stepUnit})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {displayGrinders.map((g) => {
+                  const isSelected = g.name === activeGrinder.name;
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => handleSelectGrinder(g)}
+                      className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono font-medium transition flex items-center gap-1.5 cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-xs ring-1 ring-[#C26D52]'
+                          : 'bg-[#FAF7F2] hover:bg-[#E8DFD5]/50 text-[#7A6E65] border-[#E8DFD5]'
+                      }`}
+                    >
+                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#C26D52]" />}
+                      <span className="font-semibold">{g.name}</span>
+                      <span className="text-[9px] opacity-75">
+                        ({g.type === 'stepless' ? 'Stepless' : 'Stepped'})
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {(() => {
             const isDualZoneBaratza =
@@ -692,8 +684,8 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               maxSetting: effectiveMax,
               espressoMaxSetting: effectiveEspressoMax,
             });
-            const anchor = getAnchorForBean(activeBean.id, grinderIdentifier, machineName);
-            const refAnchor = getLatestAnchorForGrinder(grinderIdentifier, machineName);
+            const anchor = getAnchorForBean(activeBean.id, grinderIdentifier, activeMachineOrBrewer);
+            const refAnchor = getLatestAnchorForGrinder(grinderIdentifier, activeMachineOrBrewer);
 
             const allShots = loadShots();
             const lastShotForDrink = allShots.find(
@@ -705,18 +697,25 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
               (s) => !s.isOcrAnomaly && (s.drinkId === drink.id || s.drinkName?.toLowerCase() === drink.name.toLowerCase())
             );
 
+            const targetTimeSecs = calculateTargetExtractionTime(
+              doseGrams,
+              targetYieldGrams,
+              isFilter ? 'pour_over' : 'espresso',
+              drink.expectedTimeSeconds
+            );
+
             const aiPred = predictOptimalGrindSetting({
               grinderProfile: profile,
               activeBean: activeBean,
               anchor,
               referenceAnchorForGrinder: refAnchor,
               currentSetting: grindSetting,
-              machineName,
+              machineName: activeMachineOrBrewer,
               lastShot: lastShotForDrink ? {
                 grindSetting: lastShotForDrink.grindSetting,
                 totalTimeSeconds: lastShotForDrink.totalTimeSeconds,
-                targetTimeSeconds: drink.expectedTimeSeconds || 27.0,
-                actualYieldGrams: lastShotForDrink.actualYieldGrams,
+                targetTimeSeconds: targetTimeSecs,
+                actualYieldGrams: lastShotForDrink.correctedYieldGrams ?? lastShotForDrink.actualYieldGrams,
                 channelingDetected: Boolean(lastShotForDrink.channelingDetected || (typeof lastShotForDrink.channeling === 'object' && lastShotForDrink.channeling?.detected)),
                 channeling: lastShotForDrink.channeling,
                 tasteRating: lastShotForDrink.tasteRating,
@@ -738,6 +737,7 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
                   aiSuggestedSetting={hasAiTarget ? aiPred.formattedSetting : undefined}
                   isAlreadyAdjusted={isAtAiTarget}
                   showAiSuggestion={false}
+                  hideHeader={true}
                 />
 
                 {/* AI Adaptive Intelligence Recommendation Card */}

@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.17] - 2026-11-01
+### Etape 96: Komplet Shot Cockpit Optimering, Udtræks-Bundmenu & Lukket Kværn/Udstyrs-Sync Loop
+- **100% Synlige Start & Stop Shot Knapper i Shot Mode ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [FlowChart.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FlowChart.tsx)):**
+  - Forankret `ScaleMonitor` præcist under `#app-header` (`top: var(--app-header-height)`) med plads i bunden til udtræks-håndtaget, så intet indhold dækkes af header eller bundmenu.
+  - Opdateret `FlowChart` i `compact` mode til altid at vise det kompakte koordinatsystem (`height = 130`, `min-h-[70px] max-h-[115px]`) i stedet for den høje empty-state boks, så `[Tare (0.0g)] + [▶ START SHOT]` i standby og `[■ STOP SHOT] + [↺ Afbryd]` under brygning altid er 100% synlige på skærmen.
+- **Udtræks-Bundmenu med Håndtag (Kun i Shot Mode) & Bund-Sync Panel ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx) & [ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Når man er i Shot Mode (`activeTab === 'monitor'`), glider bundmenuen automatisk ned (`translate-y-full`) og efterlader et diskret `[ ⎯⎯ Menu ▲/▼ ]` håndtag i bunden, der kan trækkes op/ned med fingeren eller trykkes på. På alle øvrige faner er bundmenuen fast synlig som normalt.
+  - Tilføjet dedikeret **Dial-In & Equipment Sync Status Panel** nederst i Shot Cockpit med mål-opskrift & tid (`17g → 34g • ~25s • 93°C`), aktiv maskine/brygger + kværn, `✓ SYNC: {grindSetting}` badge samt 1-tap `[🎚️ Dial-In]` genvej.
+- **Optimeret 1-Linjes Kamera-Værktøjslinje & Fjernelse af Tap-Markør ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx)):**
+  - Konsolideret kamera-værktøjerne fra 3 rækker til én slank 1-linjes bjælke lige under søgeren: `[1.0x | 1.8x | 2.5x]` • `[▭ Smal/Bred]` • `[LED/LCD]` • `[⚡]` • `[🧪 Lab]` • `[⏹ Stop / 📷 Start]`. Fjernet de misvisende `Calibrate Scale` og `Focus Lock` knapper.
+  - Fjernet den flydende grønne tap-firkant (`tapFeedback`) ved tryk på kamerabilledet, så kun det faste center-sigtekorn (`{ x: 0.5, y: 0.5 }`) vises.
+- **Lukket Kværn- & Udstyrs-Synkronisering på Tværs af Hele Appen ([App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx), [storage.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/storage.ts), [DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx), [DrinkSelector.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DrinkSelector.tsx), [TactileGrindDial.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/TactileGrindDial.tsx), [ShotSummaryModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ShotSummaryModal.tsx), [grindIntelligence.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/grindIntelligence.ts), [fleetTelemetry.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/fleetTelemetry.ts)):**
+  - Etableret `commitMasterDialIn` i `App.tsx` som Single Source of Truth, der synkroniserer `grindSetting`, `doseGrams`, `targetYieldGrams` og `grinderName` på tværs af sammensatte nøgler (`bean__drink__grinder__machine`), legacy-nøgler og bønne-profiler.
+  - Fjernet gammel nødløsning i `App.tsx`, der tvang `Baratza Encore ESP Pro` over på `Baratza Encore ESP`, fjernet dobbelt-dropdown i `DialInWizardModal` Trin 2, og gjort enhedsvisningen (`Micro` / `Macro` / `Step`) i `TactileGrindDial` ren uden afskæring (`MI...`).
+  - Opgraderet `ShotSummaryModal` og `predictOptimalGrindSetting` til at forene Espresso og Pour Over samt smagsbedømmelse (`Balanced`, `Sour`, `Bitter`, `Watery`) og optisk fejlsikring (`isOcrAnomaly`), så både brugerens lokale kværnprofil og Admin Hub Fleet Telemetry kun lærer af verificerede bryg.
+
 ## [1.21.16] - 2026-10-31
 ### Etape 95: Forenet Zero-Scroll Scale Cockpit & Optisk Målefejls-Rapportering
 - **Forenet, Urokkeligt Scale Cockpit (Zero-Scroll & Nul Modal-Hop) ([ScaleMonitor.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/ScaleMonitor.tsx) & [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**

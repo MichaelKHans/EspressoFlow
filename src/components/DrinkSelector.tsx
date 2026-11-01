@@ -62,6 +62,7 @@ interface DrinkSelectorProps {
   currentBean: CoffeeBeanProfile;
   currentGrinder: GrinderProfile;
   activeDrinkId: string;
+  grindSetting?: string;
   machineName?: string;
   doseGrams?: number;
   targetYieldGrams?: number;
@@ -89,6 +90,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   currentBean,
   currentGrinder,
   activeDrinkId,
+  grindSetting: propGrindSetting,
   machineName,
   doseGrams,
   targetYieldGrams,
@@ -269,6 +271,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
   const savedDrinkSetting =
     savedCalibration?.grindSetting ||
     drinkGrinds[calibrationKey] ||
+    propGrindSetting ||
     lastShotForDrink?.grindSetting ||
     lastShotForBean?.grindSetting ||
     currentBean.grindSetting ||
@@ -289,6 +292,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     const setting =
       cal?.grindSetting ||
       drinkGrinds[key] ||
+      propGrindSetting ||
       lastShotForDrink?.grindSetting ||
       lastShotForBean?.grindSetting ||
       currentBean.grindSetting ||
@@ -303,6 +307,7 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
     machineName,
     filterBrewer,
     drinkGrinds,
+    propGrindSetting,
     lastShotForDrink?.grindSetting,
     lastShotForBean?.grindSetting,
     currentBean.grindSetting,

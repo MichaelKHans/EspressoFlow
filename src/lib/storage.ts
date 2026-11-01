@@ -130,8 +130,10 @@ export function saveShot(shot: ShotRecord): void {
       localStorage.setItem(STORAGE_KEYS.SHOTS, JSON.stringify(pruned));
     }
 
-    // Fire-and-forget compact fleet shot telemetry
-    void recordShotFleetTelemetry(shot);
+    // Fire-and-forget compact fleet shot telemetry (only for valid, non-glitch shots)
+    if (!shot.isOcrAnomaly) {
+      void recordShotFleetTelemetry(shot);
+    }
   } catch (err) {
     console.error('Failed to save shot record', err);
   }
@@ -151,18 +153,35 @@ export function deleteShot(shotId: string): ShotRecord[] {
 
 export function resolveGrinder(name: string | undefined, grinders: GrinderProfile[]): GrinderProfile | undefined {
   if (!name || grinders.length === 0) return undefined;
-  // 1. Exact match
-  const exact = grinders.find((g) => g.name.toLowerCase() === name.toLowerCase());
+  const trimmed = name.trim().toLowerCase();
+
+  // 1. Exact match by name or id (prioritizing grinders inSetup if duplicates exist)
+  const exactInSetup = grinders.find(
+    (g) => g.inSetup && (g.name.toLowerCase() === trimmed || g.id.toLowerCase() === trimmed)
+  );
+  if (exactInSetup) return exactInSetup;
+
+  const exact = grinders.find((g) => g.name.toLowerCase() === trimmed || g.id.toLowerCase() === trimmed);
   if (exact) return exact;
 
-  // 2. Prefix or substring match (e.g. "Eureka Mignon Specialita" matches "Eureka Mignon Specialita 16CR")
+  // 2. Prefix match among active setup grinders first (prevents switching away from user's active Pro/non-Pro model)
+  const setupPool = grinders.filter((g) => g.inSetup);
+  const prefixInSetup = setupPool.find(
+    (g) => g.name.toLowerCase().startsWith(trimmed) || trimmed.startsWith(g.name.toLowerCase())
+  );
+  if (prefixInSetup) return prefixInSetup;
+
+  // 3. Prefix match across all grinders
   const prefix = grinders.find(
-    (g) => g.name.toLowerCase().startsWith(name.toLowerCase()) || name.toLowerCase().startsWith(g.name.toLowerCase())
+    (g) => g.name.toLowerCase().startsWith(trimmed) || trimmed.startsWith(g.name.toLowerCase())
   );
   if (prefix) return prefix;
 
-  // 3. First brand word match (e.g. "Eureka", "DF64", "Baratza", "Niche", "Varia")
-  const firstWord = name.split(' ')[0].toLowerCase();
+  // 4. First brand word match (prioritizing active setup grinders)
+  const firstWord = trimmed.split(' ')[0];
+  const brandInSetup = setupPool.find((g) => g.name.toLowerCase().startsWith(firstWord));
+  if (brandInSetup) return brandInSetup;
+
   const brandMatch = grinders.find((g) => g.name.toLowerCase().startsWith(firstWord));
   return brandMatch;
 }
@@ -255,6 +274,17 @@ export function loadGrinders(): GrinderProfile[] {
         existingPro.stepUnit = 'micro-steps (1-40 espresso / 41-60 filter)';
         needsSave = true;
       }
+    }
+
+    // Deduplicate Baratza Encore ESP vs ESP Pro if both were unintentionally marked inSetup by legacy migration
+    const existingNonPro = grinders.find(
+      (g) => g.id === 'grinder-baratza-esp' || g.name === 'Baratza Encore ESP'
+    );
+    const baratzaDedupFlag = localStorage.getItem('flowbean_baratza_dedup_v1');
+    if (!baratzaDedupFlag && existingPro?.inSetup && existingNonPro?.inSetup) {
+      existingNonPro.inSetup = false;
+      localStorage.setItem('flowbean_baratza_dedup_v1', 'true');
+      needsSave = true;
     }
 
     // Comprehensive dial-in specification backfill for ALL saved grinders

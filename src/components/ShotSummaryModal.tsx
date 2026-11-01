@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import type { ShotRecord, TasteRating, TempUnit } from '../types/espresso';
 import { FlowChart } from './FlowChart';
-import { generateDialInAdvice, type DialInAdvice, formatTemperature, calculatePuckIntegrity } from '../lib/espressoMath';
+import { generateDialInAdvice, type DialInAdvice, formatTemperature, calculatePuckIntegrity, calculateTargetExtractionTime } from '../lib/espressoMath';
+import {
+  loadOrCreateGrinderProfile,
+  getAnchorForBean,
+  getLatestAnchorForGrinder,
+  resolveGrinder,
+  loadGrinders,
+  loadBeans,
+} from '../lib/storage';
+import { predictOptimalGrindSetting } from '../lib/grindIntelligence';
 import {
   CheckCircle,
   AlertCircle,
@@ -77,9 +86,10 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
     onUpdateShot(updated);
   };
 
+  const effectiveYieldGrams = shot.correctedYieldGrams ?? shot.actualYieldGrams;
   const ratio =
     shot.doseGrams > 0
-      ? (shot.actualYieldGrams / shot.doseGrams).toFixed(1)
+      ? (effectiveYieldGrams / shot.doseGrams).toFixed(1)
       : '2.0';
 
   const dateStr = new Date(shot.timestamp).toLocaleTimeString([], {
@@ -87,10 +97,21 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
     minute: '2-digit',
   });
 
+  const matchingRecipe = DRINK_RECIPES.find(
+    (d) => d.id === shot.drinkId || d.name.toLowerCase() === (shot.drinkName || '').toLowerCase()
+  );
+  const isPourOver = shot.method === 'pour_over' || matchingRecipe?.method === 'pour_over';
+  const targetSec = calculateTargetExtractionTime(
+    shot.doseGrams,
+    shot.targetYieldGrams || effectiveYieldGrams,
+    isPourOver ? 'pour_over' : 'espresso',
+    matchingRecipe?.expectedTimeSeconds
+  );
+
   const advice: DialInAdvice = generateDialInAdvice(
     shot.totalTimeSeconds,
     shot.doseGrams,
-    shot.actualYieldGrams,
+    effectiveYieldGrams,
     shot.channeling || shot.channelingDetected,
     selectedTaste || undefined,
     shot.preInfusionSeconds,
@@ -98,6 +119,56 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
     shot.grinderName,
     shot.grindSetting
   );
+
+  // Unified AI Grind Intelligence Prediction (Matches DrinkSelector & DialInWizardModal 100%)
+  const allGrinders = loadGrinders();
+  const resolvedGrinder = resolveGrinder(shot.grinderName, allGrinders) || allGrinders[0] || {
+    id: 'default',
+    name: shot.grinderName || 'Baratza Encore ESP Pro',
+    type: 'stepped' as const,
+    defaultSetting: '15',
+    stepUnit: 'steps',
+  };
+  const grinderProfile = loadOrCreateGrinderProfile(resolvedGrinder.name, {
+    type: resolvedGrinder.type,
+    minSetting: resolvedGrinder.minSetting,
+    maxSetting: resolvedGrinder.maxSetting,
+    espressoMaxSetting: resolvedGrinder.espressoMaxSetting,
+  });
+  const matchingBean = loadBeans().find(
+    (b) => b.name.toLowerCase() === (shot.coffeeName || '').toLowerCase()
+  );
+  const activeMachineOrBrewer = isPourOver ? shot.filterBrewer : shot.machineName;
+  const anchor = matchingBean
+    ? getAnchorForBean(matchingBean.id, resolvedGrinder.name, activeMachineOrBrewer)
+    : undefined;
+  const refAnchor = getLatestAnchorForGrinder(resolvedGrinder.name, activeMachineOrBrewer);
+
+  const aiPrediction = predictOptimalGrindSetting({
+    grinderProfile,
+    activeBean: {
+      id: matchingBean?.id || 'shot_bean',
+      name: shot.coffeeName || matchingBean?.name || 'Coffee',
+      roaster: shot.roaster || matchingBean?.roaster,
+      roastDate: matchingBean?.roastDate || new Date().toISOString().split('T')[0],
+      roastLevel: shot.roastLevel || matchingBean?.roastLevel || 'medium',
+      grindSetting: shot.grindSetting,
+    },
+    anchor,
+    referenceAnchorForGrinder: refAnchor,
+    currentSetting: shot.grindSetting,
+    machineName: activeMachineOrBrewer,
+    lastShot: {
+      grindSetting: shot.grindSetting,
+      totalTimeSeconds: shot.totalTimeSeconds,
+      targetTimeSeconds: targetSec,
+      actualYieldGrams: effectiveYieldGrams,
+      channelingDetected: shot.channelingDetected,
+      channeling: shot.channeling,
+      tasteRating: selectedTaste || undefined,
+      isOcrAnomaly: shot.isOcrAnomaly,
+    },
+  });
 
   const tasteOptions: { key: TasteRating; label: string; desc: string; activeColor: string }[] = [
     {
@@ -127,8 +198,9 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
   ];
 
   const isChanneling = Boolean(shot.channelingDetected || (typeof shot.channeling === 'object' && shot.channeling.detected));
-  const isFast = shot.totalTimeSeconds < 24.0 || advice.grindAdvice === 'finer';
-  const isSlow = !isFast && (shot.totalTimeSeconds > 32.0 || advice.grindAdvice === 'coarser');
+  const effectiveDirection = shot.isOcrAnomaly ? 'keep' : aiPrediction.direction;
+  const isFast = !shot.isOcrAnomaly && (effectiveDirection === 'finer' || (!isPourOver && shot.totalTimeSeconds < targetSec - 2.0) || (isPourOver && shot.totalTimeSeconds < targetSec - 12.0));
+  const isSlow = !shot.isOcrAnomaly && !isFast && (effectiveDirection === 'coarser' || (!isPourOver && shot.totalTimeSeconds > targetSec + 2.0) || (isPourOver && shot.totalTimeSeconds > targetSec + 12.0));
   const isSurgeOnly = isChanneling && !isFast && !isSlow;
   const isGood = !isFast && !isSlow && !isSurgeOnly;
 
@@ -138,15 +210,10 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
     shot.averageFlowGps
   );
 
-  const currentGrindNum = parseFloat(shot.grindSetting);
-  let nextSettingStr: string | null = advice.targetGrindSetting || null;
-  if (!nextSettingStr && !isNaN(currentGrindNum) && advice.grindDeltaSteps > 0) {
-    if (advice.grindAdvice === 'finer') {
-      nextSettingStr = (Math.max(0, currentGrindNum - advice.grindDeltaSteps)).toFixed(1).replace('.0', '');
-    } else if (advice.grindAdvice === 'coarser') {
-      nextSettingStr = (currentGrindNum + advice.grindDeltaSteps).toFixed(1).replace('.0', '');
-    }
-  }
+  const nextSettingStr: string | null =
+    !shot.isOcrAnomaly && effectiveDirection !== 'keep'
+      ? aiPrediction.formattedSetting
+      : null;
 
   const handleApplyGrind = (newSetting: string) => {
     if (onApplyGrindSetting) {
@@ -287,7 +354,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
             </div>
 
             <p className="text-xs text-[#2C2018]/90 mt-2.5 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-[#E8DFD5]">
-              {advice.rationale}
+              {aiPrediction.explanation || advice.rationale}
             </p>
 
             {/* AI Learning Paused Shield Alert (Protects Grinder Profile against Channeling Spikes) */}
@@ -315,17 +382,19 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
                   {t('shotsummary.grinder_adjustment')}
                 </span>
                 <span className="text-sm font-bold text-[#C26D52]">
-                  {advice.grindAdvice === 'finer' && nextSettingStr
+                  {shot.isOcrAnomaly
+                    ? (language === 'da' ? `Optisk fejl markeret • Behold ${shot.grindSetting}` : `Optical glitch flagged • Keep ${shot.grindSetting}`)
+                    : effectiveDirection === 'finer' && nextSettingStr
                     ? (t('logbook.dialin_finer', { from: shot.grindSetting, to: nextSettingStr }) || `Adjust grinder FINER: ${shot.grindSetting} ➔ ${nextSettingStr}`)
-                    : advice.grindAdvice === 'coarser' && nextSettingStr
+                    : effectiveDirection === 'coarser' && nextSettingStr
                     ? (t('logbook.dialin_coarser', { from: shot.grindSetting, to: nextSettingStr }) || `Adjust grinder COARSER: ${shot.grindSetting} ➔ ${nextSettingStr}`)
-                    : advice.grindAdvice === 'keep'
+                    : effectiveDirection === 'keep'
                     ? (t('logbook.dialin_keep', { setting: shot.grindSetting }) || `Keep grinder at ${shot.grindSetting} (optimal)`)
                     : advice.grinderSpecificAdvice || 'Keep grinder setting • Improve puck prep'}
                 </span>
               </div>
 
-              {onApplyGrindSetting && nextSettingStr && advice.grindAdvice !== 'keep' && !isChanneling && (
+              {onApplyGrindSetting && nextSettingStr && effectiveDirection !== 'keep' && !isChanneling && !shot.isOcrAnomaly && (
                 <button
                   type="button"
                   onClick={() => handleApplyGrind(nextSettingStr!)}
@@ -360,7 +429,7 @@ export const ShotSummaryModal: React.FC<ShotSummaryModalProps> = ({
                   {t('shotsummary.metric_yield')}
                 </span>
                 <div className="text-xl sm:text-2xl font-bold text-[#2C2018] tracking-tight">
-                  {shot.actualYieldGrams.toFixed(1)}<span className="text-xs font-normal text-[#7A6E65]">g</span>
+                  {effectiveYieldGrams.toFixed(1)}<span className="text-xs font-normal text-[#7A6E65]">g</span>
                 </div>
                 <span className="text-[10px] text-[#A6998E] block">
                   {t('shotsummary.metric_in_time', { time: shot.totalTimeSeconds.toFixed(1) })}

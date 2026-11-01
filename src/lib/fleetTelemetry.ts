@@ -65,16 +65,21 @@ export async function recordShotFleetTelemetry(
   options?: { aiPredictedTimeS?: number; userOverrideDelta?: number }
 ): Promise<void> {
   if (!isFleetTelemetryOptedIn()) return;
-  if (!shot.doseGrams || !shot.actualYieldGrams || !shot.totalTimeSeconds) return;
+  if (shot.isOcrAnomaly) return; // Never pollute fleet consensus or Admin Hub with flagged OCR glitches!
+  const effectiveYield = shot.correctedYieldGrams ?? shot.actualYieldGrams;
+  if (!shot.doseGrams || !effectiveYield || !shot.totalTimeSeconds) return;
 
-  const machineName = shot.machineName || 'Unknown Machine';
+  const isPourOver = shot.method === 'pour_over';
+  const machineName = isPourOver
+    ? (shot.filterBrewer || shot.machineName || 'Unknown Filter Brewer')
+    : (shot.machineName || 'Unknown Machine');
   const grinderName = shot.grinderName || 'Unknown Grinder';
   const machineKey = toGearKey(machineName);
   const grinderKey = toGearKey(grinderName);
 
   const physics = resolveBrewPhysics({
     machineName,
-    filterBrewer: (shot as any).filterBrewer,
+    filterBrewer: shot.filterBrewer,
   });
 
   const machineProfile = getMachineTempProfile(machineName);
@@ -88,12 +93,12 @@ export async function recordShotFleetTelemetry(
     physicsClass: physics,
     basketDiameterMm,
     doseG: Math.round(shot.doseGrams * 100) / 100,
-    yieldG: Math.round(shot.actualYieldGrams * 100) / 100,
+    yieldG: Math.round(effectiveYield * 100) / 100,
     brewTimeS: Math.round(shot.totalTimeSeconds * 10) / 10,
     preInfusionS: shot.preInfusionSeconds ? Math.round(shot.preInfusionSeconds * 10) / 10 : undefined,
     grindSetting: shot.grindSetting || '15.0',
     flowCurve1Hz: downsampleFlowCurve1Hz(shot.dataPoints),
-    tasteRating: (shot as any).rating || (shot as any).tasteRating,
+    tasteRating: (shot as any).rating || shot.tasteRating,
     channelingDetected: Boolean(shot.channelingDetected || (shot.channeling && shot.channeling.detected)),
     aiPredictedTimeS: options?.aiPredictedTimeS,
     userOverrideDelta: options?.userOverrideDelta,

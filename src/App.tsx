@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Coffee, Sliders, BookOpen, ShieldCheck, Camera, Globe, Settings } from 'lucide-react';
+import { Coffee, Sliders, BookOpen, ShieldCheck, Camera, Globe, Settings, ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslation, type SupportedLanguage } from './i18n';
 import { ScaleMonitor } from './components/ScaleMonitor';
 import { FlowChart } from './components/FlowChart';
@@ -69,7 +69,14 @@ import {
   calculateNormalizedShotTime,
   getFactorySecondsPerStep,
 } from './lib/grindIntelligence';
-import { analyzeChanneling, analyzeExtractionDynamics, RATIO_PRESETS, ROAST_PRESETS, calculateBeanFreshness } from './lib/espressoMath';
+import {
+  analyzeChanneling,
+  analyzeExtractionDynamics,
+  RATIO_PRESETS,
+  ROAST_PRESETS,
+  calculateBeanFreshness,
+  calculateTargetExtractionTime,
+} from './lib/espressoMath';
 import { subscribeToRemoteCommands, broadcastShotVerdict } from './lib/antiLiveSync';
 import { redeemLicenseKey } from './lib/licenseEngine';
 import { GearStationView } from './components/GearStationView';
@@ -128,9 +135,8 @@ export function App() {
   const [doseGrams, setDoseGrams] = useState<number>(currentBean.doseGrams);
   const [targetYieldGrams, setTargetYieldGrams] = useState<number>(currentBean.targetYieldGrams);
   const [grinderName, setGrinderName] = useState<string>(() => {
-    const rawName = currentBean.grinderName === 'Baratza Encore ESP Pro' ? 'Baratza Encore ESP' : currentBean.grinderName;
-    const res = resolveGrinder(rawName, loadGrinders());
-    return res?.name || rawName;
+    const res = resolveGrinder(currentBean.grinderName, loadGrinders());
+    return res?.name || currentBean.grinderName;
   });
   const [grindSetting, setGrindSetting] = useState<string>(currentBean.grindSetting);
   const [machineName, setMachineName] = useState<string>(() => loadMachineName());
@@ -156,6 +162,16 @@ export function App() {
   const [isBrewing, setIsBrewing] = useState<boolean>(false);
   const [currentPoints, setCurrentPoints] = useState<ShotDataPoint[]>([]);
   const [lastFinishedShot, setLastFinishedShot] = useState<ShotRecord | null>(null);
+
+  // Slide-down bottom navigation state (Shot Mode only)
+  const [isShotNavExpanded, setIsShotNavExpanded] = useState<boolean>(false);
+  const [navTouchStartY, setNavTouchStartY] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (activeTab === 'monitor' || isBrewing) {
+      setIsShotNavExpanded(false);
+    }
+  }, [activeTab, activeMode, isBrewing]);
 
   // Modals
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
@@ -410,6 +426,115 @@ export function App() {
     setIsDialInWizardOpen(true);
   };
 
+  // Master Equipment & Grind Setting Sync (Single Source of Truth across all screens)
+  const commitMasterDialIn = useCallback(
+    (params: {
+      beanId?: string;
+      drinkId?: string;
+      doseGrams?: number;
+      targetYieldGrams?: number;
+      grindSetting: string;
+      grinderName?: string;
+      brewTempC?: number;
+    }) => {
+      const targetBeanId = params.beanId || activeBeanId;
+      const targetDrinkId = params.drinkId || activeDrinkId;
+      const targetDrink = DRINK_RECIPES.find((d) => d.id === targetDrinkId) || activeDrink;
+      const isFilter = targetDrink?.method === 'pour_over';
+      const effectiveGrinderName = params.grinderName || grinderName;
+      const effectiveDose = params.doseGrams ?? doseGrams;
+      const effectiveYield = params.targetYieldGrams ?? targetYieldGrams;
+      const activeMachineOrBrewer = isFilter ? filterBrewer : machineName;
+
+      setDoseGrams(effectiveDose);
+      setTargetYieldGrams(effectiveYield);
+      setGrindSetting(params.grindSetting);
+
+      if (params.grinderName && params.grinderName !== grinderName) {
+        setGrinderName(params.grinderName);
+      }
+
+      const multiKey = buildDrinkCalibrationKey(
+        targetBeanId,
+        targetDrinkId,
+        effectiveGrinderName,
+        activeMachineOrBrewer
+      );
+      const legacyKey = `${targetBeanId}_${targetDrinkId}`;
+
+      const calibrationPayload = {
+        doseGrams: effectiveDose,
+        targetYieldGrams: effectiveYield,
+        grindSetting: params.grindSetting,
+        brewTempC: params.brewTempC ?? currentBean.brewTempC,
+        grinderName: effectiveGrinderName,
+        machineName: !isFilter ? machineName : undefined,
+        filterBrewer: isFilter ? filterBrewer : undefined,
+      };
+
+      saveDrinkGrindSetting(legacyKey, params.grindSetting);
+      saveDrinkGrindSetting(multiKey, params.grindSetting);
+      saveDrinkCalibration(legacyKey, calibrationPayload);
+      saveDrinkCalibration(multiKey, calibrationPayload);
+
+      setBeans((prevBeans) => {
+        const updated = prevBeans.map((b) =>
+          b.id === targetBeanId
+            ? {
+                ...b,
+                doseGrams: effectiveDose,
+                targetYieldGrams: effectiveYield,
+                grindSetting: params.grindSetting,
+                grinderName: effectiveGrinderName,
+                ...(params.brewTempC ? { brewTempC: params.brewTempC } : {}),
+              }
+            : b
+        );
+        saveBeans(updated);
+        return updated;
+      });
+    },
+    [
+      activeBeanId,
+      activeDrinkId,
+      activeDrink,
+      grinderName,
+      doseGrams,
+      targetYieldGrams,
+      filterBrewer,
+      machineName,
+      currentBean.brewTempC,
+    ]
+  );
+
+  // Reactive Sync: Keep App.tsx grindSetting, doseGrams & targetYieldGrams synchronized when bean, drink, grinder or machine changes
+  useEffect(() => {
+    if (!activeBeanId || !activeDrink) return;
+    const isFilter = activeDrink.method === 'pour_over';
+    const activeMachineOrBrewer = isFilter ? filterBrewer : machineName;
+    const savedCal = resolveDrinkCalibration(activeBeanId, activeDrink.id, grinderName, activeMachineOrBrewer);
+    const legacyKey = `${activeBeanId}_${activeDrink.id}`;
+    const drinkGrinds = loadDrinkGrindSettings();
+    const multiKey = buildDrinkCalibrationKey(activeBeanId, activeDrink.id, grinderName, activeMachineOrBrewer);
+
+    if (savedCal) {
+      setDoseGrams(savedCal.doseGrams);
+      setTargetYieldGrams(savedCal.targetYieldGrams);
+      if (savedCal.grindSetting) {
+        setGrindSetting(savedCal.grindSetting);
+      }
+    } else {
+      const resolvedSetting =
+        drinkGrinds[multiKey] ||
+        drinkGrinds[legacyKey] ||
+        currentBean.grindSetting ||
+        currentGrinder.defaultSetting;
+      if (resolvedSetting) {
+        setGrindSetting(resolvedSetting);
+      }
+    }
+  }, [activeBeanId, activeDrinkId, grinderName, machineName, filterBrewer]);
+
   const handleSaveAndProceedFromWizard = (dialInData: {
     beanId?: string;
     doseGrams: number;
@@ -426,13 +551,8 @@ export function App() {
       handleSelectBean(dialInData.beanId);
     }
 
-    // 2. Update active brewing state
-    setDoseGrams(dialInData.doseGrams);
-    setTargetYieldGrams(dialInData.targetYieldGrams);
-    setGrindSetting(dialInData.grindSetting);
+    // 2. Ensure the chosen grinder is marked inSetup
     if (dialInData.grinderName) {
-      setGrinderName(dialInData.grinderName);
-      // Ensure the chosen grinder is marked inSetup
       setGrinders((prev) => {
         const found = prev.find((g) => g.name === dialInData.grinderName);
         if (found && !found.inSetup) {
@@ -446,44 +566,18 @@ export function App() {
       });
     }
 
-    // 3. Persist directly onto target bean in vault
-    const updated = beans.map((b) =>
-      b.id === targetBeanId
-        ? {
-            ...b,
-            doseGrams: dialInData.doseGrams,
-            targetYieldGrams: dialInData.targetYieldGrams,
-            grindSetting: dialInData.grindSetting,
-            ...(dialInData.brewTempC ? { brewTempC: dialInData.brewTempC } : {}),
-            ...(dialInData.grinderName ? { grinderName: dialInData.grinderName } : {}),
-          }
-        : b
-    );
-    setBeans(updated);
-    saveBeans(updated);
-
-    // 4. Save drink-specific grind setting and full calibration mapping (composite + legacy fallback)
-    const isFilter = activeDrink?.method === 'pour_over';
-    const activeMachineOrBrewer = isFilter ? filterBrewer : machineName;
-    const multiKey = buildDrinkCalibrationKey(targetBeanId, activeDrinkId, dialInData.grinderName, activeMachineOrBrewer);
-    const legacyKey = `${targetBeanId}_${activeDrinkId}`;
-
-    const calibrationPayload = {
+    // 3. Commit to master dial-in store (updates state, composite + legacy calibrations, drinkGrinds, and beans)
+    commitMasterDialIn({
+      beanId: targetBeanId,
+      drinkId: activeDrinkId,
       doseGrams: dialInData.doseGrams,
       targetYieldGrams: dialInData.targetYieldGrams,
       grindSetting: dialInData.grindSetting,
-      brewTempC: dialInData.brewTempC,
       grinderName: dialInData.grinderName,
-      machineName: !isFilter ? machineName : undefined,
-      filterBrewer: isFilter ? filterBrewer : undefined,
-    };
+      brewTempC: dialInData.brewTempC,
+    });
 
-    saveDrinkGrindSetting(legacyKey, dialInData.grindSetting);
-    saveDrinkGrindSetting(multiKey, dialInData.grindSetting);
-    saveDrinkCalibration(legacyKey, calibrationPayload);
-    saveDrinkCalibration(multiKey, calibrationPayload);
-
-    // 5. Close wizard and conditionally launch scale monitor
+    // 4. Close wizard and conditionally launch scale monitor
     setIsDialInWizardOpen(false);
     if (dialInData.launchScaleCam !== false) {
       setActiveTab('monitor');
@@ -657,11 +751,15 @@ export function App() {
 
     // Automatically persist the grind setting used for this drink & active bean so all screens stay in sync
     if (grindSetting && activeBeanId && activeDrinkId) {
-      const key = `${activeBeanId}_${activeDrinkId}`;
-      saveDrinkGrindSetting(key, grindSetting);
-      const updatedBeans = beans.map((b) => (b.id === activeBeanId ? { ...b, grindSetting } : b));
-      setBeans(updatedBeans);
-      saveBeans(updatedBeans);
+      commitMasterDialIn({
+        beanId: activeBeanId,
+        drinkId: activeDrinkId,
+        doseGrams,
+        targetYieldGrams,
+        grindSetting,
+        grinderName,
+        brewTempC: currentBean.brewTempC,
+      });
     }
 
     // Broadcast shot verdict to Antigravity PC Simulator
@@ -772,6 +870,7 @@ export function App() {
     currentBean.brewTempC,
     currentBean.roastDate,
     currentBean.roastLevel,
+    commitMasterDialIn,
   ]);
 
   const handleUpdateShot = (updatedShot: ShotRecord) => {
@@ -781,12 +880,15 @@ export function App() {
   };
 
   const handleApplyGrindAdjustment = (newSetting: string) => {
-    setGrindSetting(newSetting);
-    const key = `${activeBeanId}_${activeDrinkId}`;
-    saveDrinkGrindSetting(key, newSetting);
-    const updatedBeans = beans.map((b) => (b.id === activeBeanId ? { ...b, grindSetting: newSetting } : b));
-    setBeans(updatedBeans);
-    saveBeans(updatedBeans);
+    commitMasterDialIn({
+      beanId: activeBeanId,
+      drinkId: activeDrinkId,
+      doseGrams,
+      targetYieldGrams,
+      grindSetting: newSetting,
+      grinderName,
+      brewTempC: currentBean.brewTempC,
+    });
   };
 
   const handleDeleteShot = (shotId: string) => {
@@ -1123,6 +1225,7 @@ export function App() {
                 machineName={machineName}
                 doseGrams={doseGrams}
                 targetYieldGrams={targetYieldGrams}
+                grindSetting={grindSetting}
                 shots={shots}
                 allBeans={beans}
                 filterBrewer={filterBrewer}
@@ -1132,7 +1235,7 @@ export function App() {
                 onLaunchScaleCam={handleLaunchScaleCam}
                 onOpenDialInWizard={handleOpenDialInWizard}
                 onOpenBeanVault={() => setActiveMode('beandex')}
-                onGrindSettingChange={setGrindSetting}
+                onGrindSettingChange={handleApplyGrindAdjustment}
                 onSwitchBean={handleSelectBean}
                 onScanBean={() => setIsBeanScannerOpen(true)}
                 onUpdateBeanDialIn={handleUpdateBeanField}
@@ -1141,8 +1244,11 @@ export function App() {
                 onCloseAllDrinksModal={() => setIsAllDrinksModalOpen(false)}
                 isAdminEditMode={isAdminEditMode}
                 onUpdateRecipeTarget={(dose, yieldG) => {
-                  setDoseGrams(dose);
-                  setTargetYieldGrams(yieldG);
+                  commitMasterDialIn({
+                    doseGrams: dose,
+                    targetYieldGrams: yieldG,
+                    grindSetting,
+                  });
                 }}
               />
             )}
@@ -1168,6 +1274,17 @@ export function App() {
             targetFlowRateMin={activeDrink.pourOverGuide?.flowRateMinGps || 4.0}
             targetFlowRateMax={activeDrink.pourOverGuide?.flowRateMaxGps || 6.0}
             drinkName={activeDrink.name}
+            grindSetting={grindSetting}
+            grinderName={currentGrinder.name}
+            machineName={activeDrink.method === 'pour_over' ? filterBrewer : machineName}
+            targetTimeSeconds={calculateTargetExtractionTime(
+              doseGrams,
+              targetYieldGrams,
+              activeDrink.method === 'pour_over' ? 'pour_over' : 'espresso',
+              activeDrink.expectedTimeSeconds
+            )}
+            brewTempC={currentBean.brewTempC || 93}
+            onOpenDialIn={() => setIsDialInWizardOpen(true)}
             liveChartSlot={
               <FlowChart
                 points={isBrewing ? currentPoints : (currentPoints.length > 0 ? currentPoints : (lastFinishedShot?.dataPoints || []))}
@@ -1209,8 +1326,7 @@ export function App() {
               }}
               grindSetting={grindSetting}
               setGrindSetting={(setting) => {
-                setGrindSetting(setting);
-                handleUpdateBeanField({ grindSetting: setting });
+                handleApplyGrindAdjustment(setting);
               }}
               grinders={grinders}
               setGrinders={setGrinders}
@@ -1471,6 +1587,9 @@ export function App() {
         machineName={machineName}
         filterBrewer={filterBrewer}
         tempUnit={tempUnit}
+        activeGrindSetting={grindSetting}
+        activeDoseGrams={doseGrams}
+        activeTargetYieldGrams={targetYieldGrams}
         onSelectBean={handleSelectBean}
         onProceedToScaleCam={() => {
           setIsDialInWizardOpen(false);
@@ -1530,14 +1649,72 @@ export function App() {
         currentGrinderName={currentGrinder.name}
       />
 
-      {/* Mobile Bottom Navigation Bar (Thumb-First 5-Tab Bar - Exclusively Professional Vector Icons, Zero Emojis) */}
+      {/* Mobile Bottom Navigation Bar (Thumb-First 5-Tab Bar - Slides down with Pull Handle in Shot Mode) */}
       <nav
         aria-label="Mobile Navigation Bar"
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t-2 border-[#CBB8A3] shadow-[0_-4px_24px_rgba(44,32,24,0.08)] select-none ${
-          isBrewing ? 'hidden pointer-events-none' : 'block'
+        onTouchStart={(e) => {
+          if (activeMode === 'flow' && activeTab === 'monitor') {
+            setNavTouchStartY(e.touches[0].clientY);
+          }
+        }}
+        onTouchEnd={(e) => {
+          if (activeMode === 'flow' && activeTab === 'monitor' && navTouchStartY !== null) {
+            const deltaY = e.changedTouches[0].clientY - navTouchStartY;
+            if (deltaY < -20) {
+              setIsShotNavExpanded(true);
+            } else if (deltaY > 20) {
+              setIsShotNavExpanded(false);
+            }
+            setNavTouchStartY(null);
+          }
+        }}
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FFFDF9]/95 backdrop-blur-md border-t-2 border-[#CBB8A3] shadow-[0_-4px_24px_rgba(44,32,24,0.08)] select-none transition-transform duration-300 ease-out ${
+          isBrewing
+            ? 'translate-y-full pointer-events-none opacity-0'
+            : activeMode === 'flow' && activeTab === 'monitor' && !isShotNavExpanded
+            ? 'translate-y-full'
+            : 'translate-y-0'
         }`}
         style={{ paddingBottom: 'max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))' }}
       >
+        {/* Pull Handle Tab (Active only in Shot Mode when not brewing) */}
+        {activeMode === 'flow' && activeTab === 'monitor' && !isBrewing && (
+          <button
+            type="button"
+            onClick={() => setIsShotNavExpanded((prev) => !prev)}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+              setNavTouchStartY(e.touches[0].clientY);
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              if (navTouchStartY !== null) {
+                const deltaY = e.changedTouches[0].clientY - navTouchStartY;
+                if (deltaY < -15) {
+                  setIsShotNavExpanded(true);
+                } else if (deltaY > 15) {
+                  setIsShotNavExpanded(false);
+                } else {
+                  setIsShotNavExpanded((prev) => !prev);
+                }
+                setNavTouchStartY(null);
+              } else {
+                setIsShotNavExpanded((prev) => !prev);
+              }
+            }}
+            className="absolute -top-6 left-1/2 -translate-x-1/2 px-4 h-6 rounded-t-xl bg-[#2C2018] text-[#FAF7F2] border-t border-x border-[#C26D52]/50 shadow-md flex items-center gap-1.5 text-[10px] font-mono font-bold tracking-wider uppercase cursor-pointer pointer-events-auto active:scale-95 transition"
+            title={isShotNavExpanded ? 'Skjul bundmenu' : 'Træk op eller tryk for bundmenu'}
+          >
+            <span className="w-5 h-1 rounded-full bg-[#C26D52]" />
+            <span>Menu</span>
+            {isShotNavExpanded ? (
+              <ChevronDown className="w-3.5 h-3.5 text-[#C26D52]" />
+            ) : (
+              <ChevronUp className="w-3.5 h-3.5 text-[#C26D52]" />
+            )}
+          </button>
+        )}
+
         <div className="grid grid-cols-5 w-full max-w-lg mx-auto px-1 pt-1.5 pb-1">
           {/* Tab 1: Bar */}
           <button
@@ -1545,6 +1722,7 @@ export function App() {
             onClick={() => {
               if (isBrewing) return;
               closeAllActiveModals();
+              setIsShotNavExpanded(false);
               setActiveMode('flow');
               setActiveTab('drinks');
             }}
@@ -1573,6 +1751,7 @@ export function App() {
             type="button"
             onClick={() => {
               closeAllActiveModals();
+              setIsShotNavExpanded(false);
               setActiveMode('flow');
               setActiveTab('monitor');
             }}
@@ -1599,6 +1778,7 @@ export function App() {
             onClick={() => {
               if (isBrewing) return;
               closeAllActiveModals();
+              setIsShotNavExpanded(false);
               setActiveMode('beandex');
             }}
             disabled={isBrewing}
@@ -1635,6 +1815,7 @@ export function App() {
             onClick={() => {
               if (isBrewing) return;
               closeAllActiveModals();
+              setIsShotNavExpanded(false);
               setActiveMode('flow');
               setActiveTab('logbook');
             }}
@@ -1664,6 +1845,7 @@ export function App() {
             onClick={() => {
               if (isBrewing) return;
               closeAllActiveModals();
+              setIsShotNavExpanded(false);
               setActiveMode('flow');
               setActiveTab('equipment');
             }}
