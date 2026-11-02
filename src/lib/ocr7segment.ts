@@ -86,7 +86,6 @@ const PATTERN_VARIANTS: Record<string, number[][]> = {
     [1, 1, 1, 1, 0, 1, 1], // standard 9 (with bottom bar)
     [1, 1, 1, 0, 0, 1, 1], // 9 without bottom bar
   ],
-  '-': [[0, 0, 0, 0, 0, 0, 1]],
 };
 
 // ── Zero-GC Static Memory Pool for 30 FPS Canvas Processing ──
@@ -292,19 +291,39 @@ export function binarizeROI(
     if (isDarkDigitsOnLight) {
       gray[i] = lum;
     } else {
-      // LED Mode: Coffee scales use vibrant Blue, Cyan, White or Red LEDs.
-      // Boost chromatic LED pixels while avoiding boosting flat white spotlight glare
-      const maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
-      const minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
-      const chroma = maxC - minC;
-      const boosted = maxC + (chroma >> 1);
+      // LED Mode: Coffee scales use vibrant Blue, Cyan, Green, White or Red LEDs.
+      // Boost true LED chromatic emission (cool blue/cyan/green where B>R or G>R, or saturated red where R-G > 28)
+      // while suppressing warm-grey / brownish room light reflections on matte plastic bezels (where R >= G >= B with low R-G).
+      const coolExcess = b > g ? (b > r ? b - r : 0) : (g > r ? g - r : 0);
+      const redExcess = r - g > 28 ? (r - g) - 28 : 0;
+      const boosted = lum + coolExcess + redExcess;
       gray[i] = boosted > 255 ? 255 : boosted;
     }
   }
 
   const avgLuminance = sumLuminance / numPixels;
-  const detectedPolarity: 'led' | 'lcd' = avgLuminance < 115 ? 'led' : 'lcd';
   const otsuThreshold = calculateOtsuThreshold(gray);
+
+  // Extract background level (60th percentile) and LED peak level (98th percentile)
+  // directly from the 256-bin histogram populated by calculateOtsuThreshold (O(1) time, 0 allocations)
+  const hist = ocrPool.histogram;
+  const targetP60 = Math.floor(numPixels * 0.60);
+  const targetP98 = Math.floor(numPixels * 0.98);
+  let accum = 0;
+  let p60 = 0;
+  let p98 = 0;
+  for (let t = 0; t < 256; t++) {
+    accum += hist[t];
+    if (accum >= targetP60 && p60 === 0) p60 = t;
+    if (accum >= targetP98) {
+      p98 = t;
+      break;
+    }
+  }
+
+  // Scene is only truly bright LCD/paper if background median/p60 is very bright (>175) without glowing highlights
+  const detectedPolarity: 'led' | 'lcd' =
+    avgLuminance < 145 || (p98 - p60 >= 32 && p60 < 175) ? 'led' : 'lcd';
 
   if (!useAdaptiveThreshold) {
     const threshold = isDarkDigitsOnLight
@@ -321,15 +340,20 @@ export function binarizeROI(
   // 2D Integral Image for Bradley-Roth Adaptive Thresholding
   const S = computeIntegralImage(gray, width, height);
   const sWidth = width + 1;
-  const windowRadius = Math.max(8, Math.floor(width / 14)); // adaptive window ~22px
+  const windowRadius = Math.max(8, Math.floor(width / 16)); // adaptive window ~30px
 
-  // Integer-only Bradley-Roth + Local Contrast Gate (Zero float divisions!)
+  // Percentile-anchored LED floor & core thresholds:
+  // Eliminates matte plastic frame edges (gray ~110-135) while preserving bright blooming LED cores (gray ~175-255)
+  const dynamicRange = p98 - p60;
   const minContrastDelta = 10;
-  const ledFloor = Math.max(28, Math.min(85, (otsuThreshold * 70) >> 7)); // Capped at 85 so spotlight reflection doesn't poison threshold
+  const ledFloor = dynamicRange < 16
+    ? 255 // Blank uniform surface with no glowing digits -> reject noise
+    : Math.max(42, Math.floor(p60 + dynamicRange * 0.34));
+  const ledSaturationCore = Math.max(236, p98 - 6);
   const lcdCeiling = Math.min(210, (otsuThreshold * 147) >> 7);
 
-  const marginX = Math.max(4, Math.floor(width * 0.06));
-  const marginY = Math.max(4, Math.floor(height * 0.06));
+  const marginX = Math.max(4, Math.floor(width * 0.05));
+  const marginY = Math.max(4, Math.floor(height * 0.04));
 
   for (let y = marginY; y < height - marginY; y++) {
     const y1 = y - windowRadius < 0 ? 0 : y - windowRadius;
@@ -352,9 +376,14 @@ export function binarizeROI(
         const isLocallyDark = (scaledPixel << 7) <= sum * 109 && (sum - scaledPixel) >= minContrastDelta * count;
         binary[rowOffset + x] = isLocallyDark && pixelVal < lcdCeiling ? 1 : 0;
       } else {
-        // LED: active if locally brighter than background with minimum contrast delta
-        const isLocallyBright = (scaledPixel << 7) >= sum * 143 && (scaledPixel - sum) >= minContrastDelta * count;
-        binary[rowOffset + x] = isLocallyBright && pixelVal >= ledFloor ? 1 : 0;
+        // LED: active if above percentile floor AND locally brighter than surround (or at sensor saturation >= 236)
+        if (pixelVal >= ledFloor) {
+          const isLocallyBright = (scaledPixel << 7) >= sum * 138 && (scaledPixel - sum) >= minContrastDelta * count;
+          const isSaturatedCore = pixelVal >= ledSaturationCore && scaledPixel >= sum;
+          binary[rowOffset + x] = isLocallyBright || isSaturatedCore ? 1 : 0;
+        } else {
+          binary[rowOffset + x] = 0;
+        }
       }
     }
   }
@@ -836,7 +865,7 @@ function parseDigitsFromBinary(
   }
 
   // Dynamic row threshold: adapts to actual digit stroke intensity
-  const rowThreshold = Math.max(3, Math.floor(maxRowCount * 0.16));
+  const rowThreshold = Math.max(3, Math.floor(maxRowCount * 0.12));
   const minRowH = Math.max(16, Math.floor(height * 0.10)); // Digital scale rows are >= 16px
   const rawRowBands: { start: number; end: number }[] = [];
   let inRow = false;
@@ -863,8 +892,8 @@ function parseDigitsFromBinary(
 
   // Merge Intra-Digit Gaps:
   // In 7-segment digits (especially '0', '7', '1' with no center bar 'g'),
-  // a small gap of 2-8px separates top and bottom vertical segments.
-  // Adjacent bands separated by <= 12px belong to the same digit row!
+  // a small gap separates top and bottom vertical segments.
+  // Adjacent bands separated by <= 16px belong to the same digit row!
   const mergedRowBands: { start: number; end: number }[] = [];
   for (const b of rawRowBands) {
     if (mergedRowBands.length === 0) {
@@ -872,7 +901,7 @@ function parseDigitsFromBinary(
     } else {
       const prev = mergedRowBands[mergedRowBands.length - 1];
       const gap = b.start - prev.end;
-      if (gap <= Math.max(12, Math.floor(height * 0.08))) {
+      if (gap <= Math.max(14, Math.floor(height * 0.08))) {
         prev.end = b.end; // Merge top and bottom halves into single row
       } else {
         mergedRowBands.push({ ...b });
@@ -880,18 +909,19 @@ function parseDigitsFromBinary(
     }
   }
 
-  // Dual-Row Valley Splitter: If row contains stacked Weight + Timer, split at horizontal valley
+  // Dual-Row Valley Splitter: If row contains stacked Weight + Timer, split at true inter-row valley
   const rowBands: { start: number; end: number }[] = [];
   for (const b of mergedRowBands) {
     const bH = b.end - b.start;
-    if (bH >= Math.max(34, Math.floor(height * 0.44))) {
-      const searchY1 = b.start + Math.floor(bH * 0.25);
-      const searchY2 = b.start + Math.floor(bH * 0.75);
+    if (bH >= Math.max(46, Math.floor(height * 0.50))) {
+      const searchY1 = b.start + Math.floor(bH * 0.28);
+      const searchY2 = b.start + Math.floor(bH * 0.72);
       let minVal = Infinity;
       let splitY = -1;
       let lowRowCount = 0;
+      const maxValleyVal = Math.max(4, Math.floor(maxRowCount * 0.12));
       for (let y = searchY1; y <= searchY2; y++) {
-        if (smoothedRows[y] <= Math.max(rowThreshold * 1.5, Math.floor(maxRowCount * 0.18))) {
+        if (smoothedRows[y] <= maxValleyVal) {
           lowRowCount++;
         }
         if (smoothedRows[y] < minVal) {
@@ -902,9 +932,9 @@ function parseDigitsFromBinary(
       if (
         splitY !== -1 &&
         lowRowCount >= 3 &&
-        minVal <= Math.max(rowThreshold * 1.5, Math.floor(maxRowCount * 0.18)) &&
-        splitY - b.start >= Math.max(14, Math.floor(minRowH * 0.7)) &&
-        b.end - splitY >= Math.max(14, Math.floor(minRowH * 0.7))
+        minVal <= maxValleyVal &&
+        splitY - b.start >= Math.max(18, Math.floor(minRowH * 0.85)) &&
+        b.end - splitY >= Math.max(18, Math.floor(minRowH * 0.85))
       ) {
         rowBands.push({ start: b.start, end: splitY });
         rowBands.push({ start: splitY, end: b.end });
@@ -1074,10 +1104,8 @@ function parseDigitsFromBinary(
     const spans = splitFusedSpansTopological(mergedRawSpans, colCounts, binary, width, band.start, band.end, colThreshold);
 
     // Anti-Sentence / Text-Entropy Gate:
-    // Coffee scale displays have at most 4-8 elements across a single band (e.g. "0:15  18.4g").
     // A printed line of text from a book or newspaper contains dozens of characters.
-    // If the horizontal span count exceeds 8, this band is a sentence/text block, NOT a digital scale!
-    if (spans.length > 8) {
+    if (spans.length > 15) {
       continue;
     }
 
@@ -1105,15 +1133,21 @@ function parseDigitsFromBinary(
         }
       }
 
-      if (activePixels < 2) continue; // Noise artifact
+      if (activePixels < 3) continue; // Noise artifact
 
       const spanW = span.end - span.start + 1;
       const spanH = spanMaxY - spanMinY + 1;
 
-      // Decimal Point check (small blob in bottom half of digit band, accommodates blooming/LED glow)
-      const isNarrow = spanW <= Math.max(12, Math.floor(bandH * 0.42));
-      const isShort = spanH <= Math.max(14, Math.floor(bandH * 0.48));
-      const isBottom = spanMinY >= band.start + Math.floor(bandH * 0.38);
+      // Reject border-touching artifacts early (screen bezel frame, camera crop boundary, edge glares)
+      const edgeMargin = Math.max(14, Math.floor(width * 0.04));
+      if (span.start <= edgeMargin || span.end >= width - edgeMargin) {
+        continue;
+      }
+
+      // Decimal Point check (small blob near bottom baseline of digit band, accommodates blooming/LED glow)
+      const isNarrow = spanW <= Math.max(14, Math.floor(bandH * 0.34));
+      const isShort = spanH <= Math.max(16, Math.floor(bandH * 0.32));
+      const isBottom = spanMinY >= band.start + Math.floor(bandH * 0.52);
 
       if (isNarrow && isShort && isBottom) {
         elements.push({
@@ -1125,19 +1159,32 @@ function parseDigitsFromBinary(
         continue;
       }
 
-      // Timer Colon ':' (two dots with empty gap in vertical center)
-      if (isNarrow && spanH >= bandH * 0.40) {
+      // Timer Colon ':' (two small dots with empty gap in vertical center, shorter than full digit '1')
+      if (
+        isNarrow &&
+        spanH >= bandH * 0.34 &&
+        spanH <= bandH * 0.74 &&
+        spanW <= Math.max(14, Math.floor(bandH * 0.30))
+      ) {
         let centerPixels = 0;
-        const midY1 = band.start + Math.floor(bandH * 0.42);
-        const midY2 = band.start + Math.floor(bandH * 0.58);
-        for (let y = midY1; y <= midY2; y++) {
+        let topPixels = 0;
+        let botPixels = 0;
+        const topY2 = spanMinY + Math.floor(spanH * 0.35);
+        const midY1 = spanMinY + Math.floor(spanH * 0.38);
+        const midY2 = spanMinY + Math.floor(spanH * 0.62);
+        const botY1 = spanMinY + Math.floor(spanH * 0.65);
+        for (let y = spanMinY; y <= spanMaxY; y++) {
           for (let x = span.start; x <= span.end; x++) {
-            if (binary[y * width + x] === 1) centerPixels++;
+            if (binary[y * width + x] === 1) {
+              if (y <= topY2) topPixels++;
+              else if (y >= midY1 && y <= midY2) centerPixels++;
+              else if (y >= botY1) botPixels++;
+            }
           }
         }
 
-        // A true colon has NO active pixels in the vertical center gap between the two dots
-        if (centerPixels <= 1) {
+        // A true colon has active dots at top and bottom with an empty vertical center gap
+        if (centerPixels === 0 && topPixels >= 2 && botPixels >= 2) {
           elements.push({
             type: 'colon',
             char: ':',
@@ -1149,9 +1196,9 @@ function parseDigitsFromBinary(
         }
       }
 
-      // Minus Sign '-' (horizontal bar in center)
-      const isMinusAspect = spanW >= spanH * 1.2;
-      const isCenterVertical = spanMinY >= band.start + bandH * 0.3 && spanMaxY <= band.start + bandH * 0.7;
+      // Minus Sign '-' (horizontal bar in vertical center, strictly bounded width)
+      const isMinusAspect = spanW >= spanH * 1.35 && spanW <= bandH * 0.65;
+      const isCenterVertical = spanMinY >= band.start + bandH * 0.34 && spanMaxY <= band.start + bandH * 0.66;
       if (isMinusAspect && isShort && isCenterVertical) {
         elements.push({
           type: 'minus',
@@ -1163,14 +1210,8 @@ function parseDigitsFromBinary(
       }
 
       // Unit letter filtering ('g', 'oz', 'ml' on far right with non-digit bit pattern)
-      if (spanW <= bandH * 0.55 && spanH <= bandH * 0.70 && span.start > width * 0.68) {
+      if (spanW <= bandH * 0.55 && spanH <= bandH * 0.65 && span.start > width * 0.68) {
         // Skip isolated unit markers
-        continue;
-      }
-
-      // Reject border-touching artifacts (screen bezel frame, camera crop boundary, edge glares)
-      const edgeMargin = Math.max(16, Math.floor(width * 0.045));
-      if (span.start <= edgeMargin || span.end >= width - edgeMargin) {
         continue;
       }
 
@@ -1180,9 +1221,6 @@ function parseDigitsFromBinary(
       }
 
       // Reject solid glares and specular reflections for 2-column digits (aspect >= 0.40):
-      // True 2-column 7-segment digits consist of thin strokes with hollow loops (fill density ~20-55%).
-      // Solid glare spots, metal reflections, and light flares typically exceed 68% density.
-      // (Single-column digit '1' with aspect < 0.40 is naturally a solid vertical stroke).
       const boxArea = spanW * spanH;
       const fillDensity = activePixels / boxArea;
       if (spanW >= spanH * 0.40 && fillDensity > 0.68 && spanW >= 8 && spanH >= 12) {
@@ -1196,7 +1234,6 @@ function parseDigitsFromBinary(
 
       // 7-Segment Digit
       // Real espresso scale digits are >= 18px tall and occupy >= 42% of the row band height.
-      // Small printed book/paper letters (8-14px) are rejected here.
       if (spanH >= Math.max(18, Math.floor(bandH * 0.42))) {
         const box = {
           x: span.start,
@@ -1218,14 +1255,13 @@ function parseDigitsFromBinary(
       }
     }
 
-    // Reject row if detected elements exceed 7 (scale displays have at most 5-6 digits/symbols)
-    if (elements.length > 7) {
+    // Reject row only if detected elements exceed 12 (sentence/text block)
+    if (elements.length > 12) {
       continue;
     }
 
     // 3. Spatial Token Clustering: Group elements into contiguous tokens based on spatial proximity
-    // Consecutive digits within the same number are spaced close together (gap <= bandH * 0.50)
-    // Wide gaps or colons indicate a distinct token (e.g. side-by-side timer vs weight, or isolated glare)
+    // Keep colons ':' inside their timer cluster so "0:00" stays together as a single timer token!
     const clusters: ParsedElement[][] = [];
     let currentCluster: ParsedElement[] = [];
 
@@ -1236,14 +1272,14 @@ function parseDigitsFromBinary(
       } else {
         const prev = currentCluster[currentCluster.length - 1];
         const gap = el.box.x - (prev.box.x + prev.box.width);
-        // Bounded gap threshold: 7-segment digit '1' only has strokes on the right edge of its cell,
-        // so any digit preceding '1' has an empty cell half between them (~0.60 * bandH).
-        // Side-by-side timer and weight are separated by a large gulf (>= 1.2 * bandH) or colon ':'.
-        const maxGap = el.type === 'digit' && el.char === '1'
+        const isOneAdjacent =
+          (el.type === 'digit' && el.char === '1') ||
+          (prev.type === 'digit' && prev.char === '1');
+        const maxGap = isOneAdjacent
           ? Math.max(28, Math.floor(bandH * 0.92))
-          : Math.max(20, Math.floor(bandH * 0.70));
+          : Math.max(22, Math.floor(bandH * 0.72));
 
-        if (gap > maxGap || el.type === 'colon' || prev.type === 'colon') {
+        if (gap > maxGap) {
           clusters.push(currentCluster);
           currentCluster = [el];
         } else {
@@ -1266,51 +1302,128 @@ function parseDigitsFromBinary(
       if (elements.length < 2) return elements;
 
       const digits = elements.filter((e) => e.type === 'digit');
-      if (digits.length < 2) return elements;
+      if (digits.length === 0) return elements;
 
       const heights = digits.map((d) => d.box.height).sort((a, b) => a - b);
       const tops = digits.map((d) => d.box.y).sort((a, b) => a - b);
       const bottoms = digits.map((d) => d.box.y + d.box.height).sort((a, b) => a - b);
 
       const medH = heights[Math.floor(heights.length / 2)];
+      const maxH = heights[heights.length - 1];
       const medTop = tops[Math.floor(tops.length / 2)];
       const medBot = bottoms[Math.floor(bottoms.length / 2)];
+      const maxBot = bottoms[bottoms.length - 1];
 
       const maxHDiff = Math.max(7, Math.floor(medH * 0.25));
       const maxTopDiff = Math.max(6, Math.floor(medH * 0.20));
       const maxBotDiff = Math.max(6, Math.floor(medH * 0.20));
 
-      let result = [...elements];
-
-      // A coffee scale display has standard 1-decimal resolution (e.g. 0.0g or 36.2g)
-      // Check if there is a decimal point
-      const dotIdx = result.findIndex((e) => e.type === 'dot');
-      if (dotIdx !== -1) {
-        // In coffee scale displays: dot is followed by exactly 1 decimal digit (tenths place)
-        // Any trailing elements after (dotIdx + 1) are edge borders, unit 'g', or optical flare!
-        while (result.length > dotIdx + 2) {
-          result.pop();
+      // Pre-filter isolated noise dots that are far from adjacent digits or floating above the baseline
+      let result: ParsedElement[] = [];
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i];
+        if (el.type === 'dot') {
+          const prev = i > 0 ? elements[i - 1] : null;
+          const next = i < elements.length - 1 ? elements[i + 1] : null;
+          const dotCenterY = el.box.y + el.box.height * 0.5;
+          const isBaselineDot =
+            dotCenterY >= medBot - medH * 0.36 &&
+            dotCenterY <= maxBot + medH * 0.16;
+          const gapLeft = prev ? el.box.x - (prev.box.x + prev.box.width) : Infinity;
+          const gapRight = next ? next.box.x - (el.box.x + el.box.width) : Infinity;
+          const maxGapRight = next?.char === '1'
+            ? Math.max(40, Math.floor(maxH * 0.68))
+            : Math.max(26, Math.floor(maxH * 0.52));
+          const isTightBetweenDigits =
+            prev?.type === 'digit' &&
+            next?.type === 'digit' &&
+            gapLeft <= Math.max(18, Math.floor(maxH * 0.36)) &&
+            gapRight <= maxGapRight;
+          if (!isBaselineDot || !isTightBetweenDigits) {
+            continue;
+          }
         }
+        result.push(el);
       }
 
-      // 1. Inspect first element if it's an edge artifact mimicking digit '1'
+      // 0. Strip leading non-digit noise specks (dots, colons, or distant minus signs) and trailing dots/colons
+      while (result.length >= 2) {
+        const first = result[0];
+        if (first.type === 'dot' || first.type === 'colon') {
+          result.shift();
+          continue;
+        }
+        if (first.type === 'minus') {
+          const nextEl = result[1];
+          const gapToNext = nextEl.box.x - (first.box.x + first.box.width);
+          if (nextEl.type !== 'digit' || gapToNext > Math.max(14, Math.floor(medH * 0.38))) {
+            result.shift();
+            continue;
+          }
+        }
+        break;
+      }
+
+      while (result.length >= 2) {
+        const last = result[result.length - 1];
+        if (last.type === 'dot' || last.type === 'colon' || last.type === 'minus') {
+          result.pop();
+          continue;
+        }
+        break;
+      }
+
+      if (digits.length < 2) return result;
+
+      // 1. Inspect first element if it's an edge artifact mimicking digit '1' (BEFORE decimal truncation!)
       // Legitimate multi-digit numbers (e.g. 216.1, 131.5, 127.3, 18.0, 10.0, 50.0, 80.0) are preserved.
-      // An edge artifact on the bezel is either abnormally tiny (<40% of median height),
-      // or separated by an enormous gap (> 0.70-0.92*medH) onto the outer chassis.
+      // An edge artifact on the bezel is either abnormally short (<62% of max digit height)
+      // or separated by an excessive gap onto the outer chassis.
       if (result.length >= 2 && result[0].type === 'digit' && result[0].char === '1') {
         const firstBox = result[0].box;
         const nextEl = result[1];
         const gapToNext = nextEl.box.x - (firstBox.x + firstBox.width);
         const maxDistantGap = nextEl.type === 'digit' && nextEl.char === '1'
           ? Math.max(30, Math.floor(medH * 0.92))
-          : Math.max(22, Math.floor(medH * 0.70));
+          : Math.max(22, Math.floor(medH * 0.68));
         const isDistantEdge = gapToNext > maxDistantGap;
 
-        // An edge sliver is abnormally tiny (less than 40% of median height)
-        const isTinyNoiseSliver = firstBox.height < Math.max(12, Math.floor(medH * 0.40));
+        // A bezel edge reflection is significantly shorter than the true 7-segment digits in the row
+        const isTinyNoiseSliver = firstBox.height < Math.max(12, Math.floor(maxH * 0.62));
 
         if (isDistantEdge || isTinyNoiseSliver) {
           result.shift();
+        }
+      }
+
+      // A coffee scale display has standard 1-decimal resolution (e.g. 0.0g or 36.2g)
+      // Only match a decimal point that sits between two real digits!
+      const dotIdx = result.findIndex(
+        (e, idx) =>
+          e.type === 'dot' &&
+          idx > 0 &&
+          idx < result.length - 1 &&
+          result[idx - 1].type === 'digit' &&
+          result[idx + 1].type === 'digit'
+      );
+      if (dotIdx !== -1) {
+        // Check if this is a 3-digit timer "0:00" where colon was read as '.' ("0.00")
+        const isTimerTwoDecimals =
+          dotIdx === 1 &&
+          result.length === 4 &&
+          result[0].type === 'digit' &&
+          result[0].char === '0' &&
+          result[2].type === 'digit' &&
+          result[3].type === 'digit' &&
+          Math.abs(result[3].box.height - medH) <= maxHDiff &&
+          result[3].box.x - (result[2].box.x + result[2].box.width) <= Math.max(18, Math.floor(medH * 0.55));
+
+        if (!isTimerTwoDecimals) {
+          // In coffee scale displays: dot is followed by exactly 1 decimal digit (tenths place)
+          // Any trailing elements after (dotIdx + 1) are edge borders, unit 'g', or optical flare!
+          while (result.length > dotIdx + 2) {
+            result.pop();
+          }
         }
       }
 
@@ -1360,6 +1473,7 @@ function parseDigitsFromBinary(
       const bottoms = digits.map((d) => d.box.y + d.box.height).sort((a, b) => a - b);
       const medH = heights[heights.length >> 1];
       const medBot = bottoms[bottoms.length >> 1];
+      const maxBot = bottoms[bottoms.length - 1];
 
       // Step 1: Validate any existing isolated 'dot' elements against the cluster's bottom baseline
       const validated: ParsedElement[] = [];
@@ -1371,7 +1485,7 @@ function parseDigitsFromBinary(
           const dotCenterY = el.box.y + el.box.height * 0.5;
           const isBaselineAligned =
             dotCenterY >= medBot - medH * 0.34 &&
-            dotCenterY <= medBot + medH * 0.12;
+            dotCenterY <= maxBot + medH * 0.16;
 
           // Dot must sit between two digits (not leading ".5" or trailing "18.")
           const hasPrevDigit = i > 0 && cluster[i - 1].type === 'digit';
@@ -1463,22 +1577,31 @@ function parseDigitsFromBinary(
         return validated;
       }
 
-      // Step 3: Sub-threshold Micro-Gap Check between onesDigit and tenthsDigit
-      // Sometimes a 1-2px dim decimal dot was filtered out by `colCounts < colThreshold`
-      const gapX1 = box.x + box.width + 1;
-      const gapX2 = tenthsDigit.box.x - 1;
-      if (gapX2 >= gapX1 && gapX2 - gapX1 <= Math.floor(medH * 0.45)) {
-        const dotY1 = Math.floor(medBot - medH * 0.28);
-        const dotY2 = Math.min(Math.floor(medBot + 2), box.y + box.height);
+      // Step 3: Sub-threshold Micro-Gap & Gray-Luminance Dot Check between onesDigit and tenthsDigit
+      // Sometimes a 1-2px dim decimal dot was filtered out by `colCounts < colThreshold` or `ledFloor`
+      const gapX1 = Math.max(0, box.x + box.width);
+      const gapX2 = Math.min(canvasW - 1, tenthsDigit.box.x);
+      if (gapX2 >= gapX1 && gapX2 - gapX1 <= Math.floor(medH * 0.52)) {
+        const dotY1 = Math.floor(medBot - medH * 0.30);
+        const dotY2 = Math.min(Math.floor(medBot + 3), box.y + box.height);
         let dotPixels = 0;
         let upperNoisePixels = 0;
-        const upperY1 = box.y + Math.floor(box.height * 0.15);
-        const upperY2 = box.y + Math.floor(box.height * 0.60);
+        let botGraySum = 0;
+        let botGrayCount = 0;
+        let topGraySum = 0;
+        let topGrayCount = 0;
+        const upperY1 = box.y + Math.floor(box.height * 0.18);
+        const upperY2 = box.y + Math.floor(box.height * 0.58);
+        const grayBuf = ocrPool.gray;
 
         for (let y = dotY1; y < dotY2; y++) {
           const rOff = y * canvasW;
           for (let x = gapX1; x <= gapX2; x++) {
             if (binaryData[rOff + x] === 1) dotPixels++;
+            if (grayBuf) {
+              botGraySum += grayBuf[rOff + x];
+              botGrayCount++;
+            }
           }
         }
 
@@ -1486,14 +1609,22 @@ function parseDigitsFromBinary(
           const rOff = y * canvasW;
           for (let x = gapX1; x <= gapX2; x++) {
             if (binaryData[rOff + x] === 1) upperNoisePixels++;
+            if (grayBuf) {
+              topGraySum += grayBuf[rOff + x];
+              topGrayCount++;
+            }
           }
         }
 
-        if (dotPixels >= 2 && upperNoisePixels === 0) {
+        const avgBotGray = botGrayCount > 0 ? botGraySum / botGrayCount : 0;
+        const avgTopGray = topGrayCount > 0 ? topGraySum / topGrayCount : 0;
+        const hasGrayDecimalBump = avgBotGray >= avgTopGray + 14;
+
+        if ((dotPixels >= 1 && upperNoisePixels === 0) || (hasGrayDecimalBump && upperNoisePixels <= 1)) {
           validated.splice(lastIdx, 0, {
             type: 'dot',
             char: '.',
-            box: { x: gapX1, y: dotY1, width: gapX2 - gapX1 + 1, height: dotY2 - dotY1 },
+            box: { x: gapX1, y: dotY1, width: Math.max(2, gapX2 - gapX1 + 1), height: Math.max(2, dotY2 - dotY1) },
             confidence: 0.85,
           });
         }
@@ -1539,6 +1670,9 @@ function parseDigitsFromBinary(
         }
       }
 
+      // Check for 3-digit timer "0.00" where colon was read as '.' before stripping extra dots
+      const isTwoDecimalTimer = /^\d{1,2}\.\d{2}$/.test(clText);
+
       // Sanity Gate: A digital scale NEVER has more than one decimal point.
       // If multiple dots are detected (e.g. "126.0.4" or "136.0.1"), strip trailing noisy dots
       const dotCount = (clText.match(/\./g) || []).length;
@@ -1557,30 +1691,33 @@ function parseDigitsFromBinary(
         ? /^-?\d+\.\d+$/.test(cleanNum)
         : /^-?\d+$/.test(cleanNum);
 
-      const valid = hasValidSyntax && !isNaN(parsed) && parsed >= -20 && parsed <= 2000;
+      const valid = hasValidSyntax && !isNaN(parsed) && parsed >= -50 && parsed <= 2000;
       const conf = digitsInCl.length > 0 ? digitsInCl.reduce((s, d) => s + d.confidence, 0) / digitsInCl.length : 0;
 
       // Check for Timer format vs Tare Zero Weight format
-      // Digital coffee scale timers commonly format as "0:00", "00:00", or "00.15" (2 decimal places with 4+ chars)
-      // A display showing "0.0", "00.0", "-0.0", or "0" is PURE TARE ZERO WEIGHT!
+      // Digital coffee scale timers commonly format as "0:00", "00:00", or "00.15" (2 decimal places)
+      // A display showing "0.0", "00.0", "-0.0", or "0" (without colon or 2 decimals) is PURE TARE ZERO WEIGHT!
       const isTareZero =
-        cleanNum === '0.0' ||
-        cleanNum === '00.0' ||
-        cleanNum === '000.0' ||
-        cleanNum === '-0.0' ||
-        cleanNum === '-00.0' ||
-        cleanNum === '0' ||
-        cleanNum === '00';
+        !clHasColon &&
+        !isTwoDecimalTimer &&
+        (cleanNum === '0.0' ||
+         cleanNum === '00.0' ||
+         cleanNum === '000.0' ||
+         cleanNum === '-0.0' ||
+         cleanNum === '-00.0' ||
+         cleanNum === '0' ||
+         cleanNum === '00');
 
       const isTimerPattern =
         !isTareZero &&
         (clHasColon ||
+         isTwoDecimalTimer ||
          clText.includes(':') ||
          clText.startsWith('0:') ||
          clText.startsWith('00:') ||
          clText === '0:00' ||
          clText === '00:00' ||
-         (/\b\d{2}\.\d{2}\b/.test(clText) && clText.length >= 5));
+         (/\b\d{1,2}\.\d{2}\b/.test(clText) && clText.length >= 4));
 
       let clScore = conf * 20;
       if (isTareZero) {
@@ -1642,42 +1779,36 @@ function parseDigitsFromBinary(
         ? selectedDigits.reduce((sum, d) => sum + d.confidence, 0) / selectedDigits.length
         : 0;
 
+    const clusterHasColon = bestCluster?.hasColon ?? false;
+
     const rowIsTareZero =
-      cleanNumeric === '0.0' ||
-      cleanNumeric === '00.0' ||
-      cleanNumeric === '000.0' ||
-      cleanNumeric === '-0.0' ||
-      cleanNumeric === '-00.0' ||
-      cleanNumeric === '0' ||
-      cleanNumeric === '00';
+      !clusterHasColon &&
+      (cleanNumeric === '0.0' ||
+       cleanNumeric === '00.0' ||
+       cleanNumeric === '000.0' ||
+       cleanNumeric === '-0.0' ||
+       cleanNumeric === '-00.0' ||
+       cleanNumeric === '0' ||
+       cleanNumeric === '00');
 
     const rowIsTimer =
       !rowIsTareZero &&
-      (rowHasColon ||
+      (clusterHasColon ||
        parsedText.includes(':') ||
        parsedText.startsWith('0:') ||
        parsedText.startsWith('00:') ||
        parsedText === '0:00' ||
        parsedText === '00:00' ||
-       (/\b\d{2}\.\d{2}\b/.test(parsedText) && parsedText.length >= 5));
+       (/\b\d{1,2}\.\d{2}\b/.test(parsedText) && parsedText.length >= 4));
 
     let score = avgConfidence * 20;
     if (rowIsTareZero) {
       score += 150; // Massive top-tier bonus for tare zero weight row ("0.0", "00.0")!
-    } else {
-      if (hasDec && !rowIsTimer) score += 70;
-      if (parsedWeight !== null && !rowIsTimer) score += 35;
-    }
-
-    // Dual-Row Stacking Architecture:
-    // On espresso scales (Muvna, Timemore, Acaia Lunar, MHW-3BOMBER), the WEIGHT is placed on Row 0 (TOP),
-    // while the TIMER is placed on Row 1 (BOTTOM).
-    if (candidateBands.length > 1) {
-      if (rIdx === 0) {
-        score += 150; // Strong top row priority for weight on stacked dual-row displays
-      } else {
-        score -= 250; // Bottom row heavily penalized (it is the timer!)
-      }
+    } else if (parsedWeight !== null && !rowIsTimer) {
+      if (hasDec) score += 70;
+      score += 35;
+    } else if (parsedWeight === null && !rowIsTimer) {
+      score -= 220; // Penalize unparseable noise fragments (e.g. lone ".")
     }
 
     if (rowIsTimer) {
@@ -1710,11 +1841,26 @@ function parseDigitsFromBinary(
       digits: selectedDigits,
       isStableZero,
       hasDecimal: hasDec,
-      hasColon: rowHasColon,
+      hasColon: clusterHasColon,
       boundingBox,
       layoutType,
       score,
     });
+  }
+
+  // Dual-Row Stacking Architecture:
+  // On espresso scales (Muvna, Timemore, Acaia Lunar, MHW-3BOMBER), the WEIGHT is placed on the TOP digit row,
+  // while the TIMER ("0:00") is placed on the BOTTOM digit row.
+  // Only compare rows that actually contain detected digits so empty glare bands never steal the top-row bonus!
+  const rowsWithDigits = evaluatedRows.filter((r) => r.digits.length >= 1);
+  if (rowsWithDigits.length > 1) {
+    for (let i = 0; i < rowsWithDigits.length; i++) {
+      if (i === 0) {
+        rowsWithDigits[i].score += 150; // Strong top digit-row priority for weight
+      } else {
+        rowsWithDigits[i].score -= 250; // Lower digit-row penalized (it is the timer!)
+      }
+    }
   }
 
   evaluatedRows.sort((a, b) => b.score - a.score);
@@ -1859,14 +2005,17 @@ export class ScaleReadingFilter {
     const dt = Math.max(0.015, Math.min(1.0, deltaTimeSeconds));
     this.timeSinceValidSec += dt;
 
-    if (newReading === null || newReading < -20.0 || newReading > 2000.0) {
+    if (newReading === null || newReading < -50.0 || newReading > 2000.0) {
       // Decay flow rate gently during frame dropouts
       this.flowRate *= Math.pow(0.85, dt * 10);
       return { weight: this.weight, flowRate: Math.max(0, this.flowRate), isOutlier: true };
     }
 
+    // During active brewing, liquid mass in the cup is strictly >= 0.0g (a stray minus glare before "22.5" -> "+22.5")
+    let measurement = isBrewing && newReading < -0.5 ? Math.abs(newReading) : newReading;
+
     // 1. Instant Tare Zero Lock (<= 0.3g when already near zero, or anytime in standby)
-    if (newReading <= 0.3 && (!isBrewing || Math.abs(this.weight) <= 0.4)) {
+    if (measurement >= -0.3 && measurement <= 0.3 && (!isBrewing || Math.abs(this.weight) <= 0.4)) {
       this.weight = 0.0;
       this.flowRate = 0.0;
       this.altCount = 0;
@@ -1877,24 +2026,25 @@ export class ScaleReadingFilter {
 
     // 2. Kinematic State Prediction across elapsed time since last valid reading
     const effDt = Math.min(1.5, this.timeSinceValidSec);
+    const maxPhysicalFlow = isBrewing ? maxFlowCap : 15.0;
     const predictedWeight = isBrewing
       ? this.weight + Math.max(0, this.flowRate) * Math.min(0.35, effDt)
       : this.weight;
 
     // 3. 10x Dropped-Decimal Glitch Auto-Heal:
-    // If OCR read an integer >= 10 (e.g. 142 instead of 14.2, or 362 instead of 36.2)
-    // and newReading / 10 matches our kinematic prediction within 0.45g, heal the decimal!
-    let measurement = newReading;
+    // If OCR read an integer >= 10 (e.g. 142 instead of 14.2, or 253 instead of 25.3)
+    // and measurement / 10 matches our kinematic trajectory (or 3-digit cup weight in standby), heal the decimal!
     const isIntegerReading = Math.abs(measurement - Math.round(measurement)) < 0.01;
-    if (
-      isIntegerReading &&
-      !hasDecimal &&
-      measurement >= 10.0 &&
-      predictedWeight >= 1.0 &&
-      Math.abs(measurement - predictedWeight) > 8.0 &&
-      Math.abs(measurement * 0.1 - predictedWeight) <= 0.45
-    ) {
-      measurement = Math.round(measurement) * 0.1;
+    if (isIntegerReading && !hasDecimal && Math.abs(measurement) >= 10.0) {
+      if (
+        this.weight >= 1.5 &&
+        Math.abs(measurement - predictedWeight) > 6.0 &&
+        Math.abs(measurement * 0.1 - predictedWeight) <= Math.max(1.2, effDt * maxPhysicalFlow)
+      ) {
+        measurement = Math.round(measurement) * 0.1;
+      } else if (!isBrewing && measurement >= 100.0 && measurement <= 999.0) {
+        measurement = Math.round(measurement) * 0.1;
+      }
     }
 
     // 3b. Leading-Digit OCR Corruption Healer ('4' -> '1' turning 42.4g into 12.4g, or '7' -> '1'):
@@ -1906,23 +2056,30 @@ export class ScaleReadingFilter {
       }
     }
 
-    // Hard ceiling during active espresso brewing (prevents unhealed 10x spikes from 0.x)
-    if (isBrewing && measurement > 150.0 && this.weight < 65.0) {
+    // Hard ceiling during active espresso brewing (prevents unhealed 10x spikes or 700g hallucinations)
+    if (isBrewing && maxFlowCap <= 8.0 && measurement > 120.0 && this.weight < 85.0) {
       return { weight: this.weight, flowRate: this.flowRate, isOutlier: true };
     }
 
+    // Require a confirmed decimal point (or multi-frame consensus) to break away from Tare Zero (0.0g) by > 3.0g
+    const isUnconfirmedZeroBreak =
+      Math.abs(this.weight) <= 0.4 && !hasDecimal && Math.abs(measurement) > 3.0;
+
     // 4. Physical Innovation Gate (Asymmetric Fluid Dynamics)
     // Max physical flow rate: ~6.5 g/s for espresso, ~15.0 g/s for pour-over / idle
-    const maxPhysicalFlow = isBrewing ? maxFlowCap : 15.0;
-    const maxForwardDelta = Math.max(isBrewing ? 0.65 : 1.2, effDt * maxPhysicalFlow);
+    const maxForwardDelta = Math.max(isBrewing ? 0.85 : 1.5, effDt * maxPhysicalFlow);
     const maxReverseDelta = isBrewing && this.weight >= 2.5 ? -0.25 : -1.5;
 
     const innovation = measurement - predictedWeight;
     const rawDelta = measurement - this.weight;
 
-    if (rawDelta >= maxReverseDelta && (innovation <= maxForwardDelta || rawDelta <= maxForwardDelta)) {
+    if (
+      !isUnconfirmedZeroBreak &&
+      rawDelta >= maxReverseDelta &&
+      (innovation <= maxForwardDelta || rawDelta <= maxForwardDelta)
+    ) {
       // Measurement is physically consistent with continuous fluid extraction!
-      if (isBrewing && rawDelta > 0.05) {
+      if (isBrewing && rawDelta > 0.05 && this.weight < 110.0) {
         this.validBrewStepsCount++;
       }
 
@@ -1949,6 +2106,12 @@ export class ScaleReadingFilter {
     }
 
     // 5. Parallel Hypothesis Tracker (Handles step changes & self-healing consensus recovery)
+    // During active brewing, block impossible forward teleport jumps (> maxAllowedBrewJump)
+    const maxAllowedBrewJump = Math.max(6.0, Math.min(4.0, this.timeSinceValidSec) * maxPhysicalFlow);
+    if (isBrewing && measurement - this.weight > maxAllowedBrewJump) {
+      return { weight: this.weight, flowRate: this.flowRate, isOutlier: true };
+    }
+
     const altStepTolerance = Math.max(0.5, dt * maxPhysicalFlow);
     if (this.altCount > 0 && Math.abs(measurement - this.altWeight) <= altStepTolerance) {
       this.altCount++;
@@ -1957,7 +2120,7 @@ export class ScaleReadingFilter {
       // Rule: NEVER allow downward "self-heal" if the current weight was built up gradually
       // over >= 8 genuine incremental flow steps (liquid cannot evaporate from the cup!),
       // UNLESS the barista explicitly tared the scale back to 0.0g (measurement <= 0.4g).
-      const isManualMidShotTare = measurement <= 0.4;
+      const isManualMidShotTare = measurement >= -0.4 && measurement <= 0.4;
       const canSelfHealDownward = !isBrewing || this.validBrewStepsCount < 8 || isManualMidShotTare;
 
       // Require 5 consecutive frames to self-heal downward during brewing; 2 frames for forward jumps

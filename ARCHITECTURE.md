@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.28 (Taktile Mappe-Faner med Omkant, Kontekst-Bannere, Isolering af Kaffebar & Klar "+ Føj til Aktive Bønner")  
+> **Gældende version:** v1.21.29 (Kirurgisk Restaurering af 7-Segment Vægt-OCR & Kinematisk Filter-Stabilitet)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -146,7 +146,7 @@ flowchart LR
         MorphOpen --> DualRowValley[Central Projektion & Dual-Row Dal-Detektion]
         DualRowValley --> ShearedProj[4-Vinkels Sheared Søjleprojektion 0-15°]
         ShearedProj --> TopoSplit[Topologisk Fused-Digits Split mod a,g,d Overklip]
-        TopoSplit --> TextEntropyGate{Spans > 8 el. Elementer > 7?}
+        TopoSplit --> TextEntropyGate{Spans > 15 el. Elementer > 12?}
         TextEntropyGate -- Ja (Bogsætning afvises) --> DropNoise
         TextEntropyGate -- Nej --> SegmentAnalysis[7-Segment Bitmask Probing POPCNT 7-Bit O(1)]
         SegmentAnalysis --> ClusterAlign[Klynge Typografi & Højde/Top/Bund Afvisning]

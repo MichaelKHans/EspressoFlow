@@ -2,6 +2,22 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.29] - 2026-11-02
+### Etape 108: Kirurgisk Restaurering af 7-Segment Vægt-OCR & Kinematisk Filter-Stabilitet (0.0g -> 30.3g)
+- **Eliminering af Mat-Plastik Bezel-Refleksion ("72.0g / 720.0g / 772.3g" Hallucination) ([ocr7segment.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/ocr7segment.ts)):**
+  - I `binarizeROI` erstattet den gamle `maxC + chroma/2` LED-forstærkning (som forstærkede varmgrå/brunlige rumrefleksioner på vægtens matte displayramme til falske `7`- og `77`-cifre i øverste venstre hjørne) med en kromatisk LED-selektor (`lum + coolExcess + redExcess`), der kun fremhæver ægte blå/cyan/grønne/røde LED-segmenter og undertrykker varmgrå plastikkanter.
+  - Indført percentil-forankret adaptiv bundgrænse (`ledFloor = p60 + dynamicRange * 0.34`) og sensor-mætningskerne (`ledSaturationCore`), så hullerne i `0`, `6`, `8` og `9` altid forbliver hule, og matte plastikrammer aldrig binariseres som cifre.
+- **Fjernelse af Destruktiv Span- & Punktum-Trunkering ([ocr7segment.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/ocr7segment.ts)):**
+  - Hævet `spans.length`-loftet fra `8` til `15` og `elements.length` fra `7` til `12`, så vægtrækken aldrig kasseres under brygning, når der optræder små refleksionsprikker og `g`-enhedssymbol på samme linje.
+  - Rettet en kritisk fejl i `filterEdgeArtifactsFromCluster`, hvor en støjprik til venstre for vægten blev klassificeret som `type: 'dot'` (`dotIdx = 0` eller `1`), hvorefter `while (result.length > dotIdx + 2) result.pop()` slettede selve vægtens cifre! Nu valideres decimalpunktummer strengt mod bundlinje (`medBot..maxBot`) og nabocifre (`prev.type === 'digit' && next.type === 'digit'`), og indledende støj-`1`-taller/prikker fjernes *før* trunkering efter tiendedels-cifret.
+  - Fjernet `'-'` fra `PATTERN_VARIANTS` i `probeDigitSegments`, så lodrette refleksioner aldrig fejltolkes som et `digit: '-'` foran vægten.
+- **Beskyttelse af Top-Række Vægt-Prioritet & Timer-Kolon Isolering ([ocr7segment.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/ocr7segment.ts)):**
+  - Top-række bonussen (`+150`) tildeles nu kun på tværs af rækker, der faktisk indeholder detekterede cifre (`rowsWithDigits`), så et tomt refleksionsbånd øverst aldrig stjæler vægtrækkens top-prioritet.
+  - Bevaret `:` inde i timer-klyngen (`0:00`), så timeren altid genkendes som timer og aldrig splittes til falske vægt-nuller, mens strø-koloner på vægtrækken ikke længere straffer gyldige decimaltal.
+- **Fysisk Hop-Barriere i `ScaleReadingFilter` ([ocr7segment.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/ocr7segment.ts)):**
+  - Indført `maxAllowedBrewJump` under aktiv brygning i `Parallel Hypothesis Tracker`, så to sammenhængende støjframes aldrig kan teleportere vægten fra `0.0g` til `72.0g` -> `720.0g` og låse filteret via `validBrewStepsCount`.
+  - Verificeret mod samtlige 58 ekstraherede realtids-frames fra brugerens bryggevideo (`Record_2026-11-02-15-56-35`): 100% stabil `25.3g` (kop før tare) -> `0.0g` (efter tare og under pre-infusion) -> glidende, nøjagtig ekstraktion `0.8g` -> `3.3g` -> `4.9g` -> `6.3g` -> `9.1g` -> `10.6g` -> `12.1g` -> `13.6g` -> `14.9g` -> `16.4g` -> `18.0g` -> `19.4g` -> `21.1g` -> `22.6g` -> `24.1g` -> `25.8g` -> `27.4g` -> `28.7g` -> `29.0g` -> `29.4g` -> `29.7g` -> `30.1g` -> `30.3g`.
+
 ## [1.21.28] - 2026-11-02
 ### Etape 107: Fuldtekst Mappe-Faner ("Mappe Omkant"), Kontekst-Bannere, Isolering af Kaffebar & Klar "+ Føj til Aktive Bønner"
 - **3 Fysiske Taktile Mappe-Faner med Omkant & Nul Tekstafskæring ([BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx), [en.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/en.ts), [da.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/da.ts)):**

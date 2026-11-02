@@ -26,6 +26,16 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-11-02 -- Etape 108: Kirurgisk Restaurering af 7-Segment Vægt-OCR & Kinematisk Filter-Stabilitet (v1.21.29)
+- **Eliminering af Mat-Plastik Bezel-Refleksion ("72.0g / 720.0g / 772.3g" Hallucination) ([ocr7segment.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/ocr7segment.ts)):**
+  - Udskiftet `maxC + chroma/2` i `binarizeROI` med en kromatisk LED-selektor (`lum + coolExcess + redExcess`) og en percentil-forankret adaptiv bundgrænse (`ledFloor = p60 + dynamicRange * 0.34`), som afskærer varmgrå refleksioner på vægtens matte displayramme uden at udhule eller udprise LED-segmenternes hulrum.
+- **Fjernelse af Destruktiv Span- & Punktum-Trunkering ([ocr7segment.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/ocr7segment.ts)):**
+  - Hævet `spans.length`-loftet fra `8` til `15` og `elements.length` fra `7` til `12`, så vægtrækken aldrig kasseres under brygning.
+  - Rettet en kritisk fejl i `filterEdgeArtifactsFromCluster`, hvor en støjprik til venstre for vægten blev matchet som `dotIdx = 0/1`, hvorefter `while (result.length > dotIdx + 2) result.pop()` slettede selve vægtens cifre! Nu valideres decimalpunktummer strengt mod bundlinje (`medBot..maxBot`) og nabocifre (`prev.type === 'digit' && next.type === 'digit'`), og støj-`1`-taller på kanten fjernes før trunkering.
+- **Fysisk Hop-Barriere i `ScaleReadingFilter` ([ocr7segment.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/lib/ocr7segment.ts)):**
+  - Indført `maxAllowedBrewJump` under aktiv brygning i `Parallel Hypothesis Tracker`, så støjframes aldrig kan teleportere vægten fra `0.0g` til `72.0g` -> `720.0g` og låse filteret.
+  - Verificeret med 100% nøjagtighed på alle 58 ekstraherede frames fra brugerens video (`Record_2026-11-02-15-56-35`): `25.3g` (kop før tare) -> `0.0g` (efter tare & pre-infusion) -> `0.8g` -> `3.3g` -> `4.9g` -> `6.3g` -> `9.1g` -> `10.6g` -> `12.1g` -> `13.6g` -> `14.9g` -> `16.4g` -> `18.0g` -> `19.4g` -> `21.1g` -> `22.6g` -> `24.1g` -> `25.8g` -> `27.4g` -> `28.7g` -> `29.0g` -> `29.4g` -> `29.7g` -> `30.1g` -> `30.3g`.
+
 ### 2026-11-02 -- Etape 107: Fuldtekst Mappe-Faner ("Mappe Omkant"), Kontekst-Bannere, Isolering af Kaffebar & Klar "+ Føj til Aktive Bønner" (v1.21.28)
 - **3 Fysiske Taktile Mappe-Faner med Omkant & Nul Tekstafskæring ([BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx), [en.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/en.ts), [da.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/da.ts)):**
   - Løst problemet med forkortede fane-titler (`Acti...`, `Wish...`, `Arch...`) på mobilskærme ved at omlægge fanerne til en 3-trins vertikal arkitektur:
