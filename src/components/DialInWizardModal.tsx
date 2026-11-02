@@ -104,8 +104,8 @@ export const DialInWizardModal: React.FC<DialInWizardModalProps> = ({
     ? allGrinders
     : (availableGrinders.length > 0 ? availableGrinders : [currentGrinder]);
 
-  // Master pool of all available coffee beans (prioritizes active non-finished beans)
-  const activeBeansInPool = (allBeans || []).filter((b) => !b.isFinished);
+  // Master pool of all available coffee beans (prioritizes active non-finished, non-wishlist beans)
+  const activeBeansInPool = (allBeans || []).filter((b) => !b.isFinished && !b.isWishlist);
   const beanPool = activeBeansInPool.length > 0 ? activeBeansInPool : (allBeans && allBeans.length > 0 ? allBeans : [currentBean]);
 
   // Active bean selection state inside Dial-In Studio

@@ -1015,27 +1015,41 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
           </div>
         </div>
 
-        {/* Inventory Mode Selector: 3 Folder Tabs (Active Stock vs Wishlist vs Archive) with tactile folder border */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
-          <div className="w-full sm:w-auto grid grid-cols-3 gap-1.5 sm:gap-2 p-1.5 bg-[#FAF7F2] border border-[#DECFC0] rounded-2xl shadow-xs">
+        {/* Inventory Mode Selector: 3 Tactile Folder Tabs (Active Stock vs Wishlist vs Archive) with physical folder border */}
+        <div className="space-y-2 pt-1">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 p-1.5 bg-[#FAF7F2] border-2 border-[#D8C9B9] rounded-2xl shadow-inner">
             {/* Tab 1: Active Stock */}
             <button
               type="button"
               onClick={() => setInventoryTab('active')}
-              className={`py-2 px-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
+              className={`pt-2 pb-2 px-1 rounded-t-xl rounded-b-lg font-mono flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${
                 inventoryTab === 'active'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-sm ring-1 ring-[#C26D52]'
-                  : 'bg-[#FFFDF9] text-[#7A6E65] border-[#DECFC0] hover:bg-white hover:border-[#C2B5A8] hover:text-[#2C2018]'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] border-[#C26D52] shadow-md ring-2 ring-[#C26D52]/20 -translate-y-0.5'
+                  : 'bg-[#FFFDF9] text-[#7A6E65] border-[#DECFC0] hover:border-[#C26D52]/60 hover:bg-white hover:text-[#2C2018]'
               }`}
             >
-              <Coffee className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'active' ? 'text-[#E58367]' : 'text-[#C26D52]'}`} />
-              <span className="truncate">{t('beandex.tab_active_bags')}</span>
+              {/* Row 1: Icon + Count Badge */}
+              <div className="flex items-center gap-1.5">
+                <Coffee className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'active' ? 'text-[#E58367]' : 'text-[#C26D52]'}`} />
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold shrink-0 ${
+                    inventoryTab === 'active' ? 'bg-[#C26D52] text-white' : 'bg-[#DECFC0]/70 text-[#2C2018]'
+                  }`}
+                >
+                  {activeBags.length}
+                </span>
+              </div>
+              {/* Row 2: Folder Title (Full, un-truncated) */}
+              <span className="text-[11px] sm:text-xs font-bold leading-tight text-center px-0.5">
+                {t('beandex.tab_active_bags')}
+              </span>
+              {/* Row 3: Subtitle Descriptor */}
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
-                  inventoryTab === 'active' ? 'bg-[#C26D52] text-white' : 'bg-[#DECFC0]/60 text-[#7A6E65]'
+                className={`text-[9px] uppercase tracking-wider font-mono ${
+                  inventoryTab === 'active' ? 'text-[#E58367]' : 'text-[#A6998E]'
                 }`}
               >
-                {activeBags.length}
+                {t('beandex.tab_active_desc')}
               </span>
             </button>
 
@@ -1043,20 +1057,34 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             <button
               type="button"
               onClick={() => setInventoryTab('wishlist')}
-              className={`py-2 px-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
+              className={`pt-2 pb-2 px-1 rounded-t-xl rounded-b-lg font-mono flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${
                 inventoryTab === 'wishlist'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-sm ring-1 ring-[#D4A373]'
-                  : 'bg-[#FFFDF9] text-[#7A6E65] border-[#DECFC0] hover:bg-white hover:border-[#C2B5A8] hover:text-[#2C2018]'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] border-amber-400 shadow-md ring-2 ring-amber-400/20 -translate-y-0.5'
+                  : 'bg-[#FFFDF9] text-[#7A6E65] border-amber-200/80 hover:border-amber-400 hover:bg-white hover:text-[#2C2018]'
               }`}
             >
-              <Bookmark className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'wishlist' ? 'text-amber-300 fill-amber-300' : 'text-[#D4A373]'}`} />
-              <span className="truncate">{t('beandex.tab_wishlist')}</span>
+              {/* Row 1: Icon + Count Badge */}
+              <div className="flex items-center gap-1.5">
+                <Bookmark className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'wishlist' ? 'text-amber-300 fill-amber-300' : 'text-[#D4A373]'}`} />
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold shrink-0 ${
+                    inventoryTab === 'wishlist' ? 'bg-[#D4A373] text-[#2C2018]' : 'bg-amber-100 text-amber-900'
+                  }`}
+                >
+                  {wishlistBags.length}
+                </span>
+              </div>
+              {/* Row 2: Folder Title (Full, un-truncated) */}
+              <span className="text-[11px] sm:text-xs font-bold leading-tight text-center px-0.5">
+                {t('beandex.tab_wishlist')}
+              </span>
+              {/* Row 3: Subtitle Descriptor */}
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
-                  inventoryTab === 'wishlist' ? 'bg-[#D4A373] text-[#2C2018] font-bold' : 'bg-[#DECFC0]/60 text-[#7A6E65]'
+                className={`text-[9px] uppercase tracking-wider font-mono ${
+                  inventoryTab === 'wishlist' ? 'text-amber-300' : 'text-[#A6998E]'
                 }`}
               >
-                {wishlistBags.length}
+                {t('beandex.tab_wishlist_desc')}
               </span>
             </button>
 
@@ -1064,32 +1092,69 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             <button
               type="button"
               onClick={() => setInventoryTab('archive')}
-              className={`py-2 px-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
+              className={`pt-2 pb-2 px-1 rounded-t-xl rounded-b-lg font-mono flex flex-col items-center justify-center gap-1 transition-all cursor-pointer border-2 ${
                 inventoryTab === 'archive'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-sm ring-1 ring-[#72806B]'
-                  : 'bg-[#FFFDF9] text-[#7A6E65] border-[#DECFC0] hover:bg-white hover:border-[#C2B5A8] hover:text-[#2C2018]'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] border-[#72806B] shadow-md ring-2 ring-[#72806B]/20 -translate-y-0.5'
+                  : 'bg-[#FFFDF9] text-[#7A6E65] border-[#DECFC0] hover:border-[#72806B]/60 hover:bg-white hover:text-[#2C2018]'
               }`}
             >
-              <Archive className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'archive' ? 'text-[#9AA894]' : 'text-[#72806B]'}`} />
-              <span className="truncate">{t('beandex.tab_finished_archive')}</span>
+              {/* Row 1: Icon + Count Badge */}
+              <div className="flex items-center gap-1.5">
+                <Archive className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'archive' ? 'text-[#9AA894]' : 'text-[#72806B]'}`} />
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold shrink-0 ${
+                    inventoryTab === 'archive' ? 'bg-[#72806B] text-white' : 'bg-[#DECFC0]/70 text-[#2C2018]'
+                  }`}
+                >
+                  {finishedBags.length}
+                </span>
+              </div>
+              {/* Row 2: Folder Title (Full, un-truncated) */}
+              <span className="text-[11px] sm:text-xs font-bold leading-tight text-center px-0.5">
+                {t('beandex.tab_finished_archive')}
+              </span>
+              {/* Row 3: Subtitle Descriptor */}
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
-                  inventoryTab === 'archive' ? 'bg-[#72806B] text-white' : 'bg-[#DECFC0]/60 text-[#7A6E65]'
+                className={`text-[9px] uppercase tracking-wider font-mono ${
+                  inventoryTab === 'archive' ? 'text-[#9AA894]' : 'text-[#A6998E]'
                 }`}
               >
-                {finishedBags.length}
+                {t('beandex.tab_archive_desc')}
               </span>
             </button>
           </div>
 
-          {/* Archive Repurchase Satisfaction Summary Pill */}
-          {inventoryTab === 'archive' && repurchaseRate !== null && (
-            <div className="flex items-center gap-2 text-xs font-mono px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 self-start sm:self-auto shadow-2xs">
-              <ThumbsUp className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="font-bold">{repurchaseRate}%</span>
-              <span>{t('beandex.repurchase_rate_badge')}</span>
+          {/* Dedicated Folder Context Banner */}
+          <div
+            className={`w-full px-3 py-2 rounded-xl border flex items-center justify-between gap-2.5 text-xs font-mono transition-all duration-200 ${
+              inventoryTab === 'active'
+                ? 'bg-[#C26D52]/10 border-[#C26D52]/30 text-[#7A3622]'
+                : inventoryTab === 'wishlist'
+                ? 'bg-amber-500/10 border-amber-400/40 text-amber-900'
+                : 'bg-[#72806B]/10 border-[#72806B]/30 text-[#2C3829]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm shrink-0">
+                {inventoryTab === 'active' ? '☕' : inventoryTab === 'wishlist' ? '🔖' : '📦'}
+              </span>
+              <span className="font-semibold text-[11px] sm:text-xs leading-snug">
+                {inventoryTab === 'active'
+                  ? t('beandex.folder_active_banner')
+                  : inventoryTab === 'wishlist'
+                  ? t('beandex.folder_wishlist_banner')
+                  : t('beandex.folder_archive_banner')}
+              </span>
             </div>
-          )}
+
+            {/* Archive Repurchase Satisfaction Summary Pill */}
+            {inventoryTab === 'archive' && repurchaseRate !== null && (
+              <div className="shrink-0 flex items-center gap-1.5 text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-100 border border-emerald-300 text-emerald-800">
+                <ThumbsUp className="w-3 h-3 text-emerald-700" />
+                <span>{repurchaseRate}%</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bags Grid */}
@@ -1736,14 +1801,14 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                   {/* Card Footer: Rating / Dial-In Action OR Wishlist Move to Active */}
                   <div className="pt-2 border-t border-[#E8DFD5]/70 flex items-center justify-between gap-2">
                     {isWishlistBean ? (
-                      <div className="flex items-center justify-between gap-2 w-full">
+                      <div className="flex flex-col items-center gap-1.5 w-full">
                         <button
                           type="button"
                           onClick={() => handleMoveWishlistToActive(bean)}
-                          className="w-full py-2 px-3.5 rounded-xl bg-linear-to-r from-[#C26D52] to-[#A85840] hover:brightness-110 text-white font-bold text-xs font-mono flex items-center justify-center gap-2 transition shadow-sm active:scale-95 cursor-pointer"
+                          className="w-full py-2.5 px-4 rounded-xl bg-linear-to-r from-[#C26D52] to-[#A85840] hover:brightness-110 text-white font-bold text-xs font-mono flex items-center justify-center gap-2 transition shadow-sm active:scale-95 cursor-pointer"
                           title={t('beandex.move_to_active_stock_tooltip')}
                         >
-                          <Check className="w-3.5 h-3.5" />
+                          <Plus className="w-4 h-4 stroke-[2.5]" />
                           <span>{t('beandex.move_to_active_stock')}</span>
                         </button>
                       </div>

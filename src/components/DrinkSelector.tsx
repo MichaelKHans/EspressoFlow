@@ -959,7 +959,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
             {/* 4. Active Recipe Equipment & Calibration Overview (Clean, Read-Only & Informative) */}
             {(() => {
               const guidance = getOptimalBeanGuidanceForDrink(selectedDrink, currentBean);
-              const matches = allBeans && allBeans.length > 0 ? matchBeansForDrink(allBeans, selectedDrink) : [];
+              const activeOnlyBeans = (allBeans || []).filter((b) => !b.isFinished && !b.isWishlist);
+              const matches = activeOnlyBeans.length > 0 ? matchBeansForDrink(activeOnlyBeans, selectedDrink) : [];
               const currentMatch = matches.find((m) => m.bean.id === currentBean.id);
               const score = currentMatch?.matchScore ?? (guidance.isCurrentBeanOptimal ? 92 : 75);
 
@@ -988,8 +989,8 @@ export const DrinkSelector: React.FC<DrinkSelectorProps> = ({
                   <div className="rounded-xl bg-white border border-[#E8DFD5] grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-[#E8DFD5] overflow-hidden text-xs shadow-xs">
                     {/* Active Bean Info or Empty Bag Notice */}
                     {(() => {
-                      const activeBeans = (allBeans || []).filter((b) => !b.isFinished);
-                      const isBeanEmptied = !currentBean || currentBean.isFinished || currentBean.id === 'empty-inventory' || activeBeans.length === 0;
+                      const activeBeans = (allBeans || []).filter((b) => !b.isFinished && !b.isWishlist);
+                      const isBeanEmptied = !currentBean || currentBean.isFinished || currentBean.isWishlist || currentBean.id === 'empty-inventory' || activeBeans.length === 0;
 
                       if (isBeanEmptied) {
                         return (

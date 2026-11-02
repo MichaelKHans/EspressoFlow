@@ -2,8 +2,29 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
-## [1.21.27] - 2026-11-02
-### Etape 106: Beandex Ønskeliste (Wishlist), 3 Taktile Mappe-Faner & Flyttet Matchmaker
+## [1.21.28] - 2026-11-02
+### Etape 107: Fuldtekst Mappe-Faner ("Mappe Omkant"), Kontekst-Bannere, Isolering af Kaffebar & Klar "+ Føj til Aktive Bønner"
+- **3 Fysiske Taktile Mappe-Faner med Omkant & Nul Tekstafskæring ([BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx), [en.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/en.ts), [da.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/i18n/locales/da.ts)):**
+  - Løst problemet med forkortede fane-titler (`Acti...`, `Wish...`, `Arch...`) på mobilskærme ved at omlægge fanerne til en 3-trins vertikal arkitektur:
+    1. **Række 1 (Ikon & Tæller):** Mappeikon og distinct farvet tællerbadge (`[ ☕ 2 ]`, `[ 🔖 1 ]`, `[ 📦 1 ]`).
+    2. **Række 2 (Mappenavn):** Fuld, uforkortet fed tekst (`Aktive Bønner` / `Active Stock`, `Ønskeliste` / `Wishlist`, `Tømte Poser` / `Archive`).
+    3. **Række 3 (Formålsmærke):** Hurtig formålsbeskrivelse (`I Baren` / `In Bar`, `Ønsker` / `Wanted`, `Historik` / `History`).
+  - Hver fane har nu en markant taktil "mappe-omkant" med afrundet hængemappe-top (`rounded-t-xl rounded-b-lg border-2 shadow-inner`) og skræddersyet farveidentitet:
+    - ☕ **Aktive Bønner:** Terracotta `#C26D52` kant og ring ved aktiv fane.
+    - 🔖 **Ønskeliste:** Varm gylden ravfarvet `#D4A373` kant og ring ved aktiv fane.
+    - 📦 **Tømte Poser:** Specialkaffe salviegrøn `#72806B` kant og ring ved aktiv fane.
+- **Dedikeret Mappe-Kontekst Banner ([BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx)):**
+  - Tilføjet et forklarende kontekst-banner direkte under de 3 faner, der øjeblikkeligt fjerner enhver tvivl om mappens formål:
+    - *Aktive:* `☕ På lager og klar til bryg i Kaffebaren`
+    - *Ønskeliste:* `🔖 Gemt på Ønskeliste • Ikke i baren endnu (tryk "+ Føj til Aktive Bønner" når du har købt den)`
+    - *Tømte Poser:* `📦 Arkiv over tømte poser • Kværnhukommelse & smagshistorik` (inklusive barista-genkøbsrate % hvis data findes).
+- **Klar "+ Føj til Aktive Bønner" Handling ([BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx)):**
+  - Fjernet den forvirrende tekst *"✓ 🛒 In Stock • Move to Active"*, da bønnen netop IKKE er på lager endnu.
+  - Erstattet med et rent plus-ikon `<Plus />` og knapteksten **`+ Føj til Aktive Bønner` (`+ Add to Active Coffee`)** med hjælpetekst.
+- **Fuld Isolering af Kaffebaren mod Bønner på Ønskelisten ([DrinkSelector.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DrinkSelector.tsx), [DialInWizardModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/DialInWizardModal.tsx), [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - I `DrinkSelector.tsx` og `App.tsx` filtreres bønner nu konsekvent med `!b.isFinished && !b.isWishlist`.
+  - Bryggebarens dropdown *"SWITCH ACTIVE BEAN"* tæller og viser kun reelle aktive bønner på hylden (tælleren faldt fra fejlagtige 3 til korrekte 2 aktive).
+  - Indført `useEffect` safeguard i `App.tsx`, så hvis `activeBeanId` nogensinde refererer til en ønskelistebønne, skiftes der automatisk til den første aktive pose på hylden.
 - **Dedikeret Ønskeliste (Wishlist) System ([espresso.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/types/espresso.ts), [BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx), [BeanMatchmakerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanMatchmakerModal.tsx), [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
   - Implementeret `isWishlist?: boolean` i `CoffeeBeanProfile`.
   - Når baristaen finder bønner via *Find Coffee Match* eller i det globale bønnekatalog, tilføjes de nu direkte til **Ønskelisten** med `+ Tilføj til Ønskeliste` (`+ Add to Wishlist`) som primær handling, frem for at blive blandet sammen med aktive bryggebønner på hylden.

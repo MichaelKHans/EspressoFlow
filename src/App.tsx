@@ -96,7 +96,11 @@ export function App() {
 
   // Bean Vault & Multi-Grinder State
   const [beans, setBeans] = useState<CoffeeBeanProfile[]>(() => loadBeans());
-  const [activeBeanId, setActiveBeanId] = useState<string>(() => loadBeans()[0]?.id || 'bean-ethiopia');
+  const [activeBeanId, setActiveBeanId] = useState<string>(() => {
+    const loaded = loadBeans();
+    const active = loaded.filter((b) => !b.isFinished && !b.isWishlist);
+    return active[0]?.id || '';
+  });
   const [grinders, setGrinders] = useState<GrinderProfile[]>(() => loadGrinders());
   const [isBeanScannerOpen, setIsBeanScannerOpen] = useState<boolean>(false);
   const [isAdminEditMode, setIsAdminEditMode] = useState<boolean>(() => loadAdminEditMode());
@@ -339,6 +343,18 @@ export function App() {
       setCoffeeBeanName('');
     }
   };
+
+  // Safeguard: Ensure activeBeanId never points to a wishlist bean in the Bar
+  useEffect(() => {
+    if (activeBeanId) {
+      const selected = beans.find((b) => b.id === activeBeanId);
+      if (selected?.isWishlist) {
+        if (activeBeans.length > 0) {
+          handleSelectBean(activeBeans[0].id);
+        }
+      }
+    }
+  }, [beans, activeBeanId, activeBeans]);
 
   const handleSelectDrink = (drink: DrinkRecipe) => {
     setActiveDrinkId(drink.id);
@@ -1229,7 +1245,7 @@ export function App() {
                 targetYieldGrams={targetYieldGrams}
                 grindSetting={grindSetting}
                 shots={shots}
-                allBeans={beans}
+                allBeans={activeBeans}
                 filterBrewer={filterBrewer}
                 kettleName={kettleName}
                 onOpenEquipmentTab={() => setActiveTab('equipment')}
@@ -1585,7 +1601,7 @@ export function App() {
         currentGrinder={currentGrinder}
         availableGrinders={grinders.filter((g) => g.inSetup)}
         allGrinders={grinders}
-        allBeans={beans}
+        allBeans={activeBeans}
         machineName={machineName}
         filterBrewer={filterBrewer}
         tempUnit={tempUnit}
