@@ -26,6 +26,19 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-11-02 -- Etape 105: Visuel Riste-Tidslinje & Barista Freshness Note i Freshness Radar (v1.21.26)
+- **Visuel Riste-Tidslinje (`RoastTimelineBar`) i Freshness Radar ([FreshnessRadarModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FreshnessRadarModal.tsx)):**
+  - Implementeret Beandex's visuelle 3-fasede riste-tidslinje i det overlejrede verdict-kort (`#FAF7F2` Espresso Warmth pergament):
+    - Dage siden ristning (`X d off roast`), dato (`DD.MM.YYYY` / ISO) samt BBD estimat-badge.
+    - Fuldt segmenteret tidslinje-progress bar (`Resting`, `Sweetness Peak` med nålestriber, `Mellowing / Past Peak`) med aktiv nålemarkør (pin indicator).
+    - Fodnote-legende med tidsintervaller for ristningsgraden (`Day 0 (Roast)`, `Days 5-28 (Sweetness Peak)`, `Day 28+ (Mellowing)`).
+- **Barista Freshness Intelligence Note:**
+  - Beregner dynamisk friskhedsfase og serverer målrettet barista-rådgivning (justering af kværn, vandtemperatur og mælkedriks-anbefalinger) direkte under tidslinjen ved scanning i supermarkedet eller cafeen.
+- **Optimeret Workflow & Tidsstyring:**
+  - Udvidet auto-reset timer fra 4 til 8 sekunder med animeret progressbar, så baristaen har ro til at aflæse detaljerne, samt direkte knap til "Scan Næste" (`Scan Next`).
+- **Verifikation & Test:**
+  - `npm run build` udført og valideret 100% fejlfri.
+
 ### 2026-11-01 -- Etape 104: Løsning af Minified React Error #310 i BeanScannerModal (v1.21.25)
 - **Eliminering af Betinget Hook-Kald ([BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**
   - Identificeret og løst Minified React Error #310 ("Rendered more hooks than during the previous render"), der forårsagede ErrorBoundary crash ved åbning af "Scan Coffee Bag".

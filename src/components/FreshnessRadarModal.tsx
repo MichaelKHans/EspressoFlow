@@ -7,11 +7,15 @@ import {
   Camera,
   Layers,
   Image as ImageIcon,
+  Calendar,
 } from 'lucide-react';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { useTranslation } from '../i18n';
 import { extractDatesAndRoastFromBagText, normalizeDateStringToISO } from '../lib/bagScanner';
 import { preprocessImageForOcr } from '../lib/bagImageUtil';
+import type { RoastLevel } from '../types/espresso';
+import { RoastTimelineBar } from './RoastTimelineBar';
+import { calculateBeanFreshness } from '../lib/espressoMath';
 
 export type FreshnessStatus = 'peak' | 'past_peak' | 'stale' | 'degassing';
 
@@ -28,6 +32,7 @@ export interface FreshnessVerdict {
   recommendedAction: string;
   isEstimatedFromBBD: boolean;
   rawMatchedSnippet?: string;
+  detectedRoastLevel?: RoastLevel;
 }
 
 interface FreshnessRadarModalProps {
@@ -113,7 +118,8 @@ export function evaluateDateFreshness(
   dateStr: string,
   isEstimatedFromBBD: boolean = false,
   rawSnippet?: string,
-  lang: string = 'da'
+  lang: string = 'da',
+  detectedRoastLevel?: RoastLevel
 ): FreshnessVerdict {
   const iso = normalizeDateStringToISO(dateStr);
   const roast = new Date(iso);
@@ -147,6 +153,7 @@ export function evaluateDateFreshness(
         : 'Very fresh with high CO₂ pressure. Let rest 3-5 days in the bag with one-way valve for clean, unhindered extraction.',
       isEstimatedFromBBD,
       rawMatchedSnippet: rawSnippet,
+      detectedRoastLevel,
     };
   } else if (diffDays <= 30) {
     return {
@@ -166,6 +173,7 @@ export function evaluateDateFreshness(
         : 'Safe to buy! Beans are in their prime aromatic sweet spot with maximum clarity, natural sweetness, and rich crema.',
       isEstimatedFromBBD,
       rawMatchedSnippet: rawSnippet,
+      detectedRoastLevel,
     };
   } else if (diffDays <= 55) {
     return {
@@ -185,6 +193,7 @@ export function evaluateDateFreshness(
         : 'Still enjoyable coffee. Top floral notes are mellowing – grind 0.5-1 step finer. Excellent for milk drinks (Cortado / Latte).',
       isEstimatedFromBBD,
       rawMatchedSnippet: rawSnippet,
+      detectedRoastLevel,
     };
   } else {
     return {
@@ -208,6 +217,7 @@ export function evaluateDateFreshness(
         : 'Over 2 months off roast. Delicate coffee oils have oxidized, leaving thin crema and muted flavors.',
       isEstimatedFromBBD,
       rawMatchedSnippet: rawSnippet,
+      detectedRoastLevel,
     };
   }
 }
@@ -299,18 +309,18 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
 
   // Apply discovered date stamp and evaluate barista verdict
   const handleDateRecognized = useCallback(
-    (rawDate: string, isEstimated: boolean, snippet?: string) => {
+    (rawDate: string, isEstimated: boolean, snippet?: string, detectedRoast?: RoastLevel) => {
       const iso = normalizeDateStringToISO(rawDate);
       if (!iso) return;
       verdictLockRef.current = true;
-      const newVerdict = evaluateDateFreshness(iso, isEstimated, snippet, language);
+      const newVerdict = evaluateDateFreshness(iso, isEstimated, snippet, language, detectedRoast);
       setVerdict(newVerdict);
       setScanFeedbackMsg(null);
       playRadarAudio(newVerdict.status);
       triggerRadarHaptic(newVerdict.status);
 
-      // Start 4-second auto-reset timer
-      setAutoResetCountdown(4);
+      // Start 8-second auto-reset timer (gives plenty of time to view scale and recommendations)
+      setAutoResetCountdown(8);
       countdownIntervalRef.current = setInterval(() => {
         setAutoResetCountdown((prev) => {
           if (prev <= 1) {
@@ -338,6 +348,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
         let extractedDate: string | null = null;
         let isBBD = false;
         let snippetText: string | undefined = undefined;
+        let detectedRoast: RoastLevel | undefined = undefined;
 
         if (fileSource) {
           const { scanCoffeeBagForDateAndRoast } = await import('../lib/bagOcr');
@@ -346,6 +357,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
             extractedDate = res.roastDate;
             isBBD = res.isEstimatedFromBBD;
             snippetText = res.rawMatchedSnippet || res.formatDescription || undefined;
+            if (res.detectedRoastLevel) detectedRoast = res.detectedRoastLevel;
           } else {
             // Tier 4 Cloud AI fallback for uploaded photo
             try {
@@ -358,6 +370,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
                   extractedDate = aiRes.data.roastDate;
                   isBBD = false;
                   snippetText = aiRes.data.detectedFormat || 'Beandex Bag Vision™ (AI)';
+                  if (aiRes.data.roastLevel) detectedRoast = aiRes.data.roastLevel;
                 }
               }
             } catch (aiErr) {
@@ -398,6 +411,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
                   extractedDate = parsed.roastDate;
                   isBBD = parsed.isEstimatedFromBBD;
                   snippetText = parsed.rawMatchedSnippet || parsed.formatDescription || undefined;
+                  if (parsed.detectedRoastLevel) detectedRoast = parsed.detectedRoastLevel;
                 }
               }
             } catch (e) {
@@ -413,6 +427,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
               extractedDate = res.roastDate;
               isBBD = res.isEstimatedFromBBD;
               snippetText = res.rawMatchedSnippet || res.formatDescription || undefined;
+              if (res.detectedRoastLevel) detectedRoast = res.detectedRoastLevel;
             }
           }
 
@@ -424,6 +439,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
               extractedDate = resFull.roastDate;
               isBBD = resFull.isEstimatedFromBBD;
               snippetText = resFull.rawMatchedSnippet || resFull.formatDescription || undefined;
+              if (resFull.detectedRoastLevel) detectedRoast = resFull.detectedRoastLevel;
             }
           }
 
@@ -439,6 +455,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
                   extractedDate = aiRes.data.roastDate;
                   isBBD = false;
                   snippetText = aiRes.data.detectedFormat || 'Beandex Bag Vision™ (AI)';
+                  if (aiRes.data.roastLevel) detectedRoast = aiRes.data.roastLevel;
                 }
               }
             } catch (aiErr) {
@@ -448,7 +465,7 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
         }
 
         if (extractedDate) {
-          handleDateRecognized(extractedDate, isBBD, snippetText);
+          handleDateRecognized(extractedDate, isBBD, snippetText, detectedRoast);
         } else {
           setScanFeedbackMsg(t('bean.date_not_found') || 'Ingen dato fundet. Hold kameraet tæt på datostemplet.');
           setTimeout(() => setScanFeedbackMsg(null), 3000);
@@ -499,7 +516,8 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
               handleDateRecognized(
                 parsed.roastDate,
                 parsed.isEstimatedFromBBD,
-                parsed.rawMatchedSnippet || parsed.formatDescription || undefined
+                parsed.rawMatchedSnippet || parsed.formatDescription || undefined,
+                parsed.detectedRoastLevel || undefined
               );
               return;
             }
@@ -772,50 +790,90 @@ export const FreshnessRadarModal: React.FC<FreshnessRadarModalProps> = ({
 
         {/* Verdict HUD Card (Slides up over bottom) */}
         {verdict && (
-          <div className="absolute inset-x-3 bottom-3 z-30 p-4 rounded-2xl bg-[#1F1714]/95 backdrop-blur-xl border border-white/15 shadow-2xl space-y-3 animate-fadeIn">
-            {/* Auto-reset progress bar */}
-            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#C26D52] transition-all duration-1000 ease-linear rounded-full"
-                style={{ width: `${(autoResetCountdown / 4) * 100}%` }}
-              />
-            </div>
-
-            {/* Verdict Header & Traffic Light Badge */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
+          <div className="absolute inset-x-3 bottom-3 z-30 p-3.5 sm:p-4 rounded-2xl bg-[#1F1714]/95 backdrop-blur-xl border border-white/15 shadow-2xl space-y-2.5 animate-fadeIn max-h-[85vh] overflow-y-auto">
+            {/* Auto-reset progress bar + Scan Next */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <div
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold font-mono tracking-tight uppercase ${verdict.badgeBg} ${verdict.badgeBorder} ${verdict.badgeText}`}
-                >
-                  <span>{verdict.statusLabel}</span>
-                </div>
-                <div className="text-base font-extrabold text-[#FFFDF9] font-mono">
-                  {verdict.baristaVerdict}
-                </div>
-                <div className="text-xs text-[#A6998E] flex items-center gap-1.5 font-mono">
-                  <span>Dato: {verdict.date}</span>
-                  {verdict.isEstimatedFromBBD && (
-                    <span className="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.2 rounded border border-amber-400/30">
-                      BBD Estimat
-                    </span>
-                  )}
-                </div>
+                  className="h-full bg-[#C26D52] transition-all duration-1000 ease-linear rounded-full shadow-[0_0_8px_rgba(194,109,82,0.6)]"
+                  style={{ width: `${(autoResetCountdown / 8) * 100}%` }}
+                />
               </div>
-
               <button
                 type="button"
                 onClick={handleResetForNextScan}
-                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-sm"
+                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-[11px] font-semibold text-white transition flex items-center gap-1.5 shadow-xs shrink-0 cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-[#E58367]" />
+                <RefreshCw className="w-3 h-3 text-[#E58367]" />
                 <span>{t('radar.scan_next')}</span>
               </button>
             </div>
 
-            {/* Barista Recommendation Advice */}
-            <p className="text-xs text-[#DDD2C7] leading-relaxed bg-black/30 p-2.5 rounded-xl border border-white/5">
-              {verdict.recommendedAction}
-            </p>
+            {/* Espresso Warmth Parchment Card with Exact Freshness Scale & Barista Note */}
+            <div className="p-3 rounded-xl bg-[#FAF7F2] text-[#2C2018] border border-[#DECFC0] space-y-2.5 shadow-md">
+              {/* Header: Days off roast + Date & BBD Badge */}
+              <div className="flex items-center justify-between text-[11px] font-mono text-[#7A6E65]">
+                <span className="flex items-center gap-1.5 font-bold text-[#2C2018]">
+                  <Calendar className="w-3.5 h-3.5 text-[#C26D52]" />
+                  <span>{verdict.daysOffRoast}d off roast</span>
+                  {verdict.isEstimatedFromBBD && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-900 border border-amber-400/40">
+                      BBD Estimat
+                    </span>
+                  )}
+                </span>
+                <span className="text-[10px] text-[#A6998E]">
+                  {verdict.date}
+                </span>
+              </div>
+
+              {/* Exact Visual Segmented Roast Timeline Bar (with Days, Pin, Pinstripes & Legend) */}
+              <RoastTimelineBar
+                roastDate={verdict.date}
+                roastLevel={verdict.detectedRoastLevel || 'medium'}
+              />
+
+              {/* Barista Freshness Intelligence Note */}
+              {(() => {
+                const freshness = calculateBeanFreshness(verdict.date, verdict.detectedRoastLevel || 'medium');
+                return (
+                  <div
+                    className={`p-2.5 rounded-xl border text-[10.5px] leading-snug transition-all ${
+                      freshness.phase === 'stale'
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-950'
+                        : freshness.phase === 'past_peak'
+                        ? 'bg-stone-500/10 border-stone-400/30 text-stone-900'
+                        : freshness.phase === 'degassing'
+                        ? 'bg-[#C26D52]/10 border-[#C26D52]/30 text-[#8C3D26]'
+                        : 'bg-[#72806B]/10 border-[#72806B]/30 text-[#2E3C2B]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1 font-bold font-mono text-[9.5px] uppercase tracking-wide">
+                      <span>
+                        {freshness.phase === 'stale'
+                          ? (t('beandex.freshness_stale_title') || '🥛 Best with Milk / Cortado')
+                          : freshness.phase === 'past_peak'
+                          ? (t('beandex.freshness_past_peak_title') || '⏱️ Past Peak • Grind Finer')
+                          : freshness.phase === 'degassing'
+                          ? (t('beandex.freshness_degassing_title') || '💨 Resting • Degassing CO₂')
+                          : (t('beandex.freshness_peak_title') || '✨ Peak Flavor Window')}
+                      </span>
+                    </div>
+                    <p className="font-sans text-[10px] opacity-90 mt-0.5 leading-tight">
+                      {language === 'da'
+                        ? freshness.phase === 'stale'
+                          ? 'Kaffeolierne er oxideret. Cremaen er tyndere – smager skønt med mælk (Flat White / Latte) eller som kort Ristretto.'
+                          : freshness.phase === 'past_peak'
+                          ? 'Aromaerne er blødere. Kværn et halvt trin finere for at bevare sødme og fylde.'
+                          : freshness.phase === 'degassing'
+                          ? 'Friskristet med højt CO₂. Lad hvile et par dage for renere smag uden boblende crema.'
+                          : 'Maksimal aromaintensitet og tyk crema. Helt i top til ren espresso eller pour over!'
+                        : freshness.baristaTip}
+                    </p>
+                  </div>
+                );
+              })()}
+            </div>
 
             {/* Quick Actions Footer */}
             <div className="grid grid-cols-2 gap-2 pt-1">

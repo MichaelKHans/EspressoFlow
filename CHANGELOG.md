@@ -2,6 +2,14 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.26] - 2026-11-02
+### Etape 105: Visuel Riste-Tidslinje & Barista Intelligence Note i Freshness Radar HUD
+- **Visuel Friskhedsskala i Freshness Radar ([FreshnessRadarModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FreshnessRadarModal.tsx)):**
+  - Integreret den fulde visuelle `RoastTimelineBar` fra Beandex direkte ind i Freshness Radar scanningsoverlayet.
+  - Viser nu det varme Espresso Warmth pergament-kort (`#FAF7F2`) med `X dage fra ristning`, eksakt ristedato (`YYYY-MM-DD`), statusmærke (`PAST PEAK`, `PEAK WINDOW`, `RESTING`, `STALE`), 3-zoners tidslinjespor med nålemarkør og guldzone-skravering.
+  - Tilføjet det intelligente Barista Freshness Note-kort med dynamiske ekstraktions- og smagsanbefalinger til baristaen (tilpasset dansk/engelsk).
+  - Forlænget auto-reset countdown fra 4 til 8 sekunder med tydelig timerbar, så baristaen har ro til at aflæse skalaen og noterne på hylden i supermarkedet, samt tilføjet en lynhurtig *"Scan Næste"* genvej.
+
 ## [1.21.25] - 2026-11-01
 ### Etape 104: Løsning af Minified React Error #310 i BeanScannerModal
 - **Korrekt Hook-Placering og Håndtering af Betingede Renders ([BeanScannerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanScannerModal.tsx)):**
