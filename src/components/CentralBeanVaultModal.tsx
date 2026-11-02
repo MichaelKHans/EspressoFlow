@@ -8,6 +8,7 @@ import {
   Check,
   Plus,
   Sparkles,
+  Bookmark,
 } from 'lucide-react';
 import type { CoffeeBeanProfile, RoastLevel, RatioStyle } from '../types/espresso';
 import { fetchAllGlobalBeans, type GlobalCoffeeBean } from '../lib/supabase';
@@ -111,7 +112,7 @@ export const CentralBeanVaultModal: React.FC<CentralBeanVaultModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleAdd = (globalBean: GlobalCoffeeBean) => {
+  const handleAdd = (globalBean: GlobalCoffeeBean, asWishlist: boolean = false) => {
     const defaultRatio: RatioStyle =
       globalBean.roast_level === 'light'
         ? 'lungo'
@@ -140,10 +141,11 @@ export const CentralBeanVaultModal: React.FC<CentralBeanVaultModalProps> = ({
       imageUrl: globalBean.image_url,
       flavorNotes: globalBean.flavor_notes,
       originCountry: globalBean.origin_country,
+      isWishlist: asWishlist,
     };
 
     onAddBeanToVault(newBean);
-    setToastMessage(`✓ ${globalBean.name} added to your vault!`);
+    setToastMessage(asWishlist ? `🔖 ${globalBean.name} added to your Wishlist!` : `✓ ${globalBean.name} added to your vault!`);
     setTimeout(() => {
       setToastMessage(null);
     }, 2800);
@@ -427,14 +429,26 @@ export const CentralBeanVaultModal: React.FC<CentralBeanVaultModalProps> = ({
                           <span>{t('vault.in_vault')}</span>
                         </span>
                       ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleAdd(bean)}
-                          className="text-[10px] font-bold text-[#C26D52] hover:text-white px-2.5 py-1 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52] transition flex items-center gap-1 shrink-0 shadow-2xs active:scale-95"
-                        >
-                          <Plus className="w-3 h-3" />
-                          <span>{t('vault.add_to_vault')}</span>
-                        </button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleAdd(bean, true)}
+                            className="text-[10px] font-bold text-amber-900 hover:text-white px-2 py-1 rounded-lg border border-amber-400/40 bg-amber-500/10 hover:bg-amber-600 transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer"
+                            title={t('beandex.add_to_wishlist')}
+                          >
+                            <Bookmark className="w-3 h-3 text-amber-700 hover:text-white" />
+                            <span>{t('beandex.add_to_wishlist_short')}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAdd(bean, false)}
+                            className="text-[10px] font-bold text-[#C26D52] hover:text-white px-2 py-1 rounded-lg border border-[#C26D52] bg-[#C26D52]/10 hover:bg-[#C26D52] transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer"
+                            title={t('vault.add_to_vault')}
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>{t('vault.add_to_vault')}</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

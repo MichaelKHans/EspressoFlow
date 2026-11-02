@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Zap,
   Archive,
+  Bookmark,
   ThumbsUp,
   ThumbsDown,
   HelpCircle,
@@ -103,7 +104,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
   const [roastFilter, setRoastFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<PriceTier | 'all'>('all');
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
-  const [inventoryTab, setInventoryTab] = useState<'active' | 'archive'>('active');
+  const [inventoryTab, setInventoryTab] = useState<'active' | 'wishlist' | 'archive'>('active');
   const [finishingBean, setFinishingBean] = useState<CoffeeBeanProfile | null>(null);
   const [isMatchmakerOpen, setIsMatchmakerOpen] = useState<boolean>(false);
 
@@ -184,9 +185,10 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     };
   }, []);
 
-  // Active vs Finished bags
-  const activeBags = useMemo(() => beans.filter((b) => !b.isFinished), [beans]);
-  const finishedBags = useMemo(() => beans.filter((b) => b.isFinished), [beans]);
+  // Active vs Wishlist vs Finished bags
+  const activeBags = useMemo(() => beans.filter((b) => !b.isFinished && !b.isWishlist), [beans]);
+  const wishlistBags = useMemo(() => beans.filter((b) => !b.isFinished && Boolean(b.isWishlist)), [beans]);
+  const finishedBags = useMemo(() => beans.filter((b) => Boolean(b.isFinished)), [beans]);
 
   // Calculate Repurchase Satisfaction percentage for finished bags
   const repurchaseRate = useMemo(() => {
@@ -196,9 +198,14 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     return Math.round((buyAgainCount / rated.length) * 100);
   }, [finishedBags]);
 
-  // Filtered personal bags according to active/archive inventory tab
+  // Filtered personal bags according to active/wishlist/archive inventory tab
   const filteredBags = useMemo(() => {
-    const targetPool = inventoryTab === 'active' ? activeBags : finishedBags;
+    const targetPool =
+      inventoryTab === 'active'
+        ? activeBags
+        : inventoryTab === 'wishlist'
+        ? wishlistBags
+        : finishedBags;
     return targetPool.filter((b) => {
       const q = searchQuery.toLowerCase().trim();
       if (q) {
@@ -206,7 +213,9 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
         const matchesRoaster = b.roaster?.toLowerCase().includes(q) || false;
         const matchesNotes = b.notes?.toLowerCase().includes(q) || false;
         const matchesFinishNotes = b.finishNotes?.toLowerCase().includes(q) || false;
-        if (!matchesName && !matchesRoaster && !matchesNotes && !matchesFinishNotes) return false;
+        const matchesFlavor = b.flavorNotes?.some((fn) => fn.toLowerCase().includes(q)) || false;
+        const matchesOrigin = b.originCountry?.toLowerCase().includes(q) || false;
+        if (!matchesName && !matchesRoaster && !matchesNotes && !matchesFinishNotes && !matchesFlavor && !matchesOrigin) return false;
       }
 
       if (roastFilter !== 'all' && b.roastLevel !== roastFilter) {
@@ -224,7 +233,20 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
 
       return true;
     });
-  }, [inventoryTab, activeBags, finishedBags, searchQuery, roastFilter, priceFilter, favoritesOnly]);
+  }, [inventoryTab, activeBags, wishlistBags, finishedBags, searchQuery, roastFilter, priceFilter, favoritesOnly]);
+
+  // Handle moving a wishlist bean to active stock
+  const handleMoveWishlistToActive = (bean: CoffeeBeanProfile) => {
+    onUpdateBean(bean.id, {
+      isWishlist: false,
+      roastDate: new Date().toISOString().split('T')[0],
+      dateOpened: new Date().toISOString().split('T')[0],
+    });
+    setAddedFeedback(bean.name);
+    setTimeout(() => setAddedFeedback(null), 3500);
+    setInventoryTab('active');
+    onSelectBean(bean.id);
+  };
 
   // Handle finishing / archiving a bag
   const handleConfirmFinish = (
@@ -466,7 +488,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
     });
   };
 
-  const handleAddGlobalBeanToVault = (gb: GlobalCoffeeBean) => {
+  const handleAddGlobalBeanToVault = (gb: GlobalCoffeeBean, asWishlist: boolean = false) => {
     const roast = gb.roast_level === 'dark' ? 'dark' : gb.roast_level === 'light' ? 'light' : 'medium';
     onCreateBean({
       name: gb.name,
@@ -489,6 +511,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
       flavorNotes: gb.flavor_notes,
       originCountry: gb.origin_country || gb.purchase_country,
       purchaseLocation: gb.purchase_location,
+      isWishlist: asWishlist,
     });
 
     setAddedFeedback(gb.name);
@@ -549,21 +572,12 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             </p>
           </div>
 
-          {/* Action Chips */}
+          {/* Action Chips: Physical Bag Tools First */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
-              onClick={() => setIsMatchmakerOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-linear-to-r from-[#D4A373] to-[#C26D52] hover:brightness-110 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md transition active:scale-95 cursor-pointer ring-1 ring-white/20"
-              title={t('beandex.matchmaker_tooltip')}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
-              <span>{t('beandex.matchmaker_btn')}</span>
-            </button>
-            <button
-              type="button"
               onClick={onOpenScanner}
-              className="px-3.5 py-2 rounded-xl bg-linear-to-r from-[#C26D52] to-[#A85840] hover:brightness-110 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md transition active:scale-95"
+              className="px-3.5 py-2 rounded-xl bg-linear-to-r from-[#C26D52] to-[#A85840] hover:brightness-110 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md transition active:scale-95 cursor-pointer"
             >
               <Camera className="w-3.5 h-3.5" />
               <span>{t('beandex.scan_bag_btn')}</span>
@@ -572,7 +586,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
               <button
                 type="button"
                 onClick={onOpenRadar}
-                className="px-3.5 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15] hover:bg-[#38271C] text-[#FFFDF9] font-semibold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs"
+                className="px-3.5 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15] hover:bg-[#38271C] text-[#FFFDF9] font-semibold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer"
                 title={t('radar.tooltip')}
               >
                 <Zap className="w-3.5 h-3.5 text-[#E58367] fill-[#E58367]" />
@@ -582,7 +596,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             <button
               type="button"
               onClick={() => setIsAddingCustomBag(!isAddingCustomBag)}
-              className="px-3 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15] hover:bg-[#38271C] text-[#FAF7F2] font-semibold text-xs flex items-center gap-1.5 transition"
+              className="px-3 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15] hover:bg-[#38271C] text-[#FAF7F2] font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-[#D4A373]" />
               <span>{isAddingCustomBag ? 'Close Form' : t('beandex.add_bag_btn')}</span>
@@ -590,7 +604,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             <button
               type="button"
               onClick={onOpenCentralVault}
-              className="px-3 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15] hover:bg-[#38271C] text-[#D4A373] font-semibold text-xs flex items-center gap-1.5 transition"
+              className="px-3 py-2 rounded-xl border border-[#4D382B] bg-[#2A1D15] hover:bg-[#38271C] text-[#D4A373] font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer"
               title="Open full cloud directory"
             >
               <Globe className="w-3.5 h-3.5" />
@@ -606,6 +620,20 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
             >
               <ShieldCheck className="w-3.5 h-3.5 text-[#C26D52]" />
               <span className="hidden md:inline">Curator</span>
+            </button>
+          </div>
+
+          {/* Discovery & Wishlist Tool: Find Coffee Match (Moved Below Physical Tools) */}
+          <div className="pt-0.5">
+            <button
+              type="button"
+              onClick={() => setIsMatchmakerOpen(true)}
+              className="px-4 py-2 rounded-xl bg-linear-to-r from-[#D4A373] via-[#C26D52] to-[#B3583D] hover:brightness-110 text-white font-semibold text-xs flex items-center gap-2 shadow-md transition active:scale-95 cursor-pointer ring-1 ring-white/20"
+              title={t('beandex.matchmaker_tooltip')}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
+              <span>{t('beandex.matchmaker_btn')}</span>
+              <span className="text-[10px] text-amber-100/90 font-normal hidden xs:inline">• {t('beandex.matchmaker_hint')}</span>
             </button>
           </div>
         </div>
@@ -987,43 +1015,66 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
           </div>
         </div>
 
-        {/* Inventory Mode Selector: Active Bags vs Finished Archive */}
+        {/* Inventory Mode Selector: 3 Folder Tabs (Active Stock vs Wishlist vs Archive) with tactile folder border */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
-          <div className="flex items-center gap-1.5 p-1 bg-[#FAF7F2] border border-[#DECFC0] rounded-xl self-start">
+          <div className="w-full sm:w-auto grid grid-cols-3 gap-1.5 sm:gap-2 p-1.5 bg-[#FAF7F2] border border-[#DECFC0] rounded-2xl shadow-xs">
+            {/* Tab 1: Active Stock */}
             <button
               type="button"
               onClick={() => setInventoryTab('active')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
+              className={`py-2 px-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
                 inventoryTab === 'active'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
-                  : 'text-[#7A6E65] hover:text-[#2C2018]'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-sm ring-1 ring-[#C26D52]'
+                  : 'bg-[#FFFDF9] text-[#7A6E65] border-[#DECFC0] hover:bg-white hover:border-[#C2B5A8] hover:text-[#2C2018]'
               }`}
             >
-              <Coffee className="w-3.5 h-3.5 text-[#C26D52]" />
-              <span>{t('beandex.tab_active_bags')}</span>
+              <Coffee className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'active' ? 'text-[#E58367]' : 'text-[#C26D52]'}`} />
+              <span className="truncate">{t('beandex.tab_active_bags')}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  inventoryTab === 'active' ? 'bg-[#C26D52] text-white' : 'bg-[#DECFC0]/50 text-[#7A6E65]'
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
+                  inventoryTab === 'active' ? 'bg-[#C26D52] text-white' : 'bg-[#DECFC0]/60 text-[#7A6E65]'
                 }`}
               >
                 {activeBags.length}
               </span>
             </button>
 
+            {/* Tab 2: Wishlist */}
+            <button
+              type="button"
+              onClick={() => setInventoryTab('wishlist')}
+              className={`py-2 px-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
+                inventoryTab === 'wishlist'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-sm ring-1 ring-[#D4A373]'
+                  : 'bg-[#FFFDF9] text-[#7A6E65] border-[#DECFC0] hover:bg-white hover:border-[#C2B5A8] hover:text-[#2C2018]'
+              }`}
+            >
+              <Bookmark className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'wishlist' ? 'text-amber-300 fill-amber-300' : 'text-[#D4A373]'}`} />
+              <span className="truncate">{t('beandex.tab_wishlist')}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
+                  inventoryTab === 'wishlist' ? 'bg-[#D4A373] text-[#2C2018] font-bold' : 'bg-[#DECFC0]/60 text-[#7A6E65]'
+                }`}
+              >
+                {wishlistBags.length}
+              </span>
+            </button>
+
+            {/* Tab 3: Archive */}
             <button
               type="button"
               onClick={() => setInventoryTab('archive')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer ${
+              className={`py-2 px-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
                 inventoryTab === 'archive'
-                  ? 'bg-[#2C2018] text-[#FAF7F2] shadow-xs'
-                  : 'text-[#7A6E65] hover:text-[#2C2018]'
+                  ? 'bg-[#2C2018] text-[#FAF7F2] border-[#2C2018] shadow-sm ring-1 ring-[#72806B]'
+                  : 'bg-[#FFFDF9] text-[#7A6E65] border-[#DECFC0] hover:bg-white hover:border-[#C2B5A8] hover:text-[#2C2018]'
               }`}
             >
-              <Archive className="w-3.5 h-3.5 text-[#72806B]" />
-              <span>{t('beandex.tab_finished_archive')}</span>
+              <Archive className={`w-3.5 h-3.5 shrink-0 ${inventoryTab === 'archive' ? 'text-[#9AA894]' : 'text-[#72806B]'}`} />
+              <span className="truncate">{t('beandex.tab_finished_archive')}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  inventoryTab === 'archive' ? 'bg-[#72806B] text-white' : 'bg-[#DECFC0]/50 text-[#7A6E65]'
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono shrink-0 ${
+                  inventoryTab === 'archive' ? 'bg-[#72806B] text-white' : 'bg-[#DECFC0]/60 text-[#7A6E65]'
                 }`}
               >
                 {finishedBags.length}
@@ -1044,7 +1095,27 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
         {/* Bags Grid */}
         {filteredBags.length === 0 ? (
           <div className="p-8 rounded-2xl border border-dashed border-[#DECFC0] bg-[#FFFDF9] text-center space-y-3">
-            {inventoryTab === 'archive' ? (
+            {inventoryTab === 'wishlist' ? (
+              <>
+                <Bookmark className="w-8 h-8 text-[#D4A373]/70 mx-auto" />
+                <h4 className="text-xs font-bold uppercase font-mono text-[#2C2018]">
+                  {t('beandex.empty_wishlist_title')}
+                </h4>
+                <p className="text-xs text-[#7A6E65] font-sans max-w-md mx-auto">
+                  {t('beandex.empty_wishlist_subtitle')}
+                </p>
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsMatchmakerOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-linear-to-r from-[#D4A373] to-[#C26D52] hover:brightness-110 text-white text-xs font-semibold inline-flex items-center gap-2 transition shadow-sm cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
+                    <span>{t('beandex.matchmaker_btn')}</span>
+                  </button>
+                </div>
+              </>
+            ) : inventoryTab === 'archive' ? (
               <>
                 <Archive className="w-8 h-8 text-[#72806B]/50 mx-auto" />
                 <h4 className="text-xs font-bold uppercase font-mono text-[#2C2018]">
@@ -1107,6 +1178,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredBags.map((bean) => {
+              const isWishlistBean = Boolean(bean.isWishlist);
               const isActiveInFlow = bean.id === activeBeanId;
               const freshness = calculateBeanFreshness(bean.roastDate, bean.roastLevel, bean.dateOpened);
               const rating = bean.rating || 0;
@@ -1116,7 +1188,9 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                 <div
                   key={bean.id}
                   className={`p-4 rounded-2xl border transition flex flex-col justify-between gap-3 shadow-xs ${
-                    bean.isFinished
+                    isWishlistBean
+                      ? 'border-amber-300/80 bg-amber-50/20 hover:border-amber-400'
+                      : bean.isFinished
                       ? 'border-[#DECFC0] bg-[#FAF7F2]/60 opacity-90'
                       : isActiveInFlow
                       ? 'border-[#C26D52] bg-[#FFFDF9] ring-2 ring-[#C26D52] shadow-md'
@@ -1174,7 +1248,12 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                       </div>
 
                       <div className="flex items-center gap-1.5">
-                        {!bean.isFinished ? (
+                        {isWishlistBean ? (
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-900 border border-amber-400/40 flex items-center gap-1 font-mono">
+                            <Bookmark className="w-2.5 h-2.5 fill-amber-700 text-amber-700" />
+                            <span>{t('beandex.wishlist_badge')}</span>
+                          </span>
+                        ) : !bean.isFinished ? (
                           <>
                             {isActiveInFlow ? (
                               <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#72806B]/15 text-[#72806B] border border-[#72806B]/30 flex items-center gap-1">
@@ -1230,7 +1309,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                           </div>
                         )}
 
-                        {beans.length > 1 && (
+                        {(beans.length > 1 || isWishlistBean) && (
                           <button
                             type="button"
                             onClick={() => {
@@ -1338,103 +1417,130 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                     </div>
 
                     {/* Visual Peak Flavor Window Timeline Bar (Stitch Inspiration) */}
-                    <div className="pt-0.5 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-[9.5px] font-mono text-[#7A6E65]">
-                          <Calendar className="w-3 h-3 text-[#A6998E]" />
-                          <span>{t('beandex.days_off_roast', { days: freshness.daysOffRoast })}</span>
+                    {/* Visual Segmented Roast Timeline Bar (Only for non-wishlist bags) */}
+                    {!isWishlistBean ? (
+                      <>
+                        <div className="pt-0.5 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-[9.5px] font-mono text-[#7A6E65]">
+                              <Calendar className="w-3 h-3 text-[#A6998E]" />
+                              <span>{t('beandex.days_off_roast', { days: freshness.daysOffRoast })}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenFreshness(bean.roastLevel)}
+                              className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] text-[#7A6E65] hover:text-[#C26D52] flex items-center justify-center transition cursor-pointer"
+                              title={t('beandex.info_degas_button')}
+                            >
+                              <Info className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          <RoastTimelineBar
+                            roastDate={bean.roastDate}
+                            roastLevel={bean.roastLevel}
+                            dateOpened={bean.dateOpened}
+                          />
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenFreshness(bean.roastLevel)}
-                          className="w-5 h-5 rounded-full bg-[#FAF7F2] border border-[#E8DFD5] hover:border-[#C26D52] text-[#7A6E65] hover:text-[#C26D52] flex items-center justify-center transition cursor-pointer"
-                          title={t('beandex.info_degas_button')}
+
+                        {/* Barista Freshness Intelligence Note */}
+                        <div
+                          className={`p-2 rounded-xl border text-[10.5px] leading-snug transition-all ${
+                            freshness.phase === 'stale'
+                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-950'
+                              : freshness.phase === 'past_peak'
+                              ? 'bg-stone-500/10 border-stone-400/30 text-stone-900'
+                              : freshness.phase === 'degassing'
+                              ? 'bg-[#C26D52]/10 border-[#C26D52]/30 text-[#8C3D26]'
+                              : 'bg-[#72806B]/10 border-[#72806B]/30 text-[#2E3C2B]'
+                          }`}
                         >
-                          <Info className="w-3 h-3" />
-                        </button>
-                      </div>
+                          <div className="flex items-center gap-1 font-bold font-mono text-[9.5px] uppercase tracking-wide">
+                            <span>
+                              {freshness.phase === 'stale'
+                                ? (t('beandex.freshness_stale_title') || '🥛 Best with Milk / Cortado')
+                                : freshness.phase === 'past_peak'
+                                ? (t('beandex.freshness_past_peak_title') || '⏱️ Past Peak • Grind Finer')
+                                : freshness.phase === 'degassing'
+                                ? (t('beandex.freshness_degassing_title') || '💨 Resting • Degassing CO₂')
+                                : (t('beandex.freshness_peak_title') || '✨ Peak Flavor Window')}
+                            </span>
+                          </div>
+                          <p className="font-sans text-[10px] opacity-90 mt-0.5 leading-tight">
+                            {language === 'da'
+                              ? freshness.phase === 'stale'
+                                ? 'Kaffeolierne er oxideret. Cremaen er tyndere – smager skønt med mælk (Flat White / Latte) eller som kort Ristretto.'
+                                : freshness.phase === 'past_peak'
+                                ? 'Aromaerne er blødere. Kværn et halvt trin finere for at bevare sødme og fylde.'
+                                : freshness.phase === 'degassing'
+                                ? 'Friskristet med højt CO₂. Lad hvile et par dage for renere smag uden boblende crema.'
+                                : 'Maksimal aromaintensitet og tyk crema. Helt i top til ren espresso eller pour over!'
+                              : freshness.baristaTip}
+                          </p>
+                        </div>
 
-                      <RoastTimelineBar
-                        roastDate={bean.roastDate}
-                        roastLevel={bean.roastLevel}
-                        dateOpened={bean.dateOpened}
-                      />
-                    </div>
-
-                    {/* Barista Freshness Intelligence Note */}
-                    <div
-                      className={`p-2 rounded-xl border text-[10.5px] leading-snug transition-all ${
-                        freshness.phase === 'stale'
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-950'
-                          : freshness.phase === 'past_peak'
-                          ? 'bg-stone-500/10 border-stone-400/30 text-stone-900'
-                          : freshness.phase === 'degassing'
-                          ? 'bg-[#C26D52]/10 border-[#C26D52]/30 text-[#8C3D26]'
-                          : 'bg-[#72806B]/10 border-[#72806B]/30 text-[#2E3C2B]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1 font-bold font-mono text-[9.5px] uppercase tracking-wide">
-                        <span>
-                          {freshness.phase === 'stale'
-                            ? (t('beandex.freshness_stale_title') || '🥛 Best with Milk / Cortado')
-                            : freshness.phase === 'past_peak'
-                            ? (t('beandex.freshness_past_peak_title') || '⏱️ Past Peak • Grind Finer')
-                            : freshness.phase === 'degassing'
-                            ? (t('beandex.freshness_degassing_title') || '💨 Resting • Degassing CO₂')
-                            : (t('beandex.freshness_peak_title') || '✨ Peak Flavor Window')}
-                        </span>
-                      </div>
-                      <p className="font-sans text-[10px] opacity-90 mt-0.5 leading-tight">
-                        {language === 'da'
-                          ? freshness.phase === 'stale'
-                            ? 'Kaffeolierne er oxideret. Cremaen er tyndere – smager skønt med mælk (Flat White / Latte) eller som kort Ristretto.'
-                            : freshness.phase === 'past_peak'
-                            ? 'Aromaerne er blødere. Kværn et halvt trin finere for at bevare sødme og fylde.'
-                            : freshness.phase === 'degassing'
-                            ? 'Friskristet med højt CO₂. Lad hvile et par dage for renere smag uden boblende crema.'
-                            : 'Maksimal aromaintensitet og tyk crema. Helt i top til ren espresso eller pour over!'
-                          : freshness.baristaTip}
-                      </p>
-                    </div>
-
-                    {/* Bag Opened Status Row */}
-                    <div className="flex items-center justify-between text-[10px] pt-0.5">
-                      {bean.dateOpened ? (
-                        <div className="flex items-center gap-1 text-[10px] text-stone-700 bg-stone-100/80 border border-stone-200 px-2 py-0.5 rounded-lg w-full justify-between">
-                          <span className="flex items-center gap-1">
-                            <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" />
-                            <span>{t('beandex.opened_status', { days: freshness.daysOpened ?? 0 })}</span>
-                            <span className="text-[#A6998E]">({bean.dateOpened})</span>
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newDate = prompt(t('beandex.opened_date_label'), bean.dateOpened);
-                              if (newDate !== null) {
-                                onUpdateBean(bean.id, { dateOpened: newDate.trim() || undefined });
+                        {/* Bag Opened Status Row */}
+                        <div className="flex items-center justify-between text-[10px] pt-0.5">
+                          {bean.dateOpened ? (
+                            <div className="flex items-center gap-1 text-[10px] text-stone-700 bg-stone-100/80 border border-stone-200 px-2 py-0.5 rounded-lg w-full justify-between">
+                              <span className="flex items-center gap-1">
+                                <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" />
+                                <span>{t('beandex.opened_status', { days: freshness.daysOpened ?? 0 })}</span>
+                                <span className="text-[#A6998E]">({bean.dateOpened})</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newDate = prompt(t('beandex.opened_date_label'), bean.dateOpened);
+                                  if (newDate !== null) {
+                                    onUpdateBean(bean.id, { dateOpened: newDate.trim() || undefined });
+                                  }
+                                }}
+                                className="text-[9px] font-bold text-[#C26D52] hover:underline cursor-pointer"
+                              >
+                                {t('beandex.edit_opened_date')}
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onUpdateBean(bean.id, {
+                                  dateOpened: new Date().toISOString().split('T')[0],
+                                })
                               }
-                            }}
-                            className="text-[9px] font-bold text-[#C26D52] hover:underline cursor-pointer"
-                          >
-                            {t('beandex.edit_opened_date')}
-                          </button>
+                              className="text-[10px] font-bold text-[#7A6E65] hover:text-[#C26D52] flex items-center gap-1 py-0.5 px-1.5 rounded-md hover:bg-[#FAF7F2] transition cursor-pointer"
+                              title="Click when you break the bag seal"
+                            >
+                              <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" />
+                              <span>{t('beandex.mark_opened_today')}</span>
+                            </button>
+                          )}
                         </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onUpdateBean(bean.id, {
-                              dateOpened: new Date().toISOString().split('T')[0],
-                            })
-                          }
-                          className="text-[10px] font-bold text-[#7A6E65] hover:text-[#C26D52] flex items-center gap-1 py-0.5 px-1.5 rounded-md hover:bg-[#FAF7F2] transition cursor-pointer"
-                          title="Click when you break the bag seal"
-                        >
-                          <PackageOpen className="w-3.5 h-3.5 text-[#C26D52]" />
-                          <span>{t('beandex.mark_opened_today')}</span>
-                        </button>
-                      )}
-                    </div>
+                      </>
+                    ) : (
+                      /* Wishlist Sensory & Availability Card */
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-[11px] text-amber-950 space-y-1">
+                        <div className="flex items-center justify-between font-mono text-[10px] font-bold text-amber-900 uppercase">
+                          <span className="flex items-center gap-1.5">
+                            <Bookmark className="w-3.5 h-3.5 text-amber-700 fill-amber-700" />
+                            <span>{t('beandex.wishlist_badge')}</span>
+                          </span>
+                          {bean.approxPriceDkk && (
+                            <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md border border-amber-300">
+                              ~{bean.approxPriceDkk} DKK
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-sans text-[11px] text-amber-900/90 leading-snug">
+                          {bean.purchaseLocation
+                            ? t('beandex.available_at', { location: bean.purchaseLocation })
+                            : language === 'da'
+                            ? 'Gemt på din ønskeliste. Tryk "Købt! Flyt til Aktive" nedenfor når du har posen i hånden.'
+                            : 'Saved on your wishlist. Tap "In Stock • Move to Active" below once you have the bag at home.'}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Finished Bag Exit Verdict (if bag is finished) */}
                     {bean.isFinished && (
@@ -1606,7 +1712,7 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                     </div>
 
                     {/* Dialed-In Recipe Box (Stitch Inspiration) */}
-                    {!bean.isFinished && (
+                    {!bean.isFinished && !isWishlistBean && (
                       <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E8DFD5] text-[10px] font-mono space-y-1">
                         <div className="flex items-center justify-between text-[#7A6E65]">
                           <span className="font-bold text-[9px] uppercase tracking-wider text-[#C26D52] flex items-center gap-1">
@@ -1627,84 +1733,100 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                     )}
                   </div>
 
-                  {/* Card Footer: 1-5 Star Rating & Dial-In Studio Action */}
+                  {/* Card Footer: Rating / Dial-In Action OR Wishlist Move to Active */}
                   <div className="pt-2 border-t border-[#E8DFD5]/70 flex items-center justify-between gap-2">
-                    {/* Interactive 5-Star Barista Rating */}
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => handleRateBean(bean.id, star)}
-                            className="p-0.5 hover:scale-125 transition active:scale-95"
-                            title={`${star} stars`}
-                          >
-                            <Star
-                              className={`w-4 h-4 transition ${
-                                star <= rating
-                                  ? 'text-amber-500 fill-amber-500 drop-shadow-xs'
-                                  : 'text-[#E8DFD5] hover:text-amber-300'
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                      <span className="text-[9px] text-[#A6998E] block">
-                        {rating > 0 ? `${rating} / 5 stars` : t('beandex.unrated')}
-                      </span>
-                    </div>
-
-                    {/* Action button: Buy Again clone or Dial-In Studio + Start Brew */}
-                    {bean.isFinished ? (
-                      <div className="flex items-center gap-1.5">
+                    {isWishlistBean ? (
+                      <div className="flex items-center justify-between gap-2 w-full">
                         <button
                           type="button"
-                          onClick={() => onOpenDialInForBean(bean.id)}
-                          className="px-2 py-1 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] text-[10px] flex items-center gap-1 transition cursor-pointer"
-                          title={t('beandex.dial_in_view_tooltip')}
+                          onClick={() => handleMoveWishlistToActive(bean)}
+                          className="w-full py-2 px-3.5 rounded-xl bg-linear-to-r from-[#C26D52] to-[#A85840] hover:brightness-110 text-white font-bold text-xs font-mono flex items-center justify-center gap-2 transition shadow-sm active:scale-95 cursor-pointer"
+                          title={t('beandex.move_to_active_stock_tooltip')}
                         >
-                          <Sliders className="w-3 h-3 text-[#C26D52]" />
-                          <span>Dial-In</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRepeatPurchase(bean)}
-                          className="px-2.5 py-1.5 rounded-xl border border-[#C26D52] bg-[#C26D52] hover:bg-[#b05d43] text-white font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs cursor-pointer"
-                          title={t('beandex.buy_again_new_bag_btn')}
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          <span>{t('beandex.buy_again_new_bag_btn')}</span>
+                          <Check className="w-3.5 h-3.5" />
+                          <span>{t('beandex.move_to_active_stock')}</span>
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => onOpenDialInForBean(bean.id)}
-                          className="px-2.5 py-1.5 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs cursor-pointer"
-                          title="Open 4-step Dial-In Studio for this bean"
-                        >
-                          <Sliders className="w-3 h-3 text-[#C26D52]" />
-                          <span>{t('beandex.dial_in_btn')}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onStartBrewWithBean) {
-                              onStartBrewWithBean(bean.id);
-                            } else {
-                              onSelectBean(bean.id);
-                              onSwitchToFlow();
-                            }
-                          }}
-                          className="px-3 py-1.5 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white font-bold text-[10px] font-mono flex items-center gap-1.5 transition shadow-xs active:scale-95 cursor-pointer"
-                          title={t('beandex.start_brew_with_bean')}
-                        >
-                          <Coffee className="w-3.5 h-3.5" />
-                          <span>{t('beandex.start_brew_short')}</span>
-                        </button>
-                      </div>
+                      <>
+                        {/* Interactive 5-Star Barista Rating */}
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => handleRateBean(bean.id, star)}
+                                className="p-0.5 hover:scale-125 transition active:scale-95"
+                                title={`${star} stars`}
+                              >
+                                <Star
+                                  className={`w-4 h-4 transition ${
+                                    star <= rating
+                                      ? 'text-amber-500 fill-amber-500 drop-shadow-xs'
+                                      : 'text-[#E8DFD5] hover:text-amber-300'
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                          <span className="text-[9px] text-[#A6998E] block">
+                            {rating > 0 ? `${rating} / 5 stars` : t('beandex.unrated')}
+                          </span>
+                        </div>
+
+                        {/* Action button: Buy Again clone or Dial-In Studio + Start Brew */}
+                        {bean.isFinished ? (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => onOpenDialInForBean(bean.id)}
+                              className="px-2 py-1 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] text-[10px] flex items-center gap-1 transition cursor-pointer"
+                              title={t('beandex.dial_in_view_tooltip')}
+                            >
+                              <Sliders className="w-3 h-3 text-[#C26D52]" />
+                              <span>Dial-In</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRepeatPurchase(bean)}
+                              className="px-2.5 py-1.5 rounded-xl border border-[#C26D52] bg-[#C26D52] hover:bg-[#b05d43] text-white font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                              title={t('beandex.buy_again_new_bag_btn')}
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              <span>{t('beandex.buy_again_new_bag_btn')}</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => onOpenDialInForBean(bean.id)}
+                              className="px-2.5 py-1.5 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] font-semibold text-[10px] flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                              title="Open 4-step Dial-In Studio for this bean"
+                            >
+                              <Sliders className="w-3 h-3 text-[#C26D52]" />
+                              <span>{t('beandex.dial_in_btn')}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onStartBrewWithBean) {
+                                  onStartBrewWithBean(bean.id);
+                                } else {
+                                  onSelectBean(bean.id);
+                                  onSwitchToFlow();
+                                }
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-[#C26D52] hover:bg-[#b05d43] text-white font-bold text-[10px] font-mono flex items-center gap-1.5 transition shadow-xs active:scale-95 cursor-pointer"
+                              title={t('beandex.start_brew_with_bean')}
+                            >
+                              <Coffee className="w-3.5 h-3.5" />
+                              <span>{t('beandex.start_brew_short')}</span>
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -1832,14 +1954,26 @@ export const BeandexView: React.FC<BeandexViewProps> = ({
                         <span>{t('beandex.in_my_bags')}</span>
                       </span>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleAddGlobalBeanToVault(gb)}
-                        className="w-full py-1.5 rounded-lg bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] font-semibold text-[10px] flex items-center justify-center gap-1 transition shadow-2xs"
-                      >
-                        <Plus className="w-3 h-3 text-[#D4A373]" />
-                        <span>{t('beandex.add_to_my_bags')}</span>
-                      </button>
+                      <div className="grid grid-cols-2 gap-1.5 w-full">
+                        <button
+                          type="button"
+                          onClick={() => handleAddGlobalBeanToVault(gb, true)}
+                          className="py-1.5 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 border border-amber-400/40 font-semibold text-[10px] flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer"
+                          title={t('beandex.add_to_wishlist')}
+                        >
+                          <Bookmark className="w-3 h-3 text-amber-700" />
+                          <span>{t('beandex.add_to_wishlist_short')}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddGlobalBeanToVault(gb, false)}
+                          className="py-1.5 px-2 rounded-lg bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] font-semibold text-[10px] flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer"
+                          title={t('beandex.add_to_my_bags')}
+                        >
+                          <Plus className="w-3 h-3 text-[#D4A373]" />
+                          <span>{t('beandex.add_to_active_short')}</span>
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

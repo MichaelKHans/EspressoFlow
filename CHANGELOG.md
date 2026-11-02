@@ -2,6 +2,24 @@
 
 Alle væsentlige ændringer og milepæle i Flowbean dokumenteres i dette dokument i henhold til Semantisk Versionering (SemVer).
 
+## [1.21.27] - 2026-11-02
+### Etape 106: Beandex Ønskeliste (Wishlist), 3 Taktile Mappe-Faner & Flyttet Matchmaker
+- **Dedikeret Ønskeliste (Wishlist) System ([espresso.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/types/espresso.ts), [BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx), [BeanMatchmakerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanMatchmakerModal.tsx), [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - Implementeret `isWishlist?: boolean` i `CoffeeBeanProfile`.
+  - Når baristaen finder bønner via *Find Coffee Match* eller i det globale bønnekatalog, tilføjes de nu direkte til **Ønskelisten** med `+ Tilføj til Ønskeliste` (`+ Add to Wishlist`) som primær handling, frem for at blive blandet sammen med aktive bryggebønner på hylden.
+  - Ønskelistebønner ekskluderes automatisk fra aktive bønner i bryggebaren (`BarView`, `DrinkSelector`), så de aldrig forstyrrer workflowet for det kaffe, man reelt har hjemme.
+  - På hvert ønskelistekort i Beandex er der tilføjet en stor, tydelig handlingsknap: **`🛒 Købt! Flyt til Aktive` (`🛒 In Stock • Move to Active`)**, som med ét klik konverterer bønnen til en aktiv bryggepose, sætter ristedato og gør den klar til Dial-In og brygning i Flow.
+- **3 Taktile Arkivmappe-Faner ("Mappe Omkant") ([BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx)):**
+  - Omlagt fanebaren i Beandex til 3 markante, taktile arkivmappe-faner med tydelig afgrænsning (`border border-[#DECFC0] rounded-xl`) og skarp kontrast:
+    1. ☕ **Aktive** (med terracotta tællerbadge)
+    2. 🔖 **Ønskeliste** (med gyldent ravfarvet tællerbadge)
+    3. 📦 **Arkiv** (med salviegrønt tællerbadge)
+  - Layoutet er struktureret som et 3-kolonners gitter (`grid grid-cols-3 gap-1.5 sm:gap-2`), der tilpasser sig alle mobilskærme uden at teksten klemmes eller brydes akavet.
+  - Tilføjet varm tom-tilstand til Ønskelisten med direkte genvej til at starte *Find Coffee Match*.
+- **Ergonomisk Placering af "Find Coffee Match" ([BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx)):**
+  - Flyttet "Find Coffee Match" ned under de fysiske bønnehåndteringsværktøjer (*Scan Coffee Bag*, *Freshness Radar*, *Add Custom Bag*).
+  - Skaber en naturlig barista-prioritering: De fysiske kamera- og scanneværktøjer til posen på køkkenbordet er i top, mens opdagelses- og matchmaker-værktøjet til nye bønner ligger direkte herunder med forklarende undertitel.
+
 ## [1.21.26] - 2026-11-02
 ### Etape 105: Visuel Riste-Tidslinje & Barista Intelligence Note i Freshness Radar HUD
 - **Visuel Friskhedsskala i Freshness Radar ([FreshnessRadarModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FreshnessRadarModal.tsx)):**

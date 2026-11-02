@@ -111,8 +111,8 @@ export function App() {
   const [isRadarOpen, setIsRadarOpen] = useState<boolean>(false);
   const [radarScannedDate, setRadarScannedDate] = useState<string | undefined>(undefined);
 
-  // Active (non-finished) Beans pool
-  const activeBeans = beans.filter((b) => !b.isFinished);
+  // Active (non-finished, non-wishlist) Beans pool
+  const activeBeans = beans.filter((b) => !b.isFinished && !b.isWishlist);
 
   // Active Bean derived - prioritizes active (non-emptied) beans!
   const currentBean =
@@ -325,7 +325,7 @@ export function App() {
   const handleSelectBean = (beanId: string) => {
     setActiveBeanId(beanId);
     const selected = beans.find((b) => b.id === beanId);
-    if (selected && !selected.isFinished) {
+    if (selected && !selected.isFinished && !selected.isWishlist) {
       setCoffeeBeanName(selected.name);
       setRoastDate(selected.roastDate);
       setRoastLevel(selected.roastLevel);
@@ -1187,8 +1187,10 @@ export function App() {
               const updated = [newBean, ...beans];
               setBeans(updated);
               saveBeans(updated);
-              setActiveBeanId(newBean.id);
-              handleSelectBean(newBean.id);
+              if (!newBean.isWishlist) {
+                setActiveBeanId(newBean.id);
+                handleSelectBean(newBean.id);
+              }
             }}
             onOpenScanner={() => setIsBeanScannerOpen(true)}
             onOpenRadar={() => setIsRadarOpen(true)}

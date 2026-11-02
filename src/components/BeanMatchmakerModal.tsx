@@ -8,9 +8,10 @@ import {
   ChevronLeft,
   RotateCcw,
   Store,
-  Plus,
   Flame,
   Award,
+  Bookmark,
+  Coffee,
 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import type { CoffeeBeanProfile, PriceTier } from '../types/espresso';
@@ -50,7 +51,8 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
   ]);
   const [acidity, setAcidity] = useState<AcidityTolerance>('balanced');
   const [priceTier, setPriceTier] = useState<'all' | PriceTier>('all');
-  const [addedBeans, setAddedBeans] = useState<Set<string>>(new Set());
+  const [wishlistAddedBeans, setWishlistAddedBeans] = useState<Set<string>>(new Set());
+  const [activeAddedBeans, setActiveAddedBeans] = useState<Set<string>>(new Set());
 
   // Preferences object
   const preferences: MatchmakerPreferences = useMemo(
@@ -83,7 +85,7 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
     });
   };
 
-  const handleAddMatchToShelf = (match: CoffeeMatchResult) => {
+  const handleAddMatchToWishlist = (match: CoffeeMatchResult) => {
     const item = match.item;
     onAddBeanToShelf({
       name: item.name,
@@ -109,9 +111,42 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
       priceTier: item.priceTier || match.resolvedPriceTier,
       approxPriceDkk: item.approxPriceDkk,
       imageUrl: item.imageUrl,
+      isWishlist: true,
     });
 
-    setAddedBeans((prev) => new Set(prev).add(item.name));
+    setWishlistAddedBeans((prev) => new Set(prev).add(item.name));
+  };
+
+  const handleAddMatchToActive = (match: CoffeeMatchResult) => {
+    const item = match.item;
+    onAddBeanToShelf({
+      name: item.name,
+      roaster: item.roaster,
+      roastLevel: item.roastLevel,
+      roastDate: new Date().toISOString().split('T')[0],
+      doseGrams: 18,
+      targetYieldGrams: item.roastLevel === 'light' ? 42 : item.roastLevel === 'dark' ? 30 : 36,
+      ratioStyle: item.roastLevel === 'light' ? 'lungo' : item.roastLevel === 'dark' ? 'ristretto' : 'standard',
+      grindSetting: '13',
+      grinderName: activeGrinderName,
+      notes: item.notes,
+      suitableFor: item.suitableFor,
+      barcode: item.barcode,
+      species: item.species,
+      varietal: item.varietal,
+      originCountry: item.originCountry,
+      purchaseLocation: item.purchaseLocation,
+      purchaseCountry: item.purchaseCountry,
+      flavorNotes: item.flavorNotes,
+      expertScore: item.scaScore,
+      expertSource: item.scaScore ? 'SCA Specialty Lot' : undefined,
+      priceTier: item.priceTier || match.resolvedPriceTier,
+      approxPriceDkk: item.approxPriceDkk,
+      imageUrl: item.imageUrl,
+      isWishlist: false,
+    });
+
+    setActiveAddedBeans((prev) => new Set(prev).add(item.name));
   };
 
   const handleReset = () => {
@@ -436,7 +471,8 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
                 {matches.map((m, index) => {
                   const item = m.item;
                   const tierMeta = PRICE_TIERS[m.resolvedPriceTier];
-                  const isAdded = addedBeans.has(item.name);
+                  const isWishlistAdded = wishlistAddedBeans.has(item.name);
+                  const isActiveAdded = activeAddedBeans.has(item.name);
 
                   return (
                     <div
@@ -511,22 +547,39 @@ export const BeanMatchmakerModal: React.FC<BeanMatchmakerModalProps> = ({
                         </div>
                       )}
 
-                      {/* Action Button: Add to My Shelf */}
-                      <div className="pt-2 border-t border-[#E8DFD5] flex items-center justify-between gap-2">
-                        {isAdded ? (
-                          <span className="text-[11px] font-bold text-[#72806B] flex items-center gap-1 font-mono">
+                      {/* Action Button: Add to Wishlist (Primary) or Add to Active Shelf */}
+                      <div className="pt-2 border-t border-[#E8DFD5] flex items-center justify-between gap-2 flex-wrap">
+                        {isWishlistAdded ? (
+                          <span className="text-[11px] font-bold text-amber-800 flex items-center gap-1.5 font-mono bg-amber-500/15 border border-amber-400/40 px-2.5 py-1 rounded-xl">
+                            <Bookmark className="w-3.5 h-3.5 fill-amber-700 text-amber-700" />
+                            <span>{t('matchmaker.added_to_wishlist')}</span>
+                          </span>
+                        ) : isActiveAdded ? (
+                          <span className="text-[11px] font-bold text-[#72806B] flex items-center gap-1.5 font-mono bg-[#72806B]/15 border border-[#72806B]/30 px-2.5 py-1 rounded-xl">
                             <Check className="w-3.5 h-3.5" />
                             <span>{t('matchmaker.added_success')}</span>
                           </span>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleAddMatchToShelf(m)}
-                            className="px-3.5 py-1.5 rounded-xl bg-[#2C2018] hover:bg-[#3D2D22] text-[#FAF7F2] text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                          >
-                            <Plus className="w-3.5 h-3.5 text-[#C26D52]" />
-                            <span>{t('matchmaker.add_to_shelf')}</span>
-                          </button>
+                          <div className="flex items-center gap-2 w-full justify-between">
+                            <button
+                              type="button"
+                              onClick={() => handleAddMatchToWishlist(m)}
+                              className="px-3.5 py-1.5 rounded-xl bg-linear-to-r from-[#D4A373] to-[#C26D52] hover:brightness-110 text-white text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                            >
+                              <Bookmark className="w-3.5 h-3.5 text-amber-100" />
+                              <span>{t('matchmaker.add_to_wishlist')}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleAddMatchToActive(m)}
+                              className="px-2.5 py-1.5 rounded-xl border border-[#DECFC0] bg-white hover:bg-[#FAF7F2] text-[#7A6E65] hover:text-[#2C2018] text-[10px] font-mono font-semibold transition flex items-center gap-1 cursor-pointer"
+                              title={t('matchmaker.add_to_shelf_tooltip')}
+                            >
+                              <Coffee className="w-3 h-3 text-[#C26D52]" />
+                              <span>{t('matchmaker.have_it_in_stock')}</span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

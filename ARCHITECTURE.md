@@ -1,7 +1,7 @@
 # 🗺️ FLOWBEAN – APPENS PROCESOVERBLIK & ARKITEKTURKORT
 
 > **Dokumentstatus:** Aktivt Systemkort (Single Source of Architecture Truth)  
-> **Gældende version:** v1.21.26 (Visuel Friskhedsskala & Riste-Tidslinje i Freshness Radar)  
+> **Gældende version:** v1.21.27 (Beandex Ønskeliste, 3 Taktile Mappe-Faner & Flyttet Matchmaker)  
 > **Formål:** Dette dokument fungerer som det overordnede arkitektur- og proceskort for hele Flowbean (tidligere Espresso Flow). Det skal konsulteres før enhver ny funktion eller ændring påbegyndes, og opdateres ved enhver strukturel tilføjelse for at forhindre regressioner, utilsigtede sideeffekter og systemsvagheder.
 
 ---
@@ -59,9 +59,15 @@ flowchart TD
 
     %% Bønnehåndtering / Beandex & Livscyklus
     NavTabs -- Bønnesamling (Beandex) --> Beandex[Beandex Kaffehvælving]
-    Beandex --> BeandexTabs{Vælg Fane}
-    BeandexTabs -- Aktive Poser --> ActiveBags[Aktive Poser i Omløb]
-    BeandexTabs -- Tømte Poser / Arkiv --> FinishedArchive[Tømte Posers Arkiv & Historik]
+    Beandex --> BeandexTabs{3 Taktile Mappe-Faner}
+    BeandexTabs -- ☕ Aktive --> ActiveBags[Aktive Poser i Omløb]
+    BeandexTabs -- 🔖 Ønskeliste --> WishlistBags[Ønskeliste: Bønner fundet via Matchmaker/Katalog]
+    BeandexTabs -- 📦 Arkiv --> FinishedArchive[Tømte Posers Arkiv & Historik]
+    
+    WishlistBags --> WishlistActions{Ønskeliste Handling}
+    WishlistActions -- 🛒 Købt! Flyt til Aktive --> ActiveBags
+    WishlistActions -- Fjern --> DeleteWishlist[Slet fra Ønskeliste]
+
     ActiveBags --> BeanActions{Handling i Beandex}
     BeanActions -- ☕ Start Bryg med denne bønne --> ReadyToBrew
     BeanActions -- Scan Pose --> BagScanner[Bean Scanner Modal<br/>Stregkode + Etiket Vision OCR]

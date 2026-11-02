@@ -26,6 +26,24 @@
    - Køre `npx cap sync android` og teste i Android Studio.
    - Pushe til GitHub, så Vercel automatisk deployer til `https://espressoflow-app.vercel.app/`.
 
+### 2026-11-02 -- Etape 106: Beandex Ønskeliste (Wishlist), 3 Taktile Mappe-Faner & Flyttet Matchmaker (v1.21.27)
+- **Dedikeret Ønskeliste (Wishlist) System ([espresso.ts](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/types/espresso.ts), [BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx), [BeanMatchmakerModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeanMatchmakerModal.tsx), [App.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/App.tsx)):**
+  - Tilføjet `isWishlist?: boolean` til `CoffeeBeanProfile`.
+  - Når man finder matches i *BeanMatchmakerModal* eller i bønnekataloget, tilføjes de som udgangspunkt til **Ønskelisten** (`+ Tilføj til Ønskeliste`), så de ikke blandes sammen med det kaffe man har hjemme og brygger med i baren.
+  - Ønskelistebønner filtreres automatisk fra de aktive bønner i baren (`activeBeans`), og når man opretter/finder en bønne til ønskelisten, sættes den ikke som aktiv bryggebønne.
+  - På hvert kort på ønskelisten i Beandex er der tilføjet en fremtrædende **`🛒 Købt! Flyt til Aktive`** knap, som med ét klik flytter posen over til aktive bryggebønner med aktuel dato.
+- **3 Taktile Arkivmappe-Faner ("Mappe Omkant") ([BeandexView.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/BeandexView.tsx)):**
+  - Omlagt fanebaren til 3 markante, taktile arkivmapper (`grid grid-cols-3 gap-1.5 sm:gap-2`) med tydelig afgrænsning (`border border-[#DECFC0] rounded-xl`) og skarp kontrast:
+    1. ☕ **Aktive** (med terracotta tællerbadge)
+    2. 🔖 **Ønskeliste** (med gyldent tællerbadge)
+    3. 📦 **Arkiv** (med salviegrønt tællerbadge)
+  - Layoutet tilpasser sig alle mobilskærme uden at teksten klemmes eller brydes akavet.
+  - Tilføjet dedikeret tom-tilstand for Ønskelisten med genvej til at køre *Find Coffee Match*.
+- **Ergonomisk Placering af "Find Coffee Match":**
+  - Flyttet "Find Coffee Match" ned under de fysiske scanning- og oprettelsesknapper (*Scan Coffee Bag*, *Freshness Radar*, *Add Custom Bag*), så man først håndterer den fysiske pose på bordet, og nedenunder har adgang til at opdage nye bønner.
+- **Verifikation & Test:**
+  - `npm run build` udført og valideret 100% fejlfri.
+
 ### 2026-11-02 -- Etape 105: Visuel Riste-Tidslinje & Barista Freshness Note i Freshness Radar (v1.21.26)
 - **Visuel Riste-Tidslinje (`RoastTimelineBar`) i Freshness Radar ([FreshnessRadarModal.tsx](file:///c:/Users/mh/Documents/GitHub/Espresso%20Flow/src/components/FreshnessRadarModal.tsx)):**
   - Implementeret Beandex's visuelle 3-fasede riste-tidslinje i det overlejrede verdict-kort (`#FAF7F2` Espresso Warmth pergament):

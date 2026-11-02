@@ -55,6 +55,7 @@ export interface CoffeeBeanProfile {
   dateOpened?: string; // ISO date string (YYYY-MM-DD) when the bag was unsealed
   dateFinished?: string; // ISO date string (YYYY-MM-DD) when the bag was emptied
   isFinished?: boolean; // True if archived / emptied
+  isWishlist?: boolean; // True if this bean is on the user's wishlist / wanted list (not in active brewing stock)
   repurchaseVerdict?: RepurchaseVerdict; // Barista repurchase recommendation
   finishNotes?: string; // Final thoughts / tasting note upon finishing the bag
   bagCount?: number; // Total number of times this specific coffee has been purchased/enjoyed (1, 2, 3...)
